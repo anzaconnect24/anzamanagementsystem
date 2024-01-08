@@ -11,11 +11,7 @@ import { Metadata } from "next";
 import axios from "axios"
 import { server_url } from "@/utils/endpoint";
 import Spinner from "../../../components/spinner"
-export const metadata = {
-  title: "Signin Page | Next.js E-commerce Dashboard Template",
-  description: "This is Signin page for TailAdmin Next.js",
-  // other metadata
-};
+
 
 const SignIn = () => {
   const validationSchema = yup.object().shape({
