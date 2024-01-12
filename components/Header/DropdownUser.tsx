@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { logout } from "@/app/utils/local_storage";
+import { useRouter } from "next/navigation";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
+ const router = useRouter()
 
   // close on click outside
   useEffect(() => {
@@ -53,7 +56,8 @@ const DropdownUser = () => {
           <Image
             width={112}
             height={112}
-            src={"/images/user/user-01.png"}
+            className=" aspect-square object-cover rounded-full "
+            src={"https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTw2Nqptbj6RZ_RRBPjyln_dI53haB4eP_sYg&usqp=CAU"}
             alt="User"
           />
         </span>
@@ -157,7 +161,12 @@ const DropdownUser = () => {
             </Link>
           </li>
         </ul>
-        <button className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+        <button onClick={()=>{
+            // alert("hello there")
+             logout()
+             router.push("/signin")
+             
+        }} className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
           <svg
             className="fill-current"
             width="22"
