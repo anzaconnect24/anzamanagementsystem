@@ -1,13 +1,12 @@
 "use client"
 import { useContext, useEffect, useState } from "react";
-import {getApprovedBusinesses, getPendingBusinesses} from "../../../controllers/business_controller"
-import {timeAgo} from "../../../utils/time_ago"
+import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
+import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
-import { BusinessContext } from "../layout";
+
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-  const {setSelectedBusiness} = useContext(BusinessContext)
   useEffect(() => {
         getApprovedBusinesses().then((data)=>setApplications(data))
   }, []);
