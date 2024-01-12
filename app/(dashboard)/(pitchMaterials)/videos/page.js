@@ -23,8 +23,8 @@ const Page = () => {
       
         </div>
         <div className="grid grid-cols-3 gap-3 ">
-           {videos.map((item)=>{
-        return <div className="py-5 px-5 border border-stroke cursor-pointer  rounded hover:shadow-lg">
+           {videos.map((item,key)=>{
+        return <div key={key} className="py-5 px-5 border border-stroke cursor-pointer  rounded hover:shadow-lg">
             <div>{item.fileName}</div>
         </div>
        })}

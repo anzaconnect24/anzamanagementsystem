@@ -7,9 +7,7 @@ import Link from "next/link";
 import { Formik } from 'formik';
 import * as yup from 'yup';
 import toast from 'react-hot-toast';
-import { Metadata } from "next";
-import axios from "axios"
-import { server_url } from "@/app/utils/endpoint";
+
 import Spinner from "../../../components/spinner"
 import {login, register, resetPassword} from "../../controllers/user_controller"
 import { useRouter } from "next/navigation";
@@ -109,7 +107,7 @@ const Page = () => {
 
   <div className="mt-6 text-center">
     <p>
-      I'll do it later?{" "}
+     <div>I'll do it later?</div>
       <Link href="/signin" className="text-primary font-bold">
         Go back
       </Link>

@@ -45,7 +45,7 @@ const Page = ({params}) => {
        }}>
        <div className="space-y-3 pt-2">
        {program.ProgramRequirements.map((item,index)=>{
-        return <div className="space-y-1">
+        return <div key={index} className="space-y-1">
           <div className="font-bold">
           {item.name}
           </div>
