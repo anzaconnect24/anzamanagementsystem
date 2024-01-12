@@ -107,7 +107,7 @@ const Page = () => {
 
   <div className="mt-6 text-center">
     <p>
-     <div>I'll do it later?</div>
+     <div>I will do it later ?</div>
       <Link href="/signin" className="text-primary font-bold">
         Go back
       </Link>
