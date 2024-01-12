@@ -1,14 +1,18 @@
 export const storeUser = (user)=>{
-    localStorage.setItem('user', JSON.stringify(user));
+    if (typeof window !== 'undefined') {
+         localStorage.setItem('user', JSON.stringify(user)); 
+      }
 
 }
 
 export const getUser = ()=>{
-    return JSON.parse(localStorage.getItem('user'))
+    return typeof window !== 'undefined' && JSON.parse(localStorage.getItem('user'))
 }
 
 export const logout = ()=>{
+    if (typeof window !== 'undefined') {
     localStorage.removeItem('user');
+}
 }
 
 
