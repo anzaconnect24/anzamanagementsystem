@@ -22,9 +22,7 @@ export default function RootLayout({
  const pathname = usePathname()
 const router  = useRouter()
 const [data, setData] = useState(null);
-useEffect(() => {
-   getDashboardData().then((data)=>setData(data))
-}, []);
+
 
   useEffect(() => {
     console.log(getUser().ACCESS_TOKEN)
@@ -32,6 +30,8 @@ useEffect(() => {
     if(getUser()){
       getMyInfo().then((data)=>{
         setUserDetails(data)
+       getDashboardData().then((data)=>setData(data))
+
        if(data.activated == 1){
         if(data.role != "Enterprenuer"){
           router.push(pathname)
