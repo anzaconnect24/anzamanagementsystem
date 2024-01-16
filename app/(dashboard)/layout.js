@@ -25,7 +25,7 @@ const [data, setData] = useState(null);
 
 
   useEffect(() => {
-    console.log(getUser().ACCESS_TOKEN)
+    // console.log(getUser().ACCESS_TOKEN)
     setUserDetails(null)
     if(getUser()){
       getMyInfo().then((data)=>{
