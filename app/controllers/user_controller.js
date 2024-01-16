@@ -12,7 +12,7 @@ export const register = async (data) => {
      return response.data
     } catch (error) { 
       console.log(error)
-      return error.response;
+      return error.response.data;
     }
   };
   export const updateUser = async (data,uuid) => {

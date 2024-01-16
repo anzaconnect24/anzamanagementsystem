@@ -33,11 +33,14 @@ const {userDetails} = useContext(UserContext)
 
       </div>
       <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
-        <div className="col-span-1 flex items-center">
+        <div className="col-span-2 flex items-center">
           <p className="font-medium">Created </p>
         </div>
-        <div className="col-span-5 hidden items-center sm:flex">
+        <div className="col-span-2 hidden items-center sm:flex">
           <p className="font-medium">Program title</p>
+        </div>
+        <div className="col-span-2 hidden items-center sm:flex">
+          <p className="font-medium">Status</p>
         </div>
        
         <div className="col-span-1 flex items-center">
@@ -50,14 +53,19 @@ const {userDetails} = useContext(UserContext)
           className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5"
           key={key}
         >
-          <div className="col-span-1 hidden items-center sm:flex">
+          <div className="col-span-2 hidden items-center sm:flex">
             <p className="text-sm text-black dark:text-white">
             {timeAgo(item.createdAt)}
             </p>
           </div>
-          <div className="col-span-5 flex items-center">
+          <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">
-              {item.title}
+            {item.title}
+            </p>
+          </div>
+          <div className="col-span-2 flex items-center">
+            <p className={`text-sm text-black py-2 px-3 rounded-full ${item.applied?"bg-success text-white":"bg-bodydark1"} dark:text-white`}>
+              {item.applied?"Applied":"Not applied"}
             </p>
           </div>
           
@@ -74,20 +82,22 @@ const {userDetails} = useContext(UserContext)
                    Options
                    <div className={`absolute z-1 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-50 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
-                      {title:"Program details",path:`/programDetails/${item.uuid}`},
-                      {title:"Pending applications",path:`/pendingProgramApplications/`},
-                      {title:"Accepted applications",path:`/acceptedProgramApplications/`},
-                      {title:"Rejected applications",path:`/rejectedProgramApplications/`},
+                      {title:"Program details",path:`/programDetails/${item.uuid}`,visible:true, role:["Admin","Enterprenuer"]},
+                    
+                      {title:"My application",path:`/userProgramApplication/${item.uuid}`,visible:item.applied, role:["Admin","Enterprenuer"]},
+                      {title:"Program updates",path:`/programUpdates/${item.uuid}`,visible:item.applied, role:["Admin","Enterprenuer"]},
 
-                      {title:"Edit details",path:`/pendingprograms/${item.uuid}`},
-                     
-
+                      {title:"Pending applications",path:`/pendingProgramApplications/`,visible:true, role:["Admin"]},
+                      {title:"Accepted applications",path:`/acceptedProgramApplications/`,visible:true, role:["Admin"]},
+                      {title:"Rejected applications",path:`/rejectedProgramApplications/`,visible:true, role:["Admin"]},
+                      {title:"Edit details",path:`/pendingprograms/${item.uuid}`,visible:true, role:["Admin"]},
                     ].map((item)=>{
-                      return <div key={item.title}> 
+                      return item.role.includes(userDetails.role)&& item.visible &&<div key={item.title}> 
+                      
                       <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
+                      
                       </div>
                     })}
-                    
                    </div>
                 </div>
           </div>

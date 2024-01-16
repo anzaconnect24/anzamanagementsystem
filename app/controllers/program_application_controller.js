@@ -132,7 +132,6 @@ export const sendProgramApplication = async (data) => {
       const response = await axios.patch(`${server_url}/program_application/${uuid}`,data,{
          headers
       });
-      alert("hello")
      return response.data
     } catch (error) { 
       console.log(error.response)

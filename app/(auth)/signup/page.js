@@ -73,7 +73,7 @@ useEffect(() => {
           }
           if(e.target.password.value == e.target.repeatPassword.value){
                   register(userData).then((data)=>{
-                    if(data.status){
+                    if(data.status == true){
                       if(role == "Enterprenuer"){
                         createBusiness(businessData).then((data)=>{
                       router.push("/signin")
