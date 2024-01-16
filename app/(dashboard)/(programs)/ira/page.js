@@ -24,7 +24,12 @@ const Page = () => {
         <h4 className="text-xl font-semibold text-black dark:text-white">
           Investment Readiness Accelerator programs
         </h4>
+        {
+        ["Admin"].includes(userDetails.role)&&
         <Link href="/newProgram" className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
+
+        }
+
       </div>
       <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-1 flex items-center">

@@ -102,253 +102,253 @@ useEffect(() => {
           else{
             toast.error("Passwords don't match")
           }
-      }} className=" w-11/12 md:w-5/12  mx-auto py-12 ">
-        <div className="px-8 bg-white  hover:shadow py-10 shadow-2xl rounded-lg  ring-1 ring-stroke ">
-        <div className="flex justify-center">
-              <Image height={100} width={100} src={"/anza.png"}/>
+              }} className=" w-11/12 md:w-5/12  mx-auto py-12 ">
+                <div className="px-8 bg-white  hover:shadow py-10 shadow-2xl rounded-lg  ring-1 ring-stroke ">
+                <div className="flex justify-center">
+                      <Image height={100} width={100} src={"/anza.png"}/>
 
-              </div>
-        {/* <span className="mb-1.5 block text-center text-primary font-bold">Register to anza </span> */}
-        <div className="text-4xl font-bold text-black pb-10 text-center">Create Anza account</div>
-        <div>
-        {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
-        <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Full name
-          </label>
-          <input name="userName" required className=" form-style" placeholder="Username" type="text"/>
+                      </div>
+                {/* <span className="mb-1.5 block text-center text-primary font-bold">Register to anza </span> */}
+                <div className="text-4xl font-bold text-black pb-10 text-center">Create Anza account</div>
+                <div>
+                {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Full name
+                  </label>
+                  <input name="userName" required className=" form-style" placeholder="Username" type="text"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Email address
-          </label>
-          <input name="userEmail" required className="form-style" placeholder="Email address" type="email"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Email address
+                  </label>
+                  <input name="userEmail" required className="form-style" placeholder="Email address" type="email"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Phone number
-          </label>
-          <input name="userPhone" required className="form-style" placeholder="Phone number" type="tel"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Phone number
+                  </label>
+                  <input name="userPhone" required className="form-style" placeholder="Phone number" type="tel"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Registering as
-          </label>
-          {/* <div>Register as</div> */}
-          <div className="flex flex-col  space-y-2  ">
-            {["Enterprenuer","Investor","Staff"].map((item)=>
-              <div key={item} className="flex items-center space-x-2">
-              <input required name="role" value={item} onChange={(e)=>{
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Registering as
+                  </label>
+                  {/* <div>Register as</div> */}
+                  <div className="flex flex-col  space-y-2  ">
+                    {["Enterprenuer","Investor","Staff"].map((item)=>
+                      <div key={item} className="flex items-center space-x-2">
+                      <input required name="role" value={item} onChange={(e)=>{
+                        
+                            setRole(e.target.value);
+                      }}   type="radio"/>
+                      <div>{item}</div>
+                      </div>
+                    )}
                 
-                    setRole(e.target.value);
-              }}   type="radio"/>
-              <div>{item}</div>
-              </div>
-            )}
-        
-          </div>
-          
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Create password
-          </label>
-          <input name="password"  required className="form-style" placeholder="Enter password" type="password"/>
+                  </div>
+                  
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Create password
+                  </label>
+                  <input name="password"  required className="form-style" placeholder="Enter password" type="password"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Repeat password
-          </label>
-          <input name="repeatPassword" required className="form-style" placeholder="Repeat password" type="password"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Repeat password
+                  </label>
+                  <input name="repeatPassword" required className="form-style" placeholder="Repeat password" type="password"/>
 
-          </div>
+                  </div>
 
 
-          <div>
-          
-        </div>
-        </div>
+                  <div>
+                  
+                </div>
+                </div>
 
-        </div>
-        <div>
-          {role == "Enterprenuer" &&<div>
-          {/* <div className=" text-2xl text-black pt-8 pb-4">Company details</div> */}
-        <div className="space-y-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Business name
-          </label>
-          <input required name="businessName" className=" form-style" placeholder="Company name" type="text"/>
+                </div>
+                <div>
+                  {role == "Enterprenuer" &&<div>
+                  {/* <div className=" text-2xl text-black pt-8 pb-4">Company details</div> */}
+                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Business name
+                  </label>
+                  <input required name="businessName" className=" form-style" placeholder="Company name" type="text"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Business email adress
-          </label>
-          <input required name="businessEmail" className="form-style" placeholder="Company email address" type="text"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Business email adress
+                  </label>
+                  <input required name="businessEmail" className="form-style" placeholder="Company email address" type="text"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Business phone number
-          </label>
-          <input required name="businessPhone" className="form-style" placeholder="Company phone number" type="text"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Business phone number
+                  </label>
+                  <input required name="businessPhone" className="form-style" placeholder="Company phone number" type="text"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-          Number of people in your team
-          </label>
-          <input required name="team" className="form-style" placeholder="Enter number of team members" type="text"/>
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Registration status
-          </label>
-          <select required name="registration" className="form-style">
-            <option>Registration status</option>
-            <option value="Registered with BRELA">Registered with BRELA</option>
-            <option value="Registered with TIN only">Registered with TIN only</option>
-            <option value="Have BRELA and TIN">Have BRELA and TIN</option>
-          </select>
-                    </div>
-          
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Business sector
-          </label>
-          <select required name="business_sector_uuid" className="form-style">
-            <option>Select business sector</option>
-            {sectors.map((item)=>{
-            return  <option key={item.id} value={item.uuid}>{item.name}</option>
-            })}
-          </select>
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Business stage
-          </label>
-          <select required name="stage" className="form-style">
-          <option>Select business stage</option>
-            <option value="Startup">Startup</option>
-            <option value="Growth stage">Growth stage</option>
-            <option value="Expansion stage">Expansion stage</option>
-            <option value="Maturity stage">Maturity stage</option>
-          </select>
-          </div>
-          
-          
-         
-        
-        </div>
-        <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-          What problems does your business solve ?
-          </label>
-          <textarea name="problem" className="form-style" placeholder="What problem does your business solve ?"></textarea>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  Number of people in your team
+                  </label>
+                  <input required name="team" className="form-style" placeholder="Enter number of team members" type="text"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Registration status
+                  </label>
+                  <select required name="registration" className="form-style">
+                    <option>Registration status</option>
+                    <option value="Registered with BRELA">Registered with BRELA</option>
+                    <option value="Registered with TIN only">Registered with TIN only</option>
+                    <option value="Have BRELA and TIN">Have BRELA and TIN</option>
+                  </select>
+                            </div>
+                  
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Business sector
+                  </label>
+                  <select required name="business_sector_uuid" className="form-style">
+                    <option>Select business sector</option>
+                    {sectors.map((item)=>{
+                    return  <option key={item.id} value={item.uuid}>{item.name}</option>
+                    })}
+                  </select>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Business stage
+                  </label>
+                  <select required name="stage" className="form-style">
+                  <option>Select business stage</option>
+                    <option value="Startup">Startup</option>
+                    <option value="Growth stage">Growth stage</option>
+                    <option value="Expansion stage">Expansion stage</option>
+                    <option value="Maturity stage">Maturity stage</option>
+                  </select>
+                  </div>
+                  
+                  
+                
+                
+                </div>
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  What problems does your business solve ?
+                  </label>
+                  <textarea name="problem" className="form-style" placeholder="What problem does your business solve ?"></textarea>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-          What solution does your business provide ?
-          </label>
-          <textarea name="solution" className="form-style" placeholder="What solution does your business provide ?"></textarea>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  What solution does your business provide ?
+                  </label>
+                  <textarea name="solution" className="form-style" placeholder="What solution does your business provide ?"></textarea>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-          What is your commercial traction ? (Number of paying customers or revenue per year)
-          </label>
-          <textarea name="traction" className="form-style" placeholder="What is your commecial traction ?" />
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  What is your commercial traction ? (Number of paying customers or revenue per year)
+                  </label>
+                  <textarea name="traction" className="form-style" placeholder="What is your commecial traction ?" />
 
-          </div>
-        </div>
-          </div>
-          }
+                  </div>
+                </div>
+                  </div>
+                  }
 
-          {role == "Investor" &&<div>
-          {/* <div className=" text-2xl text-black pt-8 pb-4">Investor profile</div> */}
-        <div className="space-y-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Company name (optional)
-          </label>
-          <input  name="investorCompany" className=" form-style" placeholder="Company name" type="text"/>
+                  {role == "Investor" &&<div>
+                  {/* <div className=" text-2xl text-black pt-8 pb-4">Investor profile</div> */}
+                <div className="space-y-2">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Company name (optional)
+                  </label>
+                  <input  name="investorCompany" className=" form-style" placeholder="Company name" type="text"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Role/title
-          </label>
-          <input required name="investorRole" className="form-style" placeholder="Enter your role/title" type="text"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Role/title
+                  </label>
+                  <input required name="investorRole" className="form-style" placeholder="Enter your role/title" type="text"/>
 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Current address
-          </label>
-          <input required name="investorGeography" className="form-style" placeholder="Write your address" type="text"/>
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Avarage ticket size
-          </label>
-          <input required name="investorTicketSize" className="form-style" placeholder="Tell us your avarage ticket size" type="text"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Current address
+                  </label>
+                  <input required name="investorGeography" className="form-style" placeholder="Write your address" type="text"/>
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Avarage ticket size
+                  </label>
+                  <input required name="investorTicketSize" className="form-style" placeholder="Tell us your avarage ticket size" type="text"/>
 
+                  </div>
+                  
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Structures
+                  </label>
+                  <select required name="investorStructure" className="form-style">
+                    <option>Select structure</option>
+                    <option value="equity">Equity</option>
+                    <option value="dept">Dept</option>
+                    <option value="mezzanine">Mezzanine</option>
+                  </select>
+                            </div>
+                  
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Business sector
+                  </label>
+                  <select required name="investorSector" className="form-style">
+                    <option>Select business sector</option>
+                    {sectors.map((item)=>{
+                    return  <option key={item.id} value={item.uuid}>{item.name}</option>
+                    })}
+                  </select>
+                  </div>
+                
+                </div>
+                </div>
+                  </div>
+                  }
+                </div>
+                <div className="  flex justify-center py-4 ">
+                <button
+                  type="submit"
+                  className="w-full cursor-pointer rounded-lg border flex justify-center border-primary bg-primary p-4 text-white transition hover:bg-opacity-90">
+                  {loading?<Spinner/>:"Submit details for review"}
+                </button>
+                </div>
+                <div className="mt-0 text-center">
+            <p>
+              Already registered ?{" "}
+              <Link href="/signin" className="text-primary font-bold">
+                Sign in
+              </Link>
+            </p>
           </div>
-          
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Structures
-          </label>
-          <select required name="investorStructure" className="form-style">
-            <option>Select structure</option>
-            <option value="equity">Equity</option>
-            <option value="dept">Dept</option>
-            <option value="mezzanine">Mezzanine</option>
-          </select>
-                    </div>
-          
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Business sector
-          </label>
-          <select required name="investorSector" className="form-style">
-            <option>Select business sector</option>
-            {sectors.map((item)=>{
-            return  <option key={item.id} value={item.uuid}>{item.name}</option>
-            })}
-          </select>
-          </div>
-         
-        </div>
-        </div>
-          </div>
-          }
-        </div>
-        <div className="  flex justify-center py-4 ">
-        <button
-          type="submit"
-          className="w-full cursor-pointer rounded-lg border flex justify-center border-primary bg-primary p-4 text-white transition hover:bg-opacity-90">
-          {loading?<Spinner/>:"Submit details for review"}
-        </button>
-        </div>
-        <div className="mt-0 text-center">
-    <p>
-      Already registered ?{" "}
-      <Link href="/signin" className="text-primary font-bold">
-        Sign in
-      </Link>
-    </p>
-  </div>
-        </div>
+                </div>
         
        
       </form>
