@@ -3,12 +3,13 @@ import { useContext, useEffect, useState } from "react";
 import {getIRAPrograms} from "@/app/controllers/program_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import { UserContext } from "../../layout";
 
 
 const Page = () => {
   const [programs, setPrograms] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-
+const {userDetails} = useContext(UserContext)
   useEffect(() => {
     getIRAPrograms(1,5).then((body)=>{
       setPrograms(body.data)

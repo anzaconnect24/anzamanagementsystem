@@ -4,10 +4,12 @@ import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/bus
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
 import { getVideos } from "@/app/controllers/pitch_material_controller";
+import { UserContext } from "../../layout";
 
 const Page = () => {
   const [videos, setVideos] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
+  const {userDetails}  = useContext(UserContext)
   useEffect(() => {
         getVideos(1,5).then((body)=>setVideos(body.data))
   }, []);
@@ -19,7 +21,11 @@ const Page = () => {
 <h4 className="text-xl font-semibold text-black dark:text-white">
           Videos
         </h4>
-        <Link className="px-4 py-2 rounded bg-primary text-white hover:opacity-95" href={"/uploadPitchMaterial"}>Add</Link>
+        {
+        ["Admin"].includes(userDetails.role)&&
+        <Link href="/newProgram" className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
+          
+        }
       
         </div>
         <div className="grid grid-cols-3 gap-3 ">
