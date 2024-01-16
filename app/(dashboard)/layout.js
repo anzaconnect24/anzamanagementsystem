@@ -59,10 +59,9 @@ const [data, setData] = useState(null);
         }
       }
       else{
-        // alert(`${data.email} not activated`)
-        router.push("/authorizationPage")
+        router.push("/signin")
         setTimeout(() => setLoading(false), 4000);
-       }
+      }
        
       })
     }
