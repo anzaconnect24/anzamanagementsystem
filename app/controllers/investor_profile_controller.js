@@ -20,9 +20,23 @@ export const createInvestorProfile = async (data) => {
       return error.response;
     }
   };
-  export const updateInvestorProfile = async (uuid,data) => {
+  export const getMyInvestorProfile = async()=>{
+    try {
+      const user = getUser()
+     const response = await axios.get(`${server_url}/investor_profile/me`,{
+        headers:{
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+          }
+     })
+      return response.data.body
+    } catch (error) {
+     console.log(error)
+    }
+  }
+  export const updateInvestorProfile = async (data) => {
     try { 
-      const response = await axios.post(`${server_url}/investor_profile/${uuid}`, data,{
+      const response = await axios.patch(`${server_url}/investor_profile/me`, data,{
          headers
       });
      return response.data

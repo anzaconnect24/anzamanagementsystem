@@ -43,13 +43,13 @@ const Page = ({params}) => {
 
           })
        }}>
-       <div className="space-y-3 pt-2">
+       <div className="space-y-3 py-8">
        {program.ProgramRequirements.map((item,index)=>{
-        return <div key={index} className="space-y-1">
-          <div className="font-bold">
-          {item.name}
+        return <div key={index} className="space-y-1 flex">
+          <div className="w-4/12">
+          {item.name}:
           </div>
-          <div>
+          <div className="w-8/12">
           <input onChange={(e)=>{
              let file = e.target.files[0];
              let tempData= data;

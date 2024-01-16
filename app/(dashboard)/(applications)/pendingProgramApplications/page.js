@@ -13,7 +13,7 @@ const Page = () => {
             setApplications(body.data)
         })
   }, []);
-    return (
+    return applications && (
     <div>
                <Breadcrumb prevLink={``} prevPage="Programs" pageName="Pending applications" />
         

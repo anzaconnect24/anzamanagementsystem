@@ -5,6 +5,7 @@ import {createBusinessReview, deleteBusinessReview, getReviewers} from "@/app/co
 
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Breadcrumb from "@/app/component/Breadcrumb";
 
 
 const Page = ({params}) => {
@@ -21,10 +22,11 @@ const Page = ({params}) => {
     return  users&&(
       <div className="">
     <div>
+      <Breadcrumb pageName={"Assign reviewer"} prevLink={""} prevPage={"Businesses"}/>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Assign reviewers 
+          Reviewers list
         </h4>
       </div>
 
@@ -77,23 +79,23 @@ const Page = ({params}) => {
             <p className="text-sm text-black dark:text-white">{item.email}</p>
           </div>
           <div className="col-span-1 flex items-center">
-          <div className="rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                   <input onChange={(e)=>{
-                    const data = {
-                        business_uuid:uuid,
+          <div onClick={()=>{
+                      const data = {
+                        business_uuid:uuid ,
                         user_uuid:item.uuid
-                    };
-                    if(item.status <1){
-                        createBusinessReview(data).then((data)=>{
-                            setRefresh(refresh+1)
-                        })
-                    }else{
-                        deleteBusinessReview(item.BusinessReviews[0].uuid).then((data)=>{
-                            setRefresh(refresh+1)
-                        })
-                    }
-                  }} checked={item.status} type="checkbox"/>
-                </div>
+                      }
+                        if(item.status <1){
+                          createBusinessReview(data).then((data)=>{
+                               setRefresh(refresh+1)
+                           })
+                       }else{
+                           deleteBusinessReview(item.BusinessReview.uuid).then((data)=>{
+                               setRefresh(refresh+1)
+                           })
+                       }
+                    }} className={`py-2 px-3 ${item.status <1?"bg-primary text-white":"bg-bodydark1 text-black"} cursor-pointer
+                     hover:opacity-95 transition-all  rounded`}>
+                      {item.status<1?"Assign":"Remove"}</div>
           </div>
         </div>
       ))}

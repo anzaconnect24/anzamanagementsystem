@@ -79,32 +79,27 @@ export const newPassword = async(data,uuid)=>{
     return error.response.data;
   }
 }
- export const getUsers = async(data)=>{
-    try {
-     const response = await axios.get(`${server_url}/user/`,{
-      headers
-     })
-     console.log(response.data.body)
-      return response.data.body
-    } catch (error) {
-     console.log(error)
-    }
- }
 
  export const getUserInfo = async(uuid)=>{
   try {
+    console.log(headers)
    const response = await axios.get(`${server_url}/user/${uuid}`,{
     headers
    })
+   console.log(response.data)
     return response.data.body
   } catch (error) {
- 
+    throw error
   }
 }
 export const getMyInfo = async()=>{
   try {
+    const user = getUser()
    const response = await axios.get(`${server_url}/user/me`,{
-      headers
+      headers:{
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+        }
    })
     return response.data.body
   } catch (error) {
@@ -116,6 +111,58 @@ export const getMyInfo = async()=>{
   try {
    
    const response = await axios.get(`${server_url}/user/?page=${page}&limit=${limit}`,{
+    headers
+   })
+   console.log(response.data)
+    return response.data.body
+  } catch (error) {
+   console.log(error)
+  }
+}
+
+export const getInvestors = async(limit,page)=>{
+  try {
+   
+   const response = await axios.get(`${server_url}/user/investors/?page=${page}&limit=${limit}`,{
+    headers
+   })
+   console.log(response.data)
+    return response.data.body
+  } catch (error) {
+   console.log(error)
+  }
+}
+
+export const getEnterprenuers = async(limit,page)=>{
+  try {
+   
+   const response = await axios.get(`${server_url}/user/enterprenuers/?page=${page}&limit=${limit}`,{
+    headers
+   })
+   console.log(response.data)
+    return response.data.body
+  } catch (error) {
+   console.log(error)
+  }
+}
+
+export const getAdmins = async(limit,page)=>{
+  try {
+   
+   const response = await axios.get(`${server_url}/user/admins/?page=${page}&limit=${limit}`,{
+    headers
+   })
+   console.log(response.data)
+    return response.data.body
+  } catch (error) {
+   console.log(error)
+  }
+}
+
+export const getReviewers = async(limit,page)=>{
+  try {
+   
+   const response = await axios.get(`${server_url}/user/reviewers/?page=${page}&limit=${limit}`,{
     headers
    })
    console.log(response.data)

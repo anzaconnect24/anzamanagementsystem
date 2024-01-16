@@ -3,6 +3,8 @@
 
 import React, { useContext, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+
 // import login from "../../../controllers/user_controller"
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -42,12 +44,17 @@ const Page = () => {
 
   return (
     <>
-      <div className="rounded-sm border border-stroke bg-white min-w-screen dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-sm border bg-bodydark1 border-stroke  min-w-screen dark:border-strokedark dark:bg-boxdark">
         <div className="flex flex-wrap ">
          
           <div className="w-full     mx-auto  xl:w-1/2  ">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              <span className="mb-1.5 block text-center text-primary font-bold">Sign in to anza </span>
+              <div className=" bg-white shadow-2xl ring-1 hover:shadow  ring-stroke rounded-lg px-8 py-10 ">
+              <div className="flex justify-center">
+              <Image height={100} width={100} src={"/anza.png"}/>
+
+              </div>
+              {/* <span className="mb-1.5 block text-center text-primary font-bold">Sign in to anza </span> */}
               <h2 className="mb-9 text-2xl text-center font-bold text-black dark:text-white sm:text-title-xl2">
                 Sign In to continue
               </h2>
@@ -167,6 +174,8 @@ const Page = () => {
   </div>
 </form>
         )}</Formik>
+              </div>
+              
             
             </div>
           </div>

@@ -1,20 +1,20 @@
 "use client"
 import { useContext, useEffect, useState } from "react";
-import { getAllUsers } from "../../../controllers/user_controller"
+import { getAllUsers, updateUser } from "../../../controllers/user_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
-
+import toast from "react-hot-toast"
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-
+const [refresh, setRefresh] = useState(0);
   useEffect(() => {
         getAllUsers(5,1).then((body)=>{
             console.log(body.data.length)
 
             setUsers(body.data)
         })
-  }, []);
+  }, [refresh]);
     return  users&&(
       <div className="">
     <div>
@@ -42,7 +42,7 @@ const Page = () => {
           <p className="font-medium">Email</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="font-medium">More</p>
+          <p className="font-medium"></p>
         </div>
       </div>
 
@@ -62,10 +62,25 @@ const Page = () => {
               {item.name}
             </p>
           </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">
-              {item.role}
-            </p>
+          <div className="col-span-1 flex items-center ">
+            <select disabled={item.role=="Investor"} onChange={(e)=>{
+              if(e.target.value == "Investor"){
+                toast.error("Sorry! You can't just change user to Investor")
+                e.target.value = item.role
+              }else{
+                updateUser({role:e.target.value},item.uuid).then((data)=>{
+                  setRefresh(refresh+1)
+                  toast.success("Role changed")
+                })
+              }
+             
+            }} className="border-0 focus:border-stroke rounded py-1 focus:ring-stroke text-sm text-black dark:text-white "  defaultValue={item.role} >
+              <option value="Admin">Admin</option>
+              <option value="Staff">Staff</option>
+              <option value="Investor">Investor</option>
+              <option value="Enterprenuer">Enterprenuer</option>
+              <option value="Reviewer">Reviewer</option>
+            </select>
           </div>
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">{item.phone}</p>
@@ -74,29 +89,21 @@ const Page = () => {
             <p className="text-sm text-black dark:text-white">{item.email}</p>
           </div>
           <div className="col-span-1 flex items-center">
-          <div onClick={()=>{
-                  if(item.uuid == ShowOptions){
-                    setShowOptions("")
-                    setSelectedBusiness(item)
-                  }else{
-                  setShowOptions(item.uuid)
-                  setSelectedBusiness(null)
-                  }
+            {item.activated ==true? <div onClick={()=>{
+              updateUser({activated:false},item.uuid).then((data)=>{
+                setRefresh(refresh+1)
+              })
+            }} className=" bg-bodydark2 hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
+              Deactivate
+            </div>: <div onClick={()=>{
+                  updateUser({activated:true},item.uuid).then((data)=>{
+                    setRefresh(refresh+1)
+                    toast.success("")
+                  })
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                   Options
-                   <div className={`absolute transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
-                    {[
-                      {title:"View details",path:`/pendingusers/${item.uuid}`},
-                      {title:"Assign reviewer",path:"/assignReviewer/"},
-
-                    ].map((item)=>{
-                      return <div key={item.title}> 
-                      <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
-                      </div>
-                    })}
-                    
-                   </div>
-                </div>
+                   Activate
+                </div>}
+         
           </div>
         </div>
       ))}

@@ -1,6 +1,6 @@
 "use client"
 import { getProgramApplicationReviewers } from "@/app/controllers/program_application_controller";
-import { assignProgramApplicationReviewer } from "@/app/controllers/program_application_review_controller"
+import { assignProgramApplicationReviewer, deleteProgramApplicationReviewer } from "@/app/controllers/program_application_review_controller"
 import { useEffect, useState } from "react";
 import { timeAgo } from "@/app/utils/time_ago";
 import Link from "next/link"
@@ -21,6 +21,7 @@ const Page = ({params}) => {
     return users&&(
         <div className="">
       <div>
+        <Breadcrumb prevLink={""} pageName={"Assign application to reviewers"} prevPage={"Applications"}/>
         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">
@@ -72,21 +73,23 @@ const Page = ({params}) => {
             </div>
             <div className="col-span-1 flex items-center">
             <div className="rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                     <input onChange={(e)=>{
+                    <div onClick={()=>{
                       const data = {
-                        program_application_uuid:uuid,
+                        program_application_uuid:uuid ,
                         user_uuid:item.uuid
-                      };
-                      if(item.status <1){
-                         assignProgramApplicationReviewer(data).then((data)=>{
-                              setRefresh(refresh+1)
-                          })
-                      }else{
-                          deleteBusinessReview(item.BusinessReviews[0].uuid).then((data)=>{
-                              setRefresh(refresh+1)
-                          })
                       }
-                    }} checked={item.status} type="checkbox"/>
+                        if(item.status <1){
+                          assignProgramApplicationReviewer(data).then((data)=>{
+                               setRefresh(refresh+1)
+                           })
+                       }else{
+                           deleteProgramApplicationReviewer(item.ProgramApplicationReview.uuid).then((data)=>{
+                               setRefresh(refresh+1)
+                           })
+                       }
+                    }} className={`py-2 px-3 ${item.status <1?"bg-primary text-white":"bg-bodydark1 text-black"} cursor-pointer
+                     hover:opacity-95 transition-all  rounded`}>
+                      {item.status<1?"Assign":"Remove"}</div>
                   </div>
             </div>
           </div>

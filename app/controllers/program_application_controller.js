@@ -56,7 +56,7 @@ export const sendProgramApplication = async (data) => {
       const response = await axios.get(`${server_url}/program_application/waiting/?page=${page}&limit=${limit}`,{
          headers
       });
-      console.log(response)
+
      return response.data.body
     } catch (error) { 
       console.log(error.response)
@@ -66,9 +66,11 @@ export const sendProgramApplication = async (data) => {
     
   export const getAcceptedProgramApplications = async (page,limit) => {
     try {
-      const response = await axios.get(`${server_url}/program_application/waiting/?page=${page}&limit=${limit}`,{
+
+      const response = await axios.get(`${server_url}/program_application/accepted/?page=${page}&limit=${limit}`,{
          headers
       });
+      console.log(response.data)
      return response.data.body
     } catch (error) { 
       console.log(error.response)
@@ -114,7 +116,29 @@ export const sendProgramApplication = async (data) => {
       return error.response;
     }
   };
-
+  export const getUserProgramApplication = async (uuid) => {
+    try {
+      const response = await axios.get(`${server_url}/program_application/user/${uuid}`,{
+         headers
+      });
+     return response.data.body
+    } catch (error) { 
+      console.log(error.response)
+      return error.response;
+    }
+  };
+  export const updateProgramApplication = async (uuid,data) => {
+    try {
+      const response = await axios.patch(`${server_url}/program_application/${uuid}`,data,{
+         headers
+      });
+      alert("hello")
+     return response.data
+    } catch (error) { 
+      console.log(error.response)
+      return error.response;
+    }
+  };
   export const deleteBusinessReview = async (uuid) => {
     try {
       const response = await axios.delete(`${server_url}/business_review/${uuid}`,{

@@ -76,7 +76,7 @@ const Page = () => {
                    Options
                    <div className={`absolute transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
-                      {title:"View details",path:`/pendingApplications/${item.uuid}`},
+                      {title:"View details",path:`/businessDetails/${item.uuid}`},
                       {title:"Assign reviewer",path:`/assignReviewer/${item.uuid}`},
 
                     ].map((item)=>{

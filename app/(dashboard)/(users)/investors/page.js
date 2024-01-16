@@ -1,6 +1,6 @@
 "use client"
 import { useContext, useEffect, useState } from "react";
-import { getAllUsers } from "../../../controllers/user_controller"
+import { getAllUsers, getInvestors } from "../../../controllers/user_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
 
@@ -9,7 +9,7 @@ const Page = () => {
   const [ShowOptions, setShowOptions] = useState(false);
 
   useEffect(() => {
-        getAllUsers(5,1).then((body)=>{
+        getInvestors(15,1).then((body)=>{
             console.log(body.data.length)
 
             setUsers(body.data)
@@ -21,7 +21,7 @@ const Page = () => {
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          System users
+          Investors
         </h4>
       </div>
 
@@ -84,10 +84,10 @@ const Page = () => {
                   }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Options
-                   <div className={`absolute transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
+                   <div className={`absolute z-999 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
-                      {title:"View details",path:`/pendingusers/${item.uuid}`},
-                      {title:"Assign reviewer",path:"/assignReviewer/"},
+                      {title:"View profile",path:`/investors/${item.uuid}`},
+                      {title:"View investments",path:"/assignReviewer/"},
 
                     ].map((item)=>{
                       return <div key={item.title}> 

@@ -3,6 +3,8 @@
 
 import React, { useContext, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+
 // import login from "../../../controllers/user_controller"
 import { Formik } from 'formik';
 import * as yup from 'yup';
@@ -39,12 +41,17 @@ const Page = () => {
 
   return (
     <>
-      <div className="rounded-sm border h-screen items-center border-stroke bg-white min-w-screen dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-sm border h-screen items-center border-stroke bg-bodydark1 min-w-screen dark:border-strokedark dark:bg-boxdark">
         <div className="flex flex-wrap">
          
-          <div className="w-full     mx-auto  xl:w-1/2  ">
+          <div className="w-full mx-auto  xl:w-1/2  ">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              <span className="mb-1.5 block text-center text-primary font-bold">Forgot password ?</span>
+              <div className="shadow-2xl px-8 py-10 ring-1 bg-white ring-stroke rounded-lg">
+              <div className="flex justify-center">
+              <Image height={100} width={100} src={"/anza.png"}/>
+
+              </div>
+              {/* <span className="mb-1.5 block text-center text-primary font-bold">Forgot password ?</span> */}
               <h2 className="mb-9 text-2xl text-center font-bold text-black dark:text-white sm:text-title-xl2">
                 Get password reset link
               </h2>
@@ -107,14 +114,16 @@ const Page = () => {
 
   <div className="mt-6 text-center">
     <p>
-     <div>I will do it later ?</div>
-      <Link href="/signin" className="text-primary font-bold">
+     <div className="flex justify-center space-x-2">I will do it later ?  <Link href="/signin" className="text-primary font-bold">
         Go back
-      </Link>
+      </Link></div>
+     
     </p>
   </div>
 </form>
         )}</Formik>
+              </div>
+             
             
             </div>
           </div>

@@ -4,10 +4,10 @@ import {useRouter} from "next/navigation"
 export const BusinessContext = createContext();
 const Layout = ({children}) => {
     const router = useRouter();
-    const [selectedBusiness, setSelectedBusiness] = useState(null);
+    const [user, setUser] = useState(null);
    
     return ( <div>
-        <BusinessContext.Provider value={{ selectedBusiness,setSelectedBusiness }}>
+        <BusinessContext.Provider value={{ user,setUser }}>
         {children}
         </BusinessContext.Provider>
     </div> );

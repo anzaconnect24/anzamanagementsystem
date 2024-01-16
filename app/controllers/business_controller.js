@@ -2,12 +2,17 @@ import axios from "axios"
 import { server_url } from "../utils/endpoint"
 import { headers } from "../utils/headers";
 import { config } from "process";
+import { getUser } from "../utils/local_storage";
 
 
 export const createBusiness = async (data) => {
     try { 
+      const user = getUser() 
       const response = await axios.post(`${server_url}/business/`, data,{
-         headers
+         headers:{
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+        }
       });
      return response.data
     } catch (error) { 
@@ -66,6 +71,17 @@ export const createBusiness = async (data) => {
   export const getApprovedBusinesses = async () => {
     try {
       const response = await axios.get(`${server_url}/business/approved/`,{
+        headers
+      });
+      console.log(response.data)
+      return response.data.body
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  export const getInvestorBusinesses = async (page,limit) => {
+    try {
+      const response = await axios.get(`${server_url}/business/investor/?page=${page}&limit=${limit}`,{
         headers
       });
       console.log(response.data)

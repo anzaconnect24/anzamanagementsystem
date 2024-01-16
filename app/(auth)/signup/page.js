@@ -20,9 +20,9 @@ import Spinner from "@/components/spinner";
 // };
 const SignUp = () => {
 const [role, setRole] = useState("");
-const [sectors, setSectors] = useState([]);
 const router = useRouter()
 const [loading, setloading] = useState(false);
+const [sectors, setSectors] = useState([]);
 
 useEffect(() => {
   getSectors().then((data)=>{
@@ -32,7 +32,7 @@ useEffect(() => {
   })
 }, []);
   return (
-    <div className="bg-white min-h-screen">
+    <div className=" bg-bodydark1 min-h-screen">
       <form onSubmit={(e)=>{
         e.preventDefault()
         setloading(true)
@@ -71,7 +71,6 @@ useEffect(() => {
               structure:e.target.investorStructure.value
             }
           }
-          
           if(e.target.password.value == e.target.repeatPassword.value){
                   register(userData).then((data)=>{
                     if(data.status){
@@ -103,11 +102,16 @@ useEffect(() => {
           else{
             toast.error("Passwords don't match")
           }
-      }} className=" w-11/12 md:w-6/12 mx-auto py-12 ">
-        <span className="mb-1.5 block text-center text-primary font-bold">Register to anza </span>
-        <div className="text-4xl font-bold text-black pb-2 text-center">Create Anza account</div>
+      }} className=" w-11/12 md:w-5/12  mx-auto py-12 ">
+        <div className="px-8 bg-white  hover:shadow py-10 shadow-2xl rounded-lg  ring-1 ring-stroke ">
+        <div className="flex justify-center">
+              <Image height={100} width={100} src={"/anza.png"}/>
+
+              </div>
+        {/* <span className="mb-1.5 block text-center text-primary font-bold">Register to anza </span> */}
+        <div className="text-4xl font-bold text-black pb-10 text-center">Create Anza account</div>
         <div>
-        <div className=" text-2xl text-black pt-8 pb-4">Personal details</div>
+        {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
         <div>
           <label className="mb-2.5 block font-medium text-black dark:text-white">
@@ -135,7 +139,7 @@ useEffect(() => {
             Registering as
           </label>
           {/* <div>Register as</div> */}
-          <div className="flex space-x-4 items-center ">
+          <div className="flex flex-col  space-y-2  ">
             {["Enterprenuer","Investor","Staff"].map((item)=>
               <div key={item} className="flex items-center space-x-2">
               <input required name="role" value={item} onChange={(e)=>{
@@ -173,7 +177,7 @@ useEffect(() => {
         </div>
         <div>
           {role == "Enterprenuer" &&<div>
-          <div className=" text-2xl text-black pt-8 pb-4">Company details</div>
+          {/* <div className=" text-2xl text-black pt-8 pb-4">Company details</div> */}
         <div className="space-y-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
           <div>
@@ -269,7 +273,7 @@ useEffect(() => {
           }
 
           {role == "Investor" &&<div>
-          <div className=" text-2xl text-black pt-8 pb-4">Investor profile</div>
+          {/* <div className=" text-2xl text-black pt-8 pb-4">Investor profile</div> */}
         <div className="space-y-2">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
           <div>
@@ -306,9 +310,9 @@ useEffect(() => {
           </label>
           <select required name="investorStructure" className="form-style">
             <option>Select structure</option>
-            <option value="Registered with BRELA">Equity</option>
-            <option value="Registered with TIN only">Dept</option>
-            <option value="Have BRELA and TIN">Mezanine</option>
+            <option value="equity">Equity</option>
+            <option value="dept">Dept</option>
+            <option value="mezzanine">Mezzanine</option>
           </select>
                     </div>
           
@@ -344,6 +348,8 @@ useEffect(() => {
       </Link>
     </p>
   </div>
+        </div>
+        
        
       </form>
     </div>

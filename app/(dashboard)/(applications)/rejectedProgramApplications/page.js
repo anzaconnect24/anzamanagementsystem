@@ -3,20 +3,23 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "../../../controllers/business_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
+import Breadcrumb from "../../../component/Breadcrumb";
+import { getRejectedProgramApplications } from "@/app/controllers/program_application_controller";
 
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
 
   useEffect(() => {
-        getApprovedBusinesses().then((data)=>setApplications(data))
+        getRejectedProgramApplications(1,5).then((body)=>setApplications(body.data))
   }, []);
-    return (
+    return applications && (
     <div>
+     <Breadcrumb prevLink={``} prevPage="Programs" pageName="Rejected applications" />
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Accepted program applications
+          Rejected program applications
         </h4>
       </div>
 
@@ -25,14 +28,15 @@ const Page = () => {
           <p className="font-medium">Sent </p>
         </div>
         <div className="col-span-2 hidden items-center sm:flex">
-          <p className="font-medium">Business name</p>
+          <p className="font-medium">Program</p>
+        </div>
+        <div className="col-span-2 flex items-center">
+          <p className="font-medium">Name</p>
         </div>
         <div className="col-span-2 flex items-center">
           <p className="font-medium">Phone</p>
         </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Email</p>
-        </div>
+       
         <div className="col-span-1 flex items-center">
           <p className="font-medium">More</p>
         </div>
@@ -51,14 +55,14 @@ const Page = () => {
           </div>
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">
-              {item.name}
+              {item.Program.title}
             </p>
           </div>
           <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.phone}</p>
+            <p className="text-sm text-black dark:text-white">{item.User.name}</p>
           </div>
           <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.email}</p>
+            <p className="text-sm text-black dark:text-white">{item.User.phone}</p>
           </div>
           <div className="col-span-1 flex items-center">
           <div onClick={()=>{
@@ -71,15 +75,17 @@ const Page = () => {
                   }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Options
-                   <div className={`absolute transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
+                   <div className={`absolute z-9 transition-all 
+                   ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} 
+                   -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
-                      {title:"View details",path:`/pendingApplications/${item.uuid}`},
+                      {title:"View application",path:`/viewProgramApplication/${item.uuid}`}
                     ].map((item)=>{
                       return <div key={item.title}> 
-                      <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
+                      <Link  className="text-black text-base hover:text-primary text-center " 
+                      href={item.path}>{item.title}</Link>
                       </div>
                     })}
-                    
                    </div>
                 </div>
           </div>
