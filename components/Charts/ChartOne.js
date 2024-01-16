@@ -1,12 +1,13 @@
 "use client";
 import { ApexOptions } from "apexcharts";
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import dynamic from "next/dynamic";
+import { UserContext } from "@/app/(dashboard)/layout";
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-const options: ApexOptions = {
+const options = {
   legend: {
     show: false,
     position: "top",
@@ -93,10 +94,6 @@ const options: ApexOptions = {
   xaxis: {
     type: "category",
     categories: [
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
       "Jan",
       "Feb",
       "Mar",
@@ -105,6 +102,10 @@ const options: ApexOptions = {
       "Jun",
       "Jul",
       "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
     ],
     axisBorder: {
       show: false,
@@ -124,24 +125,31 @@ const options: ApexOptions = {
   },
 };
 
-interface ChartOneState {
-  series: {
-    name: string;
-    data: number[];
-  }[];
-}
 
-const ChartOne: React.FC = () => {
-  const [state, setState] = useState<ChartOneState>({
+const ChartOne = () => {
+  const {data} = useContext(UserContext)
+  let bfaData = [];
+  let iraData = [];
+
+
+ for (let index = 0; index < 12; index++) {
+  bfaData[index] = data.bfa.filter((item)=>parseInt(item.month) == index+1).length
+ }
+ for (let index = 0; index < 12; index++) {
+  iraData[index] = data.ira.filter((item)=>parseInt(item.month) == index+1).length
+ }
+//  alert(bfaData)  
+
+  const [state, setState] = useState({
     series: [
       {
-        name: "Product One",
-        data: [23, 11, 22, 27, 13, 22, 37, 21, 44, 22, 30, 45],
+        name: "IRA",
+        data: iraData,
       },
 
       {
-        name: "Product Two",
-        data: [30, 25, 36, 30, 45, 35, 64, 52, 59, 36, 39, 51],
+        name: "BFA",
+        data: bfaData,
       },
     ],
   });
@@ -153,7 +161,6 @@ const ChartOne: React.FC = () => {
   };
 
   handleReset;
-
   // NextJS Requirement
   const isWindowAvailable = () => typeof window !== "undefined";
 
@@ -169,7 +176,7 @@ const ChartOne: React.FC = () => {
             </span>
             <div className="w-full">
               <p className="font-semibold text-primary">Business Foundation Program</p>
-              <p className="text-sm font-medium">Latest program</p>
+              <p className="text-sm font-medium">This year</p>
             </div>
           </div>
           <div className="flex min-w-47.5">
@@ -178,7 +185,7 @@ const ChartOne: React.FC = () => {
             </span>
             <div className="w-full">
               <p className="font-semibold text-secondary">Investiment Readiness Accelerator</p>
-              <p className="text-sm font-medium">Latest program</p>
+              <p className="text-sm font-medium">This year</p>
             </div>
           </div>
         </div>
