@@ -12,11 +12,21 @@ const Page = () => {
   const [ShowOptions, setShowOptions] = useState(false);
 const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(true);
+const [total, settotal] = useState(0);
+const [limit, setlimit] = useState(7);
+const [currentPage, setcurrentPage] = useState(1);
+const [totalPages, settotalPages] = useState(1);
+
+
+
+
   useEffect(() => {
-        getAllUsers(5,1).then((body)=>{
+        getAllUsers(limit,currentPage).then((body)=>{
           setloading(false)
             console.log(body.data.length)
-
+            settotal(body.count)
+            setcurrentPage(body.page)
+            settotalPages(body.totalPages)
             setUsers(body.data)
         })
   }, [refresh]);
@@ -26,11 +36,11 @@ const [refresh, setRefresh] = useState(0);
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          System users
+          System users ({total})
         </h4>
       </div>
 
-      <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+      <div className="grid grid-cols-6 border-t border-stroke py-4.5  dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-1 flex items-center">
           <p className="font-medium">Sent </p>
         </div>
@@ -112,6 +122,23 @@ const [refresh, setRefresh] = useState(0);
           </div>
         </div>
       ))}
+      <div  className="flex px-5 py-8 justify-between">
+        <div>Page {currentPage} of {totalPages} pages</div>
+        <div className="flex space-x-3 ">
+         <div onClick={()=>{
+          if(currentPage >1){
+            setcurrentPage(currentPage-1)
+            setRefresh(refresh+1)
+          }
+         }} className="ring-1 ring-stroke hover:bg-primary hover:text-white py-2 px-4 cursor-pointer rounded ">Prev</div>
+         <div onClick={()=>{
+          if(currentPage<totalPages){
+            setcurrentPage(currentPage+1)
+            setRefresh(refresh+1)
+          }
+         }} className="ring-1 ring-stroke hover:bg-primary hover:text-white py-2 px-4 cursor-pointer rounded ">Next</div>
+        </div>
+      </div>
     </div>
        
        
