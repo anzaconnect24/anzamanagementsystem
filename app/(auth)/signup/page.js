@@ -34,7 +34,7 @@ const [sectors, setSectors] = useState([]);
   })
 }, []);
   return (
-    <div className=" bg-bodydark1 min-h-screen">
+    <div className=" bg-bodydark1 min-h-screen flex items-center">
       <form onSubmit={(e)=>{
         e.preventDefault()
         setloading(true)
@@ -105,7 +105,7 @@ const [sectors, setSectors] = useState([]);
             toast.error("Passwords don't match")
           }
               }} className=" w-11/12 md:w-5/12  mx-auto py-12 ">
-                <div className="px-8 bg-white  hover:shadow py-10 shadow-2xl rounded-lg  ring-1 ring-stroke ">
+                <div className="px-8 bg-white  hover:shadow py-10 shadow-lg rounded-lg  ring-1 ring-stroke ">
                 <div className="flex justify-center">
                       <Image height={100} width={100} src={"/anza.png"}/>
 
