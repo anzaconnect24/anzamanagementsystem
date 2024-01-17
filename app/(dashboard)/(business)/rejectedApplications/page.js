@@ -12,8 +12,8 @@ const Page = () => {
   const {setSelectedBusiness} = useContext(BusinessContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
-        getRejectedBusinesses().then((data)=>{
-          setApplications(data)
+        getRejectedBusinesses(1,10).then((data)=>{
+          setApplications(data.data)
           setloading(false)
         })
   }, []);

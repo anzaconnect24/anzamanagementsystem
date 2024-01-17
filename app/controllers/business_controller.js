@@ -32,9 +32,9 @@ export const createBusiness = async (data) => {
     }
   };
 
-  export const getPendingBusinesses = async () => {
+  export const getPendingBusinesses = async (page,limit) => {
     try {
-      const response = await axios.get(`${server_url}/business/waiting/`,{
+      const response = await axios.get(`${server_url}/business/waiting/?page=${page}&limit=${limit}`,{
         headers
       });
       console.log(response.data)
@@ -44,9 +44,9 @@ export const createBusiness = async (data) => {
       return error.response
     }
   };
-  export const getRejectedBusinesses = async () => {
+  export const getRejectedBusinesses = async (page,limit) => {
     try {
-      const response = await axios.get(`${server_url}/business/rejected/`,{
+      const response = await axios.get(`${server_url}/business/rejected/?page=${page}&limit=${limit}`,{
         headers
       });
       console.log(response.data)
@@ -68,9 +68,9 @@ export const createBusiness = async (data) => {
       return error.response
     }
   };
-  export const getApprovedBusinesses = async () => {
+  export const getApprovedBusinesses = async (page,limit) => {
     try {
-      const response = await axios.get(`${server_url}/business/approved/`,{
+      const response = await axios.get(`${server_url}/business/approved/?page=${page}&limit=${limit}`,{
         headers
       });
       console.log(response.data)

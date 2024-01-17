@@ -13,9 +13,9 @@ const Page = () => {
   const [loading, setloading] = useState(true);
 
   useEffect(() => {
-        getPendingBusinesses().then((data)=>{
+        getPendingBusinesses(1,10).then((data)=>{
           setloading(false)
-          setApplications(data)
+          setApplications(data.data)
         })
   }, []);
     return loading ?<Loader/>: (
