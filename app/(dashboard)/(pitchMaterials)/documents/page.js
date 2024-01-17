@@ -5,6 +5,7 @@ import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
 import { getDocuments } from "@/app/controllers/pitch_material_controller";
 import { UserContext } from "../../layout";
+import NoData from "@/app/component/noData";
 
 const Page = () => {
   const [documents, setDocuments] = useState([]);
@@ -30,13 +31,14 @@ const Page = () => {
         }
       
         </div>
-        <div className="grid grid-cols-3 gap-3 ">
+        {documents.length<1?<NoData/>: <div className="grid grid-cols-3 gap-3 ">
            {documents.map((item,key)=>{
         return <div key={key} className="py-5 px-5 border border-stroke cursor-pointer  rounded hover:shadow-lg">
             <div>{item.fileName}</div>
         </div>
        })}
-</div>
+</div>}
+       
       </div>
      
 

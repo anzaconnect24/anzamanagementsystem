@@ -5,6 +5,7 @@ import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
 import { getVideos } from "@/app/controllers/pitch_material_controller";
 import { UserContext } from "../../layout";
+import NoData from "@/app/component/noData";
 
 const Page = () => {
   const [videos, setVideos] = useState([]);
@@ -29,6 +30,7 @@ const Page = () => {
         }
       
         </div>
+        {videos.length<1?<NoData/>:<div>
         <div className="grid grid-cols-3 gap-3 ">
            {videos.map((item,key)=>{
         return <div key={key} className="py-5 px-5 border border-stroke cursor-pointer  rounded hover:shadow-lg">
@@ -36,6 +38,8 @@ const Page = () => {
         </div>
        })}
 </div>
+          </div>}
+        
       </div>
      
 

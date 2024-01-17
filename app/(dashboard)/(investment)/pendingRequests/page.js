@@ -3,7 +3,9 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getInvestorBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Image from "next/image"
 import Loader from "@/components/common/Loader";
+import NoData from "@/app/component/noData"
 import { UserContext } from "../../layout";
 import { getPendingInvestmentRequest } from "@/app/controllers/investment_requests_controller";
 
@@ -18,7 +20,7 @@ const Page = () => {
           setloading(false)
         })
   }, []);
-    return loading ?<Loader/>: (
+    return loading ?<Loader/>:  (
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
@@ -26,8 +28,9 @@ const Page = () => {
           Pending requests
         </h4>
       </div>
-
-      <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+    {
+      requests.length<1? <NoData/>:<div>
+<div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-1 flex items-center">
           <p className="font-medium">Sent </p>
         </div>
@@ -93,6 +96,9 @@ const Page = () => {
           </div>
         </div>
       ))}
+      </div>
+    }
+      
     </div>
        
        

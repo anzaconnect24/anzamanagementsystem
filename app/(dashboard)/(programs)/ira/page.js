@@ -5,6 +5,7 @@ import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
 import { UserContext } from "../../layout";
 import Loader from "@/components/common/Loader";
+import NoData from "@/app/component/noData";
 
 
 const Page = () => {
@@ -35,6 +36,7 @@ const {userDetails} = useContext(UserContext)
         }
 
       </div>
+      {programs.length<1?<NoData/>:<div>
       <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-2 flex items-center">
           <p className="font-medium">Created </p>
@@ -105,7 +107,8 @@ const {userDetails} = useContext(UserContext)
                 </div>
           </div>
         </div>
-      ))}
+      ))}</div>}
+     
     </div>
        
        
