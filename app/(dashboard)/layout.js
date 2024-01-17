@@ -78,7 +78,7 @@ const [data, setData] = useState(null);
       <UserContext.Provider value={{ userDetails,setUserDetails,data }}>
       <div className="dark:bg-boxdark-2 dark:text-bodydark">
           {loading ? (
-            <Loader />
+            <Loader height={"h-screen"} />
           ) : (
               <div className="flex h-screen overflow-hidden">
                 <Sidebar
