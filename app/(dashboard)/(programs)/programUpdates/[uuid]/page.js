@@ -6,7 +6,7 @@ import Link from "next/link"
 import Loader from "@/components/common/Loader";
 import { UserContext } from "../../../layout";
 import Breadcrumb from "@/app/component/Breadcrumb";
-
+import NoData from "@/app/component/noData"
 
 const Page = ({params}) => {
     const uuid = params.uuid;
@@ -27,7 +27,7 @@ const Page = ({params}) => {
  <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between">
-        <h4 className="text-xl font-semibold text-primary dark:text-white">
+        <h4 className="text-xl font-semibold text-black dark:text-white">
         Program updates list
         </h4>
         {
@@ -37,7 +37,7 @@ const Page = ({params}) => {
       </div>
      
 
-      {updates.map((item, key) => (
+      {updates.length<1?<NoData/>: updates.map((item, key) => (
         <div
           className=" w-9/12 py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5"
           key={key}
