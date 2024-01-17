@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../../../../component/Breadcrumb";
 import { timeAgo } from "@/app/utils/time_ago";
+import Loader from "@/components/common/Loader";
 
 const Page = ({params}) => {
     const uuid = params.uuid
@@ -12,10 +13,13 @@ const Page = ({params}) => {
     const [application, setApplication] = useState(null);
     const [loading, setloading] = useState(true);
   useEffect(() => {
-        getProgramApplication(uuid).then((data)=>setApplication(data))
+        getProgramApplication(uuid).then((data)=>{
+          setloading(false)
+          setApplication(data)
+        })
     }, []);
 
-    return ( application&&<div>
+    return loading? <Loader/>:( <div>
                <Breadcrumb prevLink={``} prevPage="Applications" pageName="Application details" />
          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">

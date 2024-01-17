@@ -12,10 +12,13 @@ const Page = ({params}) => {
     const router = useRouter()
     const [loading, setloading] = useState(true);
   useEffect(() => {
-        getBusiness(uuid).then((data)=>setBusiness(data))
+        getBusiness(uuid).then((data)=>{
+          setloading(false)
+          setBusiness(data)
+        })
     }, []);
 
-    return ( business&&<div>
+    return loading?<Loader/>:(<div>
       
                <Breadcrumb prevLink="" prevPage="Businesses" pageName="Business details" />
          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
