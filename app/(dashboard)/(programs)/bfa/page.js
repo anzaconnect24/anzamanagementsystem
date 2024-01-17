@@ -41,7 +41,7 @@ const Page = () => {
           <p className="font-medium">Program title</p>
         </div>
         <div className="col-span-2 hidden items-center sm:flex">
-          <p className="font-medium">Status</p>
+          <p className="font-medium">Application status</p>
         </div>
        
         <div className="col-span-1 flex items-center">

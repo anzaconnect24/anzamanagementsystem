@@ -5,6 +5,7 @@ import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/app/component/Breadcrumb"
+import NoData from "@/app/component/noData";
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
@@ -18,7 +19,7 @@ const Page = () => {
   }, []);
 
 
-    return (
+    return loading?<Loader/>: (
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
@@ -26,8 +27,9 @@ const Page = () => {
           Applications list
         </h4>
       </div>
-
-      <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+{
+  applications.length<1?<NoData/>:<div>
+<div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-1 flex items-center">
           <p className="font-medium">Sent </p>
         </div>
@@ -96,6 +98,9 @@ const Page = () => {
           </div>
         </div>
       ))}
+  </div>
+}
+      
     </div>
        
        

@@ -6,6 +6,7 @@ import Link from "next/link"
 import Loader from "@/components/common/Loader";
 import { UserContext } from "../../layout";
 import { getReviewerInvestmentRequests } from "@/app/controllers/investment_requests_controller";
+import NoData from "@/app/component/noData";
 
 const Page = () => {
   const [requests, setRequests] = useState([]);
@@ -26,8 +27,9 @@ const Page = () => {
           Investment requests
         </h4>
       </div>
-
-      <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+{
+    requests.length<1?<NoData/>:<div>
+<div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-1 flex items-center">
           <p className="font-medium">Sent </p>
         </div>
@@ -93,6 +95,9 @@ const Page = () => {
           </div>
         </div>
       ))}
+    </div>
+}
+      
     </div>
        
        
