@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Link from "next/link"
+import Loader from "@/components/common/Loader";;
 
 const Breadcrumb = ({ pageName,prevPage,prevLink }) => {
   return (

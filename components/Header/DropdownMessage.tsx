@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "next/link"
+import Loader from "@/components/common/Loader";;
 import Image from "next/image";
 
 const DropdownMessage = () => {
@@ -9,7 +10,7 @@ const DropdownMessage = () => {
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
 
-  // close on click outside
+
   useEffect(() => {
     const clickHandler = ({ target }: MouseEvent) => {
       if (!dropdown.current) return;
@@ -26,6 +27,7 @@ const DropdownMessage = () => {
   });
 
   // close if the esc key is pressed
+  const [loading, setloading] = useState(true);
   useEffect(() => {
     const keyHandler = ({ keyCode }: KeyboardEvent) => {
       if (!dropdownOpen || keyCode !== 27) return;

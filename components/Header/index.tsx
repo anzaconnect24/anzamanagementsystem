@@ -1,4 +1,5 @@
-import Link from "next/link";
+import Link from "next/link"
+import Loader from "@/components/common/Loader";;
 import DarkModeSwitcher from "./DarkModeSwitcher";
 import DropdownMessage from "./DropdownMessage";
 import DropdownNotification from "./DropdownNotification";

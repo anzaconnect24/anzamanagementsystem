@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "next/link"
+import Loader from "@/components/common/Loader";;
 import Image from "next/image";
 import { logout } from "@/app/utils/local_storage";
 import { useRouter } from "next/navigation";
@@ -12,7 +13,7 @@ const DropdownUser = () => {
   const dropdown = useRef<any>(null);
  const router = useRouter()
 
-  // close on click outside
+
   useEffect(() => {
     const clickHandler = ({ target }: MouseEvent) => {
       if (!dropdown.current) return;
@@ -29,6 +30,7 @@ const DropdownUser = () => {
   });
 
   // close if the esc key is pressed
+  const [loading, setloading] = useState(true);
   useEffect(() => {
     const keyHandler = ({ keyCode }: KeyboardEvent) => {
       if (!dropdownOpen || keyCode !== 27) return;
