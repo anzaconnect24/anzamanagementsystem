@@ -79,8 +79,8 @@ const [totalPages, settotalPages] = useState(1);
           </div>
           <div className="col-span-1 flex items-center ">
             <select disabled={item.role=="Investor"} onChange={(e)=>{
-              if(e.target.value == "Investor"){
-                toast.error("Sorry! You can't just change user to Investor")
+              if(e.target.value == "Investor" || e.target.value == "Enterprenuer"){
+                toast.error("Sorry! You can't just change user to this role")
                 e.target.value = item.role
               }else{
                 updateUser({role:e.target.value},item.uuid).then((data)=>{

@@ -25,7 +25,7 @@ const Page = () => {
         </h4>
         {
         ["Admin"].includes(userDetails.role)&&
-        <Link href="/newProgram" className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
+        <Link href={"/uploadPitchMaterial"} className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
           
         }
       
