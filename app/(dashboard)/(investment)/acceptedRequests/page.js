@@ -13,7 +13,10 @@ const Page = () => {
   const {userDetails} = useContext(UserContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
-        getAcceptedInvestmentRequest(1,5).then((body)=>setRequests(body.data))
+        getAcceptedInvestmentRequest(1,5).then((body)=>{
+          setRequests(body.data)
+          setloading(false)
+        })
   }, []);
     return (
     <div>

@@ -13,9 +13,12 @@ const Page = () => {
   const {userDetails} = useContext(UserContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
-      getRejectedInvestmentRequest(1,5).then((body)=>setRequests(body.data))
+      getRejectedInvestmentRequest(1,5).then((body)=>{
+          setRequests(body.data)
+          setloading(false)
+        })
   }, []);
-    return (
+    return loading?<Loader/>:(
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">

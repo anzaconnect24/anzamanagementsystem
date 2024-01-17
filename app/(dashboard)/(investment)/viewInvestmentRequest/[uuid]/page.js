@@ -8,7 +8,7 @@ const Page = ({params}) => {
     const uuid = params.uuid;
     const router  =useRouter()
     
-    return ( <div>
+    return loading?<Loader/>: ( <div>
         <Breadcrumb pageName={"Investment request"} prevLink={""} prevPage={"Businesses"}/>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
