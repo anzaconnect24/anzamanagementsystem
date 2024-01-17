@@ -45,7 +45,7 @@ const Page = () => {
 
   return (
     <>
-      <div className="rounded-sm border h-screen flex items-center bg-bodydark1 border-stroke  min-w-screen dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-sm border min-h-screen bg-bodydark1 border-stroke  min-w-screen dark:border-strokedark dark:bg-boxdark">
         <div className="flex flex-wrap ">
          
           <div className="w-full     mx-auto  xl:w-1/2  ">

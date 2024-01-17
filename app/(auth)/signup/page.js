@@ -34,7 +34,7 @@ const [sectors, setSectors] = useState([]);
   })
 }, []);
   return (
-    <div className=" bg-bodydark1 min-h-screen flex items-center">
+    <div className=" bg-bodydark1 min-h-screen ">
       <form onSubmit={(e)=>{
         e.preventDefault()
         setloading(true)
