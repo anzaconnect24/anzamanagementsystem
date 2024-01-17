@@ -4,6 +4,7 @@ import { getAdmins, getAllUsers } from "../../../controllers/user_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
+import NoData from "@/app/component/noData";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
@@ -27,8 +28,9 @@ const Page = () => {
           System admins
         </h4>
       </div>
-
-      <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
+{
+  users.length<1?<NoData/>:<div>
+ <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-1 flex items-center">
           <p className="font-medium">Sent </p>
         </div>
@@ -77,6 +79,9 @@ const Page = () => {
          
         </div>
       ))}
+  </div>
+}
+     
     </div>
        
        
