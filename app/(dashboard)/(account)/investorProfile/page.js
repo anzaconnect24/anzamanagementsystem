@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import toast from 'react-hot-toast';
 import Spinner from "@/components/spinner";
 import { getSectors } from "@/app/controllers/sector_controller";
@@ -14,13 +15,15 @@ const Page = () => {
   const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(false);
   const [sectors, setSectors] = useState([]);
-useEffect(() => {
+const [loading, setloading] = useState(true);
+  useEffect(() => {
   getSectors().then((data)=>{
     if(data){
       setSectors(data)
     }
   })
 }, []);
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getMyInvestorProfile().then((data)=>setProfile(data))
   }, [refresh]);

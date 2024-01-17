@@ -4,18 +4,21 @@ import {getIRAPrograms} from "@/app/controllers/program_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
 import { UserContext } from "../../layout";
+import Loader from "@/components/common/Loader";
 
 
 const Page = () => {
   const [programs, setPrograms] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
 const {userDetails} = useContext(UserContext)
+  const [loading, setloading] = useState(true);
   useEffect(() => {
     getIRAPrograms(1,5).then((body)=>{
+          setloading(false)
       setPrograms(body.data)
     })
 }, []);
-    return (
+    return loading?<Loader/>: (
       <div className="">
        
          

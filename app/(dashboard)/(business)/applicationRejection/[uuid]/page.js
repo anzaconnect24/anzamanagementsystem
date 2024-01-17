@@ -2,6 +2,7 @@
 import { getBusiness, updateBusiness } from "@/app/controllers/business_controller";
 import { useEffect, useState } from "react";
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../../../../component/Breadcrumb";
 // import {Breadcrumb} from "@/app/component/Breadcrumb"
@@ -9,7 +10,8 @@ const Page = ({params}) => {
     const uuid = params.uuid
     const router = useRouter()
     const [business, setBusiness] = useState(null);
-    useEffect(() => {
+    const [loading, setloading] = useState(true);
+  useEffect(() => {
         getBusiness(uuid).then((data)=>setBusiness(data))
     }, []);
 

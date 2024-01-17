@@ -5,6 +5,7 @@ import {createBusinessReview, deleteBusinessReview, getReviewers} from "@/app/co
 
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/app/component/Breadcrumb";
 
 
@@ -14,12 +15,14 @@ const Page = ({params}) => {
   const [ShowOptions, setShowOptions] = useState(false);
   const [refresh, setRefresh] = useState(0);
 
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getReviewers(uuid,1,5).then((body)=>{
+          setloading(false)
             setUsers(body.data)
         })
   }, [refresh]);
-    return  users&&(
+    return  loading?<Loader/>:(
       <div className="">
     <div>
       <Breadcrumb pageName={"Assign reviewer"} prevLink={""} prevPage={"Businesses"}/>

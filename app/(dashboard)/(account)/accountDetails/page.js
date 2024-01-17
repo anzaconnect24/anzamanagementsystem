@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { getMyInfo, updateMyInfo, updateUser } from "@/app/controllers/user_controller";
 import toast from 'react-hot-toast';
 import Spinner from "@/components/spinner";
@@ -12,6 +13,7 @@ const Page = () => {
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(false);
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getMyInfo().then((data)=>setUser(data))
   }, [refresh]);

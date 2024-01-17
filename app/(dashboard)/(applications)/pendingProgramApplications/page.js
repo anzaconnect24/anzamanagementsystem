@@ -3,13 +3,16 @@ import { useContext, useEffect, useState } from "react";
 import {getWaitingProgramApplications} from "@/app/controllers/program_application_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/app/component/Breadcrumb"
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
 
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getWaitingProgramApplications(1,5).then((body)=>{
+          setloading(false)
             setApplications(body.data)
         })
   }, []);

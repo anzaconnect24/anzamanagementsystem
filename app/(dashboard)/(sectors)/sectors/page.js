@@ -2,6 +2,7 @@
 import { useContext, useEffect, useState } from "react";
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { deleteSector, getSectors } from "@/app/controllers/sector_controller";
 import toast from 'react-hot-toast';
 
@@ -10,10 +11,14 @@ const Page = () => {
   const [ShowOptions, setShowOptions] = useState(false);
   const [sectors, setSectors] = useState([]);
   const [refresh, setrefresh] = useState(0);
+  const [loading, setloading] = useState(true);
   useEffect(() => {
-    getSectors().then((data)=>setSectors(data))
+    getSectors().then((data)=>{
+      setSectors(data)
+      setloading(false)
+    })
   }, [refresh]);
-    return (
+    return loading?<Loader/>: (
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between">

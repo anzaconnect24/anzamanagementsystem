@@ -3,12 +3,14 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getInvestorBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { UserContext } from "../../layout";
 
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails} = useContext(UserContext)
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getInvestorBusinesses(1,5).then((body)=>setApplications(body.data))
   }, []);

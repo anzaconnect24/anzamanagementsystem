@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState } from "react";
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/app/component/Breadcrumb";
 import { updateProgramApplication } from "@/app/controllers/program_application_controller";
@@ -10,7 +11,8 @@ const Page = ({params}) => {
     const uuid = params.uuid
     const router = useRouter()
  
-    useEffect(() => {
+    const [loading, setloading] = useState(true);
+  useEffect(() => {
         
     }, []);
 

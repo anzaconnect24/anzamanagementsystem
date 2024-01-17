@@ -10,7 +10,8 @@ const Page = ({params}) => {
     const uuid = params.uuid
     const router = useRouter()
     const [application, setApplication] = useState(null);
-    useEffect(() => {
+    const [loading, setloading] = useState(true);
+  useEffect(() => {
         getUserProgramApplication(uuid).then((data)=>setApplication(data))
     }, []);
 

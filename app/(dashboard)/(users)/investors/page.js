@@ -3,19 +3,22 @@ import { useContext, useEffect, useState } from "react";
 import { getAllUsers, getInvestors } from "../../../controllers/user_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
 
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getInvestors(15,1).then((body)=>{
+          setloading(false)
             console.log(body.data.length)
 
             setUsers(body.data)
         })
   }, []);
-    return  users&&(
+    return  loading?<Loader/>:(
       <div className="">
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

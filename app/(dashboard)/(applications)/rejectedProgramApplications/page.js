@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "../../../controllers/business_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import Breadcrumb from "../../../component/Breadcrumb";
 import { getRejectedProgramApplications } from "@/app/controllers/program_application_controller";
 
@@ -10,6 +11,7 @@ const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
 
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getRejectedProgramApplications(1,5).then((body)=>setApplications(body.data))
   }, []);

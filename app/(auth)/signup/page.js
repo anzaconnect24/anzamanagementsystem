@@ -1,6 +1,7 @@
 "use client"
 import React, { useEffect, useState } from "react";
-import Link from "next/link";
+import Link from "next/link"
+import Loader from "@/components/common/Loader";;
 import Image from "next/image";
 
 import { Metadata } from "next";
@@ -24,7 +25,8 @@ const router = useRouter()
 const [loading, setloading] = useState(false);
 const [sectors, setSectors] = useState([]);
 
-useEffect(() => {
+
+  useEffect(() => {
   getSectors().then((data)=>{
     if(data){
       setSectors(data)

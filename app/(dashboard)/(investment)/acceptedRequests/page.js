@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getInvestorBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { UserContext } from "../../layout";
 import { getAcceptedInvestmentRequest } from "@/app/controllers/investment_requests_controller";
 
@@ -10,6 +11,7 @@ const Page = () => {
   const [requests, setRequests] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails} = useContext(UserContext)
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getAcceptedInvestmentRequest(1,5).then((body)=>setRequests(body.data))
   }, []);

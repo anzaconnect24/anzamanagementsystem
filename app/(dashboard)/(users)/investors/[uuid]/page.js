@@ -9,7 +9,8 @@ const Page = ({params}) => {
     
     const uuid = params.uuid;
     const [user, setuser] = useState(null);
-    useEffect(() => {
+    const [loading, setloading] = useState(true);
+  useEffect(() => {
         getUserInfo(uuid).then((data)=>setuser(data))
     }, []);
     return (user&&<div>

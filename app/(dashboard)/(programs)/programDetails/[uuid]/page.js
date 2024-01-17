@@ -2,6 +2,7 @@
 import { getProgram } from "@/app/controllers/program_controller";
 import { useEffect, useState } from "react";
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../../../../component/Breadcrumb";
 import { timeAgo } from "@/app/utils/time_ago";
@@ -10,7 +11,8 @@ const Page = ({params}) => {
     const uuid = params.uuid
     const router = useRouter()
     const [program, setProgram] = useState(null);
-    useEffect(() => {
+    const [loading, setloading] = useState(true);
+  useEffect(() => {
         getProgram(uuid).then((data)=>setProgram(data))
     }, []);
 

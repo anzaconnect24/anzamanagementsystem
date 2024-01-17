@@ -2,6 +2,7 @@
 import { addProgram } from "@/app/controllers/program_controller";
 import { useEffect, useState } from "react";
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/app/component/Breadcrumb";
 import toast from 'react-hot-toast';

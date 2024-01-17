@@ -1,5 +1,6 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import Link from "next/link"
+import Loader from "@/components/common/Loader";;
 import { usePathname } from "next/navigation";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import Image from "next/image";
@@ -21,6 +22,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   );
 
   // close on click outside
+
   useEffect(() => {
     const clickHandler = ({ target }) => {
       if (!sidebar.current || !trigger.current) return;
@@ -37,6 +39,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   });
 
   // close if the esc key is pressed
+
   useEffect(() => {
     const keyHandler = ({ keyCode }) => {
       if (!sidebarOpen || keyCode !== 27) return;
@@ -46,6 +49,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     return () => document.removeEventListener("keydown", keyHandler);
   });
 
+  const [loading, setloading] = useState(true);
   useEffect(() => {
     localStorage.setItem("sidebar-expanded", sidebarExpanded.toString());
     if (sidebarExpanded) {

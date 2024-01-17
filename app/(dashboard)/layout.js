@@ -17,13 +17,14 @@ export default function RootLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  const [loading, setLoading] = useState(true);
+
   const [userDetails, setUserDetails] = useState(null);
  const pathname = usePathname()
 const router  = useRouter()
 const [data, setData] = useState(null);
 
 
+  const [loading, setLoading] = useState(true);
   useEffect(() => {
     // console.log(getUser().ACCESS_TOKEN)
     setUserDetails(null)

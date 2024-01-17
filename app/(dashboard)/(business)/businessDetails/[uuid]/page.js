@@ -3,13 +3,15 @@ import { getBusiness, updateBusiness } from "@/app/controllers/business_controll
 import { useEffect, useState } from "react";
 import {useRouter}from "next/navigation"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import Breadcrumb from "../../../../component/Breadcrumb";
 // import {Breadcrumb} from "@/app/component/Breadcrumb"
 const Page = ({params}) => {
     const uuid = params.uuid
     const [business, setBusiness] = useState(null);
     const router = useRouter()
-    useEffect(() => {
+    const [loading, setloading] = useState(true);
+  useEffect(() => {
         getBusiness(uuid).then((data)=>setBusiness(data))
     }, []);
 

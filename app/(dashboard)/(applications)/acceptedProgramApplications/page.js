@@ -3,12 +3,14 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/app/component/Breadcrumb";
 import { getAcceptedProgramApplications } from "@/app/controllers/program_application_controller";
 
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getAcceptedProgramApplications(1,5).then((body)=>setApplications(body.data))
   }, []);

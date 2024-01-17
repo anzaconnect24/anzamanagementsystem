@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useContext, useState } from "react";
-import Link from "next/link";
+import Link from "next/link"
+import Loader from "@/components/common/Loader";;
 import Image from "next/image";
 
 // import login from "../../../controllers/user_controller"

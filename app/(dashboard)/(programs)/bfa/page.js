@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import {getBFAPrograms, getIRAPrograms} from "@/app/controllers/program_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { UserContext } from "../../layout";
 
 
@@ -10,12 +11,14 @@ const Page = () => {
   const [programs, setPrograms] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails} = useContext(UserContext)
+  const [loading, setloading] = useState(true);
   useEffect(() => {
     getBFAPrograms(1,5).then((body)=>{
+          setloading(false)
       setPrograms(body.data)
     })
 }, []);
-    return (
+    return loading?<Loader/>: (
       <div className="">    
       <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

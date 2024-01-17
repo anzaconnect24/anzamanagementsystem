@@ -10,6 +10,7 @@ const Page = () => {
   const [videos, setVideos] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails}  = useContext(UserContext)
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getVideos(1,5).then((body)=>setVideos(body.data))
   }, []);

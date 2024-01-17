@@ -11,6 +11,7 @@ const Page = () => {
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails}  = useContext(UserContext)
 
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getDocuments(1,5).then((body)=>setDocuments(body.data))
   }, []);

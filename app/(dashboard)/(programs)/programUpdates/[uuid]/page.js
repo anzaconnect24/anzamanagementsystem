@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import {getProgramUpdates} from "@/app/controllers/program_update_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { UserContext } from "../../../layout";
 import Breadcrumb from "@/app/component/Breadcrumb";
 
@@ -12,8 +13,10 @@ const Page = ({params}) => {
   const [updates, setUpdates] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails} = useContext(UserContext)
+  const [loading, setloading] = useState(true);
   useEffect(() => {
     getProgramUpdates(uuid,1,5).then((body)=>{
+          setloading(false)
       setUpdates(body.data)
     })
 }, []);

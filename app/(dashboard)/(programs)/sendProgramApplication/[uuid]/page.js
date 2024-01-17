@@ -3,6 +3,7 @@ import { sendProgramApplication, sendProgramApplicationDocument } from "@/app/co
 import { useEffect, useState } from "react";
 import {getProgram} from "@/app/controllers/program_controller"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../../../../component/Breadcrumb";
 import Spinner from "@/components/spinner";
@@ -13,7 +14,8 @@ const Page = ({params}) => {
     const [program, setProgram] = useState(null);
     const [data, setData] = useState([]);
     const [loading, setloading] = useState(false);
-    useEffect(() => {
+    const [loading, setloading] = useState(true);
+  useEffect(() => {
         getProgram(uuid).then((data)=>{
           setProgram(data)
           setData(data.ProgramRequirements.map((item)=>{

@@ -3,15 +3,20 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "../../../controllers/business_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { BusinessContext } from "../layout";
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {setSelectedBusiness} = useContext(BusinessContext)
+  const [loading, setloading] = useState(true);
   useEffect(() => {
-        getApprovedBusinesses().then((data)=>setApplications(data))
+        getApprovedBusinesses().then((data)=>{
+          setApplications(data)
+          setloading(false)
+        })
   }, []);
-    return (
+    return loading ?<Loader/>:(
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">

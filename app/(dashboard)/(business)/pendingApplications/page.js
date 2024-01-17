@@ -3,15 +3,21 @@ import { useContext, useEffect, useState } from "react";
 import {getPendingBusinesses} from "../../../controllers/business_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { BusinessContext } from "../layout";
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {setSelectedBusiness} = useContext(BusinessContext)
+  const [loading, setloading] = useState(true);
+
   useEffect(() => {
-        getPendingBusinesses().then((data)=>setApplications(data))
+        getPendingBusinesses().then((data)=>{
+          setloading(false)
+          setApplications(data)
+        })
   }, []);
-    return (
+    return loading ?<Loader/>: (
       <div className="">
        
  <div>

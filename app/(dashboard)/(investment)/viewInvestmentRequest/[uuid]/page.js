@@ -3,6 +3,7 @@ import Breadcrumb from "@/app/component/Breadcrumb";
 import { sendInvestmentRequest, updateInvestmentRequest } from "@/app/controllers/investment_requests_controller"
 import { useRouter } from "next/navigation";
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 const Page = ({params}) => {
     const uuid = params.uuid;
     const router  =useRouter()

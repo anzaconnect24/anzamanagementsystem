@@ -3,13 +3,16 @@ import { useContext, useEffect, useState } from "react";
 import {getReviewerProgramApplications} from "@/app/controllers/program_application_review_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/app/component/Breadcrumb"
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
 
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getReviewerProgramApplications(1,5).then((body)=>{
+          setloading(false)
             setApplications(body.data)
         })
   }, []);

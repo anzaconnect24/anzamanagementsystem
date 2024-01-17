@@ -26,6 +26,7 @@ function useLocalStorage<T>(
   });
 
   // useEffect to update local storage when the state changes
+  const [loading, setloading] = useState(true);
   useEffect(() => {
     try {
       // Allow value to be a function so we have same API as useState

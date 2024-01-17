@@ -4,6 +4,7 @@ import { assignProgramApplicationReviewer, deleteProgramApplicationReviewer } fr
 import { useEffect, useState } from "react";
 import { timeAgo } from "@/app/utils/time_ago";
 import Link from "next/link"
+import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../../../../component/Breadcrumb";
 import { assignInvestmentRequestReviewer, deleteInvestmentReviewerAssignment, getBusinessInvestmentRequestReviewers } from "@/app/controllers/investment_requests_controller";
@@ -14,12 +15,14 @@ const Page = ({params}) => {
     const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [loading, setloading] = useState(true);
   useEffect(() => {
         getBusinessInvestmentRequestReviewers(uuid,1,5).then((body)=>{
+          setloading(false)
             setUsers(body.data)
         })
   }, [refresh]);
-    return users&&(
+    return loading?<Loader/>:(
         <div className="">
       <div>
         <Breadcrumb prevLink={""} pageName={"Assign application to reviewers"} prevPage={"Applications"}/>
