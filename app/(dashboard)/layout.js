@@ -32,32 +32,35 @@ const [data, setData] = useState(null);
       getMyInfo().then((data)=>{
       if(data){
         setUserDetails(data)
-        getDashboardData().then((data)=>setData(data))
-        if(data.activated == 1){
-         if(data.role != "Enterprenuer"){
-           router.push(pathname)
-           setTimeout(() => setLoading(false), 4000);
-         }
-         else{
-        
-           if(data.Business.status == "accepted"){
-             router.push(pathname)
-             setTimeout(() => setLoading(false), 4000);
+        getDashboardData().then((ddata)=>{
+          setData(ddata)
+          if(data.activated == 1){
+            if(data.role != "Enterprenuer"){
+              router.push(pathname)
+              setTimeout(() => setLoading(false), 4000);
+            }
+            else{
+           
+              if(data.Business.status == "accepted"){
+                router.push(pathname)
+                setTimeout(() => setLoading(false), 4000);
+              }
+              else{
+          // alert(`${data.email} Business not activated`)
+    
+                router.push("/authorizationPage")
+                setTimeout(() => setLoading(false), 4000);
+              }
+            
+            }
            }
            else{
-       // alert(`${data.email} Business not activated`)
- 
-             router.push("/authorizationPage")
-             setTimeout(() => setLoading(false), 4000);
+            // alert(`${data.email} not activated`)
+            router.push("/authorizationPage")
+            setTimeout(() => setLoading(false), 4000);
            }
-         
-         }
-        }
-        else{
-         // alert(`${data.email} not activated`)
-         router.push("/authorizationPage")
-         setTimeout(() => setLoading(false), 4000);
-        }
+        })
+        
       }
       else{
         router.push("/signin")
