@@ -23,6 +23,6 @@
       "@/*": ["./*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/icons/pitch_icon.js", "app/(auth)/signin/page.js", "app/(auth)/signup/page.js", "app/component/Breadcrumb.js", "app/layout.js", "components/Breadcrumbs/Breadcrumb.js", "app/(dashboard)/chart/page.js", "app/(dashboard)/settings/page.js", "components/Charts/ChartThree.js", "components/Dashboard/E-commerce.js", "components/Sidebar/index.js", "app/(dashboard)/layout.js"],
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/icons/pitch_icon.js", "app/(auth)/signin/page.js", "app/(auth)/signup/page.js", "app/component/Breadcrumb.js", "app/layout.js", "components/Breadcrumbs/Breadcrumb.js", "app/(dashboard)/chart/page.js", "app/(dashboard)/settings/page.js", "components/Charts/ChartThree.js", "components/Dashboard/E-commerce.js", "components/Sidebar/index.js", "app/(dashboard)/layout.js", "components/Charts/ChartOne.js"],
   "exclude": ["node_modules"]
 }
