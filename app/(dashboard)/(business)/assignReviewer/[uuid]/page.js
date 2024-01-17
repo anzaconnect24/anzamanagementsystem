@@ -14,12 +14,18 @@ const Page = ({params}) => {
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const [refresh, setRefresh] = useState(0);
-
   const [loading, setloading] = useState(true);
+const [total, settotal] = useState(0);
+const [limit, setlimit] = useState(7);
+const [currentPage, setcurrentPage] = useState(1);
+const [totalPages, settotalPages] = useState(1);
   useEffect(() => {
-        getReviewers(uuid,1,5).then((body)=>{
+        getReviewers(uuid,currentPage,limit).then((body)=>{
+          setUsers(body.data)
+          settotal(body.count)
+          setcurrentPage(body.page)
+          settotalPages(body.totalPages)
           setloading(false)
-            setUsers(body.data)
         })
   }, [refresh]);
     return  loading?<Loader/>:(
@@ -29,7 +35,7 @@ const Page = ({params}) => {
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Reviewers list
+          Reviewers ({total})
         </h4>
       </div>
 
@@ -102,6 +108,24 @@ const Page = ({params}) => {
           </div>
         </div>
       ))}
+
+      <div  className="flex px-5 py-8 justify-between">
+        <div>Page {currentPage} of {totalPages} pages</div>
+        <div className="flex space-x-3 ">
+         <div onClick={()=>{
+          if(currentPage >1){
+            setcurrentPage(currentPage-1)
+            setRefresh(refresh+1)
+          }
+         }} className="ring-1 ring-stroke hover:bg-primary hover:text-white py-2 px-4 cursor-pointer rounded ">Prev</div>
+         <div onClick={()=>{
+          if(currentPage<totalPages){
+            setcurrentPage(currentPage+1)
+            setRefresh(refresh+1)
+          }
+         }} className="ring-1 ring-stroke hover:bg-primary hover:text-white py-2 px-4 cursor-pointer rounded ">Next</div>
+        </div>
+      </div>
     </div>
        
        

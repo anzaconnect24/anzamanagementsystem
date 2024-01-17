@@ -24,7 +24,7 @@ const [totalPages, settotalPages] = useState(1);
   useEffect(() => {
         getAllUsers(limit,currentPage).then((body)=>{
           setloading(false)
-            console.log(body.data.length)
+         
             settotal(body.count)
             setcurrentPage(body.page)
             settotalPages(body.totalPages)
