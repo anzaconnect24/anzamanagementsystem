@@ -13,9 +13,9 @@ const Page = () => {
 
   const [profile, setProfile] = useState(null);
   const [refresh, setRefresh] = useState(0);
-  const [loading, setloading] = useState(false);
+
   const [sectors, setSectors] = useState([]);
-const [loading, setloading] = useState(true);
+
   useEffect(() => {
   getSectors().then((data)=>{
     if(data){

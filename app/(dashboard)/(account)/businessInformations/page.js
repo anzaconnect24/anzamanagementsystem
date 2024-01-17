@@ -13,7 +13,6 @@ const Page = () => {
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(false);
-  const [loading, setloading] = useState(true);
   useEffect(() => {
         getMyInfo().then((data)=>setUser(data))
   }, [refresh]);

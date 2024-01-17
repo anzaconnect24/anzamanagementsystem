@@ -14,7 +14,7 @@ const Page = ({params}) => {
     const [program, setProgram] = useState(null);
     const [data, setData] = useState([]);
     const [loading, setloading] = useState(false);
-    const [loading, setloading] = useState(true);
+
   useEffect(() => {
         getProgram(uuid).then((data)=>{
           setProgram(data)
