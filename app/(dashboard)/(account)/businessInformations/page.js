@@ -213,7 +213,7 @@ const Page = () => {
         </h4>
         <div className="grid grid-cols-4 gap-x-4">
             {business.BusinessDocuments.map((item,key)=>{
-              return <div className="">
+              return <div key={key} className="">
                 <a href={item.link} target="_blank" className="py-8 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow" key={key}>
                 {/* {item.link} */}
                 <div>
