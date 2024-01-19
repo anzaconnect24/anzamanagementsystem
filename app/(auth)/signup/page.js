@@ -24,6 +24,8 @@ const [role, setRole] = useState("");
 const router = useRouter()
 const [loading, setloading] = useState(false);
 const [sectors, setSectors] = useState([]);
+
+
   useEffect(() => {
   getSectors().then((data)=>{
     if(data){
