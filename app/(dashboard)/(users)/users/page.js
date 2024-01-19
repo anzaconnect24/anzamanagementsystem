@@ -1,6 +1,6 @@
 "use client"
 import { useContext, useEffect, useState } from "react";
-import { getAllUsers, updateUser } from "../../../controllers/user_controller"
+import { deleteUser, getAllUsers, updateUser } from "../../../controllers/user_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
@@ -49,16 +49,14 @@ const [totalPages, settotalPages] = useState(1);
         <div className="col-span-1 hidden items-center sm:flex">
           <p className="font-medium">Username</p>
         </div>
-        <div className="col-span-1 flex items-center">
+        <div className="col-span-2 flex items-center">
           <p className="font-medium">Role</p>
         </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Phone</p>
-        </div>
+       
         <div className="col-span-2 flex items-center">
           <p className="font-medium">Email</p>
         </div>
-        <div className="col-span-1 flex items-center">
+        <div className="col-span-2 flex items-center">
           <p className="font-medium"></p>
         </div>
       </div>
@@ -79,7 +77,7 @@ const [totalPages, settotalPages] = useState(1);
               {item.name}
             </p>
           </div>
-          <div className="col-span-1 flex items-center ">
+          <div className="col-span-2 flex items-center ">
             <select disabled={item.role=="Investor"} onChange={(e)=>{
               if(e.target.value == "Investor" || e.target.value == "Enterprenuer"){
                 toast.error("Sorry! You can't just change user to this role")
@@ -99,13 +97,11 @@ const [totalPages, settotalPages] = useState(1);
               <option value="Reviewer">Reviewer</option>
             </select>
           </div>
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.phone}</p>
-          </div>
+         
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">{item.email}</p>
           </div>
-          <div className="col-span-1 flex items-center">
+          <div className="col-span-2 flex items-center space-x-2">
             {item.activated ==true? <div onClick={()=>{
               updateUser({activated:false},item.uuid).then((data)=>{
                 setRefresh(refresh+1)
@@ -120,7 +116,14 @@ const [totalPages, settotalPages] = useState(1);
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Activate
                 </div>}
-         
+                <div onClick={()=>{
+                  deleteUser(item.uuid).then((data)=>{
+                    setRefresh(refresh+1)
+                    toast.success("Deleted successfully")
+                  })
+                }} className="bg-danger hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
+                   Delete
+                </div>
           </div>
         </div>
       ))}

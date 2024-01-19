@@ -17,7 +17,7 @@ const Page = () => {
   useEffect(() => {
         getMyInfo().then((data)=>setUser(data))
   }, [refresh]);
-    return user&&(
+    return  user&&(
     <form onSubmit={(e)=>{
         e.preventDefault()
        let data = {

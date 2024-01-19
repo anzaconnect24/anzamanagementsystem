@@ -3,14 +3,19 @@ import { getMyInfo } from "@/app/controllers/user_controller";
 import Spinner from "@/components/spinner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import Image from "next/image";
+import Link from "next/link"
 
 const Page = () => {
 const [loading, setloading] = useState(false);
 const router  = useRouter()    
-    return ( <div>
+    return ( <div className="bg-white">
         <div className="text-center w-5/12 mx-auto h-screen flex items-center justify-center">
             <div className="">
-            <div className="text-primary font-bold text-base">Account review</div>
+            <Link href="/signin" className="flex justify-center">
+                      <Image height={100} width={100} src={"/anza.png"}/>
+
+                      </Link>
             <div className="text-4xl font-bold text-black pb-3 pt-2">Review on progress</div>
             <div className=" text-base ">We are currently reviewing your account informations, we will let you know via email when we are done.</div>
           

@@ -12,14 +12,14 @@ const Page = () => {
   const {userDetails} = useContext(UserContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
-        getInvestorBusinesses(1,5).then((body)=>setApplications(body.data))
+        getApprovedBusinesses(1,5).then((body)=>setApplications(body.data))
   }, []);
     return (
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Businesses in {userDetails.InvestorProfile.BusinessSector.name} sector
+          All businesses
         </h4>
       </div>
 
@@ -30,11 +30,12 @@ const Page = () => {
         <div className="col-span-2 hidden items-center sm:flex">
           <p className="font-medium">Business name</p>
         </div>
+      
         <div className="col-span-2 flex items-center">
-          <p className="font-medium">Phone</p>
+          <p className="font-medium">Business sector</p>
         </div>
         <div className="col-span-2 flex items-center">
-          <p className="font-medium">Email</p>
+          <p className="font-medium">Stage</p>
         </div>
         <div className="col-span-1 flex items-center">
           <p className="font-medium">More</p>
@@ -58,10 +59,10 @@ const Page = () => {
             </p>
           </div>
           <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.phone}</p>
+            <p className="text-sm text-black dark:text-white">{item.BusinessSector.name}</p>
           </div>
           <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.email}</p>
+            <p className="text-sm text-black dark:text-white">{item.stage}</p>
           </div>
           <div className="col-span-1 flex items-center">
           <div onClick={()=>{
@@ -71,10 +72,10 @@ const Page = () => {
                   }else{
                   setShowOptions(item.uuid)
                   setSelectedBusiness(null)
-                  }
+                }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Options
-                   <div className={`absolute transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
+                   <div className={`absolute z-9 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
                       {title:"View details",path:`/businessDetails/${item.uuid}`},
                       {title:"Apply for investment",path:`/investmentApplication/${item.uuid}`},

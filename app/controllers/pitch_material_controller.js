@@ -31,7 +31,7 @@ import { getUser } from "../utils/local_storage";
     }
   };
   
-  export const getVideos = async (data) => {
+  export const getVideos = async (page,limit) => {
     try {
         const response = await axios.get(`${server_url}/pitch_material/video/?page=${page}&limit=${limit}`,{
            headers

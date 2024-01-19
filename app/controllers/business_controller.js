@@ -20,6 +20,33 @@ export const createBusiness = async (data) => {
       return error.response;
     }
   };
+
+  export const uploadBusinessDocument = async (data) => {
+    try {
+      const formData = new FormData();
+      console.log(data.file)
+      formData.append('file', data.file); 
+      delete data.file;
+      Object.keys(data).forEach((key) => {
+        formData.append(key, data[key]);
+      });
+    //   console.log(data)
+    //   console.log(formData)
+      const user = getUser()
+      const response = await axios.post(`${server_url}/business_document/`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', 
+          'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+        },
+      });
+     
+     return response.data
+    } catch (error) { 
+      console.log(error.response)
+      return error.response;
+    }
+  };
+  
   
   export const updateBusiness = async (data,uuid) => {
     try {
@@ -63,6 +90,18 @@ export const createBusiness = async (data) => {
       });
       console.log(response.data.body)
       return response.data.body
+    } catch (error) {
+      console.log(error.response);
+      return error.response
+    }
+  };
+
+  export const deleteBusinessDocument = async (uuid) => {
+    try {
+      const response = await axios.delete(`${server_url}/business_document/${uuid}`,{
+        headers
+      });
+      return response.data
     } catch (error) {
       console.log(error.response);
       return error.response

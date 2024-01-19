@@ -85,15 +85,15 @@ const {userDetails} = useContext(UserContext)
                   }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Options
-                   <div className={`absolute z-1 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-50 space-y-2 rounded-lg py-2 px-4 top-10`}>
+                   <div className={`absolute z-9 z-1 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-50 space-y-2 rounded-lg py-2 px-4 top-10`}>
                    {[
                       {title:"Program details",path:`/programDetails/${item.uuid}`,visible:true, role:["Admin","Enterprenuer"]},
                       {title:"My application",path:`/userProgramApplication/${item.uuid}`,visible:item.applied, role:["Enterprenuer"]},
-                      {title:"Program updates",path:`/programUpdates/${item.uuid}`,visible:true, role:["Admin","Enterprenuer"]},
+                      {title:"Program updates",path:`/programUpdates/${item.uuid}`,visible:item.applied, role:["Admin","Enterprenuer"]},
                       {title:"Pending applications",path:`/pendingProgramApplications/`,visible:true, role:["Admin"]},
                       {title:"Accepted applications",path:`/acceptedProgramApplications/`,visible:true, role:["Admin"]},
                       {title:"Rejected applications",path:`/rejectedProgramApplications/`,visible:true, role:["Admin"]},
-                      {title:"Edit details",path:`/pendingprograms/${item.uuid}`,visible:true, role:["Admin"]},
+                      // {title:"Edit details",path:`/pendingprograms/${item.uuid}`,visible:true, role:["Admin"]},
                     ].map((item)=>{
                       return item.role.includes(userDetails.role)&& item.visible == 1 &&<div key={item.title}> 
                       

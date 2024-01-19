@@ -24,8 +24,6 @@ const [role, setRole] = useState("");
 const router = useRouter()
 const [loading, setloading] = useState(false);
 const [sectors, setSectors] = useState([]);
-
-
   useEffect(() => {
   getSectors().then((data)=>{
     if(data){
@@ -142,7 +140,7 @@ const [sectors, setSectors] = useState([]);
                   </label>
                   {/* <div>Register as</div> */}
                   <div className="flex flex-col  space-y-2  ">
-                    {["Enterprenuer","Investor","Staff"].map((item)=>
+                    {["Enterprenuer","Investor","Reviewer"].map((item)=>
                       <div key={item} className="flex items-center space-x-2">
                       <input required name="role" value={item} onChange={(e)=>{
                         

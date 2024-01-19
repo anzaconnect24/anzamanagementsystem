@@ -71,7 +71,7 @@ const ChatCard = () => {
             <div className="relative h-14 w-14 rounded-full">
               <Image src={chat.avatar} alt="User" width={57} height={56} />
               <span
-                className={`absolute right-0 bottom-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
+                className={`absolute z-9 right-0 bottom-0 h-3.5 w-3.5 rounded-full border-2 border-white ${
                   chat.dot === 6 ? "bg-meta-6" : `bg-meta-${chat.dot}`
                 } `}
               ></span>
