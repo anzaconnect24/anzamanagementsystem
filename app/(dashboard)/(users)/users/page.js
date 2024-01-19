@@ -56,7 +56,10 @@ const [totalPages, settotalPages] = useState(1);
         <div className="col-span-2 flex items-center">
           <p className="font-medium">Email</p>
         </div>
-        <div className="col-span-2 flex items-center">
+        <div className="col-span-1 flex items-center">
+          <p className="font-medium"></p>
+        </div>
+        <div className="col-span-1 flex items-center">
           <p className="font-medium"></p>
         </div>
       </div>
@@ -101,7 +104,7 @@ const [totalPages, settotalPages] = useState(1);
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">{item.email}</p>
           </div>
-          <div className="col-span-2 flex items-center space-x-2">
+          <div className="col-span-1 flex items-center space-x-2">
             {item.activated ==true? <div onClick={()=>{
               updateUser({activated:false},item.uuid).then((data)=>{
                 setRefresh(refresh+1)
@@ -116,6 +119,10 @@ const [totalPages, settotalPages] = useState(1);
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Activate
                 </div>}
+               
+          </div>
+          <div className="col-span-1 flex items-center space-x-2">
+           
                 <div onClick={()=>{
                   deleteUser(item.uuid).then((data)=>{
                     setRefresh(refresh+1)
