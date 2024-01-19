@@ -85,7 +85,7 @@ const Page = () => {
                     {[
                       {title:"Program details",path:`/programDetails/${item.uuid}`,visible:true, role:["Admin","Enterprenuer"]},
                       {title:"My application",path:`/userProgramApplication/${item.uuid}`,visible:item.applied, role:["Enterprenuer"]},
-                      {title:"Program updates",path:`/programUpdates/${item.uuid}`,visible:item.applied, role:["Admin","Enterprenuer"]},
+                      {title:"Program updates",path:`/programUpdates/${item.uuid}`,visible:item.applied || userDetails.role=="Admin", role:["Admin","Enterprenuer"]},
                       {title:"Pending applications",path:`/pendingProgramApplications/`,visible:true, role:["Admin"]},
                       {title:"Accepted applications",path:`/acceptedProgramApplications/`,visible:true, role:["Admin"]},
                       {title:"Rejected applications",path:`/rejectedProgramApplications/`,visible:true, role:["Admin"]},
