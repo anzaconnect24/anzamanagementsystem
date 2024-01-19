@@ -1,15 +1,17 @@
 "use client"
 import { getProgram } from "@/app/controllers/program_controller";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../../../../component/Breadcrumb";
 import { timeAgo } from "@/app/utils/time_ago";
+import { UserContext } from "@/app/(dashboard)/layout";
 // import {Breadcrumb} from "@/app/component/Breadcrumb"
 const Page = ({params}) => {
     const uuid = params.uuid
     const router = useRouter()
+    const {userDetails}= useContext(UserContext)
     const [program, setProgram] = useState(null);
     const [loading, setloading] = useState(true);
   useEffect(() => {
@@ -39,9 +41,10 @@ const Page = ({params}) => {
         </div>
     })}
 </div>
-       {program.applied == 0 &&
+       {program.applied == 0 && userDetails.role!="Admin" &&
         <div className="flex mt-5">
-        <Link href={`/sendProgramApplication/${program.uuid}`} className="py-3 px-4 bg-primary rounded hover:opacity-95 text-white mt-3 ">Apply to program</Link>
+        <Link href={`/sendProgramApplication/${program.uuid}`} className="py-3 px-4 bg-primary 
+        rounded hover:opacity-95 text-white mt-3 ">Apply to program</Link>
         </div>
        }
        
