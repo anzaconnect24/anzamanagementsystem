@@ -7,8 +7,8 @@ import Loader from "@/components/common/Loader";
 const Page = ({params}) => {
     const uuid = params.uuid;
     const router  =useRouter()
-    
-    return loading?<Loader/>: ( <div>
+  
+    return  ( <div>
         <Breadcrumb pageName={"Investment request"} prevLink={""} prevPage={"Businesses"}/>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
