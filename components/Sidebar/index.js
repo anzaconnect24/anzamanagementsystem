@@ -61,7 +61,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <aside
       ref={sidebar}
-      className={`absolute left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute z-9 left-0 top-0 z-9999 flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -177,7 +177,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
                         Investment requests
                         <svg
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                          className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                             open && "rotate-180"
                           }`}
                           width="20"
@@ -284,7 +284,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   </svg>
                         Users
                         <svg
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                          className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                             open && "rotate-180"
                           }`}
                           width="20"
@@ -467,7 +467,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         <ApplicationIcon/>
                           Businesses
                           <svg
-                            className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                            className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                               open && "rotate-180"
                             }`}
                             width="20"
@@ -580,7 +580,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   </svg>
                         Programs
                         <svg
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                          className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                             open && "rotate-180"
                           }`}
                           width="20"
@@ -698,7 +698,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   </svg>
                         Assignments
                         <svg
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                          className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                             open && "rotate-180"
                           }`}
                           width="20"
@@ -792,7 +792,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         {<PitchIcon/>}
                         Pitch materials
                         <svg
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                          className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                             open && "rotate-180"
                           }`}
                           width="20"
@@ -845,6 +845,25 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   );
                 }}
               </SidebarLinkGroup>
+          {
+            ["Enterprenuer"].includes(userDetails.role)==true &&   <li>
+            <Link
+              href="/businessInformations"
+              className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                pathname.includes("businessInformations") && "bg-graydark dark:bg-meta-4"
+              }`}
+            >
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
+            stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
+  <path stroke-linecap="round" stroke-linejoin="round" d="M15 9h3.75M15 12h3.75M15 15h3.75M4.5 19.5h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Zm6-10.125a1.875 1.875 0 1 1-3.75 0 1.875 1.875 0 0 1 3.75 0Zm1.294 6.336a6.721 6.721 0 0 1-3.17.789 6.721 6.721 0 0 1-3.168-.789 3.376 3.376 0 0 1 6.338 0Z" />
+</svg>
+
+              Business details
+            </Link>
+          </li>
+          }
+            
+             
                 </div>}
               {/* {["Enterprenuer"].includes(item.role)==true&&}
               {["Admin"].includes(item.role)==true&&} */}
@@ -918,7 +937,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         </svg>
                         Account
                         <svg
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current ${
+                          className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                             open && "rotate-180"
                           }`}
                           width="20"
@@ -965,20 +984,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                             </Link>
                           </li>
                           
-                          {["Enterprenuer"].includes(userDetails.role)&&
-                          
-                           <li>
-                           <Link
-                             href="/businessInformations"
-                             className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${
-                               pathname === "/businessInformations" && "text-white"
-                             }`}
-                           >
-                             Business informations
-                           </Link>
-                         </li>
-                          }
-                          
+                         
+
                           <li>
                             <Link
                               href="/auth/signup"
