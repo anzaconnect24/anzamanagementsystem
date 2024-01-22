@@ -36,6 +36,33 @@ export const register = async (data) => {
       console.log(error);
     }
   };
+  
+  export const updateUserInformation = async (data) => {
+    try {
+      const formData = new FormData();
+      console.log(data.file)
+      formData.append('file', data.file); 
+      delete data.file;
+      Object.keys(data).forEach((key) => {
+        formData.append(key, data[key]);
+      });
+    //   console.log(data)
+    //   console.log(formData)
+      const user = getUser()
+      const response = await axios.patch(`${server_url}/user/image`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', 
+          'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+        },
+      });
+     
+     return response.data
+    } catch (error) { 
+      console.log(error.response)
+      throw error
+    }
+  };
+  
 
   export const deleteUser = async (uuid) => {
     try {

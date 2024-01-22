@@ -81,7 +81,7 @@ const Page = () => {
                   }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Options
-                   <div className={`absolute z-9 z-1 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-50 space-y-2 rounded-lg py-2 px-4 top-10`}>
+                   <div className={`absolute z-9 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-50 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
                       {title:"Program details",path:`/programDetails/${item.uuid}`,visible:true, role:["Admin","Enterprenuer"]},
                       {title:"My application",path:`/userProgramApplication/${item.uuid}`,visible:item.applied, role:["Enterprenuer"]},

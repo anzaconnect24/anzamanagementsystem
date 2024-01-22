@@ -1,5 +1,5 @@
 "use client"
-import { getProgram } from "@/app/controllers/program_controller";
+import { deleteProgram, getProgram } from "@/app/controllers/program_controller";
 import { useContext, useEffect, useState } from "react";
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
@@ -47,8 +47,17 @@ const Page = ({params}) => {
         rounded hover:opacity-95 text-white mt-3 ">Apply to program</Link>
         </div>
        }
-       
-
+       {userDetails.role == "Admin"&&<div>
+       <div className="flex mt-5 space-x-4">
+        <Link href={`/editProgram/${program.uuid}`} className="py-3 px-4 bg-primary 
+        rounded hover:opacity-95 text-white">Edit</Link>
+        <div onClick={()=>{
+            deleteProgram(program.uuid).then((item)=>{
+                router.back()
+            })
+        }} className="py-3 px-4 bg-danger hover:opacity-95 cursor-pointer text-white rounded">Delete</div>
+        </div>
+        </div>}
       </div>
       
       </div>
