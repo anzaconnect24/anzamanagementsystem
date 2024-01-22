@@ -35,12 +35,10 @@ const Page = () => {
         <div className="col-span-2 hidden items-center sm:flex">
           <p className="font-medium">Business name</p>
         </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Phone</p>
+        <div className="col-span-4 flex items-center">
+          <p className="font-medium">Status</p>
         </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Email</p>
-        </div>
+       
         <div className="col-span-1 flex items-center">
           <p className="font-medium">More</p>
         </div>
@@ -62,12 +60,10 @@ const Page = () => {
               {item.Business.name}
             </p>
           </div>
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.Business.phone}</p>
+          <div className="col-span-4 flex items-center">
+            <p className={`text-sm  dark:text-white py-2 px-3 rounded-full ${item.status=="accepted"?"bg-success text-white":"bg-bodydark1 text-black"}`}>{item.status}</p>
           </div>
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.Business.email}</p>
-          </div>
+          
           <div className="col-span-1 flex items-center">
           <div onClick={()=>{
                   if(item.uuid == ShowOptions){
