@@ -19,8 +19,9 @@ const Page = () => {
           setUser(data)
           if(data.image){
             setfileImage(data.image)
-            setloading(false)
           }
+          setloading(false)
+
         })
   }, [refresh]);
     return  loading?<Loader/>:(
@@ -32,8 +33,7 @@ const Page = () => {
         phone:e.target.phone.value,
         file:fileImage?e.target.file.files[0]:null
        }
-       console.log(data)
-    //    alert("Holla")
+
        setloading(true)
        updateUserInformation(data).then((data)=>{
         setRefresh(refresh+1);

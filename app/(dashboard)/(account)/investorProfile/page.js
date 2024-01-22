@@ -15,7 +15,7 @@ const Page = () => {
   const [refresh, setRefresh] = useState(0);
 
   const [sectors, setSectors] = useState([]);
-
+  const [updating, setupdating] = useState(false);
   useEffect(() => {
   getSectors().then((data)=>{
     if(data){
@@ -25,9 +25,12 @@ const Page = () => {
 }, []);
   const [loading, setloading] = useState(true);
   useEffect(() => {
-        getMyInvestorProfile().then((data)=>setProfile(data))
+        getMyInvestorProfile().then((data)=>{
+          setProfile(data)
+          setloading(false)
+        })
   }, [refresh]);
-    return profile&&(
+    return loading?<Loader/>:(
     <form onSubmit={(e)=>{
         e.preventDefault()
        let  investorData= {
@@ -39,10 +42,10 @@ const Page = () => {
         structure:e.target.investorStructure.value
       }
     //    alert("Holla")
-       setloading(true)
+       setupdating(true)
        updateInvestorProfile(investorData).then((data)=>{
         setRefresh(refresh+1);
-        setloading(false)
+        setupdating(false)
         toast.success("Profile details are updated successfully!")
         
        })
@@ -109,7 +112,7 @@ const Page = () => {
         </div>
         <div className="flex pt-8">
         <button type="submit" className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95">
-           <div>{loading?<Spinner/>:"Update details"}</div>
+           <div>{updating?<Spinner/>:"Update details"}</div>
             </button>
         </div>
       </div>

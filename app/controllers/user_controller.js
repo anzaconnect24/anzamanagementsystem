@@ -128,6 +128,7 @@ export const getMyInfo = async()=>{
           'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
         }
    })
+   console.log(user.ACCESS_TOKEN)
     return response.data.body
   } catch (error) {
    console.log(error)
