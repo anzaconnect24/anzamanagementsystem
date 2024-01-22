@@ -7,6 +7,7 @@ import Loader from "@/components/common/Loader";
 
 import toast from "react-hot-toast"
 import NoData from "@/app/component/noData";
+import Spinner from "@/components/spinner";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
@@ -16,8 +17,10 @@ const [refresh, setRefresh] = useState(0);
 const [total, settotal] = useState(0);
 const [limit, setlimit] = useState(7);
 const [currentPage, setcurrentPage] = useState(1);
+const [selectedItem, setselectedItem] = useState(null);
 const [totalPages, settotalPages] = useState(1);
-
+const [activating, setactivating] = useState(false);
+const [deleting, setdeleting] = useState(false);
 
 
 
@@ -106,30 +109,46 @@ const [totalPages, settotalPages] = useState(1);
           </div>
           <div className="col-span-1 flex items-center space-x-2">
             {item.activated ==true? <div onClick={()=>{
+                  setselectedItem(key)
+
+              setactivating(true)
               updateUser({activated:false},item.uuid).then((data)=>{
                 setRefresh(refresh+1)
+                setactivating(false)
+
               })
             }} className=" bg-bodydark2 hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-              Deactivate
+                  {activating && selectedItem == key?<Spinner/>:"Deactivate"}
+              
             </div>: <div onClick={()=>{
+                  setselectedItem(key)
+
+              setactivating(true)
                   updateUser({activated:true},item.uuid).then((data)=>{
                     setRefresh(refresh+1)
+                   setactivating(false)
+
                     toast.success("")
                   })
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                   Activate
+                  {activating && selectedItem == key?<Spinner/>:"Activate"}
+                   
                 </div>}
                
           </div>
           <div className="col-span-1 flex items-center space-x-2">
            
                 <div onClick={()=>{
-                  deleteUser(item.uuid).then((data)=>{
+                  setselectedItem(key)
+                    setdeleting(true)
+                    deleteUser(item.uuid).then((data)=>{
                     setRefresh(refresh+1)
+                    setdeleting(false)
                     toast.success("Deleted successfully")
                   })
                 }} className="bg-danger hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                   Delete
+                  {deleting && selectedItem==key?<Spinner/>:"Delete"}
+                  
                 </div>
           </div>
         </div>

@@ -1,31 +1,29 @@
 "use client"
 import { useContext, useEffect, useState } from "react";
-import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
-import {timeAgo} from "@/app/utils/time_ago"
-import Link from "next/link"
-import Loader from "@/components/common/Loader";
+
 import { getMyInfo, updateMyInfo, updateUser } from "@/app/controllers/user_controller";
 import toast from 'react-hot-toast';
 import Image from "next/image";
 import Spinner from "@/components/spinner";
 import { updateUserInformation } from "../../../controllers/user_controller";
+import Loader from "@/components/common/Loader";
 
 const Page = () => {
-
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
-  const [loading, setloading] = useState(false);
-const [fileImage, setfileImage] = useState(null);
+  const [loading, setloading] = useState(true);
+  const [fileImage, setfileImage] = useState(null);
 
   useEffect(() => {
         getMyInfo().then((data)=>{
           setUser(data)
           if(data.image){
             setfileImage(data.image)
+            setloading(false)
           }
         })
   }, [refresh]);
-    return  user&&(
+    return  loading?<Loader/>:(
     <form onSubmit={(e)=>{
         e.preventDefault()
        let data = {
@@ -38,7 +36,6 @@ const [fileImage, setfileImage] = useState(null);
     //    alert("Holla")
        setloading(true)
        updateUserInformation(data).then((data)=>{
-
         setRefresh(refresh+1);
         setloading(false)
         toast.success("User details are updated successfully!")

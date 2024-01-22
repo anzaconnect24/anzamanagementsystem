@@ -6,12 +6,14 @@ import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/app/component/Breadcrumb";
 import toast from 'react-hot-toast';
+import Spinner from "@/components/spinner";
 
 // import {Breadcrumb} from "@/app/component/Breadcrumb"
 const Page = () => {
     const [fields, setFields] = useState([]);
     const [requirement, setRequirement] = useState("");
     const router = useRouter()
+    const [loading, setLoading] = useState(false);
 
     return ( <div>
       
@@ -98,7 +100,10 @@ const Page = () => {
             </div>
            </div>)}
         </div>
-     <button type="submit" className="py-2 px-3 rounded bg-primary text-white">Publish program</button>
+     <button type="submit" className="py-2 px-3 rounded flex justify-center bg-primary text-white">
+         {loading?<Spinner/>:"Publish program"}
+        
+        </button>
        
         </form>
         
