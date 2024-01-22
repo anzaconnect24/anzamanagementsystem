@@ -12,7 +12,7 @@ const Page = () => {
   const {userDetails} = useContext(UserContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
-        getApprovedBusinesses(1,5).then((body)=>setApplications(body.data))
+        getInvestorBusinesses(1,5).then((body)=>setApplications(body.data))
   }, []);
     return (
     <div>
@@ -24,9 +24,7 @@ const Page = () => {
       </div>
 
       <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Sent </p>
-        </div>
+        
         <div className="col-span-2 hidden items-center sm:flex">
           <p className="font-medium">Business name</p>
         </div>
@@ -38,7 +36,10 @@ const Page = () => {
           <p className="font-medium">Stage</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="font-medium">More</p>
+          <p className="font-medium">Seeking</p>
+        </div>
+        <div className="col-span-1 flex items-center">
+          <p className="font-medium"></p>
         </div>
       </div>
 
@@ -48,11 +49,7 @@ const Page = () => {
           key={key}
         >
           
-          <div className="col-span-1 hidden items-center sm:flex">
-            <p className="text-sm text-black dark:text-white">
-            {timeAgo(item.createdAt)}
-            </p>
-          </div>
+          
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">
               {item.name}
@@ -63,6 +60,9 @@ const Page = () => {
           </div>
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">{item.stage}</p>
+          </div>
+          <div className="col-span-1 flex items-center">
+            <p className="text-sm text-black dark:text-white">{item.investmentAmount}TSH</p>
           </div>
           <div className="col-span-1 flex items-center">
           <div onClick={()=>{
@@ -79,7 +79,6 @@ const Page = () => {
                     {[
                       {title:"View details",path:`/businessDetails/${item.uuid}`},
                       {title:"Apply for investment",path:`/investmentApplication/${item.uuid}`},
-
                     ].map((item)=>{
                       return <div key={item.title}> 
                       <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
