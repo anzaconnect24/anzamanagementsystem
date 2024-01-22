@@ -60,7 +60,7 @@ const DropdownUser = () => {
             width={112}
             height={112}
             className=" aspect-square object-cover rounded-full "
-            src={"/user.png"}
+            src={userDetails.image??"/user.png"}
             alt="User"
           />
         </span>
