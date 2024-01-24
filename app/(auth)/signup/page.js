@@ -142,12 +142,11 @@ const [sectors, setSectors] = useState([]);
                   </label>
                   {/* <div>Register as</div> */}
                   <div className="flex flex-col  space-y-2  ">
-                    {["Enterprenuer","Investor","Reviewer"].map((item)=>
+                    {["Enterprenuer","Investor","Staff"].map((item)=>
                       <div key={item} className="flex items-center space-x-2">
                       <input required name="role" value={item} onChange={(e)=>{
-                        
                             setRole(e.target.value);
-                      }}   type="radio"/>
+                      }} type="radio"/>
                       <div>{item}</div>
                       </div>
                     )}

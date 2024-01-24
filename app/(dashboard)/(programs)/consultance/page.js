@@ -1,40 +1,36 @@
 "use client"
 import { useContext, useEffect, useState } from "react";
-import {getIRAPrograms} from "@/app/controllers/program_controller"
+import {getBFAPrograms, getConsultancePrograms, getIRAPrograms} from "@/app/controllers/program_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
-import { UserContext } from "../../layout";
 import Loader from "@/components/common/Loader";
+import { UserContext } from "../../layout";
 import NoData from "@/app/component/noData";
 
 
 const Page = () => {
   const [programs, setPrograms] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-const {userDetails} = useContext(UserContext)
+  const {userDetails} = useContext(UserContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
-    getIRAPrograms(1,5).then((body)=>{
+    getConsultancePrograms(1,5).then((body)=>{
           setloading(false)
       setPrograms(body.data)
     })
 }, []);
     return loading?<Loader/>: (
-      <div className="">
-       
-         
- <div>
+      <div className="">    
+      <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Investment Readiness Accelerator programs
+        Consultance programs
         </h4>
         {
-        ["Admin"].includes(userDetails.role)&&
-        <Link href="/newProgram" className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
-
+           ["Admin"].includes(userDetails.role)&&
+          <Link href="/newProgram" className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
         }
-
       </div>
       {programs.length<1?<NoData/>:<div>
       <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">

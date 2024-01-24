@@ -176,6 +176,7 @@ const Page = () => {
            const data = {
             lookingForInvestment:e.target.lookingForInvestment.checked,
             investmentAmount:e.target.investmentAmount.value,
+            investmentCurrency:e.target.investmentCurrency.value
            };
           setupdatingInvestmentDetails(true)
           updateBusiness(data,business.uuid).then((data)=>{
@@ -186,10 +187,10 @@ const Page = () => {
             toast.success("Investment details are updated successfully!")
             
            })
-        }} className="grid grid-cols-3 gap-x-4 items-end">
+        }} className="grid grid-cols-4 gap-x-4 items-end">
           <div>
           <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Are you looking investment ?
+                  Are you looking an investment ?
                   </label>
             <input name="lookingForInvestment" defaultChecked={business.lookingForInvestment} className="h-10 w-10 rounded " type="checkbox"/>
           </div>
@@ -198,6 +199,16 @@ const Page = () => {
               Amount you need ?
                   </label>
           <input required name="investmentAmount" defaultValue={business.investmentAmount} type="number" className="border-stroke w-full rounded" placeholder="Amount"/> 
+          </div>
+          <div>
+          <label className="mb-2.5 block font-medium text-black dark:text-white">
+              Select currency
+          </label>
+          <select required name="investmentCurrency" defaultValue={business.investmentCurrency} type="number" className="border-stroke w-full rounded" >
+            <option>Select currency</option>
+            <option value="TSH">TSH</option>
+            <option value="USD">USD</option>
+          </select>
           </div>
           <div>
           <button type="submit" className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95">

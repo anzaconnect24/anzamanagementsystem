@@ -51,6 +51,8 @@ const Page = () => {
             <option>Select program type</option>
             <option value="bfa">Business foundation accelerator</option>
             <option value="ira">Investment Readiness Accelerator</option>
+            <option value="consultance">Consultance programs</option>
+
            </select>
             </div>
         

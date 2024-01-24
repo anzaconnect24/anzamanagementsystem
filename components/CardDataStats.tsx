@@ -1,9 +1,11 @@
 import React, { ReactNode } from 'react';
+import Link from "next/link";
 
 interface CardDataStatsProps {
   title: string;
   total: string;
   rate: string;
+  link:string;
   levelUp?: boolean;
   levelDown?: boolean;
   children: ReactNode;
@@ -13,12 +15,13 @@ const CardDataStats: React.FC<CardDataStatsProps> = ({
   title,
   total,
   rate,
+  link,
   levelUp,
   levelDown,
   children,
 }) => {
   return (
-    <div className="rounded-sm border border-stroke bg-white py-6 px-7.5 shadow-default dark:border-strokedark dark:bg-boxdark">
+    <Link href={link} className="rounded-sm border border-stroke bg-white py-6 px-7.5 shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="flex h-11.5 w-11.5 items-center justify-center rounded-full bg-meta-2 dark:bg-meta-4">
         {children}
       </div>
@@ -42,7 +45,7 @@ const CardDataStats: React.FC<CardDataStatsProps> = ({
           
         </span>
       </div>
-    </div>
+    </Link>
   );
 };
 

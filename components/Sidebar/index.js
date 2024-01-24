@@ -445,7 +445,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           }}
                         >
                         <ApplicationIcon/>
-                          Businesses
+                          Applications
                           <svg
                             className={`absolute z-9 right-4 top-1/2 -translate-y-1/2 fill-current ${
                               open && "rotate-180"
@@ -480,7 +480,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                 "text-white"
                               }`}
                             >
-                              Pending businesses
+                              Pending applications
                             </Link>
                           </li>
                             }
@@ -493,7 +493,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                   "text-white"
                                 }`}
                               >
-                                Approved businesses
+                                Approved applications
                               </Link>
                             </li>
 
@@ -506,7 +506,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                 "text-white"
                               }`}
                             >
-                              Rejected businesses
+                              Rejected applications
                             </Link>
                           </li>
                             }
@@ -605,6 +605,17 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                               }`}
                             >
                             Investment Readiness Accelerator
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              href="/consultance"
+                              className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${
+                                pathname === "/consultance" &&
+                                "text-white"
+                              }`}
+                            >
+                            Consultance programs
                             </Link>
                           </li>
                         </ul>

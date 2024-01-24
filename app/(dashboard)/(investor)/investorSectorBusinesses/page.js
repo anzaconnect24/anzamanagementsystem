@@ -74,7 +74,7 @@ const Page = () => {
             <p className="text-sm text-black dark:text-white">{item.stage}</p>
           </div>
           <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.investmentAmount}TSH</p>
+            <p className="text-sm text-black dark:text-white">{item.investmentAmount}{item.investmentCurrency}</p>
           </div>
           <div className="col-span-1 flex items-center">
           <div onClick={()=>{
