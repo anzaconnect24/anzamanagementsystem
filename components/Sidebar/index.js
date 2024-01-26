@@ -856,7 +856,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             
              
                 </div>}
-                {["Admin"].includes(userDetails.role)==true&&  
+                {["Admin","Enterprenuer"].includes(userDetails.role)==true&&  
                 <li>
                 <Link
                   href="/successStories"

@@ -10,6 +10,7 @@ import NoData from "@/app/component/noData";
 import Spinner from "@/components/spinner";
 import { getLogs } from "@/app/controllers/log_controller";
 import { getSuccessStory } from "@/app/controllers/stories_controller";
+import { UserContext } from "../../layout";
 // import { getSuccessStory } from "../../../controllers/story_controller.jfx";
 
 const Page = () => {
@@ -25,7 +26,7 @@ const [totalPages, settotalPages] = useState(1);
 const [activating, setactivating] = useState(false);
 const [deleting, setdeleting] = useState(false);
 
-
+const {userDetails} = useContext(UserContext)
 
   useEffect(() => {
         getSuccessStory(currentPage,limit).then((body)=>{
@@ -44,7 +45,9 @@ const [deleting, setdeleting] = useState(false);
         <h4 className="text-xl font-semibold text-black dark:text-white">
           Success stories
         </h4>
+        {["Admin"].includes(userDetails.role)&&
         <Link href="/newStory" className="py-2 px-3 bg-primary text-white rounded hover:opacity-95 cursor-pointer">New story</Link>
+      }
       </div>
     {
       users.length<1?<NoData/>:<div>
