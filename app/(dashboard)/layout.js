@@ -11,6 +11,7 @@ import { getUser } from "../utils/local_storage";
 import { getMyInfo } from "../controllers/user_controller";
 import { usePathname, useRouter } from "next/navigation";
 import { getDashboardData } from "../controllers/dashboard_controller";
+import { createLog } from "../controllers/log_controller";
 export const UserContext = createContext();
 export default function RootLayout({
   children,
@@ -32,6 +33,7 @@ const [data, setData] = useState(null);
       getMyInfo().then((data)=>{
       if(data){
         setUserDetails(data)
+        createLog({action:"Logged in to the system"})
         getDashboardData().then((ddata)=>{
           setData(ddata)
           if(data.activated == 1){
@@ -40,18 +42,14 @@ const [data, setData] = useState(null);
               setTimeout(() => setLoading(false), 4000);
             }
             else{
-           
               if(data.Business.status == "accepted"){
                 router.push(pathname)
                 setTimeout(() => setLoading(false), 4000);
               }
               else{
-          // alert(`${data.email} Business not activated`)
-    
                 router.push("/authorizationPage")
                 setTimeout(() => setLoading(false), 4000);
-              }
-            
+              }    
             }
            }
            else{

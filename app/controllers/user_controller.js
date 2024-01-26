@@ -83,8 +83,8 @@ export const login = async(data)=>{
     storeUser(response.data.tokens)
      return response.data
     } catch (error) {
-      console.log(error.response.data)
-      return error.response.data;
+      throw error
+      // return error.response.data;
     }
  }
 

@@ -46,7 +46,7 @@ const Page = () => {
   return (
     <>
       <div className="rounded-sm border min-h-screen flex items-center justify-center w-screen bg-bodydark1 border-stroke  dark:border-strokedark dark:bg-boxdark">
-        <div className="w-5/12 py-18">
+        <div className="md:w-5/12 w-11/12 py-18">
          
               <div className=" bg-white shadow-lg ring-1 px-10  hover:shadow  ring-stroke rounded-lg py-10 ">
               <div className="flex justify-center">
