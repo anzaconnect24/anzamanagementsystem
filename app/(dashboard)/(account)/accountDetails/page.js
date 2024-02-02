@@ -8,7 +8,7 @@ import Spinner from "@/components/spinner";
 import { updateUserInformation } from "../../../controllers/user_controller";
 import Loader from "@/components/common/Loader";
 
-const Page = () => {
+const AccountDetails = () => {
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(true);
@@ -102,4 +102,4 @@ const Page = () => {
     );
 }
  
-export default Page;
+export default AccountDetails;

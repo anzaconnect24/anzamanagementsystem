@@ -25,7 +25,7 @@ const router = useRouter()
 const [loading, setloading] = useState(false);
 const [sectors, setSectors] = useState([]);
 
-
+const [isAlumni, setisAlumni] = useState(false);
   useEffect(() => {
   getSectors().then((data)=>{
     if(data){
@@ -52,6 +52,8 @@ const [sectors, setSectors] = useState([]);
               email : e.target.businessEmail.value,
               phone : e.target.businessPhone.value,
               problem : e.target.problem.value,
+              isAlumni: isAlumni,
+              completedProgram:e.target.completedProgram.value,
               solution : e.target.solution.value,
               traction : e.target.traction.value,
               registration : e.target.registration.value,
@@ -104,7 +106,7 @@ const [sectors, setSectors] = useState([]);
           else{
             toast.error("Passwords don't match")
           }
-              }} className=" w-11/12 md:w-5/12  mx-auto py-12 ">
+              }} className=" w-11/12 md:w-6/12  mx-auto py-12 ">
                 <div className="px-8 bg-white  hover:shadow py-10 shadow-lg rounded-lg  ring-1 ring-stroke ">
                 <div className="flex justify-center">
                       <Image height={100} width={100} src={"/anza.png"}/>
@@ -181,6 +183,33 @@ const [sectors, setSectors] = useState([]);
                   {/* <div className=" text-2xl text-black pt-8 pb-4">Company details</div> */}
                 <div className="space-y-2">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Are you an Anza alumni ?
+                  </label>
+                  <select onChange={(e)=>{
+                    // alert(e.target.value)
+                       setisAlumni(e.target.value == "true"?true:false)
+                  }} required name="isAlumni" className="form-style">
+                    <option value={false}>No</option>
+                    <option value={true}>Yes</option>
+                  </select>
+                            </div>
+                      {
+                         isAlumni && 
+                         <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    What program did you complete ?
+                  </label>
+                  <select required name="completedProgram" className="form-style">
+                    <option>Select program</option>
+                    <option value="BFA">BFA</option>
+                    <option value="IR program">IR program</option>
+                  </select>
+                            </div>
+                      }
+
+                            
                   <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Business name

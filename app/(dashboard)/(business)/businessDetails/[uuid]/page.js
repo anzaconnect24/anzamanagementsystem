@@ -7,6 +7,7 @@ import Loader from "@/components/common/Loader";
 import Breadcrumb from "../../../../component/Breadcrumb";
 import { updateUser } from "@/app/controllers/user_controller";
 // import {Breadcrumb} from "@/app/component/Breadcrumb"
+
 const Page = ({params}) => {
     const uuid = params.uuid
     const [business, setBusiness] = useState(null);
@@ -26,6 +27,9 @@ const Page = ({params}) => {
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
       <div className="space-y-3">
           {[
+          {title:"Enterprenuer name",value:business.User.name},
+          {title:"Is alumni ?",value:business.isAlumni?"Yes":"false"},
+          {title:"Attended (program)",value:business.completedProgram},
           {title:"Name",value:business.name},
           {title:"Company phone",value:business.phone},
           {title:"Company email",value:business.email},

@@ -6,6 +6,8 @@ import Link from "next/link"
 import Loader from "@/components/common/Loader";
 import { UserContext } from "../../layout";
 import NoData from "@/app/component/noData";
+import toast from "react-hot-toast"
+import { sendInvestmentInterest } from "@/app/controllers/investment_interest_controller";
 
 const Page = () => {
   const [applications, setApplications] = useState([]);
@@ -23,7 +25,7 @@ const Page = () => {
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Businesses looking for investment
+          Alumni
         </h4>
       </div>
   { applications.length <0?<NoData/>:
@@ -96,7 +98,19 @@ const Page = () => {
                       <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
                       </div>
                     })}
-                    
+                     <div > 
+                      <div onClick={()=>{
+                        const data = {
+                         from:"investor",
+                         user_uuid:userDetails.uuid,
+                         business_uuid:item.uuid
+                        }
+                        sendInvestmentInterest(data).then(()=>{
+                          toast.success("Your interest is sent successfully")
+                        })
+                      }} className="text-black text-base hover:text-primary 
+                      cursor-pointer " href="">I am interested</div>
+                      </div>
                    </div>
                 </div>
           </div>

@@ -47,7 +47,30 @@ export const createBusiness = async (data) => {
     }
   };
   
-  
+  export const updateBusinessWithFile = async (uuid,data) => {
+    try {
+      const formData = new FormData();
+      formData.append('file', data.file); 
+      delete data.file;
+      Object.keys(data).forEach((key) => {
+        formData.append(key, data[key]);
+      });
+      const user = getUser()
+      const response = await axios.patch(`${server_url}/business/file/${uuid}`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data', 
+          'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+        },
+      });
+     
+     return response.data
+    } catch (error) { 
+      throw error
+      return error.response;
+
+    }
+  };
+
   export const updateBusiness = async (data,uuid) => {
     try {
       const response = await axios.patch(`${server_url}/business/${uuid}`, data,{

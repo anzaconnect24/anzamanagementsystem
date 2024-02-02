@@ -21,13 +21,14 @@ const [selectedItem, setselectedItem] = useState(null);
 const [totalPages, settotalPages] = useState(1);
 const [activating, setactivating] = useState(false);
 const [deleting, setdeleting] = useState(false);
+const [adminCount, setadminCount] = useState(0);
 
 
 
   useEffect(() => {
         getAllUsers(limit,currentPage).then((body)=>{
           setloading(false)
-         
+            setadminCount(body.adminCount)
             settotal(body.count)
             setcurrentPage(body.page)
             settotalPages(body.totalPages)
@@ -84,11 +85,17 @@ const [deleting, setdeleting] = useState(false);
             </p>
           </div>
           <div className="col-span-2 flex items-center ">
-            <select disabled={item.role=="Investor"} onChange={(e)=>{
+            <select disabled={["Investor","Enterprenuer"].includes(item.role)} onChange={(e)=>{
               if(e.target.value == "Investor" || e.target.value == "Enterprenuer"){
                 toast.error("Sorry! You can't just change user to this role")
                 e.target.value = item.role
-              }else{
+              }
+              else if(e.target.value == "Admin" && adminCount >2){
+                toast.error("You have reached maximum number of admins")
+                e.target.value = item.role
+              }
+              else{
+
                 updateUser({role:e.target.value},item.uuid).then((data)=>{
                   setRefresh(refresh+1)
                   toast.success("Role changed")

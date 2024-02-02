@@ -1,42 +1,37 @@
-"use client"
 import { useContext, useEffect, useState } from "react";
-import {deleteBusinessDocument, getApprovedBusinesses, getBusiness, getPendingBusinesses, updateBusiness, uploadBusinessDocument} from "@/app/controllers/business_controller"
-import {timeAgo} from "@/app/utils/time_ago"
-import Link from "next/link"
-import Loader from "@/components/common/Loader";
-import { getMyInfo, updateMyInfo, updateUser } from "@/app/controllers/user_controller";
-import toast from 'react-hot-toast';
-import Spinner from "@/components/spinner";
 import { getSectors } from "@/app/controllers/sector_controller";
-import { UserContext } from "../../layout";
+import {getBusiness} from "@/app/controllers/business_controller"
+import { UserContext } from "../(dashboard)/layout";
+import Loader from "@/components/common/Loader";
 
-const Page = () => {
+const BusinessInformation = () => {
+    const [user, setUser] = useState(null);
+    const [refresh, setRefresh] = useState(0);
+    const [loading, setloading] = useState(false);
+    const [sectors, setSectors] = useState([]);
+    const [business, setBusiness] = useState(null);
+    const {userDetails } = useContext(UserContext)
+    const [uploadingDocument, setuploadingDocument] = useState(false);
+    const [loadingData, setloadingData] = useState(true);
+    const [updatingInvestmentDetails, setupdatingInvestmentDetails] = useState(false);
+    const [selectedOption, setselectedOption] = useState(0);
+  
+    useEffect(() => {
+        getSectors().then((data)=>{
+            if(data){
+              setSectors(data)
+            }
+          })
+    }, []);
 
-  const [user, setUser] = useState(null);
-  const [refresh, setRefresh] = useState(0);
-  const [loading, setloading] = useState(false);
-  const [sectors, setSectors] = useState([]);
-  const [business, setBusiness] = useState(null);
-  const {userDetails } = useContext(UserContext)
-  const [uploadingDocument, setuploadingDocument] = useState(false);
-  const [loadingData, setloadingData] = useState(true);
-  const [updatingInvestmentDetails, setupdatingInvestmentDetails] = useState(false);
-  useEffect(() => {
-  getSectors().then((data)=>{
-    if(data){
-      setSectors(data)
-    }
-  })
-}, []);
-  useEffect(() => {
+    useEffect(() => {
         getBusiness(userDetails.Business.uuid).then((data)=>{
           setBusiness(data)
           setloadingData(false)
         })
   }, [refresh]);
-    return  loadingData?<Loader/>: (
-      <div>
- <form onSubmit={(e)=>{
+    return ( loadingData?<Loader/>: <div>
+        <form onSubmit={(e)=>{
         e.preventDefault()
       const  businessData = {
           name : e.target.businessName.value,
@@ -181,16 +176,13 @@ const Page = () => {
           setupdatingInvestmentDetails(true)
           updateBusiness(data,business.uuid).then((data)=>{
             setRefresh(refresh+1);
-            // setloading(false)
-          setupdatingInvestmentDetails(false)
-
+            setupdatingInvestmentDetails(false);
             toast.success("Investment details are updated successfully!")
-            
            })
         }} className="grid grid-cols-4 gap-x-4 items-end">
           <div>
           <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Are you looking an investment ?
+              Are you looking an investment ?
                   </label>
             <input name="lookingForInvestment" defaultChecked={business.lookingForInvestment} className="h-10 w-10 rounded " type="checkbox"/>
           </div>
@@ -220,88 +212,8 @@ const Page = () => {
         
       </div>
     </div>
-      <div className="rounded-sm border mt-10 border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div className="py-6 px-4 md:px-6 xl:px-7.5">
-        <h4 className="text-xl font-semibold text-black dark:text-white pb-6">
-          Upload documents
-        </h4>
-        <form onSubmit={(e)=>{
-           e.preventDefault()
-           const data = {
-            title:e.target.title.value,
-            business_uuid:business.uuid,
-            file:e.target.file.files[0]
-           };
-          setuploadingDocument(true)
-           uploadBusinessDocument(data).then(()=>{
-            setRefresh(refresh+1)
-            e.target.title.value = "";
-            e.target.file.value = ""
-            toast.success("Document added successfully")
-
-          setuploadingDocument(false)
-
-           })
-        }} className="grid grid-cols-3 gap-x-4 items-start">
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Document title
-                  </label>
-          <input required name="title" className="border-stroke w-full rounded" placeholder="Enter title"/> 
-          </div>
-          <div>
-          <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Upload document file
-                  </label>
-          <input required name="file" type="file" className="border-stroke w-full rounded" placeholder="Business name"/> 
-          </div>
-          <div>
-          <button type="submit" className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95">
-            <div>{uploadingDocument?<Spinner/>:"Upload document"}</div>
-          </button>
-          </div>
-        </form>
-        <div className="mt-10">
-        <h4 className="text-xl font-semibold text-black dark:text-white pb-6">
-          
-          Business documents
-        </h4>
-        <div className="grid grid-cols-4 gap-x-4">
-            {business.BusinessDocuments.map((item,key)=>{
-              return <div key={key} className="">
-                <a href={item.link} target="_blank" className="py-8 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow" key={key}>
-                {/* {item.link} */}
-                <div>
-                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                  <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
-                  </svg>
-                </div>
-                <div className="mt-3 text-black">
-                {item.title}
-                </div>
-                </a>
-                <div onClick={()=>{
-                  deleteBusinessDocument(item.uuid).then(()=>{
-                     setRefresh(refresh+1)
-                     toast.success("Document deleted successfully")
-                  })
-                }} className=" cursor-pointer flex justify-center mt-2 ">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" className="w-6 h-6 hover:text-danger">
-  <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-</svg>
-
-                </div>
-              </div>
-            })}
-        </div>
-        </div>
-        
-      </div>
-    </div>
-    </div>
-  
-    
-    );
+      
+    </div> );
 }
  
-export default Page;
+export default BusinessInformation;

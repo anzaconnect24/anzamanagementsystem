@@ -5,11 +5,14 @@ import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
+import { UserContext } from "../../layout";
+import { sendInvestmentInterest } from "@/app/controllers/investment_interest_controller";
+import toast from "react-hot-toast"
 
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-
+  const {userDetails}  = useContext(UserContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
         getInvestors(15,1).then((body)=>{
@@ -34,11 +37,8 @@ const Page = () => {
         <div className="col-span-1 flex items-center">
           <p className="font-medium">Sent </p>
         </div>
-        <div className="col-span-1 hidden items-center sm:flex">
-          <p className="font-medium">Username</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Role</p>
+        <div className="col-span-2 hidden items-center sm:flex">
+          <p className="font-medium">Investor name</p>
         </div>
         <div className="col-span-2 flex items-center">
           <p className="font-medium">Phone</p>
@@ -62,16 +62,12 @@ const Page = () => {
             {timeAgo(item.createdAt)}
             </p>
           </div>
-          <div className="col-span-1 flex items-center">
+          <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">
               {item.name}
             </p>
           </div>
-          <div className="col-span-1 flex items-center">
-            <p className="text-sm text-black dark:text-white">
-              {item.role}
-            </p>
-          </div>
+         
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">{item.phone}</p>
           </div>
@@ -92,6 +88,8 @@ const Page = () => {
                    <div className={`absolute z-9  transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
                       {title:"View profile",path:`/investors/${item.uuid}`},
+                      
+
                       // {title:"View investments",path:"/assignReviewer/"},
 
                     ].map((item)=>{
@@ -99,6 +97,19 @@ const Page = () => {
                       <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
                       </div>
                     })}
+                    <div > 
+                      <div onClick={()=>{
+                        const data = {
+                         from:"enterprenuer",
+                         user_uuid:item.uuid,
+                         business_uuid:userDetails.Business.uuid
+                        }
+                        sendInvestmentInterest(data).then(()=>{
+                          toast.success("Your interest is sent successfully")
+                        })
+                      }} className="text-black text-base hover:text-primary 
+                      cursor-pointer " href="">I am interested</div>
+                      </div>
                     
                    </div>
                 </div>
