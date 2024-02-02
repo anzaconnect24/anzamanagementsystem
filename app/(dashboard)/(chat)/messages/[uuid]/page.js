@@ -5,6 +5,8 @@ import { useContext, useEffect, useState } from "react";
 import {setDoc,collection, onSnapshot,doc,query, where, orderBy, Timestamp} from "firebase/firestore";
 import {firestore} from "@/app/utils/firebase"
 import Image from "next/image"
+import Breadcrumb from "@/app/component/Breadcrumb";
+import { timeAgo } from "@/app/utils/time_ago";
 
 
 const MessageComponent = ({params}) => {
@@ -12,51 +14,66 @@ const [messages, setMessages] = useState([]);
 const uuid = params.uuid;
 
 useEffect(() => {
-  const q = query(collection(firestore,"messages"),where("conversation_uuid","==",uuid))
-  onSnapshot(q,(qs)=>{
-    const data = qs.docs.map((item)=>item.data());
-    setMessages(data)
-  })
+  try {
+    const q = query(collection(firestore,"messages"),where("conversation_uuid","==",uuid),orderBy("createdAt","asc"))
+    onSnapshot(q,(qs)=>{
+      const data = qs.docs.map((item)=>item.data());
+      setMessages(data)
+    })
+  } catch (error) {
+    throw error
+    
+  }
+ 
 }, []);
 
 const {userDetails} = useContext(UserContext)
   return (
-    <div className="h-[70vh] ">
-    <div className="bg-white py-4 px-8 rounded overflow-y-scroll h-[65vh]">
-      <div className="flex flex-col  justify-end h-[60vh] space-y-4">
+    <div>
+      <Breadcrumb pageName={"Chat page"} prevLink={""} prevPage={"back"}/>
+  <div className="bg-white rounded-lg  py-3 shadow-2xl px-3 ">
+    <div className="bg-white py-4 flex space-y-4 flex-col px-8 rounded overflow-y-scroll justify-end h-[55vh]">
+ 
       {messages.map((item,key) => {
-        return <div className={`flex ${userDetails.uuid==item.sender_uuid?"justify-end":"justify-start"} space-x-2 items-center`}>
+        return <div className={`${userDetails.uuid==item.sender_uuid?"text-right":"text-start"}`}>
+                 <div className={`flex ${userDetails.uuid==item.sender_uuid?"justify-end":"justify-start"} space-x-2 items-center`}>
                   <div className={`flex space-x-3 max-w-125  py-2 rounded-lg px-3 ${userDetails.uuid == item.sender_uuid?"bg-primary text-white":"bg-stroke"}`}>
                   <div className={`flex flex-col ${userDetails.uuid == item.sender_uuid?"items-end text-end":""}`}>
                   <div className="text-sm">@{item.senderName}</div>
-                  <div className="text-xl" key={key}>{item.message}</div>
+                  <div className="text-lg" key={key}>{item.message}</div>
                   </div>
-                  </div>
-                  
-              </div>  
+                  </div> 
+                </div>
+              <div className="text-sm mt-1">{timeAgo(Date(item.createdAt))}</div>  
+        </div>
+        
       })}
-      </div>
+      
     </div>
       
 <form onSubmit={(e)=>{
   e.preventDefault()
+  const id = Timestamp.now()
    const data  = {
       conversation_uuid:uuid,
+      id:id.toDate().toString(),
       message: e.target.message.value,
       senderImage:userDetails.image,
       senderName:userDetails.name,
       sender_uuid:userDetails.uuid,
-      createdAt:Timestamp.now()
+      createdAt:id
    }
-   setDoc(doc(collection(firestore,"messages")),data)
+   setDoc(doc(collection(firestore,"messages"),id.toDate().toString()),data)
   e.target.message.value = "";
 
 }} className="flex space-x-4 mt-2">
-<input type="text" placeholder="Enter text here..." className="w-full py-3 px-2 rounded  border-stroke focus:ring-primary" name="message"/>
-<button className="py-3 px-4 bg-primary text-white rounded" type="submit">Send</button>
+<input type="text" placeholder="Enter text here..." className="w-full py-4 px-4 rounded-lg  bg-stroke text-black text-lg border-stroke focus:border-stroke focus:ring-stroke" name="message"/>
+<button className="py-3 px-4 bg-success text-white rounded-lg" type="submit">Send</button>
 </form>
 
     </div>
+    </div>
+  
   );
 };
 

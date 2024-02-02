@@ -7,13 +7,17 @@ import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import { UserContext } from "../../layout";
 import { sendInvestmentInterest } from "@/app/controllers/investment_interest_controller";
+import {createConversation} from "@/app/controllers/conversation_controller"
 import toast from "react-hot-toast"
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails}  = useContext(UserContext)
   const [loading, setloading] = useState(true);
+  const [selectedBusiness, setSelectedBusiness] = useState();
+  const router = useRouter()
   useEffect(() => {
         getInvestors(15,1).then((body)=>{
           setloading(false)
@@ -85,7 +89,7 @@ const Page = () => {
                   }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Options
-                   <div className={`absolute z-9  transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
+                   <div className={`absolute z-9 -right-4 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg    w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
                       {title:"View profile",path:`/investors/${item.uuid}`},
                       
@@ -98,7 +102,22 @@ const Page = () => {
                       </div>
                     })}
                     <div > 
+                 
+
                       <div onClick={()=>{
+                        const data = {
+                         to:item.uuid,
+                         type:"userToUser",
+                         lastMessage:""
+                         
+                        }
+                        toast.success("Enabling end-to-end encryption. Please wait...")
+                        createConversation(data).then((data)=>{
+                          router.push(`/messages/${data.uuid}`)
+                        })
+                      }} className="text-black text-base hover:text-primary mb-2 
+                      cursor-pointer " href="">Message investor</div>
+                        <div onClick={()=>{
                         const data = {
                          from:"enterprenuer",
                          user_uuid:item.uuid,
@@ -110,7 +129,9 @@ const Page = () => {
                       }} className="text-black text-base hover:text-primary 
                       cursor-pointer " href="">I am interested</div>
                       </div>
+                      <div > 
                     
+                      </div>
                    </div>
                 </div>
           </div>
