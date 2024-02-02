@@ -50,8 +50,8 @@ const Services = () => {
 
         </form>
         <div className="grid grid-cols-3 gap-4 mt-8">
-        {userDetails.Business.BusinessDocuments.filter((item)=>item.type =="service").map((item)=>  {
-            return <div className="p-4 flex rounded shadow cursor-pointer text-center border border-stroke flex-col justify-start items-center text-lg font-bold">
+        {userDetails.Business.BusinessDocuments.filter((item)=>item.type =="service").map((item,key)=>  {
+            return <div key={key} className="p-4 flex rounded shadow cursor-pointer text-center border border-stroke flex-col justify-start items-center text-lg font-bold">
                 <div><Image src={item.link} className="w-full aspect-square object-cover " height={100} width={100} /></div>
                 <div className="mt-2">{item.title}</div>
                 

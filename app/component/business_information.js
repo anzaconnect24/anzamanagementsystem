@@ -3,6 +3,7 @@ import { getSectors } from "@/app/controllers/sector_controller";
 import {getBusiness} from "@/app/controllers/business_controller"
 import { UserContext } from "../(dashboard)/layout";
 import Loader from "@/components/common/Loader";
+import Spinner from "../../components/spinner"
 
 const BusinessInformation = () => {
     const [user, setUser] = useState(null);

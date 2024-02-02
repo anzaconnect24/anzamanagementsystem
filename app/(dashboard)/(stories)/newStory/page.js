@@ -75,7 +75,7 @@ const Page = () => {
          placeholder="Enter sector name">
             <option>Select business</option>
             {applications.map((item,key)=>{
-                return <option value={item.uuid}>{item.name}</option>
+                return <option key={key} value={item.uuid}>{item.name}</option>
             })}
          </select>
 

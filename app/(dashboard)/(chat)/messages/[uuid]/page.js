@@ -35,7 +35,7 @@ const {userDetails} = useContext(UserContext)
     <div className="bg-white py-4 flex space-y-4 flex-col px-8 rounded overflow-y-scroll justify-end h-[55vh]">
  
       {messages.map((item,key) => {
-        return <div className={`${userDetails.uuid==item.sender_uuid?"text-right":"text-start"}`}>
+        return <div key={key} className={`${userDetails.uuid==item.sender_uuid?"text-right":"text-start"}`}>
                  <div className={`flex ${userDetails.uuid==item.sender_uuid?"justify-end":"justify-start"} space-x-2 items-center`}>
                   <div className={`flex space-x-3 max-w-125  py-2 rounded-lg px-3 ${userDetails.uuid == item.sender_uuid?"bg-primary text-white":"bg-stroke"}`}>
                   <div className={`flex flex-col ${userDetails.uuid == item.sender_uuid?"items-end text-end":""}`}>
