@@ -24,7 +24,14 @@ const Page = () => {
   const [loadingData, setloadingData] = useState(false);
 const [selectedIndex, setselectedIndex] = useState(0);
   
-  const tabs = [<AccountDetails/>, <BusinessInformation  />,<BusinessPlan business={userDetails.Business}/>,<FinencialInformation/>,<Services/>,<MarketResearch business={userDetails.Business}/>,<LegalDocumentation/>]
+  const tabs = [
+  <AccountDetails key={1}/>, 
+  <BusinessInformation  key={2}/>,
+  <BusinessPlan key={5}  business={userDetails.Business}/>,
+  <FinencialInformation key={4} />,
+  <Services key={6}/>,
+  <MarketResearch key={7} business={userDetails.Business}/>,
+  <LegalDocumentation key={8}/>]
     return  loadingData?<Loader/>: (
       <div className="flex space-x-4 ">
         <div className="w-3/12 space-y-0">
