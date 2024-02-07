@@ -7,7 +7,7 @@ import { getUser } from "../utils/local_storage";
 export const getConversations = async (page,limit) => {
     try {
       const user = getUser() 
-      const response = await axios.get(`${server_url}/log/?page=${page}&limit=${limit}`,{
+      const response = await axios.get(`${server_url}/conversation/?page=${page}&limit=${limit}`,{
          headers:{
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
@@ -15,7 +15,7 @@ export const getConversations = async (page,limit) => {
       });
      return response.data.body
     } catch (error) { 
-      console.log(error)
+      throw error
       return error.response;
     }
   };

@@ -127,7 +127,7 @@ const Page = () => {
                           toast.success("Your interest is sent successfully")
                         })
                       }} className="text-black text-base hover:text-primary 
-                      cursor-pointer " href="">I am interested</div>
+                      cursor-pointer " href="">Interested ?</div>
                       </div>
                       <div > 
                     

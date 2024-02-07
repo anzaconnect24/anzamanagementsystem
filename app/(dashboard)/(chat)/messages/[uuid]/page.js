@@ -30,14 +30,14 @@ useEffect(() => {
 const {userDetails} = useContext(UserContext)
   return (
     <div>
-      <Breadcrumb pageName={"Chat page"} prevLink={""} prevPage={"back"}/>
+      <Breadcrumb pageName={"Chat page"} prevLink={""} prevPage={"Back"}/>
   <div className="bg-white rounded-lg  py-3 shadow-2xl px-3 ">
     <div className="bg-white py-4 flex space-y-4 flex-col px-8 rounded overflow-y-scroll justify-end h-[55vh]">
  
       {messages.map((item,key) => {
         return <div key={key} className={`${userDetails.uuid==item.sender_uuid?"text-right":"text-start"}`}>
                  <div className={`flex ${userDetails.uuid==item.sender_uuid?"justify-end":"justify-start"} space-x-2 items-center`}>
-                  <div className={`flex space-x-3 max-w-125  py-2 rounded-lg px-3 ${userDetails.uuid == item.sender_uuid?"bg-primary text-white":"bg-stroke"}`}>
+                  <div className={`flex space-x-3 max-w-125  py-2 rounded-lg px-3 ${userDetails.uuid == item.sender_uuid?"bg-primary text-white":"bg-stroke text-black"}`}>
                   <div className={`flex flex-col ${userDetails.uuid == item.sender_uuid?"items-end text-end":""}`}>
                   <div className="text-sm">@{item.senderName}</div>
                   <div className="text-lg" key={key}>{item.message}</div>
