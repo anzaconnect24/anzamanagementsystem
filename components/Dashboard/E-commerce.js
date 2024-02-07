@@ -21,7 +21,7 @@ const ECommerce = () => {
   return (
     <>
         {["Admin","Reviewer"].includes(userDetails.role) &&<div>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
 
         <CardDataStats link="/pendingApplications" title="Pending business applications" total={data.pendingBusiness} rate="0.43%" levelUp>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
@@ -70,7 +70,7 @@ const ECommerce = () => {
         </div>
           </div>}
         {["Enterprenuer"].includes(userDetails.role)&&<div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
           <CardDataStats link="documents" title="Documents" total={data.documents} rate="0.95%" levelDown>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
           stroke="currentColor" class="w-6 h-6 text-primary dark:text-white">
@@ -104,15 +104,13 @@ const ECommerce = () => {
           </div>
         </div>}
         {["Investor"].includes(userDetails.role)&&<div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 md:gap-6 xl:grid-cols-5 2xl:gap-7.5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 xl:grid-cols-5 2xl:gap-7.5">
 
           <CardDataStats link="/myInvestmentRequests" title="Requests in progress" total={data.investorWaitingBusinessInvestmentRequests} rate="0.43%" levelUp>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
           stroke-width="1.5" stroke="currentColor" class="w-6 h-6 text-primary dark:text-white">
   <path stroke-linecap="round" stroke-linejoin="round" d="M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 5.25h.008v.008H12v-.008Z" />
 </svg>
-
-
 
           </CardDataStats>
           <CardDataStats link="/myInvestmentRequests" title="Investments made" total={data.investorClosedBusinessInvestmentRequests} rate="4.35%" levelUp>
