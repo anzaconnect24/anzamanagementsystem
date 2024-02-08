@@ -49,25 +49,7 @@ const Page = () => {
         </div>
       </div>
 
-      {programs.length<1?<NoData/>:<div>
-      <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Created </p>
-        </div>
-        <div className={` ${["Enterprenuer"].includes(userDetails.role)?"col-span-2":"col-span-4"} hidden items-center sm:flex`}>
-          <p className="font-medium">Program title</p>
-        </div>
-        {["Enterprenuer"].includes(userDetails.role)&&
-        <div className="col-span-2 hidden items-center sm:flex">
-        <p className="font-medium">Application status</p>
-      </div>
-        }
-        
-       
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">More</p>
-        </div>
-      </div>
+      
 
       {programs.map((item, key) => (
         <div
@@ -126,7 +108,7 @@ const Page = () => {
         </div>
       ))}
         </div>}
-        </div>}
+        
      
     </div>
        

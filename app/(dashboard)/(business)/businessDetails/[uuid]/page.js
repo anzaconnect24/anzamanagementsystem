@@ -57,9 +57,9 @@ const Page = ({params}) => {
             Documents:
           </div>
           <div className="w-8/12 text-black">
-          <div className="grid grid-cols-3 gap-x-4">
+          <div className="grid grid-cols-3 gap-4">
             {business.BusinessDocuments.map((item,key)=>{
-              return <div key={key} className="">
+              return <div key={key} className="h-full">
                 <a href={item.link} target="_blank" className="py-8 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow" key={key}>
                 {/* {item.link} */}
                 <div>
@@ -67,7 +67,7 @@ const Page = ({params}) => {
                   <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                   </svg>
                 </div>
-                <div className="mt-3 text-black">
+                <div className="mt-3 text-black text-center">
                 {item.title}
                 </div>
                 </a>

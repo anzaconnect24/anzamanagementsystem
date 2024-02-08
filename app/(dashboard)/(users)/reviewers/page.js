@@ -4,11 +4,14 @@ import { getAllUsers, getReviewers } from "../../../controllers/user_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
+import { createConversation } from "@/app/controllers/conversation_controller";
+import { useRouter } from "next/navigation";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const [loading, setloading] = useState(true);
+  const router = useRouter();
   useEffect(() => {
         getReviewers(5,1).then((body)=>{
           setloading(false)
@@ -40,8 +43,11 @@ const Page = () => {
         <div className="col-span-2 flex items-center">
           <p className="font-medium">Phone</p>
         </div>
-        <div className="col-span-3 flex items-center">
+        <div className="col-span-2 flex items-center">
           <p className="font-medium">Email</p>
+        </div>
+        <div className="col-span-1 flex items-center">
+          
         </div>
        
       </div>
@@ -70,8 +76,21 @@ const Page = () => {
           <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">{item.phone}</p>
           </div>
-          <div className="col-span-3 flex items-center">
+          <div className="col-span-2 flex items-center">
             <p className="text-sm text-black dark:text-white">{item.email}</p>
+          </div>
+          <div className="col-span-1 flex items-center">
+             <div onClick={()=>{
+                const data = {
+                  to:item.uuid,
+                  type:"userToUser",
+                  lastMessage:""
+                  
+                 }
+               createConversation(data).then((data)=>{
+                router.push(`/messages/${data.uuid}`)
+              })
+             }} className="py-3 px-4 bg-primary cursor-pointer text-white rounded">Message</div>            
           </div>
          
         </div>

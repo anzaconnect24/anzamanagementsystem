@@ -18,6 +18,21 @@ export const sendInvestmentInterest = async (data) => {
       return error.response;
     }
   };
+  export const sendInterestedEnterprenuers = async (page,limit) => {
+    try { 
+      const user = getUser() 
+      const response = await axios.get(`${server_url}/user/enterprenuers/interested/?page=${page}&limit=${limit}`, {
+         headers:{
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+        }
+      });
+     return response.data.body
+    } catch (error) { 
+      console.log(error)
+      return error.response;
+    }
+  };
   export const assignInvestmentRequestReviewer = async (data) => {
     try { 
       const user = getUser() 

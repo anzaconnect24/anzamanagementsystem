@@ -1,6 +1,7 @@
 import axios from "axios";
 import { headers } from "@/app/utils/headers";
 import { server_url } from "../utils/endpoint";
+import { getUser } from "../utils/local_storage";
 
 export const createSuccessStory = async (data) => {
     try {
@@ -43,8 +44,12 @@ export const createSuccessStory = async (data) => {
 
   export const getSuccessStory = async (page,limit) => {
     try {
+      const user = getUser() 
       const response = await axios.get(`${server_url}/success_story/?page=${page}&limit=${limit}`,{
-         headers
+        headers:{
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+        }
       });
      return response.data.body
     } catch (error) { 
