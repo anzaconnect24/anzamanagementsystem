@@ -9,6 +9,7 @@ const BusinessPlan = ({business}) => {
     const {userDetails,setUserDetails} = useContext(UserContext)
     return ( <div className="py-6 px-8">
         <div className="font-bold text-2xl text-black mb-4">Business plan</div>
+        
         <form onSubmit={(e)=>{
            e.preventDefault()
            const data = {
