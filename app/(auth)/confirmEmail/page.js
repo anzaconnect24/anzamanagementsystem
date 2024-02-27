@@ -17,33 +17,16 @@ const router  = useRouter()
                       <Image height={100} width={100} src={"/anza.png"}/>
 
                       </Link>
-            <div className="text-4xl font-bold text-black pb-3 pt-2">Review on progress</div>
-            <div className=" text-base ">We are currently reviewing your account informations, we will let you know via email when we are done.</div>
+            <div className="text-4xl font-bold text-black pb-3 pt-2">Email confirmaton</div>
+            <div className=" text-base ">We have sent you a link to confirm your email address, open the link to confirm</div>
           
             <div onClick={()=>{
-                setloading(true)
-                getMyInfo().then((data)=>{
-                    if(data.activated){
-                     router.push("/")
-                setloading(false)
-                   
-                    }
-                    else{
-                    
-                setloading(false)
-                  
-                    }
-                   })
+                window.open("https://mail.google.com/mail/u/0/","_blank")
             }} className="py-3 px-4 mt-5 bg-primary text-white rounded
              hover:opacity-95 cursor-pointer flex justify-center">
-
-                {loading?<Spinner/>:"Refresh"}
-              
+                {loading?<Spinner/>:"Open Gmail"}
                 </div>
-            <div onClick={()=>{
-                logout()
-                router.push("/signin")
-            }} className=" font-bold text-danger pb-3 pt-3 cursor-pointer">Logout</div>
+          
 
             </div>
          

@@ -27,6 +27,40 @@ export const createSector = async (data) => {
       return error.response;
     }
   };
+  export const editSector = async (uuid,data) => {
+    try { 
+      const response = await axios.patch(`${server_url}/sector/${uuid}`,data,{
+         headers
+      });
+     return response.data
+    } catch (error) { 
+      console.log(error)
+      return error.response;
+    }
+  };
+  export const getSector = async (uuid,data) => {
+    try { 
+      const response = await axios.get(`${server_url}/sector/${uuid}`,data,{
+         headers
+      });
+     return response.data.body
+    } catch (error) { 
+      console.log(error)
+      return error.response;
+    }
+  };
+
+  export const getSectorBusinesses = async (uuid) => {
+    try { 
+      const response = await axios.get(`${server_url}/sector/businesses/${uuid}`,{
+         headers
+      });
+     return response.data.body
+    } catch (error) { 
+      console.log(error)
+      return error.response;
+    }
+  };
   export const getSectors = async (data,uuid) => {
     try {
       const response = await axios.get(`${server_url}/sector/`, {
@@ -39,14 +73,5 @@ export const createSector = async (data) => {
     }
   };
 
-  export const deleteUser = async (uuid) => {
-    try {
-      const response = await axios.delete(`${server_url}/user/${uuid}`,{
-        headers
-      });
-     return response.data.status
-    } catch (error) {
-      console.log(error);
-    }
-  };
+ 
  

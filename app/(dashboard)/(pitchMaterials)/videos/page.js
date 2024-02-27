@@ -43,6 +43,17 @@ const Page = () => {
 </svg>
 </div>
             <div>{item.fileName}</div>
+            {["Admin"].includes(userDetails.role)&&
+            <div className="flex space-x-2 justify-between mt-3">
+            <Link href={`/viewer/${item.uuid}`} className="text-base font-bold text-success">Visibility</Link>
+            <h1 onClick={()=>{
+              deletePitchMaterial(item.uuid).then((data)=>{
+                setRefresh(refresh+1)
+              })
+            }} className="text-base  cursor-pointer font-bold text-danger">Delete</h1>
+
+          </div>
+            }
         </a>
        })}
 </div>

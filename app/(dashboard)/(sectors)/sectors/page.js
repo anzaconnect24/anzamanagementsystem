@@ -52,23 +52,21 @@ const Page = () => {
             {timeAgo(item.createdAt)}
             </p>
           </div>
-          <div className="col-span-5 flex items-center">
+          <div className="col-span-4 flex items-center">
             <p className="text-sm text-black dark:text-white">
               {item.name}
             </p>
           </div>
         
-          <div className="col-span-1 flex items-center">
-          <div onClick={()=>{
-                 deleteSector(item.uuid).then((data)=>{
-                  setrefresh(refresh+1)
-                  toast.success("Deleted successfully")
-                 })
-
-          }} className="bg-danger hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                   Delete
+          <div className="col-span-2 space-x-2 flex items-center">
+          <Link href={`/editSector/${item.uuid}`}  className="bg-secondary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
+                   Edit
                   
-                </div>
+                </Link>
+          <Link href={`/sectorBusinesses/${item.uuid}`}  className=" bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
+              View businesses
+            
+          </Link>
           </div>
         </div>
       ))}

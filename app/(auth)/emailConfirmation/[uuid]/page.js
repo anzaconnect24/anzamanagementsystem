@@ -1,13 +1,14 @@
 "use client"
-import { getMyInfo } from "@/app/controllers/user_controller";
+import { getMyInfo, updateUser } from "@/app/controllers/user_controller";
 import Spinner from "@/components/spinner";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link"
 import { logout } from "@/app/utils/local_storage";
+import toast from "react-hot-toast";
 
-const Page = () => {
+const Page = ({params}) => {
 const [loading, setloading] = useState(false);
 const router  = useRouter()    
     return ( <div className="bg-white">
@@ -15,35 +16,22 @@ const router  = useRouter()
             <div className="">
             <Link href="/signin" className="flex justify-center">
                       <Image height={100} width={100} src={"/anza.png"}/>
-
-                      </Link>
-            <div className="text-4xl font-bold text-black pb-3 pt-2">Review on progress</div>
-            <div className=" text-base ">We are currently reviewing your account informations, we will let you know via email when we are done.</div>
+            </Link>
+            <div className="text-4xl font-bold text-black pb-3 pt-2">Confirmation</div>
+            <div className=" text-base ">Click button below to confirm your account.</div>
           
             <div onClick={()=>{
                 setloading(true)
-                getMyInfo().then((data)=>{
-                    if(data.activated){
-                     router.push("/")
+               updateUser({emailConfirmed:true},params.uuid).then((data)=>{
                 setloading(false)
-                   
-                    }
-                    else{
-                    
-                setloading(false)
-                  
-                    }
-                   })
+                toast.success("Confirmed successfull")
+                router.push("/signin")
+               })
             }} className="py-3 px-4 mt-5 bg-primary text-white rounded
              hover:opacity-95 cursor-pointer flex justify-center">
-
-                {loading?<Spinner/>:"Refresh"}
-              
+                {loading?<Spinner/>:"Confirm"}
                 </div>
-            <div onClick={()=>{
-                logout()
-                router.push("/signin")
-            }} className=" font-bold text-danger pb-3 pt-3 cursor-pointer">Logout</div>
+          
 
             </div>
          

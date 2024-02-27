@@ -55,8 +55,37 @@ import { getUser } from "../utils/local_storage";
         return error.response;
       }
   };
+  export const deletePitchMaterial = async (uuid) => {
+    try {
+        const response = await axios.delete(`${server_url}/pitch_material/${uuid}`,{
+           headers
+        });
+       return response.data.body
+      } catch (error) { 
+       throw error
+      }
+  };
+  export const addPitchMaterialViewer = async (uuid,data) => {
+    try {
+        const response = await axios.post(`${server_url}/pitch_material/viewer/${uuid}`,data,{
+           headers
+        });
+       return response.data.body
+      } catch (error) { 
+       throw error
+      }
+  };
 
-
+  export const deletePitchMaterialViewer = async (uuid) => {
+    try {
+        const response = await axios.delete(`${server_url}/pitch_material/viewer/${uuid}`,{
+           headers
+        });
+       return response.data.body
+      } catch (error) { 
+       throw error
+      }
+  };
   export const getProgramApplicationReviewers = async (uuid,page,limit) => {
     try {
       const response = await axios.get(`${server_url}/program_application/reviewers/${uuid}/?page=${page}&limit=${limit}`,{

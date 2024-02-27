@@ -3,7 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
-import { getDocuments } from "@/app/controllers/pitch_material_controller";
+import { deletePitchMaterial, getDocuments } from "@/app/controllers/pitch_material_controller";
 import { UserContext } from "../../layout";
 import NoData from "@/app/component/noData";
 
@@ -11,11 +11,12 @@ const Page = () => {
   const [documents, setDocuments] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails}  = useContext(UserContext)
+  const [refresh, setRefresh] = useState(0);
 
   const [loading, setloading] = useState(true);
   useEffect(() => {
         getDocuments(1,5).then((body)=>setDocuments(body.data))
-  }, []);
+  }, [refresh]);
     return (
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -41,6 +42,18 @@ const Page = () => {
 
             </div>
             <div>{item.fileName}</div>
+            {["Admin"].includes(userDetails.role)&&
+            <div className="flex space-x-2 justify-between mt-3">
+            <Link href={`/viewer/${item.uuid}`} className="text-base font-bold text-success">Visibility</Link>
+            <h1 onClick={()=>{
+              deletePitchMaterial(item.uuid).then((data)=>{
+                setRefresh(refresh+1)
+              })
+            }} className="text-base  cursor-pointer font-bold text-danger">Delete</h1>
+
+          </div>
+            }
+            
         </a>
        })}
 </div>}

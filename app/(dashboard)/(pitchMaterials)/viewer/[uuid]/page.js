@@ -1,15 +1,17 @@
 "use client"
 import { useContext, useEffect, useState } from "react";
-import { deleteUser, getAllUsers, inviteUser, updateUser } from "../../../controllers/user_controller"
-import {timeAgo} from "../../../utils/time_ago"
+import { deleteUser, getAllUsers, updateUser,getUsersWithSharedDocuments } from "../../../../controllers/user_controller"
+import {timeAgo} from "../../../../utils/time_ago"
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
 
 import toast from "react-hot-toast"
 import NoData from "@/app/component/noData";
 import Spinner from "@/components/spinner";
+import { addPitchMaterialViewer, deletePitchMaterialViewer } from "@/app/controllers/pitch_material_controller";
+import Breadcrumb from "@/app/component/Breadcrumb";
 
-const Page = () => {
+const Page = ({params}) => {
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
 const [refresh, setRefresh] = useState(0);
@@ -21,17 +23,12 @@ const [selectedItem, setselectedItem] = useState(null);
 const [totalPages, settotalPages] = useState(1);
 const [activating, setactivating] = useState(false);
 const [deleting, setdeleting] = useState(false);
-const [inviting, setinviting] = useState(false);
-const [showInvitationForm, setshowInvitationForm] = useState(false);
-
-
-
 const [adminCount, setadminCount] = useState(0);
 
 
 
   useEffect(() => {
-        getAllUsers(limit,currentPage).then((body)=>{
+        getUsersWithSharedDocuments(limit,currentPage).then((body)=>{
           setloading(false)
             setadminCount(body.adminCount)
             settotal(body.count)
@@ -42,51 +39,13 @@ const [adminCount, setadminCount] = useState(0);
   }, [refresh]);
     return  loading?<Loader/>: (
       <div className="">
+        <Breadcrumb pageName="Pitch material Viewers" prevLink={""} prevPage={'Pitch materials'} />
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between">
+      <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          System users ({total})
+          Viewers
         </h4>
-        <div className="relative">
-        <button onClick={()=>{
-          setshowInvitationForm(true)
-        }} className="text-lg font-semibold text-graydark dark:text-white">
-          Invite user
-        </button>
-        {
-            showInvitationForm && <div className="bg-white z-9 rounded-lg shadow-2xl flex flex-col px-4 py-4 absolute right-0 ">
-            <div className="flex justify-between mb-2">
-            <label>User email</label>
-            <svg onClick={()=>{
-            setshowInvitationForm(false)
-            }} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" 
-            className="w-5 h-5 cursor-pointer">
-    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
-  </svg>
-  
-            </div>
-            <form onSubmit={(e)=>{
-              e.preventDefault()
-              setinviting(true)
-              inviteUser({email:e.target.email.value}).then(()=>{
-                setinviting(false)
-                toast.success("Invitation sent successfully")
-                setshowInvitationForm(false)
-              })
-            }}>
-            <input name="email" required className=" rounded border-stroke mb-4 py-1 " placeholder="Email address "/>
-            <button type="submit"  className="text-sm w-full py-2 px-4 bg-primary font-semibold justify-center flex text-white  dark:text-white">
-              {inviting?<Spinner/>:"Send invitation"}
-  
-          </button>
-            </form>
-         
-          </div>
-        }
-        
-        </div>
-      
       </div>
     {
       users.length<1?<NoData/>:<div>
@@ -104,12 +63,10 @@ const [adminCount, setadminCount] = useState(0);
         <div className="col-span-2 flex items-center">
           <p className="font-medium">Email</p>
         </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium"></p>
+        <div className="col-span-2 flex items-center">
+          <p className="font-medium">Can view document</p>
         </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium"></p>
-        </div>
+     
       </div>
 
       {users.map((item, key) => (
@@ -159,49 +116,30 @@ const [adminCount, setadminCount] = useState(0);
             <p className="text-sm text-black dark:text-white">{item.email}</p>
           </div>
           <div className="col-span-1 flex items-center space-x-2">
-            {item.activated ==true? <div onClick={()=>{
-                  setselectedItem(key)
-
-              setactivating(true)
-              updateUser({activated:false},item.uuid).then((data)=>{
+            {item.PitchMaterialViewers.filter((e)=>e.PitchMaterial.uuid == params.uuid).length <1? <div onClick={()=>{
+           
+               addPitchMaterialViewer(params.uuid,{user_uuid:item.uuid}).then((data)=>{
                 setRefresh(refresh+1)
-                setactivating(false)
-
-              })
+               })
             }} className=" bg-bodydark2 hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                  {activating && selectedItem == key?<Spinner/>:"Deactivate"}
+                  {activating && selectedItem == key?<Spinner/>:"No"}
               
             </div>: <div onClick={()=>{
-                  setselectedItem(key)
-
-              setactivating(true)
-                  updateUser({activated:true},item.uuid).then((data)=>{
-                    setRefresh(refresh+1)
-                   setactivating(false)
-
-                    toast.success("")
-                  })
+              var viewer = item.PitchMaterialViewers.filter((e)=>e.PitchMaterial.uuid == params.uuid);
+                      //  console.log(viewer[0].uuid)
+                      if(viewer.length >0){
+                        deletePitchMaterialViewer(viewer[0].uuid).then((data)=>{
+                          setRefresh(refresh+1)
+                         })
+                      }
+                
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                  {activating && selectedItem == key?<Spinner/>:"Activate"}
+                  {activating && selectedItem == key?<Spinner/>:"Yes"}
                    
                 </div>}
                
           </div>
-          <div className="col-span-1 flex items-center space-x-2">
-           
-                <div onClick={()=>{
-                  setselectedItem(key)
-                    setdeleting(true)
-                    deleteUser(item.uuid).then((data)=>{
-                    setRefresh(refresh+1)
-                    setdeleting(false)
-                    toast.success("Deleted successfully")
-                  })
-                }} className="bg-danger hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                  {deleting && selectedItem==key?<Spinner/>:"Delete"}
-                  
-                </div>
-          </div>
+        
         </div>
       ))}
       </div>

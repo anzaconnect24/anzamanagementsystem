@@ -97,6 +97,16 @@ export const login = async(data)=>{
     return error.response.data;
   }
 }
+export const inviteUser = async(data)=>{
+  try {
+   const response = await axios.post(`${server_url}/user/inviteUser`,data)
+   return response.data;
+  } catch (error) {
+
+    throw error;
+    return error.response.data;
+  }
+}
 export const newPassword = async(data,uuid)=>{
   try {
    const response = await axios.patch(`${server_url}/user/password/${uuid}`,data)
@@ -165,6 +175,18 @@ export const getEnterprenuers = async(limit,page)=>{
   try {
    
    const response = await axios.get(`${server_url}/user/enterprenuers/?page=${page}&limit=${limit}`,{
+    headers
+   })
+   console.log(response.data)
+    return response.data.body
+  } catch (error) {
+   console.log(error)
+  }
+}
+export const getUsersWithSharedDocuments = async(limit,page)=>{
+  try {
+  
+   const response = await axios.get(`${server_url}/user/withSharedDocuments/?page=${page}&limit=${limit}`,{
     headers
    })
    console.log(response.data)
