@@ -24,7 +24,7 @@ const router  = useRouter()
                 window.open("https://mail.google.com/mail/u/0/","_blank")
             }} className="py-3 px-4 mt-5 bg-primary text-white rounded
              hover:opacity-95 cursor-pointer flex justify-center">
-                {loading?<Spinner/>:"Open Gmail"}
+                {loading?<Spinner/>:"Open Email"}
                 </div>
           
 
