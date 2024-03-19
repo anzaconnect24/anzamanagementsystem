@@ -1,7 +1,7 @@
 "use client"
 import { useContext, useState } from "react";
 import Spinner from "@/components/spinner";
-import { updateBusinessWithFile, uploadBusinessDocument } from "../controllers/business_controller";
+import { deleteBusinessDocument, updateBusinessWithFile, uploadBusinessDocument } from "../controllers/business_controller";
 import toast from "react-hot-toast"
 import { UserContext } from "../(dashboard)/layout";
 import Image from "next/image"
@@ -22,7 +22,7 @@ const Services = () => {
            uploadBusinessDocument(data).then((response)=>{
             let newData = userDetails;
             newData.Business = response.body
-            setUserDetails(newData)
+            setUserDetails({...newData})
             e.target.file.value = ""
             e.target.title.value = ""
 
@@ -52,9 +52,26 @@ const Services = () => {
         <div className="grid grid-cols-3 gap-4 mt-8">
         {userDetails.Business.BusinessDocuments.filter((item)=>item.type =="service").map((item,key)=>  {
             return <div key={key} className="p-4 flex rounded shadow cursor-pointer text-center border border-stroke flex-col justify-start items-center text-lg font-bold">
-                <div><Image src={item.link} className="w-full aspect-square object-cover " height={100} width={100} /></div>
+                <div><Image src={item.link} className="w-full aspect-video object-cover rounded " height={1000} width={1000}  /></div>
                 <div className="mt-2">{item.title}</div>
-                
+                <div className="flex space-x-2">
+                 <div onClick={()=>{
+                    window.open(item.link,'__blank')
+                     
+                  }} className="font-bold bg-success text-white border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm">
+                    Open file
+                </div>
+                <h1 onClick={()=>{
+                    deleteBusinessDocument(item.uuid).then((data)=>{
+                      let businessDocs = userDetails.Business.BusinessDocuments.filter((e)=>e.uuid != item.uuid)
+                      let newData = {...userDetails,Business:{...userDetails.Business,BusinessDocuments:businessDocs}}
+                      toast.success("Deleted successfully")
+                      setUserDetails({...newData})
+                    }) 
+                  }} className="font-bold text-danger border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm">
+                    Delete file
+                </h1>
+             </div>
                 </div>
         })}
         </div>

@@ -1,7 +1,7 @@
 "use client"
 import { useContext, useState } from "react";
 import Spinner from "@/components/spinner";
-import { updateBusinessWithFile } from "../controllers/business_controller";
+import { updateBusiness, updateBusinessWithFile } from "../controllers/business_controller";
 import toast from "react-hot-toast"
 import { UserContext } from "../(dashboard)/layout";
 const BusinessPlan = ({business}) => {
@@ -21,7 +21,7 @@ const BusinessPlan = ({business}) => {
            updateBusinessWithFile(business.uuid,data).then((response)=>{
             let newData = userDetails;
             newData.Business = response.body
-            setUserDetails(newData)
+            setUserDetails({...newData})
             e.target.file.value = ""
             toast.success("Uploaded successfully")
             setuploadingDocument(false)
@@ -53,6 +53,22 @@ const BusinessPlan = ({business}) => {
         </svg>
 
           Business plan
+          <div className="flex space-x-2">
+                 <div onClick={()=>{
+                    window.open(userDetails.Business.businessPlan,'__blank')
+                     
+                  }} className="font-bold bg-success text-white border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm">
+                    Open file
+                </div>
+                <h1 onClick={()=>{
+                updateBusiness({businessPlan:null},userDetails.Business.uuid)
+                  let newData = userDetails;
+                  newData.Business.businessPlan = null;
+                  setUserDetails({...newData})
+              }} className="font-bold text-danger border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm">
+                Delete file</h1>
+             </div>
+          
         </div> }
        
     </div> );

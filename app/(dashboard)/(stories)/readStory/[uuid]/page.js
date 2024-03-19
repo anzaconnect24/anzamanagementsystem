@@ -16,16 +16,33 @@ const Page = ({params}) => {
     const [story, setStory] = useState(null);
     const [loading, setloading] = useState(true);
   useEffect(() => {
-        getStoryDetails(uuid).then((data)=>setStory(data))
+            setloading(true)
+        getStoryDetails(uuid).then((data)=>{
+            setloading(false)
+            setStory(data)
+        })
     }, []);
 
-    return ( story&&<div>
-               <Breadcrumb prevLink={``} prevPage="Stories" pageName="Read story" />
+    return ( loading?<Loader/>:<div>
+               <Breadcrumb prevLink={``} prevPage="Stories" pageName={story.title} />
          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
       <div className="grid grid-cols-1 gap-y-4">
+        {
+            story.videoLink != "" && <div className="flex">
+            <div className="w-4/12">
+                Video:
+            </div>
+            <div className="w-8/12 text-black">
+            <iframe width="560" height="315"src={story.videoLink} title="YouTube video player" frameborder="0" 
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+             allowfullscreen></iframe>
+            </div>
+
+        </div>
+        }
+      
     {[
-        {title:"Title",value:story.title},
         {title:"Published",value:timeAgo(story.createdAt)},
         {title:"Story",value:story.story},
         // {title:"Video",value:},

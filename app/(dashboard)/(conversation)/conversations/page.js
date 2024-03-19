@@ -29,7 +29,7 @@ const Page = () => {
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Conversations
+          Chats
         </h4>
         <div className="mt-6 space-y-4">
         {
@@ -39,9 +39,10 @@ const Page = () => {
                 toast.success("Enabling end-to-end encryption. Please wait...")
                   router.push(`/messages/${item.uuid}`)
 
-            }} key={key} className="flex space-x-4 cursor-pointer">
-                <div>
-                    <div className=" aspect-square rounded-full flex justify-center bg-opacity-60 items-center bg-bodydark1  ">
+            }} key={key} className="flex space-x-4 cursor-pointer items-center">
+              <div className="w-10/12 flex space-x-2 items-center">
+              <div className="">
+                    <div className=" aspect-square rounded-full flex justify-center bg-opacity-60 items-center h-12 w-12 bg-bodydark1  ">
                     {showUser1?item.user1.image==null?<div><svg xmlns="http://www.w3.org/2000/svg" fill="none" 
                     viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6 m-4 text-primary">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
@@ -56,11 +57,14 @@ const Page = () => {
                        
                     </div>
                 </div>
-                <div>
+                <div className="">
                     <div>{showUser1?item.user1.name:item.user2.name}</div>
                     <div>{showUser1?item.user1.email:item.user2.email}</div>
 
                 </div>
+              </div>
+               
+                <div className="w-2/12">{timeAgo(item.createdAt)}</div>
 
             </div>
         })

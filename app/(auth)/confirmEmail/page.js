@@ -26,8 +26,6 @@ const router  = useRouter()
              hover:opacity-95 cursor-pointer flex justify-center">
                 {loading?<Spinner/>:"Open Email"}
                 </div>
-          
-
             </div>
          
         </div>

@@ -1,9 +1,10 @@
 import { useContext, useEffect, useState } from "react";
 import { getSectors } from "@/app/controllers/sector_controller";
-import {getBusiness} from "@/app/controllers/business_controller"
+import {getBusiness, updateBusiness} from "@/app/controllers/business_controller"
 import { UserContext } from "../(dashboard)/layout";
 import Loader from "@/components/common/Loader";
 import Spinner from "../../components/spinner"
+import {toast} from "react-hot-toast"
 
 const BusinessInformation = () => {
     const [user, setUser] = useState(null);
@@ -178,7 +179,7 @@ const BusinessInformation = () => {
           updateBusiness(data,business.uuid).then((data)=>{
             setRefresh(refresh+1);
             setupdatingInvestmentDetails(false);
-            toast.success("Investment details are updated successfully!")
+            toast.success("Updated successfully!")
            })
         }} className="grid grid-cols-4 gap-x-4 items-end">
           <div>

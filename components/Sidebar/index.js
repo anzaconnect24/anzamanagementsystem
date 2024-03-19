@@ -404,10 +404,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   My investment requests
                 </Link>
               </li>}
-              {["Investor"].includes(userDetails.role)==true&&  
+              {["Investor","Enterprenuer"].includes(userDetails.role)==true&&  
                 <li>
                 <Link
-                  href="/investorSectorBusinesses"
+                  href="/enterprenuers"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes("investorSectorBusinesses") && "bg-graydark dark:bg-meta-4"
                   }`}
@@ -877,7 +877,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
 
 
-                    Conversations
+                    Chats
                   </Link>
                 </li>
                 } 

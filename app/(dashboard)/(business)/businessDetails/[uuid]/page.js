@@ -6,6 +6,8 @@ import Link from "next/link"
 import Loader from "@/components/common/Loader";
 import Breadcrumb from "../../../../component/Breadcrumb";
 import { updateUser } from "@/app/controllers/user_controller";
+import {toast} from "react-hot-toast"
+import { createConversation } from "@/app/controllers/conversation_controller";
 // import {Breadcrumb} from "@/app/component/Breadcrumb"
 
 const Page = ({params}) => {
@@ -77,6 +79,25 @@ const Page = ({params}) => {
         </div>
           </div>
 
+          </div>
+         
+
+          <div className="flex space-x-2">
+          <div onClick={()=>{
+             const data = {
+              to:business.User.uuid,
+              type:"userToUser",
+              lastMessage:""
+              
+             }
+             toast.success("Enabling end-to-end encryption. Please wait...")
+             createConversation(data).then((data)=>{
+               router.push(`/messages/${data.uuid}`)
+             })
+          }}  className="bg-success cursor-pointer  py-3 rounded hover:opacity-95
+         px-4 text-white">Chat with Enterprenuer</div>
+          <Link href={`/investmentApplication/${uuid}`} className="bg-black  py-3 rounded hover:opacity-95
+         px-4 text-white">Apply to invest</Link>
           </div>
         {business.status == "waiting" && 
         <div className="flex space-x-3  pt-8">

@@ -1,10 +1,10 @@
 "use client"
 import { useContext, useState } from "react";
 import Spinner from "@/components/spinner";
-import { updateBusinessWithFile, uploadBusinessDocument } from "../controllers/business_controller";
+import { deleteBusinessDocument, updateBusinessWithFile, uploadBusinessDocument } from "../controllers/business_controller";
 import toast from "react-hot-toast"
 import { UserContext } from "../(dashboard)/layout";
-const LegalDocumentation = () => {
+const LegalDocumentation = ({refresh,setRefresh}) => {
     const [uploadingDocument, setuploadingDocument] = useState(false);
     const {userDetails,setUserDetails} = useContext(UserContext)
     return ( <div className="py-6 px-8">
@@ -21,7 +21,7 @@ const LegalDocumentation = () => {
            uploadBusinessDocument(data).then((response)=>{
             let newData = userDetails;
             newData.Business = response.body
-            setUserDetails(newData)
+            setUserDetails({...newData})
             e.target.file.value = ""
             e.target.title.value = ""
 
@@ -57,6 +57,26 @@ const LegalDocumentation = () => {
 </svg>
 </div>
                 {item.title}
+             <div className="flex space-x-2">
+             <div onClick={()=>{
+                    window.open(item.link,'__blank')
+                     
+                  }} className="font-bold bg-success text-white border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm">
+                    Open file
+                </div>
+                <div onClick={()=>{
+                    deleteBusinessDocument(item.uuid).then((data)=>{
+                      let businessDocs = userDetails.Business.BusinessDocuments.filter((e)=>e.uuid != item.uuid)
+                      let newData = {...userDetails,Business:{...userDetails.Business,BusinessDocuments:businessDocs}}
+                      toast.success("Deleted successfully")
+                      setUserDetails({...newData})
+                    })
+                     
+                  }} className="font-bold text-danger border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm">
+                    Delete file
+                </div>
+             </div>
+
                 </div>
         })}
         </div>
