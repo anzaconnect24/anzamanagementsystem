@@ -17,6 +17,7 @@ import FinencialInformation from "@/app/component/financial_information"
 import LegalDocumentation from "@/app/component/legal_documentation"
 import MarketResearch from "@/app/component/market_research"
 import Services from "@/app/component/services"
+import CompanyProfile from "../../../component/company_profile";
 
 const Page = () => {
   const [refresh, setRefresh] = useState(0);
@@ -26,6 +27,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
   
   const tabs = [
   <AccountDetails key={1}/>, 
+  <CompanyProfile  key={9}/>,
   <BusinessInformation  key={2}/>,
   <BusinessPlan key={5}  business={userDetails.Business}/>,
   <FinencialInformation key={4} />,
@@ -37,6 +39,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
         <div className="w-3/12 space-y-0">
           {[
           {title:"Personal informations",checked:true},
+          {title:"Company profile",checked:userDetails.Business.companyProfile?true:false},
           {title:"Business informations",checked:true},
           {title:"Business plan",checked:userDetails.Business.businessPlan?true:false},
           {title:"Financial information",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="financialInformation").length>0},

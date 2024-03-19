@@ -3,6 +3,7 @@ import { useContext, useEffect, useState } from "react";
 import { getAllUsers, getInvestors } from "../../../controllers/user_controller"
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
+import Image from "next/image"
 import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import { UserContext } from "../../layout";
@@ -17,132 +18,85 @@ const Page = () => {
   const {userDetails}  = useContext(UserContext)
   const [loading, setloading] = useState(true);
   const [selectedBusiness, setSelectedBusiness] = useState();
+  const [total, settotal] = useState(0);
+  const [refresh, setrefresh] = useState(0);
+  const [keyword, setKeyword] = useState("");
+
+
+
+  const [limit, setlimit] = useState(12);
+  const [currentPage, setcurrentPage] = useState(1);
+  const [selectedItem, setselectedItem] = useState(null);
+  const [totalPages, settotalPages] = useState(1);
   const router = useRouter()
   useEffect(() => {
-        getInvestors(15,1).then((body)=>{
+        getInvestors(limit,currentPage,keyword).then((body)=>{
           setloading(false)
-            console.log(body.data.length)
-
+            settotal(body.count)
+            setcurrentPage(body.page)
+            settotalPages(body.totalPages)
             setUsers(body.data)
         })
-  }, []);
+  }, [refresh]);
     return  loading?<Loader/>:(
       <div className="">
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-      <div className="py-6 px-4 md:px-6 xl:px-7.5">
+      <div className="flex justify-between py-6 px-4 md:px-6 xl:px-7.5">
+      <div className=" ">
         <h4 className="text-xl font-semibold text-black dark:text-white">
           Investors
         </h4>
       </div>
-  {
-    users.length<1?<NoData/>:<div>
-<div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">Sent </p>
-        </div>
-        <div className="col-span-2 hidden items-center sm:flex">
-          <p className="font-medium">Investor name</p>
-        </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Phone</p>
-        </div>
-        <div className="col-span-2 flex items-center">
-          <p className="font-medium">Email</p>
-        </div>
-        <div className="col-span-1 flex items-center">
-          <p className="font-medium">More</p>
+      <input onChange={(e)=>{
+        setKeyword(e.target.value)
+        setrefresh(refresh+1)
+      }} className="py-1 rounded border-bodydark border-opacity-40 " placeholder="Search here"/>
+      </div>
+      {
+          users.length <1?<NoData/>:<div className="pb-8">
+          <div className="grid grid-cols-4">
+              {users.map((item,key)=>(
+                <Link href={`investors/${item.uuid}`} className="flex flex-col items-center justify-center " key={key}>
+                <div className=" bg-gray h-24 w-24 rounded-full">
+                  
+                  <Image height={200} width={200} className=" object-cover rounded-full" src={item.image}/>
+                  
+                </div>
+                <h1 className="text-lg">{item.name}</h1>
+                <div className="flex space-x-1 hover:underline hover:text-primary cursor-pointer items-center">
+                <p className="text-sm">Ticket: {item.InvestorProfile.ticketSize}</p>
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
+                </svg>
+                </div>
+                
+                </Link>
+                
+              ))}
+
+            
+              </div>
+          </div>
+}
+      <div  className="flex px-5 py-8 justify-between">
+        <div>Page {currentPage} of {totalPages} pages</div>
+        <div className="flex space-x-3 ">
+         <div onClick={()=>{
+          if(currentPage >1){
+            setcurrentPage(currentPage-1)
+            setRefresh(refresh+1)
+          }
+         }} className="ring-1 ring-stroke hover:bg-primary hover:text-white py-2 px-4 cursor-pointer rounded ">Prev</div>
+         <div onClick={()=>{
+          if(currentPage<totalPages){
+            setcurrentPage(currentPage+1)
+            setRefresh(refresh+1)
+          }
+         }} className="ring-1 ring-stroke hover:bg-primary hover:text-white py-2 px-4 cursor-pointer rounded ">Next</div>
         </div>
       </div>
-
-      {users.map((item, key) => (
-        <div
-          className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5"
-          key={key}
-        >
-          
-          <div className="col-span-1 hidden items-center sm:flex">
-            <p className="text-sm text-black dark:text-white">
-            {timeAgo(item.createdAt)}
-            </p>
-          </div>
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">
-              {item.name}
-            </p>
-          </div>
-         
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.phone}</p>
-          </div>
-          <div className="col-span-2 flex items-center">
-            <p className="text-sm text-black dark:text-white">{item.email}</p>
-          </div>
-          <div className="col-span-1 flex items-center">
-          <div onClick={()=>{
-                  if(item.uuid == ShowOptions){
-                    setShowOptions("")
-                    setSelectedBusiness(item)
-                  }else{
-                  setShowOptions(item.uuid)
-                  setSelectedBusiness(null)
-                  }
-                }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                   Options
-                   <div className={`absolute z-9 -right-4 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg    w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
-                    {[
-                      {title:"View profile",path:`/investors/${item.uuid}`},
-                      
-
-                      // {title:"View investments",path:"/assignReviewer/"},
-
-                    ].map((item)=>{
-                      return <div key={item.title}> 
-                      <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
-                      </div>
-                    })}
-                    <div > 
-                 
-
-                      <div onClick={()=>{
-                        const data = {
-                         to:item.uuid,
-                         type:"userToUser",
-                         lastMessage:""
-                         
-                        }
-                        toast.success("Enabling end-to-end encryption. Please wait...")
-                        createConversation(data).then((data)=>{
-                          router.push(`/messages/${data.uuid}`)
-                        })
-                      }} className="text-black text-base hover:text-primary mb-2 
-                      cursor-pointer " href="">Message investor</div>
-                        <div onClick={()=>{
-                        const data = {
-                         from:"enterprenuer",
-                         user_uuid:item.uuid,
-                         business_uuid:userDetails.Business.uuid
-                        }
-                        sendInvestmentInterest(data).then(()=>{
-                          toast.success("Your interest is sent successfully")
-                        })
-                      }} className="text-black text-base hover:text-primary 
-                      cursor-pointer " href="">Interested ?</div>
-                      </div>
-                      <div > 
-                    
-                      </div>
-                   </div>
-                </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  }
-      
-    </div>
-       
-       
+    </div>     
     </div>
       </div>
    

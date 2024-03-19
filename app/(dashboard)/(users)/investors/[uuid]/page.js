@@ -4,12 +4,17 @@ import {getAdmins, getUserInfo} from "@/app/controllers/user_controller.js"
 import { timeAgo } from "@/app/utils/time_ago";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
+import { createConversation } from "@/app/controllers/conversation_controller";
+import { useRouter } from "next/navigation";
 
 const Page = ({params}) => {
     
     const uuid = params.uuid;
     const [user, setuser] = useState(null);
     const [loading, setloading] = useState(true);
+    const router = useRouter()
+
   useEffect(() => {
         getUserInfo(uuid).then((data)=>setuser(data))
     }, []);
@@ -41,7 +46,18 @@ const Page = ({params}) => {
         </div>
     })}
 </div>
-
+<button onClick={()=>{
+             const data = {
+                to:user.uuid,
+                type:"userToUser",
+                lastMessage:""
+             }
+             toast.success("Enabling end-to-end encryption. Please wait...")
+             createConversation(data).then((data)=>{
+               router.push(`/messages/${data.uuid}`)
+             })
+          }}  className="bg-success cursor-pointer  py-3 rounded hover:opacity-95 mt-8
+         px-4 text-white">Chat with an investor</button>
 </div>
 
 </div>

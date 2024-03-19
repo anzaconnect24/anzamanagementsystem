@@ -17,9 +17,10 @@ const Page = () => {
   const [totalPages, settotalPages] = useState(1);
   const [loading, setloading] = useState(true);
   const [refresh, setRefresh] = useState(0);
+  const [keyword, setKeyword] = useState("");
 
   useEffect(() => {
-        getEnterprenuers(limit,currentPage).then((body)=>{
+        getEnterprenuers(limit,currentPage,keyword).then((body)=>{
             setUsers(body.data)
             settotal(body.count)
             setcurrentPage(body.page)
@@ -31,33 +32,49 @@ const Page = () => {
       <div className="">
     <div>
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="flex justify-between items-center">
-        <div className="py-6 px-4 md:px-6 xl:px-7.5">
-      <h4 className="text-xl font-semibold text-black dark:text-white">
-          Enterprenuers
+      <div className="flex justify-between py-6 px-4 md:px-6 xl:px-7.5">
+      <div className=" ">
+        <h4 className="text-xl font-semibold text-black dark:text-white">
+         Enterprenuers
         </h4>
-
       </div>
-      <input className="py-2 rounded " type="Search here"/>
-        </div>
+      <input onChange={(e)=>{
+        setKeyword(e.target.value)
+        setrefresh(refresh+1)
+      }} className="py-1 rounded border-bodydark border-opacity-40 " placeholder="Search here"/>
+      </div>
      
 {
   users.length <1?<NoData/>:<div className="pb-8">
   <div className="grid grid-cols-4">
       {users.map((item,key)=>(
-        <Link href={`businessDetails/${item.Business.uuid}`} className="flex flex-col items-center justify-center " key={key}>
-        <div className=" bg-gray h-24 w-24 rounded-full">
+        <div  className="flex flex-col items-center justify-center " key={key}>
+        <Link href={`businessDetails/${item.Business.uuid}`} className=" bg-gray h-24 w-24 rounded-full">
           <Image height={200} width={200} className=" object-cover rounded-full" src={item.image}/>
-        </div>
-        <h1 className="text-lg">{item.name}</h1>
-        <div className="flex space-x-1 hover:underline hover:text-primary cursor-pointer items-center">
-        <p className="text-sm">{item.Business.name}</p>
+        </Link>
+        <h1 className="text-lg  text-black">{item.name}</h1>
+        <Link href={`businessDetails/${item.Business.uuid}`} className="flex space-x-1 hover:underline hover:text-primary cursor-pointer items-center">
+        <p className="text-sm text-black">{item.Business.name}</p>
         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3">
           <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
         </svg>
-        </div>
-        
         </Link>
+        <div className="flex space-x-3 mt-3">
+          <a target="__blank" href={item.Business.facebook}>
+          <Image height={1000} width={1000} className="w-6 h-6" src={'/facebook.svg'}/>
+          </a>
+          <a target="__blank" href={item.Business.linkedin}>
+          <Image height={1000} width={1000} className="w-6 h-6" src={'/linkedin.png'}/>
+          </a>
+          <a target="__blank" href={item.Business.instagram}>
+          <Image height={1000} width={1000} className="w-6 h-6" src={'/instagram.png'}/>
+          </a>
+          <a target="__blank" href={item.Business.twitter}>
+          <Image height={1000} width={1000} className="w-6 h-6" src={'/twitter.webp'}/>
+          </a>
+
+        </div>
+        </div>
         
       ))}
 

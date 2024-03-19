@@ -145,10 +145,10 @@ export const getMyInfo = async()=>{
   }
 }
 
- export const getAllUsers = async(limit,page)=>{
+ export const getAllUsers = async(limit,page,keyword)=>{
   try {
    
-   const response = await axios.get(`${server_url}/user/?page=${page}&limit=${limit}`,{
+   const response = await axios.get(`${server_url}/user/?page=${page}&limit=${limit}&keyword=${keyword??" "}`,{
     headers
    })
    console.log(response.data)
@@ -158,10 +158,10 @@ export const getMyInfo = async()=>{
   }
 }
 
-export const getInvestors = async(limit,page)=>{
+export const getInvestors = async(limit,page,keyword)=>{
   try {
    
-   const response = await axios.get(`${server_url}/user/investors/?page=${page}&limit=${limit}`,{
+   const response = await axios.get(`${server_url}/user/investors/?page=${page}&limit=${limit}&keyword=${keyword??" "}`,{
     headers
    })
    console.log(response.data)
@@ -171,10 +171,10 @@ export const getInvestors = async(limit,page)=>{
   }
 }
 
-export const getEnterprenuers = async(limit,page)=>{
+export const getEnterprenuers = async(limit,page,keyword)=>{
   try {
    
-   const response = await axios.get(`${server_url}/user/enterprenuers/?page=${page}&limit=${limit}`,{
+   const response = await axios.get(`${server_url}/user/enterprenuers/?page=${page}&limit=${limit}&keyword=${keyword??" "}`,{
     headers
    })
    console.log(response.data)

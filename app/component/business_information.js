@@ -40,6 +40,10 @@ const BusinessInformation = () => {
           email : e.target.businessEmail.value,
           phone : e.target.businessPhone.value,
           problem : e.target.problem.value,
+          facebook: e.target.facebook.value,
+          linkedin : e.target.linkedin.value,
+          twitter : e.target.twitter.value,
+          instagram : e.target.instagram.value,
           solution : e.target.solution.value,
           traction : e.target.traction.value,
           registration : e.target.registration.value,
@@ -82,6 +86,34 @@ const BusinessInformation = () => {
                     Business phone number
                   </label>
                   <input required defaultValue={business.phone} name="businessPhone" className="form-style" placeholder="Company phone number" type="text"/>
+
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                     Facebook link
+                  </label>
+                  <input required defaultValue={business.facebook} name="facebook" className="form-style"  type="text"/>
+
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                     Instagram link
+                  </label>
+                  <input required defaultValue={business.instagram} name="instagram" className="form-style" type="text"/>
+
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                     Twitter link
+                  </label>
+                  <input required defaultValue={business.twitter} name="twitter" className="form-style" type="text"/>
+
+                  </div>
+                  <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Linkedin link
+                  </label>
+                  <input required defaultValue={business.linkedin} name="linkedin" className="form-style" type="text"/>
 
                   </div>
                   <div>
