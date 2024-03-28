@@ -38,7 +38,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
       <div className="flex space-x-4 ">
         <div className="w-3/12 space-y-0">
           {[
-            
+          {title:"Account details",checked:true},
           {title:"Company profile",checked:userDetails.Business.companyProfile?true:false},
           {title:"Business informations",checked:true},
           {title:"Business plan",checked:userDetails.Business.businessPlan?true:false},
@@ -50,11 +50,12 @@ const [selectedIndex, setselectedIndex] = useState(0);
         ].map((item,index)=>{
             return <div key={index} onClick={()=>{
               setselectedIndex(index)
-            }} className={`border ${index==selectedIndex&&"border-l-primary "} flex space-x-2 border-stroke items-center cursor-pointer bg-white rounded py-3 px-4`}>
-              <div><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
-                stroke-width="1.5" stroke="currentColor" className={`w-6 h-6 ${item.checked?"text-success":"text-stroke"} `}>
-                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12c0 1.268-.63 2.39-1.593 3.068a3.745 3.745 0 0 1-1.043 3.296 3.745 3.745 0 0 1-3.296 1.043A3.745 3.745 0 0 1 12 21c-1.268 0-2.39-.63-3.068-1.593a3.746 3.746 0 0 1-3.296-1.043 3.745 3.745 0 0 1-1.043-3.296A3.745 3.745 0 0 1 3 12c0-1.268.63-2.39 1.593-3.068a3.745 3.745 0 0 1 1.043-3.296 3.746 3.746 0 0 1 3.296-1.043A3.746 3.746 0 0 1 12 3c1.268 0 2.39.63 3.068 1.593a3.746 3.746 0 0 1 3.296 1.043 3.746 3.746 0 0 1 1.043 3.296A3.745 3.745 0 0 1 21 12Z" />
-              </svg>
+            }} className={` border-l-6 ${index==selectedIndex&&"border-l-primary "} flex space-x-2 border-stroke items-center cursor-pointer bg-white rounded py-3 px-4`}>
+              <div><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"
+               className={`w-6 h-6 ${item.checked?"text-success":"text-stroke"}`}>
+  <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 1 0-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 0 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.14-.094l3.75-5.25Z" clipRule="evenodd" />
+</svg>
+
               </div>
               <div>
               {item.title}

@@ -110,7 +110,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname == "/" && "bg-graydark dark:bg-meta-4"
+                    pathname == "/" && "bg-primary dark:bg-primary"
                   }`}
                 >
                 <svg
@@ -161,7 +161,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -256,7 +256,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -373,7 +373,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/myInvestmentRequests"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("myInvestmentRequests") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("myInvestmentRequests") && "bg-primary dark:bg-primary"
                   }`}
                 >
                   <svg
@@ -409,7 +409,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/enterprenuers"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("investorSectorBusinesses") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("enterprenuers") && "bg-primary dark:bg-primary"
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
@@ -426,7 +426,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/interestedEnterprenuers"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("interestedEnterprenuers") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("interestedEnterprenuers") && "bg-primary dark:bg-primary"
                   }`}
                 >
                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -454,7 +454,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                             (pathname === "/forms" ||
                               pathname.includes("forms")) &&
-                            "bg-graydark dark:bg-meta-4"
+                            "bg-primary dark:bg-primary"
                           }`}
                           onClick={(e) => {
                             e.preventDefault();
@@ -555,7 +555,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -669,7 +669,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -773,7 +773,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -845,7 +845,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   <Link
                     href="/investors"
                     className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                      pathname.includes("investors") && "bg-graydark dark:bg-meta-4"
+                      pathname.includes("investors") && "bg-primary dark:bg-primary"
                     }`}
                   >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
@@ -867,7 +867,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   <Link
                     href="/conversations"
                     className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                      pathname.includes("conversations") && "bg-graydark dark:bg-meta-4"
+                      pathname.includes("conversations") && "bg-primary dark:bg-primary"
                     }`}
                   >
            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -886,7 +886,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/successStories"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("successStories") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("successStories") && "bg-primary dark:bg-primary"
                   }`}
                 >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
@@ -931,7 +931,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         href="#"
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/auth" || pathname.includes("auth")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
