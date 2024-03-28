@@ -38,8 +38,14 @@ const [data, setData] = useState(null);
           setData(ddata)
           if(data.activated == 1){
             if(data.role != "Enterprenuer"){
-              router.push(pathname)
-              setTimeout(() => setLoading(false), 4000);
+              if(data.role == "Staff"){
+                router.push("/authorizationPage")
+                setTimeout(() => setLoading(false), 4000);
+              }else{
+                router.push(pathname)
+                setTimeout(() => setLoading(false), 4000);
+              }
+             
             }
             else{
               if(data.Business.status == "accepted"){
