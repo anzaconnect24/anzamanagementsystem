@@ -38,7 +38,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
       <div className="flex space-x-4 ">
         <div className="w-3/12 space-y-0">
           {[
-          {title:"Personal informations",checked:true},
+            
           {title:"Company profile",checked:userDetails.Business.companyProfile?true:false},
           {title:"Business informations",checked:true},
           {title:"Business plan",checked:userDetails.Business.businessPlan?true:false},
