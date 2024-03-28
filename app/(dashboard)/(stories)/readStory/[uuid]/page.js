@@ -2,6 +2,7 @@
 // import { deleteStory, getStory } from "@/app/controllers/story_controller";
 import { useContext, useEffect, useState } from "react";
 import Link from "next/link"
+import Image from "next/image"
 import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "../../../../component/Breadcrumb";
@@ -31,12 +32,10 @@ const Page = ({params}) => {
         {
             story.videoLink != "" && <div className="flex">
             <div className="w-4/12">
-                Video:
+                Image
             </div>
             <div className="w-8/12 text-black">
-            <iframe width="560" height="315"src={story.videoLink} title="YouTube video player" frameborder="0" 
-            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-             allowfullscreen></iframe>
+            {/* <Image height={1000} width={1000}  className="flex h-80 object-cover" src={story.videoLink}/> */}
             </div>
 
         </div>

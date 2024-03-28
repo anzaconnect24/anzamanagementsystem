@@ -5,9 +5,17 @@ import { getUser } from "../utils/local_storage";
 
 export const createSuccessStory = async (data) => {
     try {
-        console.log(data)
-      const response = await axios.post(`${server_url}/success_story/`,data,{
-         headers
+      const formData = new FormData();
+      console.log(data.file)
+      formData.append('file', data.file); 
+      delete data.file;
+      Object.keys(data).forEach((key) => {
+        formData.append(key, data[key]);
+      });
+      const user = getUser()
+      const response = await axios.post(`${server_url}/success_story/`,formData,{
+        'Content-Type': 'multipart/form-data', 
+        'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
       });
      return response.data
     } catch (error) { 

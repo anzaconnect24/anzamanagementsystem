@@ -57,12 +57,11 @@ const {userDetails} = useContext(UserContext)
         {users.map((item, key) => (
         <Link className="w-full border p-8 rounded border-bodydark2 border-opacity-30 hover:shadow-lg" href={`/readStory/${item.uuid}`} key={key}>
           <div className="flex items-center space-x-2">
-            <div>
-              <Image height={1000} width={1000} className="h-12 w-12 rounded-full object-cover" src={item.Business.User.image}/>
-            </div>
+          <Image height={1000} width={1000} className="h-10 w-10 aspect-square rounded-full object-cover" src={item.Business.User.image}/>
+
             <div>
             <div className="font-bold text-lg line-clamp-1">{item.title}</div>
-          <div className=" text-bodydark2 ">{timeAgo(item.createdAt)}</div>
+             <div className=" text-bodydark2 ">{timeAgo(item.createdAt)}</div>
             </div>
           </div>
           <div className=" line-clamp-2 mt-2">{item.story}</div>

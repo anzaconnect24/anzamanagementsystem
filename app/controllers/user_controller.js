@@ -46,8 +46,7 @@ export const register = async (data) => {
       Object.keys(data).forEach((key) => {
         formData.append(key, data[key]);
       });
-    //   console.log(data)
-    //   console.log(formData)
+  
       const user = getUser()
       const response = await axios.patch(`${server_url}/user/image`, formData, {
         headers: {
