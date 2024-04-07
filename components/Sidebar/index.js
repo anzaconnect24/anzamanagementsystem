@@ -99,7 +99,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         </button>
       </div>
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-        <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
+        <nav className="mt-0 py-4 px-4 lg:mt-0 lg:px-6">
           <div>
             <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
               MENU
@@ -759,7 +759,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 }}
               </SidebarLinkGroup>
                 </div>}
-                {["Admin","Enterprenuer"].includes(userDetails.role)==true&& <div>
+                {["Admin","Enterprenuer","Reviewer"].includes(userDetails.role)==true&& <div>
               <SidebarLinkGroup
                 activeCondition={
                   pathname === "/forms" || pathname.includes("forms")
