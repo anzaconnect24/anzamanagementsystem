@@ -8,11 +8,11 @@ import Breadcrumb from "@/app/component/Breadcrumb";
 import Spinner from "@/components/spinner";
 
 const Page = ({params}) => {
-    const uuid = params.uuid
+    const type = params.type
     const router = useRouter()
     const [loading, setloading] = useState(false);
     return ( <div>
-               <Breadcrumb prevLink={``} prevPage="video/documents" pageName="Material upload" />
+               <Breadcrumb prevLink={``} prevPage={`${type}s`} pageName="Material upload" />
          <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <form onSubmit={(e)=>{
         e.preventDefault()
@@ -20,7 +20,7 @@ const Page = ({params}) => {
         const data = {
             fileName : e.target.fileName.value,
             file:e.target.file.files[0],
-            type:e.target.type.value,
+            type,
             description:e.target.description.value,
         }
         console.log(data)
@@ -38,17 +38,7 @@ const Page = ({params}) => {
             </label>
             <input name="fileName"  required className="form-style disabled:opacity-75" placeholder="Enter material title" type="text"/>
         </div>
-        <div>
-            <label className="mb-2.5 block font-medium text-black dark:text-white">
-               Material type
-            </label>
-            <select name="type"  required className="form-style disabled:opacity-75" placeholder="Enter email address" type="text">
-                <option>Select type</option>
-                <option value="document">Document</option>
-                <option value="video">Video</option>
-
-            </select>
-        </div>
+    
         <div>
             <label className="mb-2.5 block font-medium text-black dark:text-white">
                 File

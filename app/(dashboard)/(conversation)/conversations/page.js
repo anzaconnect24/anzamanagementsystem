@@ -32,7 +32,7 @@ const Page = () => {
           Chats
         </h4>
         <div className="mt-6 space-y-4">
-        {
+        { conversations.length <1 ?<NoData/>:
         conversations.map((item,key)=>{
             const showUser1 = item.user1.email != userDetails.email;
             return <div  onClick={()=>{

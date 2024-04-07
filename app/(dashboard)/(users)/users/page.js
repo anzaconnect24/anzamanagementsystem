@@ -23,21 +23,15 @@ const [activating, setactivating] = useState(false);
 const [deleting, setdeleting] = useState(false);
 const [inviting, setinviting] = useState(false);
 const [showInvitationForm, setshowInvitationForm] = useState(false);
-
-
-
 const [adminCount, setadminCount] = useState(0);
-
-
-
   useEffect(() => {
         getAllUsers(limit,currentPage).then((body)=>{
-          setloading(false)
             setadminCount(body.adminCount)
             settotal(body.count)
             setcurrentPage(body.page)
             settotalPages(body.totalPages)
             setUsers(body.data)
+            setloading(false)
         })
   }, [refresh]);
     return  loading?<Loader/>: (

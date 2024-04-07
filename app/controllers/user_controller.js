@@ -5,7 +5,18 @@ import { headers } from "../utils/headers";
 
 export const register = async (data) => {
     try { 
-      const response = await axios.post(`${server_url}/user/register`, data);
+      const formData = new FormData();
+      console.log(data.file)
+      formData.append('file', data.file); 
+      delete data.file;
+      Object.keys(data).forEach((key) => {
+        formData.append(key, data[key]);
+      });
+      const response = await axios.post(`${server_url}/user/register`, formData,{
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        },
+      });
       console.log(response.data)
       storeUser(response.data.tokens)
        console.log(getUser())
@@ -82,8 +93,10 @@ export const login = async(data)=>{
     storeUser(response.data.tokens)
      return response.data
     } catch (error) {
-      // throw error
+      console.log(error)
       return error.response.data;
+
+      // throw error
     }
  }
 
@@ -141,14 +154,19 @@ export const getMyInfo = async()=>{
     return response.data.body
   } catch (error) {
    console.log(error)
+   throw error
+
   }
 }
 
  export const getAllUsers = async(limit,page,keyword)=>{
   try {
-   
+    const user = getUser()
    const response = await axios.get(`${server_url}/user/?page=${page}&limit=${limit}&keyword=${keyword??" "}`,{
-    headers
+    headers:{
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+    }
    })
    console.log(response.data)
     return response.data.body
