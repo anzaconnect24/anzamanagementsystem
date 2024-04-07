@@ -13,6 +13,7 @@ import {createInvestorProfile} from "@/app/controllers/investor_profile_controll
 
 import { redirect,useRouter } from "next/navigation";
 import Spinner from "@/components/spinner";
+import { createNotification } from "@/app/controllers/notification_controller";
 
 // export const metadata: Metadata = {
 //   title: "Signup Page | Next.js E-commerce Dashboard Template",
@@ -82,7 +83,16 @@ const [isAlumni, setisAlumni] = useState(false);
           if(e.target.password.value == e.target.repeatPassword.value){
                   register(userData).then((data)=>{
                     if(data.status == true){
+                      createNotification({
+                        message:`${userData.name} has joined as ${userData.role}`,
+                        for:"Admin"
+                      })
+                     
                       if(role == "Enterprenuer"){
+                        createNotification({
+                          message:`${userData.name} has joined as ${userData.role}, waiting for confirmation`,
+                          for:"Reviewer"
+                        })
                         createBusiness(businessData).then((data)=>{
                       router.push("/confirmEmail")
                       setloading(false)
@@ -175,6 +185,7 @@ const [isAlumni, setisAlumni] = useState(false);
                       </div>
                     )}
                 
+
                   </div>
                   
                   </div>

@@ -1,15 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import {addNotificationViewer, getNotifications} from "@/app/controllers/notification_controller"
+import {timeAgo} from "@/app/utils/time_ago"
 
 const DropdownNotification = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifying, setNotifying] = useState(true);
 
-  const trigger = useRef<any>(null);
-  const dropdown = useRef<any>(null);
+  const trigger = useRef(null);
+  const dropdown = useRef(null);
 
   useEffect(() => {
-    const clickHandler = ({ target }: MouseEvent) => {
+    const clickHandler = ({ target }) => {
       if (!dropdown.current) return;
       if (
         !dropdownOpen ||
@@ -25,8 +27,15 @@ const DropdownNotification = () => {
 
   // close if the esc key is pressed
   const [loading, setloading] = useState(true);
+  const [notifications, setNotifications] = useState([]);
+  const [refresh, setRefresh] = useState(0);
   useEffect(() => {
-    const keyHandler = ({ keyCode }: KeyboardEvent) => {
+    getNotifications().then((data)=>{
+      setNotifications(data)
+    })
+  }, []);
+  useEffect(() => {
+    const keyHandler = ({ keyCode }) => {
       if (!dropdownOpen || keyCode !== 27) return;
       setDropdownOpen(false);
     };
@@ -41,12 +50,16 @@ const DropdownNotification = () => {
         onClick={() => {
           setNotifying(false);
           setDropdownOpen(!dropdownOpen);
+          if(dropdownOpen){
+            const promises = notifications.map((item)=>addNotificationViewer(item.id))
+            Promise.all(promises)
+          }
         }}
         href="#"
         className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
       >
         <span
-          className={`absolute z-9 -top-0.5 right-0 z-1 h-2 w-2 rounded-full bg-meta-1 ${
+          className={`absolute z-9 -top-0.5 right-0 h-2 w-2 rounded-full bg-meta-1 ${
             notifying === false ? 'hidden' : 'inline'
           }`}
         >
@@ -81,69 +94,23 @@ const DropdownNotification = () => {
         </div>
 
         <ul className="flex h-auto flex-col overflow-y-auto">
-          <li>
-            <Link
-              className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-              href="#"
-            >
-              <p className="text-sm">
-                <span className="text-black dark:text-white">
-                  Edit your information in a swipe
-                </span>{' '}
-                Sint occaecat cupidatat non proident, sunt in culpa qui officia
-                deserunt mollit anim.
-              </p>
+      {notifications.map((item)=>{
+        return     <li>
+        <Link
+          className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
+          href="#"
+        >
+          <p className="text-sm">
+            <span className="text-black dark:text-white">
+             {item.message}
+            </span>{' '}
+          </p>
 
-              <p className="text-xs">12 May, 2025</p>
-            </Link>
-          </li>
-          <li>
-            <Link
-              className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-              href="#"
-            >
-              <p className="text-sm">
-                <span className="text-black dark:text-white">
-                  It is a long established fact
-                </span>{' '}
-                that a reader will be distracted by the readable.
-              </p>
-
-              <p className="text-xs">24 Feb, 2025</p>
-            </Link>
-          </li>
-          <li>
-            <Link
-              className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-              href="#"
-            >
-              <p className="text-sm">
-                <span className="text-black dark:text-white">
-                  There are many variations
-                </span>{' '}
-                of passages of Lorem Ipsum available, but the majority have
-                suffered
-              </p>
-
-              <p className="text-xs">04 Jan, 2025</p>
-            </Link>
-          </li>
-          <li>
-            <Link
-              className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-              href="#"
-            >
-              <p className="text-sm">
-                <span className="text-black dark:text-white">
-                  There are many variations
-                </span>{' '}
-                of passages of Lorem Ipsum available, but the majority have
-                suffered
-              </p>
-
-              <p className="text-xs">01 Dec, 2024</p>
-            </Link>
-          </li>
+          <p className="text-xs">{timeAgo(item.createdAt)}</p>
+        </Link>
+      </li>
+      })}
+        
         </ul>
       </div>
     </li>
