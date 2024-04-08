@@ -24,33 +24,30 @@ const Page = () => {
       <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-8 px-5 md:px-6 xl:px-7.5 ">
         <div className="flex justify-between">
-<h4 className="text-xl font-semibold text-black dark:text-white">
+        <h4 className="text-xl font-semibold text-black dark:text-white">
           Videos
         </h4>
         {
-        ["Admin"].includes(userDetails.role)&&
-        <Link href={"/uploadPitchMaterial"} className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
-          
+        ["Admin","Reviewer"].includes(userDetails.role)&&
+        <Link href={"/uploadPitchMaterial/video"} className="text-white bg-primary py-2 px-3 cursor-pointer rounded">Add</Link>
         }
-      
         </div>
         {videos.length<1?<NoData/>:<div>
         <div className="grid grid-cols-4 gap-3 ">
            {videos.map((item,key)=>{
-        return <a href={item.link} target="_blank" key={key} className="py-5 px-5 border border-stroke cursor-pointer flex flex-col items-center justify-center rounded hover:shadow-lg">
-            <div><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-  <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
-</svg>
-</div>
-            <div>{item.fileName}</div>
+        return <a  key={key} className="py-5 px-5 border border-stroke cursor-pointer flex flex-col items-center justify-center rounded hover:shadow-lg">
+            <a href={item.link} target="_blank">
+              <img height={1000} width={1000} alt={`${item.title}`} className="w-12" src="/video.png"/>
+</a>
+            <div className="mt-1">{item.fileName}</div>
             {["Admin"].includes(userDetails.role)&&
             <div className="flex space-x-2 justify-between mt-3">
-            <Link href={`/viewer/${item.uuid}`} className="text-base font-bold text-success">Visibility</Link>
+            <Link href={`/viewer/${item.uuid}`} className="text-sm font-bold text-slate-300 opacity-30">Visibility</Link>
             <h1 onClick={()=>{
               deletePitchMaterial(item.uuid).then((data)=>{
                 setRefresh(refresh+1)
               })
-            }} className="text-base  cursor-pointer font-bold text-danger">Delete</h1>
+            }} className="text-sm  cursor-pointer font-bold text-danger">Delete</h1>
 
           </div>
             }

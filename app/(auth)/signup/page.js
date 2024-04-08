@@ -13,6 +13,7 @@ import {createInvestorProfile} from "@/app/controllers/investor_profile_controll
 
 import { redirect,useRouter } from "next/navigation";
 import Spinner from "@/components/spinner";
+import { createNotification } from "@/app/controllers/notification_controller";
 
 // export const metadata: Metadata = {
 //   title: "Signup Page | Next.js E-commerce Dashboard Template",
@@ -26,6 +27,7 @@ const [loading, setloading] = useState(false);
 const [sectors, setSectors] = useState([]);
 const [showPassword, setshowPassword] = useState(false);
 const [showPassword2, setshowPassword2] = useState(false);
+const [file, setfile] = useState(null);
 
 const [isAlumni, setisAlumni] = useState(false);
   useEffect(() => {
@@ -42,6 +44,7 @@ const [isAlumni, setisAlumni] = useState(false);
         setloading(true)
           const userData = {
               name : e.target.userName.value,
+              file: e.target.file.files[0],
               email: e.target.userEmail.value,
               phone: e.target.userPhone.value,
               role: e.target.role.value,
@@ -80,7 +83,16 @@ const [isAlumni, setisAlumni] = useState(false);
           if(e.target.password.value == e.target.repeatPassword.value){
                   register(userData).then((data)=>{
                     if(data.status == true){
+                      createNotification({
+                        message:`${userData.name} has joined as ${userData.role}`,
+                        for:"Admin"
+                      })
+                     
                       if(role == "Enterprenuer"){
+                        createNotification({
+                          message:`${userData.name} has joined as ${userData.role}, waiting for confirmation`,
+                          for:"Reviewer"
+                        })
                         createBusiness(businessData).then((data)=>{
                       router.push("/confirmEmail")
                       setloading(false)
@@ -124,7 +136,19 @@ const [isAlumni, setisAlumni] = useState(false);
                 <div className="text-4xl font-bold text-black pb-10 text-center">Create Anza account</div>
                 <div>
                 {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                <div className="flex justify-center ">
+                  <label for="file">
+                    {file != null ? <Image width={1000} height={1000} className="h-16 w-16 object-cover rounded-full" src={URL.createObjectURL(file)}/>:<div className="h-16 w-16 rounded-full flex justify-center items-center bg-opacity-40 bg-bodydark">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
+                    </svg>
+                    </div>}
+                  </label>
+                  <input required onChange={(e)=>{
+                    setfile(e.target.files[0])
+                  }} name="file" type="file" className="sr-only" id="file"/>
+                </div>
+                <div className="grid grid-cols-1 mt-3 md:grid-cols-2 gap-x-2 gap-y-2">
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Full name
@@ -154,13 +178,14 @@ const [isAlumni, setisAlumni] = useState(false);
                   <div className="flex flex-col  space-y-2  ">
                     {["Enterprenuer","Investor","Staff"].map((item)=>
                       <div key={item} className="flex items-center space-x-2">
-                      <input required name="role" value={item} onChange={(e)=>{
+                      <input required name="role" value={item=="Staff"?"Reviewer":item} onChange={(e)=>{
                             setRole(e.target.value);
                       }} type="radio"/>
                       <div>{item}</div>
                       </div>
                     )}
                 
+
                   </div>
                   
                   </div>

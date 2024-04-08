@@ -61,7 +61,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   return (
     <aside
       ref={sidebar}
-      className={`absolute z-9 left-0 top-0  flex h-screen w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
+      className={`absolute z-9 left-0 top-0  flex h-screen  w-72.5 flex-col overflow-y-hidden bg-black duration-300 ease-linear dark:bg-boxdark lg:static lg:translate-x-0 ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       }`}
     >
@@ -99,7 +99,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         </button>
       </div>
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
-        <nav className="mt-5 py-4 px-4 lg:mt-9 lg:px-6">
+        <nav className="mt-0 py-4 px-4 lg:mt-0 lg:px-6">
           <div>
             <h3 className="mb-4 ml-4 text-sm font-semibold text-bodydark2">
               MENU
@@ -110,7 +110,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname == "/" && "bg-graydark dark:bg-meta-4"
+                    pathname == "/" && "bg-primary dark:bg-primary"
                   }`}
                 >
                 <svg
@@ -161,7 +161,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -256,7 +256,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -373,7 +373,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/myInvestmentRequests"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("myInvestmentRequests") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("myInvestmentRequests") && "bg-primary dark:bg-primary"
                   }`}
                 >
                   <svg
@@ -404,18 +404,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   My investment requests
                 </Link>
               </li>}
-              {["Investor","Enterprenuer"].includes(userDetails.role)==true&&  
+              {["Investor","Enterprenuer","Staff","Reviewer"].includes(userDetails.role)==true&&  
                 <li>
                 <Link
                   href="/enterprenuers"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("investorSectorBusinesses") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("enterprenuers") && "bg-primary dark:bg-primary"
                   }`}
                 >
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" 
                   stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-</svg>
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+        </svg>
 
 
                   Enterprenuers
@@ -426,7 +426,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/interestedEnterprenuers"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("interestedEnterprenuers") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("interestedEnterprenuers") && "bg-primary dark:bg-primary"
                   }`}
                 >
                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -454,7 +454,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                             (pathname === "/forms" ||
                               pathname.includes("forms")) &&
-                            "bg-graydark dark:bg-meta-4"
+                            "bg-primary dark:bg-primary"
                           }`}
                           onClick={(e) => {
                             e.preventDefault();
@@ -555,7 +555,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -669,7 +669,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -759,7 +759,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 }}
               </SidebarLinkGroup>
                 </div>}
-                {["Admin","Enterprenuer"].includes(userDetails.role)==true&& <div>
+                {["Admin","Enterprenuer","Reviewer"].includes(userDetails.role)==true&& <div>
               <SidebarLinkGroup
                 activeCondition={
                   pathname === "/forms" || pathname.includes("forms")
@@ -773,7 +773,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -840,34 +840,34 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               </SidebarLinkGroup>
             
 
-               {
-                  ["Enterprenuer"].includes(userDetails.role)==true &&   <li>
+            
+
+
+                </div>}
+                {
+                  ["Enterprenuer","Reviewer"].includes(userDetails.role)==true &&   <li>
                   <Link
                     href="/investors"
                     className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                      pathname.includes("investors") && "bg-graydark dark:bg-meta-4"
+                      pathname.includes("investors") && "bg-primary dark:bg-primary"
                     }`}
                   >
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
-              stroke="currentColor" class="w-5 h-5">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
-</svg>
+                          stroke="currentColor" class="w-5 h-5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z" />
+            </svg>
 
 
                     Investors
                   </Link>
                 </li>
                 } 
-
-
-                </div>}
-
                 {
                   ["Enterprenuer","Investor","Staff","Reviewer","Admin"].includes(userDetails.role)==true &&   <li>
                   <Link
                     href="/conversations"
                     className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                      pathname.includes("conversations") && "bg-graydark dark:bg-meta-4"
+                      pathname.includes("conversations") && "bg-primary dark:bg-primary"
                     }`}
                                   >
                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5"
@@ -886,7 +886,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <Link
                   href="/successStories"
                   className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname.includes("successStories") && "bg-graydark dark:bg-meta-4"
+                    pathname.includes("successStories") && "bg-primary dark:bg-primary"
                   }`}
                 >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" 
@@ -931,7 +931,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         href="#"
                         className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/auth" || pathname.includes("auth")) &&
-                          "bg-graydark dark:bg-meta-4"
+                          "bg-primary dark:bg-primary"
                         }`}
                         onClick={(e) => {
                           e.preventDefault();
@@ -1018,7 +1018,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                            </Link>
                          </li>
                           }
-                          {["Investor","Staff","Admin"].includes(userDetails.role)&&
+                          {["Investor","Staff","Admin","Reviewer"].includes(userDetails.role)&&
                           <li>
                           <Link
                             href="/accountDetails"

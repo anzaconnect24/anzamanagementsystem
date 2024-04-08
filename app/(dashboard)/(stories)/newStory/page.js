@@ -41,13 +41,12 @@ const Page = () => {
             const data = {
                title:e.target.title.value,
                story:e.target.story.value,
-               videoLink:e.target.videoLink.value,
+               file:e.target.image.files[0],
                business_uuid:e.target.business.value
              }
            createSuccessStory(data).then((data)=>{
             router.back()
             setuploadStory(false)
-
            })
         }}>
         <div className="grid grid-cols-3 gap-x-3">
@@ -61,11 +60,10 @@ const Page = () => {
             </div>
             <div>
             <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Video link
+            Upload image
             </label>
-         <input name="videoLink" className="w-full rounded border-stroke" 
-         placeholder="Enter video link"/>
-
+               <input type="file"  name="image" className="w-full rounded border-stroke" 
+               />
             </div>
             <div>
             <label className="mb-2.5 block font-medium text-black dark:text-white">
