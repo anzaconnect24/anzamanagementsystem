@@ -6,7 +6,6 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { createConversation } from "@/app/controllers/conversation_controller";
-import {createNotification} from "@/app/controllers/notification_controller "
 import { useRouter } from "next/navigation";
 
 const Page = ({params}) => {
