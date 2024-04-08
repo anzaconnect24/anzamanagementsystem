@@ -16,10 +16,7 @@
     display: none;
   }
 
-  .no-scrollbar {
-    -ms-overflow-style: none; /* IE and Edge */
-    scrollbar-width: none; /* Firefox */
-  }
+ 
   .form-style {
     @apply w-full rounded-lg border border-stroke text-black bg-transparent py-2 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary
   }

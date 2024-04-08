@@ -31,8 +31,10 @@ const {userDetails} = useContext(UserContext)
   return (
     <div>
       <Breadcrumb pageName={"Chat page"} prevLink={""} prevPage={"Back"}/>
+
   <div className="bg-white rounded-lg  py-3 shadow-2xl px-3 ">
-    <div className="bg-white py-4 flex space-y-4 flex-col px-8 rounded overflow-y-scroll justify-end h-[55vh]">
+
+    <div className="bg-white py-4 flex space-y-4 flex-col px-8 rounded scroll-m-2 overflow-y-scroll  h-[55vh]">
  
       {messages.map((item,key) => {
         return <div key={key} className={`${userDetails.uuid==item.sender_uuid?"text-right":"text-start"}`}>
