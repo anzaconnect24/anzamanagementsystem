@@ -10,6 +10,7 @@ import {toast} from "react-hot-toast"
 import { createConversation } from "@/app/controllers/conversation_controller";
 import Image from "next/image"
 import { UserContext } from "../../../layout";
+import { createNotification } from "@/app/controllers/notification_controller";
 
 const Page = ({params}) => {
     const uuid = params.uuid
@@ -154,6 +155,7 @@ const Page = ({params}) => {
               
              }
              toast.success("Enabling end-to-end encryption. Please wait...")
+             createNotification({ user_uuid:user.uuid,to:"User", message:`You have a new message`})
              createConversation(data).then((data)=>{
                router.push(`/messages/${data.uuid}`)
              })
@@ -167,13 +169,12 @@ const Page = ({params}) => {
         {business.status == "waiting" && 
         <div className="flex space-x-3  pt-8">
         <div onClick={()=>{
-          
               updateBusiness({status:"accepted"},uuid).then(()=>{
                 updateUser({activated:true},business.User.uuid).then((data)=>{
                   router.back()
                 })
               })
-              
+   
         }} className="bg-primary py-3 rounded px-4 cursor-pointer  hover:opacity-95 text-white">Accept</div>
         <Link href={`/applicationRejection/${uuid}`} className="bg-danger py-3 rounded hover:opacity-95
          px-4 text-white">Reject application</Link>

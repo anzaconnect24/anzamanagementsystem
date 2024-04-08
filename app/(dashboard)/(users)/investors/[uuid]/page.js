@@ -53,7 +53,7 @@ const Page = ({params}) => {
                 type:"userToUser",
                 lastMessage:""
              }
-             createNotification({ user_uuid:user.uuid,to:"User", message:`You have a new message from ${user.name}`})
+             createNotification({ user_uuid:user.uuid,to:"User", message:`You have a new message`})
              toast.success("Enabling end-to-end encryption. Please wait...")
              createConversation(data).then((data)=>{
                router.push(`/messages/${data.uuid}`)
