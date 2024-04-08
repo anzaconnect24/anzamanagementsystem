@@ -8,7 +8,7 @@ import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import { UserContext } from "../../layout";
 import { sendInvestmentInterest } from "@/app/controllers/investment_interest_controller";
-import {createConversation} from "@/app/controllers/conversation_controller"
+
 import toast from "react-hot-toast"
 import { useRouter } from "next/navigation";
 
