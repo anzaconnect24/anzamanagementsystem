@@ -31,6 +31,7 @@ const {userDetails} = useContext(UserContext)
 
   useEffect(() => {
         getSuccessStory(currentPage,limit).then((body)=>{
+          console.log(body.data)
           setloading(false)
             settotal(body.count)
             setcurrentPage(body.page)

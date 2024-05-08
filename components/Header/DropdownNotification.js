@@ -5,7 +5,7 @@ import {timeAgo} from "@/app/utils/time_ago"
 
 const DropdownNotification = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [notifying, setNotifying] = useState(true);
+  const [notifying, setNotifying] = useState(false);
 
   const trigger = useRef(null);
   const dropdown = useRef(null);
