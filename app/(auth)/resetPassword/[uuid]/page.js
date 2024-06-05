@@ -48,7 +48,7 @@ const Page = ({params}) => {
 
   return (
     <>
-      <div className="rounded-sm border border-stroke bg-white min-w-screen dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-lg border border-stroke bg-white min-w-screen dark:border-strokedark dark:bg-boxdark">
         <div className="flex flex-wrap ">
          
           <div className="w-full     mx-auto  xl:w-1/2  ">

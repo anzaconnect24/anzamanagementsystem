@@ -61,11 +61,11 @@ const DropdownDefault = () => {
         ref={dropdown}
         onFocus={() => setDropdownOpen(true)}
         onBlur={() => setDropdownOpen(false)}
-        className={`absolute z-9 right-0 top-full z-40 w-40 space-y-1 rounded-sm border border-stroke bg-white p-1.5 shadow-default dark:border-strokedark dark:bg-boxdark ${
+        className={`absolute z-9 right-0 top-full z-40 w-40 space-y-1 rounded-lg border border-stroke bg-white p-1.5 shadow-default dark:border-strokedark dark:bg-boxdark ${
           dropdownOpen === true ? "block" : "hidden"
         }`}
       >
-        <button className="flex w-full items-center gap-2 rounded-sm py-1.5 px-4 text-left text-sm hover:bg-gray dark:hover:bg-meta-4">
+        <button className="flex w-full items-center gap-2 rounded-lg py-1.5 px-4 text-left text-sm hover:bg-gray dark:hover:bg-meta-4">
           <svg
             className="fill-current"
             width="16"
@@ -88,7 +88,7 @@ const DropdownDefault = () => {
           </svg>
           Edit
         </button>
-        <button className="flex w-full items-center gap-2 rounded-sm py-1.5 px-4 text-left text-sm hover:bg-gray dark:hover:bg-meta-4">
+        <button className="flex w-full items-center gap-2 rounded-lg py-1.5 px-4 text-left text-sm hover:bg-gray dark:hover:bg-meta-4">
           <svg
             className="fill-current"
             width="16"

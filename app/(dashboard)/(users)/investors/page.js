@@ -41,7 +41,7 @@ const Page = () => {
     return  loading?<Loader/>:(
       <div className="">
     <div>
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="flex justify-between py-6 px-4 md:px-6 xl:px-7.5">
       <div className=" ">
         <h4 className="text-xl font-semibold text-black dark:text-white">
@@ -55,20 +55,19 @@ const Page = () => {
       </div>
       {
           users.length <1?<NoData/>:<div className="pb-8">
-          <div className="grid grid-cols-4">
+          <div className="grid grid-cols-4 px-6">
               {users.map((item,key)=>(
-                <Link href={`investors/${item.uuid}`} className="flex flex-col items-center justify-center " key={key}>
+
+                <Link href={`investors/${item.uuid}`} className="flex flex-col items-center justify-center border hover:scale-105 transition-all duration-200 border-bodydark border-opacity-70 py-12 rounded-l " key={key}>
                 <div className=" bg-gray h-24 w-24 rounded-full">
                   
-                  <Image height={200} width={200} className=" object-cover rounded-full" src={item.image}/>
+                  <Image height={200} alt="" width={200} className=" object-cover rounded-full" src={item.image}/>
                   
                 </div>
                 <h1 className="text-lg">{item.name}</h1>
                 <div className="flex space-x-1 hover:underline hover:text-primary cursor-pointer items-center">
                 <p className="text-sm">Ticket: {item.InvestorProfile.ticketSize}</p>
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-3 h-3">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 19.5 15-15m0 0H8.25m11.25 0v11.25" />
-                </svg>
+               
                 </div>
                 
                 </Link>

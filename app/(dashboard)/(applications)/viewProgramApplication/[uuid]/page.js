@@ -21,7 +21,7 @@ const Page = ({params}) => {
 
     return loading? <Loader/>:( <div>
                <Breadcrumb prevLink={``} prevPage="Applications" pageName="Application details" />
-         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <div className="space-y-3">
           {[

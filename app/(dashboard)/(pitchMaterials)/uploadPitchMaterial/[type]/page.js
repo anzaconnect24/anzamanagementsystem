@@ -13,7 +13,7 @@ const Page = ({params}) => {
     const [loading, setloading] = useState(false);
     return ( <div>
                <Breadcrumb prevLink={``} prevPage={`${type}s`} pageName="Material upload" />
-         <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <form onSubmit={(e)=>{
         e.preventDefault()
         setloading(true)

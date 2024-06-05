@@ -64,7 +64,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
               </div>
           })}
         </div>
-        <div className="w-9/12 rounded-sm border  border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div className="w-9/12 rounded-lg border  border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           {tabs[selectedIndex]}
 
         </div>

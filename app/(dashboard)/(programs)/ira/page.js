@@ -24,7 +24,7 @@ const {userDetails} = useContext(UserContext)
        
          
  <div>
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between">
         <h4 className="text-xl font-semibold text-black dark:text-white">
           Investment Readiness Accelerator programs

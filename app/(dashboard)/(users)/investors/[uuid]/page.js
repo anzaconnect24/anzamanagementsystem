@@ -21,7 +21,7 @@ const Page = ({params}) => {
     }, []);
     return (user&&<div>
         <Breadcrumb prevLink={`/investors`} prevPage="Investors" pageName="Investor profile" />
-  <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+  <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
 <div className="py-6 px-4 md:px-6 xl:px-7.5">
 <div className="grid grid-cols-1 gap-y-4">
     {[

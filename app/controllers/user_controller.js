@@ -190,9 +190,12 @@ export const getInvestors = async(limit,page,keyword)=>{
 
 export const getEnterprenuers = async(limit,page,keyword)=>{
   try {
-   
+  const user = getUser()
    const response = await axios.get(`${server_url}/user/enterprenuers/?page=${page}&limit=${limit}&keyword=${keyword??" "}`,{
-    headers
+    headers:{
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${user && user.ACCESS_TOKEN}`
+    }
    })
    console.log(response.data)
     return response.data.body

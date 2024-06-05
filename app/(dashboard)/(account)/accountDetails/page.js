@@ -42,7 +42,7 @@ const AccountDetails = () => {
         
        })
     }}>
-      <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <div className="flex justify-center">
           <label for="file-upload"  className="aspect-squire h-34 w-34 flex justify-center items-center bg-graydark rounded-full cursor-pointer  ">

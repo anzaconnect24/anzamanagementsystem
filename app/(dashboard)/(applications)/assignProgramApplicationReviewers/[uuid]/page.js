@@ -25,7 +25,7 @@ const Page = ({params}) => {
         <div className="">
       <div>
         <Breadcrumb prevLink={""} pageName={"Assign application to reviewers"} prevPage={"Applications"}/>
-        <div className="rounded-sm border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">
             Assign reviewers 
