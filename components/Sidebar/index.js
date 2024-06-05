@@ -109,7 +109,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               <li>
                 <Link
                   href="/"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname == "/" && "bg-primary dark:bg-primary"
                   }`}
                 >
@@ -158,7 +158,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <React.Fragment>
                       <Link
                         href="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
                           "bg-primary dark:bg-primary"
@@ -253,7 +253,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <React.Fragment>
                       <Link
                         href="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
                           "bg-primary dark:bg-primary"
@@ -372,7 +372,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <li>
                 <Link
                   href="/myInvestmentRequests"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes("myInvestmentRequests") && "bg-primary dark:bg-primary"
                   }`}
                 >
@@ -408,7 +408,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <li>
                 <Link
                   href="/enterprenuers"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes("enterprenuers") && "bg-primary dark:bg-primary"
                   }`}
                 >
@@ -425,7 +425,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <li>
                 <Link
                   href="/interestedEnterprenuers"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes("interestedEnterprenuers") && "bg-primary dark:bg-primary"
                   }`}
                 >
@@ -451,7 +451,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       <React.Fragment>
                         <Link
                           href="#"
-                          className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                          className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                             (pathname === "/forms" ||
                               pathname.includes("forms")) &&
                             "bg-primary dark:bg-primary"
@@ -552,7 +552,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <React.Fragment>
                       <Link
                         href="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
                           "bg-primary dark:bg-primary"
@@ -666,7 +666,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <React.Fragment>
                       <Link
                         href="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
                           "bg-primary dark:bg-primary"
@@ -770,7 +770,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <React.Fragment>
                       <Link
                         href="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/forms" ||
                             pathname.includes("forms")) &&
                           "bg-primary dark:bg-primary"
@@ -848,7 +848,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   ["Enterprenuer","Reviewer"].includes(userDetails.role)==true &&   <li>
                   <Link
                     href="/investors"
-                    className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                       pathname.includes("investors") && "bg-primary dark:bg-primary"
                     }`}
                   >
@@ -866,7 +866,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   ["Enterprenuer","Investor","Staff","Reviewer","Admin"].includes(userDetails.role)==true &&   <li>
                   <Link
                     href="/conversations"
-                    className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                       pathname.includes("conversations") && "bg-primary dark:bg-primary"
                     }`}
                                   >
@@ -885,7 +885,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 <li>
                 <Link
                   href="/successStories"
-                  className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                     pathname.includes("successStories") && "bg-primary dark:bg-primary"
                   }`}
                 >
@@ -929,7 +929,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     <React.Fragment>
                       <Link
                         href="#"
-                        className={`group relative flex items-center gap-2.5 rounded-sm py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
                           (pathname === "/auth" || pathname.includes("auth")) &&
                           "bg-primary dark:bg-primary"
                         }`}
