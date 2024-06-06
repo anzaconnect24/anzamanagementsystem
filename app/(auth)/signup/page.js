@@ -55,6 +55,7 @@ const [isAlumni, setisAlumni] = useState(false);
           if(role == "Enterprenuer"){
              businessData = {
               name : e.target.businessName.value,
+              sdg:e.target.sdg.value,
               email : e.target.businessEmail.value,
               phone : e.target.businessPhone.value,
               problem : e.target.problem.value,
@@ -127,10 +128,10 @@ const [isAlumni, setisAlumni] = useState(false);
             setloading(false)
 
           }
-              }} className=" w-11/12 md:w-6/12  mx-auto py-12 ">
-                <div className="px-8 bg-white  hover:shadow py-10 shadow-lg rounded-lg  ring-1 ring-stroke ">
+              }} className=" w-11/12 md:w-5/12  mx-auto py-12 ">
+                <div className="px-8 bg-white  hover:shadow py-10 border border-black border-opacity-25 rounded-lg  ring-1 ring-stroke ">
                 <div className="flex justify-center">
-                      <Image height={100} width={100} src={"/anza.png"}/>
+                      <Image height={100} width={100} alt="" src={"/anza.png"}/>
 
                       </div>
                 {/* <span className="mb-1.5 block text-center text-primary font-bold">Register to anza </span> */}
@@ -139,7 +140,7 @@ const [isAlumni, setisAlumni] = useState(false);
                 {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
                 <div className="flex justify-center ">
                   <label for="file">
-                    {file != null ? <Image width={1000} height={1000} className="h-16 w-16 object-cover rounded-full" src={URL.createObjectURL(file)}/>:<div className="h-16 w-16 rounded-full flex justify-center items-center bg-opacity-40 bg-bodydark">
+                    {file != null ? <Image width={1000} height={1000} alt="" className="h-16 w-16 object-cover rounded-full" src={URL.createObjectURL(file)}/>:<div className="h-16 w-16 rounded-full flex justify-center items-center bg-opacity-10 bg-primary ">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                     </svg>
@@ -253,6 +254,35 @@ const [isAlumni, setisAlumni] = useState(false);
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Select Sustainable Development Goals
+                  </label>
+                  <select onChange={(e)=>{
+                    // alert(e.target.value)
+                       setisAlumni(e.target.value == "true"?true:false)
+                  }} required name="sdg" className="form-style">
+                    { [
+    "No Poverty",
+    "Zero Hunger",
+    "Good Health and Well-being",
+    "Quality Education",
+    "Gender Equality",
+    "Clean Water and Sanitation",
+    "Affordable and Clean Energy",
+    "Decent Work and Economic Growth",
+    "Industry, Innovation, and Infrastructure",
+    "Reduced Inequalities",
+    "Sustainable Cities and Communities",
+    "Responsible Consumption and Production",
+    "Climate Action",
+    "Life Below Water",
+    "Life on Land",
+    "Peace, Justice, and Strong Institutions",
+    "Partnerships for the Goals"
+].map((item,index)=> <option key={index} value={item}>{item}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Are you an Anza alumni ?
                   </label>
                   <select onChange={(e)=>{
@@ -262,7 +292,7 @@ const [isAlumni, setisAlumni] = useState(false);
                     <option value={false}>No</option>
                     <option value={true}>Yes</option>
                   </select>
-                            </div>
+                </div>
                       {
                          isAlumni && 
                          <div>

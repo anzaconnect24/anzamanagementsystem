@@ -36,6 +36,7 @@ const Page = ({params}) => {
           {title:"Company Name",value:business.name},
           {title:"Anza Alumni ?",value:business.isAlumni?"Yes":"false"},
           {title:"Attended (program)",value:business.completedProgram},
+          {title:"Sustainable Development Goal",value:business.sdg},
           {title:"Company phone",value:business.phone},
           {title:"Company email",value:business.email},
           {title:"Business sector",value:business.BusinessSector.name},

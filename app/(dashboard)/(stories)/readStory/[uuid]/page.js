@@ -33,7 +33,6 @@ const Page = ({params}) => {
         <Image alt="" width={2000} height={2000} className="flex  object-cover rounded-lg py-3" src={story.videoLink}/>
         <p dangerouslySetInnerHTML={{ __html:story.story }}></p>
 
-      
        {userDetails.role == "Admin"&&<div>
        <div className="flex mt-5 space-x-4">
         <Link href={`/editStory/${story.uuid}`}className="py-3 px-4 bg-primary 

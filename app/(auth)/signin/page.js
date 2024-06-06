@@ -48,11 +48,11 @@ const Page = () => {
   return (
     <>
       <div className="rounded-lg border min-h-screen flex items-center justify-center w-screen bg-bodydark1 border-stroke  dark:border-strokedark dark:bg-boxdark">
-        <div className="md:w-5/12 w-11/12 py-18">
+        <div className="md:w-4/12 w-11/12 py-18">
          
-              <div className=" bg-white shadow-lg ring-1 px-10  hover:shadow  ring-stroke rounded-lg py-10 ">
+              <div className=" bg-white border border-black border-opacity-25 ring-1 px-10  hover:shadow  ring-stroke rounded-lg py-10 ">
               <div className="flex justify-center">
-              <Image height={100} width={100} src={"/anza.png"}/>
+              <Image height={100} width={100} alt="" src={"/anza.png"}/>
 
               </div>
               {/* <span className="mb-1.5 block text-center text-primary font-bold">Sign in to anza </span> */}

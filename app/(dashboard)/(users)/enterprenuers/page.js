@@ -48,13 +48,13 @@ const Page = () => {
   users.length <1?<NoData/>:<div className="pb-8">
   <div className="grid grid-cols-4 gap-4 px-6 py-8 ">
       {users.map((item,key)=>(
-        <div  className="flex flex-col items-center justify-center border hover:scale-105 transition-all duration-200 border-bodydark border-opacity-70 py-12 rounded-lg " key={key}>
+        <div  className="flex flex-col items-center justify-center border hover:scale-105 transition-all duration-200 border-t-8 border-t-primary border-bodydark border-opacity-70 py-12 rounded-lg " key={key}>
         <Link href={`businessDetails/${item.Business.uuid}`} className=" bg-gray h-24 w-24 rounded-full">
-          <Image height={200} width={200} alt="" className=" object-cover rounded-full" src={item.image}/>
+          <Image height={2000} width={2000} alt="" className=" object-cover rounded-full h-24 w-24 " src={item.image}/>
         </Link>
         <h1 className="text-lg  text-black">{item.name}</h1>
         <Link href={`businessDetails/${item.Business.uuid}`} className="flex space-x-1 hover:underline hover:text-primary cursor-pointer items-center">
-        <p className="text-sm text-black">{item.Business.name}</p>
+        <p className="text-sm text-black">{item.Business.email}</p>
         
         </Link>
         <div className="flex space-x-3 mt-6">
