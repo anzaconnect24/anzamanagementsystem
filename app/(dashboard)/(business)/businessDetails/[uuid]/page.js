@@ -66,7 +66,7 @@ const Page = ({params}) => {
                       <a  target="_blank" href={business.companyProfile} className="py-4 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow">
                       {/* {item.link} */}
                       <div>
-                        <Image height="1000" width="1000" className="h-16 w-16"   src="/pdf.png"/>
+                        <Image height="1000" alt="" width="1000" className="h-16 w-16"   src="/pdf.png"/>
                       </div>
                       <div className="mt-3 text-black text-center">
                        Company profile
@@ -87,7 +87,7 @@ const Page = ({params}) => {
                       <a  target="_blank" href={business.businessPlan} className="py-4 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow">
                       {/* {item.link} */}
                       <div>
-                        <Image height="1000" width="1000" className="h-16 w-16"   src="/pdf.png"/>
+                        <Image height="1000" width="1000" alt="" className="h-16 w-16"   src="/pdf.png"/>
                       </div>
                       <div className="mt-3 text-black text-center">
                         Business plan
@@ -106,7 +106,7 @@ const Page = ({params}) => {
                       <a  target="_blank" href={business.marketResearch} className="py-4 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow">
                       {/* {item.link} */}
                       <div>
-                        <Image height="1000" width="1000" className="h-16 w-16"   src="/pdf.png"/>
+                        <Image height="1000" alt="" width="1000" className="h-16 w-16"   src="/pdf.png"/>
                       </div>
                       <div className="mt-3 text-black text-center">
                        market research
@@ -128,7 +128,7 @@ const Page = ({params}) => {
                       <a href={item.link} target="_blank" className="py-4 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow" key={key}>
                       {/* {item.link} */}
                       <div>
-                        <Image height="1000" width="1000" className="h-16 w-16"   src="/pdf.png"/>
+                        <Image height="1000" alt="" width="1000" className="h-16 w-16"   src="/pdf.png"/>
                       </div>
                       <div className="mt-3 text-black text-center">
                       {item.title}
@@ -155,7 +155,7 @@ const Page = ({params}) => {
               
              }
              toast.success("Enabling end-to-end encryption. Please wait...")
-             createNotification({ user_uuid:user.uuid,to:"User", message:`You have a new message`})
+             createNotification({ user_uuid:business.User.uuid,to:"User", message:`You have a new message`})
              createConversation(data).then((data)=>{
                router.push(`/messages/${data.uuid}`)
              })

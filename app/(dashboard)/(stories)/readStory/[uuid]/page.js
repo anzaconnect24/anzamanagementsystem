@@ -25,12 +25,12 @@ const Page = ({params}) => {
     }, []);
 
     return ( loading?<Loader/>:<div>
-               <Breadcrumb prevLink={``} prevPage="Stories" pageName={story.title} />
+               <Breadcrumb prevLink={``} prevPage="Stories" pageName={"Read story"} />
          <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h1 className="font-bold text-3xl">{story.title}</h1>
         <p className="italic ">{timeAgo(story.createdAt)}</p>
-        <Image width={2000} height={2000} className="flex  object-cover rounded-lg py-3" src={story.videoLink}/>
+        <Image alt="" width={2000} height={2000} className="flex  object-cover rounded-lg py-3" src={story.videoLink}/>
         <p dangerouslySetInnerHTML={{ __html:story.story }}></p>
 
       

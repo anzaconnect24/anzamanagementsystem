@@ -47,7 +47,7 @@ const {userDetails} = useContext(UserContext)
         <h4 className="text-xl font-semibold text-black dark:text-white">
           Success stories
         </h4>
-        {["Admin"].includes(userDetails.role)&&
+        {["Admin","Enterprenuer"].includes(userDetails.role)&&
         <Link href="/newStory" className="py-2 px-3 bg-primary text-white rounded hover:opacity-95 cursor-pointer">New story</Link>
       }
       </div>
@@ -56,8 +56,8 @@ const {userDetails} = useContext(UserContext)
 
         <div className="grid gap-4 grid-cols-3 px-8">
         {users.map((item, key) => (
-        <Link className="w-full border p-4 rounded border-black border-opacity-30 hover:shadow-lg" href={`/readStory/${item.uuid}`} key={key}>
-          <img className="rounded" src={item.videoLink}/>
+        <Link className="w-full border p-4 rounded border-black border-opacity-20 hover:shadow-lg" href={`/readStory/${item.uuid}`} key={key}>
+          <Image alt="" width={1000} height={1000} className="rounded h-48" src={item.videoLink}/>
           <div className="flex items-center space-x-2 mt-1">
             <div>
             <div className="font-bold text-lg line-clamp-1">{item.title}</div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { createSector } from "@/app/controllers/sector_controller";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import Loader from "@/components/common/Loader";
@@ -13,6 +13,7 @@ import { getApprovedBusinesses } from "@/app/controllers/business_controller";
 import { createSuccessStory } from "@/app/controllers/stories_controller";
 import dynamic from 'next/dynamic';
 import 'react-quill/dist/quill.snow.css';
+import { UserContext } from "../../layout";
 
 // Dynamically import ReactQuill to prevent SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
@@ -22,6 +23,7 @@ const Page = () => {
     const [description, setDescription] = useState("");
     const [imageURL, setImageURL] = useState(null);
     const [requirement, setRequirement] = useState("");
+    const {userDetails} = useContext(UserContext)
     const router = useRouter();
     
     const [applications, setApplications] = useState([]);
@@ -85,7 +87,8 @@ const Page = () => {
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
                                 Select business
                             </label>
-                            <select name="business" className="w-full rounded border-stroke"
+                            
+                            <select  name="business" defaultValue={userDetails.role=="Enterprenuer"&&userDetails.Business.uuid} disabled={userDetails.role=="Enterprenuer"}  className="w-full rounded border-stroke"
                                 placeholder="Enter sector name">
                                 <option>Select business</option>
                                 {applications.map((item, key) => {
