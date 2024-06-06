@@ -24,9 +24,9 @@ const ECommerce = () => {
     <>
     {["Enterprenuer"].includes(userDetails.role)&&<div>
         {checkIfProfileIsComplete(userDetails) == false &&<div className="bg-white shadow mb-8">
-          <div className="flex justify-between bg-warning bg-opacity-10 px-4 py-4 text-black">
-          <h1 className="text-2xl">Please complete your profile </h1>
-          <Link href="/accountInformation" className="py-2 px-2 font-bold bg-warning">Complete profile</Link>
+          <div className="flex justify-between bg-danger bg-opacity-10 px-4 py-4 text-black items-center">
+          <h1 className="text-lg">Please complete your profile </h1>
+          <Link href="/accountInformation" className="py-2 px-2 font-bold bg-danger text-white">Complete profile</Link>
           </div>
           </div>}
       </div>}
