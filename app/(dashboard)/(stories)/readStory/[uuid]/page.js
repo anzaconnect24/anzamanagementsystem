@@ -28,39 +28,11 @@ const Page = ({params}) => {
                <Breadcrumb prevLink={``} prevPage="Stories" pageName={story.title} />
          <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
-      <div className="grid grid-cols-1 gap-y-4">
-        {
-            story.videoLink != "" && <div className="flex">
-            <div className="w-4/12">
-                Image
-            </div>
-            <div className="w-8/12 text-black">
-            {/* <Image height={1000} width={1000}  className="flex h-80 object-cover" src={story.videoLink}/> */}
-            </div>
+        <h1 className="font-bold text-3xl">{story.title}</h1>
+        <p className="italic ">{timeAgo(story.createdAt)}</p>
+        <Image width={2000} height={2000} className="flex  object-cover rounded-lg py-3" src={story.videoLink}/>
+        <p dangerouslySetInnerHTML={{ __html:story.story }}></p>
 
-        </div>
-        }
-      
-    {[
-        {title:"Published",value:timeAgo(story.createdAt)},
-        {title:"Story",value:story.story},
-        // {title:"Video",value:},
-
-        // {title:"Published",value:timeAgo(story.createdAt)},
-
-   
-].map((item,key)=>{
-        return <div className="flex" key={key}>
-            <div className="w-4/12">
-                {item.title}:
-            </div>
-            <div className="w-8/12 text-black">
-                {item.value}
-            </div>
-
-        </div>
-    })}
-</div>
       
        {userDetails.role == "Admin"&&<div>
        <div className="flex mt-5 space-x-4">

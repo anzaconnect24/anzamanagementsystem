@@ -9,10 +9,13 @@ import toast from 'react-hot-toast';
 import Spinner from "@/components/spinner";
 import { getApprovedBusinesses } from "@/app/controllers/business_controller";
 import { createSuccessStory } from "@/app/controllers/stories_controller";
-
+import ReactQuill from "react-quill";
+import 'react-quill/dist/quill.snow.css';
 // import {Breadcrumb} from "@/app/component/Breadcrumb"
 const Page = () => {
     const [fields, setFields] = useState([]);
+    const [description, setDescription] = useState("");
+    const [imageURL,setImageURL] = useState(null)
     const [requirement, setRequirement] = useState("");
     const router = useRouter()
     
@@ -40,7 +43,7 @@ const Page = () => {
              setuploadStory(true)
             const data = {
                title:e.target.title.value,
-               story:e.target.story.value,
+               story:description,
                file:e.target.image.files[0],
                business_uuid:e.target.business.value
              }
@@ -49,7 +52,24 @@ const Page = () => {
             setuploadStory(false)
            })
         }}>
-        <div className="grid grid-cols-3 gap-x-3">
+          <div className="w-full flex flex-col items-center justify-center">
+           
+               <input type="file" onChange={(e)=>{
+                  setImageURL(e.target.files[0])
+               }}  name="image" id="image" className="w-full rounded border-stroke sr-only" 
+               />
+               {imageURL==null?<div>
+                 <label for="image">
+                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
+                  strokeWidth={1.5} stroke="currentColor" className="size-4 text-gray-400">
+  <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3V15" />
+</svg>
+<div>Upload story image*</div>
+
+                 </label>
+ </div>:<img src={URL.createObjectURL(imageURL)}/>}
+            </div>
+        <div className="grid grid-cols-2 gap-x-3 mt-6">
             <div>
             <label className="mb-2.5 block font-medium text-black dark:text-white">
             Title
@@ -58,13 +78,7 @@ const Page = () => {
          placeholder="Enter story title"/>
 
             </div>
-            <div>
-            <label className="mb-2.5 block font-medium text-black dark:text-white">
-            Upload image
-            </label>
-               <input type="file"  name="image" className="w-full rounded border-stroke" 
-               />
-            </div>
+        
             <div>
             <label className="mb-2.5 block font-medium text-black dark:text-white">
             Select business
@@ -78,13 +92,15 @@ const Page = () => {
          </select>
 
             </div>
+            
             </div>
+           
             <div className="mt-4">
             <label className="mb-2.5 block font-medium text-black dark:text-white">
             Story
             </label>
-         <textarea name="story" className="w-full rounded border-stroke" 
-         placeholder="Write a story"/>
+            <ReactQuill theme="snow" placeholder="Write description here" value={description} onChange={setDescription} />
+
 
             </div>
             

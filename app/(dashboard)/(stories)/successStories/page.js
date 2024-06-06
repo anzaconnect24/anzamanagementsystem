@@ -56,18 +56,16 @@ const {userDetails} = useContext(UserContext)
 
         <div className="grid gap-4 grid-cols-3 px-8">
         {users.map((item, key) => (
-        <Link className="w-full border p-8 rounded border-bodydark2 border-opacity-30 hover:shadow-lg" href={`/readStory/${item.uuid}`} key={key}>
-          <div className="flex items-center space-x-2">
-          <Image height={1000} width={1000} className="h-10 w-10 aspect-square rounded-full object-cover" src={item.Business.User.image}/>
-
+        <Link className="w-full border p-4 rounded border-black border-opacity-30 hover:shadow-lg" href={`/readStory/${item.uuid}`} key={key}>
+          <img className="rounded" src={item.videoLink}/>
+          <div className="flex items-center space-x-2 mt-1">
             <div>
             <div className="font-bold text-lg line-clamp-1">{item.title}</div>
-             <div className=" text-bodydark2 ">{timeAgo(item.createdAt)}</div>
+             <div className=" text-bodydark2 text-sm italic">{timeAgo(item.createdAt)}</div>
             </div>
           </div>
-          <div className=" line-clamp-2 mt-2">{item.story}</div>
-          <div className="border border-primary py-2 w-full rounded font-bold text-primary flex justify-center mt-4">Read story</div>
-
+          <div className=" line-clamp-2 mt-2" dangerouslySetInnerHTML={{ __html:item.story }}></div>
+         
         </Link>
       ))}
         </div>
