@@ -2,6 +2,7 @@
 import { createSector} from "@/app/controllers/sector_controller"
 import { useEffect, useState } from "react";
 import Link from "next/link"
+import Image from "next/image"
 import Loader from "@/components/common/Loader";
 import { useRouter } from "next/navigation";
 import Breadcrumb from "@/app/component/Breadcrumb";
@@ -67,7 +68,7 @@ const Page = () => {
 <div>Upload story image*</div>
 
                  </label>
- </div>:<img src={URL.createObjectURL(imageURL)}/>}
+ </div>:<Image alt="" height={1000} width={1000} src={URL.createObjectURL(imageURL)}/>}
             </div>
         <div className="grid grid-cols-2 gap-x-3 mt-6">
             <div>
