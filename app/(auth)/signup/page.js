@@ -23,6 +23,31 @@ import { createNotification } from "@/app/controllers/notification_controller";
 // };
 const SignUp = () => {
 const [role, setRole] = useState("Reviewer");
+const [formValues, setFormValues] = useState({
+  userName: '',
+  userEmail: '',
+  userPhone: '',
+  password: '',
+  repeatPassword: '',
+  businessName: '',
+  sdg: '',
+  businessEmail: '',
+  businessPhone: '',
+  problem: '',
+  completedProgram: '',
+  solution: '',
+  traction: '',
+  registration: '',
+  stage: '',
+  business_sector_uuid: '',
+  team: '',
+  investorRole: '',
+  investorCompany: '',
+  investorSector: '',
+  investorTicketSize: '',
+  investorGeography: '',
+  investorStructure: ''
+});
 const router = useRouter()
 const [loading, setloading] = useState(false);
 const [sectors, setSectors] = useState([]);
@@ -45,12 +70,12 @@ const [isAlumni, setisAlumni] = useState(false);
         e.preventDefault()
         setloading(true)
           const userData = {
-              name : e.target.userName.value,
-              file: e.target.file.files[0],
-              email: e.target.userEmail.value,
-              phone: e.target.userPhone.value,
-              role: e.target.role.value,
-              password: e.target.password.value,
+              name : formValues.userName,
+              file: file,
+              email:formValues.userEmail,
+              phone:formValues.userPhone,
+              role: role,
+              password: formValues.password,
           }
           let businessData;
           if(role == "Enterprenuer"){
@@ -83,7 +108,7 @@ const [isAlumni, setisAlumni] = useState(false);
               structure:e.target.investorStructure.value
             }
           }
-          if(e.target.password.value == e.target.repeatPassword.value){
+          if(formValues.password == formValues.repeatPassword){
                   register(userData).then((data)=>{
                     if(data.status == true){
                       createNotification({
@@ -159,7 +184,7 @@ const [isAlumni, setisAlumni] = useState(false);
                 {/* <div className="text-4xl font-bold text-black pb-10 text-center">Create Anza account</div> */}
                 <div>
                 {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
-                <div className="flex justify-between w-full mb-8">
+                <div className="flex justify-between w-full mb-8 items-center">
                   <h1 className="text-xl">{steps[selectedIndex]}</h1>
                   <div className="py-2 px-3 rounded-full bg-primary bg-opacity-10">
                     Step {selectedIndex+1}
@@ -184,21 +209,33 @@ const [isAlumni, setisAlumni] = useState(false);
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Full name
                   </label>
-                  <input name="userName" required className=" form-style" placeholder="Username" type="text"/>
+                  <input onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.userName = e.target.value
+                    setFormValues(newFormValues)
+                  }} name="userName" defaultValue={formValues.userName} required className=" form-style" placeholder="Username" type="text"/>
 
                   </div>
                   <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Email address
                   </label>
-                  <input name="userEmail" required className="form-style" placeholder="Email address" type="email"/>
+                  <input onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.userEmail = e.target.value
+                    setFormValues(newFormValues)
+                  }}  name="userEmail" defaultValue={formValues.userEmail}  required className="form-style" placeholder="Email address" type="email"/>
 
                   </div>
                   <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Phone number
                   </label>
-                  <input name="userPhone" required className="form-style" placeholder="Phone number" type="tel"/>
+                  <input  onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.userPhone = e.target.value
+                    setFormValues(newFormValues)
+                  }} name="userPhone" defaultValue={formValues.userPhone} required className="form-style" placeholder="Phone number" type="tel"/>
 
                   </div>
                   <div>
@@ -207,7 +244,7 @@ const [isAlumni, setisAlumni] = useState(false);
                   </label>
                   {/* <div>Register as</div> */}
                   <div className="flex flex-col  space-y-2  ">
-                    <select onChange={(e)=>{
+                    <select defaultValue={role} onChange={(e)=>{
                         setRole(e.target.value)
                       }} className="form-style" name="role">
                       {["Staff","Enterprenuer","Investor"].map((item)=>
@@ -221,15 +258,20 @@ const [isAlumni, setisAlumni] = useState(false);
                     Create password
                   </label>
                   <div className="relative">
-                  <input
+                  <input  onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.password = e.target.value
+                    setFormValues(newFormValues)
+                  }}
                     type={`${showPassword?"text":"password"}`}
                     name="password"
+                    defaultValue={formValues.password}
                     // aria-invalid={touched.password && !!errors.password} 
                     placeholder="Enter password"
                     className={`form-style`}
                   />
 
-                  <span onClick={()=>setshowPassword(!showPassword)} className="absolute right-4 top-4 cursor-pointer">
+                  <span onClick={()=>setshowPassword(!showPassword)} className="absolute right-4 top-2 cursor-pointer">
                   {showPassword?<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -246,6 +288,12 @@ const [isAlumni, setisAlumni] = useState(false);
                   </label>
                   <div className="relative">
                   <input
+                   onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.repeatPassword = e.target.value
+                    setFormValues(newFormValues)
+                  }}
+                  defaultValue={formValues.repeatPassword}
                     type={`${showPassword2?"text":"password"}`}
                     name="repeatPassword"
                     // aria-invalid={touched.password && !!errors.password} 
@@ -253,7 +301,7 @@ const [isAlumni, setisAlumni] = useState(false);
                     className={`form-style`}
                   />
 
-                  <span onClick={()=>setshowPassword2(!showPassword2)} className="absolute right-4 top-4 cursor-pointer">
+                  <span onClick={()=>setshowPassword2(!showPassword2)} className="absolute right-4 top-2 cursor-pointer">
                   {showPassword2?<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -287,24 +335,25 @@ const [isAlumni, setisAlumni] = useState(false);
                        setisAlumni(e.target.value == "true"?true:false)
                   }} required name="sdg" className="form-style">
                     { [
-    "No Poverty",
-    "Zero Hunger",
-    "Good Health and Well-being",
-    "Quality Education",
-    "Gender Equality",
-    "Clean Water and Sanitation",
-    "Affordable and Clean Energy",
-    "Decent Work and Economic Growth",
-    "Industry, Innovation, and Infrastructure",
-    "Reduced Inequalities",
-    "Sustainable Cities and Communities",
-    "Responsible Consumption and Production",
-    "Climate Action",
-    "Life Below Water",
-    "Life on Land",
-    "Peace, Justice, and Strong Institutions",
-    "Partnerships for the Goals"
-].map((item,index)=> <option key={index} value={item}>{item}</option>)}
+                        "No Poverty",
+                        "Zero Hunger",
+                        "Good Health and Well-being",
+                        "Quality Education",
+                        "Gender Equality",
+                        "Clean Water and Sanitation",
+                        "Affordable and Clean Energy",
+                        "Decent Work and Economic Growth",
+                        "Industry, Innovation, and Infrastructure",
+                        "Reduced Inequalities",
+                        "Sustainable Cities and Communities",
+                        "Responsible Consumption and Production",
+                        "Climate Action",
+                        "Life Below Water",
+                        "Life on Land",
+                        "Peace, Justice, and Strong Institutions",
+                        "Partnerships for the Goals"
+                    ].map((item,index)=> <option key={index} value={item}>{item}</option>
+                    )}
                   </select>
                 </div>
                 <div>
@@ -489,9 +538,9 @@ const [isAlumni, setisAlumni] = useState(false);
                 </div>}
                 
                 <div className="  flex justify-end py-4 space-x-2 w-full pt-24">
-                  {selectedIndex>0&& <button onClick={()=>{
+                  {selectedIndex>0&& <div onClick={()=>{
                     setSelectedIndex(selectedIndex-1)
-                  }} className="py-3 px-3 rounded-lg border-slate-400 border">Prev</button>}
+                  }} className="py-3 px-3 rounded-lg border-slate-400 border cursor-pointer">Prev</div>}
                  {selectedIndex ==0 && file != null&& <button onClick={()=>{
                     setSelectedIndex(selectedIndex+1)
                   }} className="py-3 px-3 rounded-lg text-white border-slate-400 border bg-primary">Next</button>}
