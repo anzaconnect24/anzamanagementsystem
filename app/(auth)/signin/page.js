@@ -47,18 +47,19 @@ const Page = () => {
 
   return (
     <>
-      <div className="rounded-lg border min-h-screen flex items-center justify-center w-screen bg-bodydark1 border-stroke  dark:border-strokedark dark:bg-boxdark">
+      <div className="rounded-lg border min-h-screen flex items-center justify-center w-screen bg-slate-800 border-stroke  dark:border-strokedark dark:bg-boxdark">
         <div className="md:w-4/12 w-11/12 py-18">
-         
-              <div className=" bg-white border border-black border-opacity-25 ring-1 px-10  hover:shadow  ring-stroke rounded-lg py-10 ">
-              <div className="flex justify-center">
-              <Image height={100} width={100} alt="" src={"/anza.png"}/>
+        <div className="flex justify-center">
+              <Image height={100} width={100} alt="" src={"https://anzaentrepreneurs.co.tz/wp-content/uploads/2023/08/cropped-White-Version-300x92.png"}/>
 
               </div>
+              <div className=" bg-white border ring-1 px-10  rounded-lg py-10 mt-8 ">
+              
               {/* <span className="mb-1.5 block text-center text-primary font-bold">Sign in to anza </span> */}
-              <h2 className="mb-2  text-center font-bold text-black dark:text-white sm:text-title-xl2">
+              <h2 className="mb-2  text-center font-bold text-black dark:text-white sm:text-title-lg ">
                 Sign In to continue
               </h2>
+              <p className="text-slate-500 text-center mb-8">Provide your credentials to Sign In</p>
               <Formik
         initialValues={{ email: '', password: '' }}
         validationSchema={validationSchema}
@@ -78,7 +79,7 @@ const Page = () => {
         onChange={handleChange}
         // aria-invalid={touched.email && !!errors.email}   
         placeholder="Enter your email"
-        className="w-full rounded-lg border border-stroke bg-transparent py-2 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
+        className=" form-style"
       />
 
   
@@ -101,7 +102,7 @@ const Page = () => {
         name="password"
         // aria-invalid={touched.password && !!errors.password} 
         placeholder="6+ Characters, 1 Capital letter"
-        className={`w-full rounded-lg border border-stroke bg-transparent py-2 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary`}
+        className={` form-style`}
       />
 
       <span onClick={()=>setshowPassword(!showPassword)} className="absolute right-4 top-4 cursor-pointer">
@@ -117,7 +118,7 @@ const Page = () => {
     {errors.password}
     </p>
     <div className="flex justify-end py-3">
-    <Link href="/forgotPassword">
+    <Link href="/forgotPassword" className="italic text-slate-500">
     Forgot password ?
     </Link>
   </div>
