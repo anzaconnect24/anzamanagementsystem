@@ -22,14 +22,40 @@ import { createNotification } from "@/app/controllers/notification_controller";
 //   // other metadata
 // };
 const SignUp = () => {
-const [role, setRole] = useState("");
+const [role, setRole] = useState("Reviewer");
+const [formValues, setFormValues] = useState({
+  userName: '',
+  userEmail: '',
+  userPhone: '',
+  password: '',
+  repeatPassword: '',
+  businessName: '',
+  sdg: '',
+  businessEmail: '',
+  businessPhone: '',
+  problem: '',
+  completedProgram: '',
+  solution: '',
+  traction: '',
+  registration: '',
+  stage: '',
+  business_sector_uuid: '',
+  team: '',
+  investorRole: '',
+  investorCompany: '',
+  investorSector: '',
+  investorTicketSize: '',
+  investorGeography: '',
+  investorStructure: ''
+});
 const router = useRouter()
 const [loading, setloading] = useState(false);
 const [sectors, setSectors] = useState([]);
 const [showPassword, setshowPassword] = useState(false);
 const [showPassword2, setshowPassword2] = useState(false);
 const [file, setfile] = useState(null);
-
+const [selectedIndex, setSelectedIndex] = useState(0)
+const steps = ["Profile Image", "User Informations","Business Informations"];
 const [isAlumni, setisAlumni] = useState(false);
   useEffect(() => {
   getSectors().then((data)=>{
@@ -39,17 +65,17 @@ const [isAlumni, setisAlumni] = useState(false);
   })
 }, []);
   return (
-    <div className=" bg-bodydark1 min-h-screen flex items-center">
+    <div className=" bg-slate-700 min-h-screen flex items-center">
       <form onSubmit={(e)=>{
         e.preventDefault()
         setloading(true)
           const userData = {
-              name : e.target.userName.value,
-              file: e.target.file.files[0],
-              email: e.target.userEmail.value,
-              phone: e.target.userPhone.value,
-              role: e.target.role.value,
-              password: e.target.password.value,
+              name : formValues.userName,
+              file: file,
+              email:formValues.userEmail,
+              phone:formValues.userPhone,
+              role: role,
+              password: formValues.password,
           }
           let businessData;
           if(role == "Enterprenuer"){
@@ -82,7 +108,7 @@ const [isAlumni, setisAlumni] = useState(false);
               structure:e.target.investorStructure.value
             }
           }
-          if(e.target.password.value == e.target.repeatPassword.value){
+          if(formValues.password == formValues.repeatPassword){
                   register(userData).then((data)=>{
                     if(data.status == true){
                       createNotification({
@@ -128,48 +154,88 @@ const [isAlumni, setisAlumni] = useState(false);
             setloading(false)
 
           }
-              }} className=" w-11/12 md:w-5/12  mx-auto py-12 ">
-                <div className="px-8 bg-white  hover:shadow py-10 border border-black border-opacity-25 rounded-lg  ring-1 ring-stroke ">
-                <div className="flex justify-center">
+              }} className=" w-11/12 md:w-8/12  mx-auto  ">
+                <div className=" bg-white  hover:shadow  border-black   rounded-lg  ring-1 ring-stroke ">
+                  <div className="grid grid-cols-12">
+                    <div className="col-span-4 bg-slate-100 h-full p-8 py-16 rounded-l-lg flex flex-col justify-between ">
+                      <div>
+                      <p className="font-medium text-primary">Welcome</p>
+                          <h1 className="text-4xl font-bold">Create Anza Account</h1>
+
+                        <div className="space-y-2 mt-12">
+                          {steps.map((item,index)=>{
+                            return <div key={item} className={`py-2 px-3 border border-slate-400 rounded-md ${selectedIndex==index&&"bg-primary text-white"}`}>{item}</div>
+                          })}
+                        </div>
+                      </div>
+                        <p className="mt-24">
+              <span className="italic">Already registered ?{" "}</span>
+              <Link href="/signin" className="text-primary font-bold">
+                Sign in
+              </Link>
+            </p>
+                    </div>
+                    <div className="col-span-8 p-8 py-16 flex flex-col justify-center  w-full">
+                    {/* <div className="flex justify-center">
                       <Image height={100} width={100} alt="" src={"/anza.png"}/>
 
-                      </div>
+                      </div> */}
                 {/* <span className="mb-1.5 block text-center text-primary font-bold">Register to anza </span> */}
-                <div className="text-4xl font-bold text-black pb-10 text-center">Create Anza account</div>
+                {/* <div className="text-4xl font-bold text-black pb-10 text-center">Create Anza account</div> */}
                 <div>
                 {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
-                <div className="flex justify-center ">
-                  <label for="file">
-                    {file != null ? <Image width={1000} height={1000} alt="" className="h-16 w-16 object-cover rounded-full" src={URL.createObjectURL(file)}/>:<div className="h-16 w-16 rounded-full flex justify-center items-center bg-opacity-10 bg-primary ">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
+                <div className="flex justify-between w-full mb-8 items-center">
+                  <h1 className="text-xl">{steps[selectedIndex]}</h1>
+                  <div className="py-2 px-3 rounded-full bg-primary bg-opacity-10">
+                    Step {selectedIndex+1}
+                  </div>
+                </div>
+               {selectedIndex == 0 &&  <div className="flex justify-center flex-col items-center">
+                  <label for="file" className="flex flex-col items-center justify-center">
+                    {file != null ? <Image width={1000} height={1000} alt="" className="h-48 w-48 object-cover border border-dashed border-slate-400  rounded-full" src={URL.createObjectURL(file)}/>:<div className=" border w-48 h-48 border-dashed border-slate-400 p-12 rounded-full flex justify-center items-center ">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="size-12">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
                     </svg>
                     </div>}
+                    {file==null&&<p className="italic text-body mt-2">Upload profile image*</p> }
+                    
                   </label>
                   <input required onChange={(e)=>{
                     setfile(e.target.files[0])
                   }} name="file" type="file" className="sr-only" id="file"/>
-                </div>
-                <div className="grid grid-cols-1 mt-3 md:grid-cols-2 gap-x-2 gap-y-2">
+                </div>}
+                {selectedIndex==1 &&  <div className="grid grid-cols-1 mt-3 md:grid-cols-2 gap-x-2 gap-y-2">
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Full name
                   </label>
-                  <input name="userName" required className=" form-style" placeholder="Username" type="text"/>
+                  <input onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.userName = e.target.value
+                    setFormValues(newFormValues)
+                  }} name="userName" defaultValue={formValues.userName} required className=" form-style" placeholder="Username" type="text"/>
 
                   </div>
                   <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Email address
                   </label>
-                  <input name="userEmail" required className="form-style" placeholder="Email address" type="email"/>
+                  <input onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.userEmail = e.target.value
+                    setFormValues(newFormValues)
+                  }}  name="userEmail" defaultValue={formValues.userEmail}  required className="form-style" placeholder="Email address" type="email"/>
 
                   </div>
                   <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Phone number
                   </label>
-                  <input name="userPhone" required className="form-style" placeholder="Phone number" type="tel"/>
+                  <input  onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.userPhone = e.target.value
+                    setFormValues(newFormValues)
+                  }} name="userPhone" defaultValue={formValues.userPhone} required className="form-style" placeholder="Phone number" type="tel"/>
 
                   </div>
                   <div>
@@ -178,33 +244,34 @@ const [isAlumni, setisAlumni] = useState(false);
                   </label>
                   {/* <div>Register as</div> */}
                   <div className="flex flex-col  space-y-2  ">
-                    {["Enterprenuer","Investor","Staff"].map((item)=>
-                      <div key={item} className="flex items-center space-x-2">
-                      <input required name="role" value={item=="Staff"?"Reviewer":item} onChange={(e)=>{
-                            setRole(e.target.value);
-                      }} type="radio"/>
-                      <div>{item}</div>
-                      </div>
-                    )}
-                
-
+                    <select defaultValue={role} onChange={(e)=>{
+                        setRole(e.target.value)
+                      }} className="form-style" name="role">
+                      {["Staff","Enterprenuer","Investor"].map((item)=>
+                        <option  key={item} value={item=="Staff"?"Reviewer":item}>{item}</option>
+                      )}
+                    </select>
                   </div>
-                  
                   </div>
                   <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Create password
                   </label>
                   <div className="relative">
-                  <input
+                  <input  onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.password = e.target.value
+                    setFormValues(newFormValues)
+                  }}
                     type={`${showPassword?"text":"password"}`}
                     name="password"
+                    defaultValue={formValues.password}
                     // aria-invalid={touched.password && !!errors.password} 
                     placeholder="Enter password"
-                    className={`w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary`}
+                    className={`form-style`}
                   />
 
-                  <span onClick={()=>setshowPassword(!showPassword)} className="absolute right-4 top-4 cursor-pointer">
+                  <span onClick={()=>setshowPassword(!showPassword)} className="absolute right-4 top-2 cursor-pointer">
                   {showPassword?<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -221,14 +288,20 @@ const [isAlumni, setisAlumni] = useState(false);
                   </label>
                   <div className="relative">
                   <input
+                   onChange={(e)=>{
+                    const newFormValues = formValues;
+                    newFormValues.repeatPassword = e.target.value
+                    setFormValues(newFormValues)
+                  }}
+                  defaultValue={formValues.repeatPassword}
                     type={`${showPassword2?"text":"password"}`}
                     name="repeatPassword"
                     // aria-invalid={touched.password && !!errors.password} 
                     placeholder="Re-enter password"
-                    className={`w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary`}
+                    className={`form-style`}
                   />
 
-                  <span onClick={()=>setshowPassword2(!showPassword2)} className="absolute right-4 top-4 cursor-pointer">
+                  <span onClick={()=>setshowPassword2(!showPassword2)} className="absolute right-4 top-2 cursor-pointer">
                   {showPassword2?<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 0 1 0-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178Z" />
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
@@ -244,10 +317,11 @@ const [isAlumni, setisAlumni] = useState(false);
                   <div>
                   
                 </div>
-                </div>
+                </div>}
+               
 
                 </div>
-                <div>
+                {selectedIndex == 2 && <div>
                   {role == "Enterprenuer" &&<div>
                   {/* <div className=" text-2xl text-black pt-8 pb-4">Company details</div> */}
                 <div className="space-y-2">
@@ -261,24 +335,25 @@ const [isAlumni, setisAlumni] = useState(false);
                        setisAlumni(e.target.value == "true"?true:false)
                   }} required name="sdg" className="form-style">
                     { [
-    "No Poverty",
-    "Zero Hunger",
-    "Good Health and Well-being",
-    "Quality Education",
-    "Gender Equality",
-    "Clean Water and Sanitation",
-    "Affordable and Clean Energy",
-    "Decent Work and Economic Growth",
-    "Industry, Innovation, and Infrastructure",
-    "Reduced Inequalities",
-    "Sustainable Cities and Communities",
-    "Responsible Consumption and Production",
-    "Climate Action",
-    "Life Below Water",
-    "Life on Land",
-    "Peace, Justice, and Strong Institutions",
-    "Partnerships for the Goals"
-].map((item,index)=> <option key={index} value={item}>{item}</option>)}
+                        "No Poverty",
+                        "Zero Hunger",
+                        "Good Health and Well-being",
+                        "Quality Education",
+                        "Gender Equality",
+                        "Clean Water and Sanitation",
+                        "Affordable and Clean Energy",
+                        "Decent Work and Economic Growth",
+                        "Industry, Innovation, and Infrastructure",
+                        "Reduced Inequalities",
+                        "Sustainable Cities and Communities",
+                        "Responsible Consumption and Production",
+                        "Climate Action",
+                        "Life Below Water",
+                        "Life on Land",
+                        "Peace, Justice, and Strong Institutions",
+                        "Partnerships for the Goals"
+                    ].map((item,index)=> <option key={index} value={item}>{item}</option>
+                    )}
                   </select>
                 </div>
                 <div>
@@ -460,21 +535,38 @@ const [isAlumni, setisAlumni] = useState(false);
                 </div>
                   </div>
                   }
-                </div>
-                <div className="  flex justify-center py-4 ">
-                <button
+                </div>}
+                
+                <div className="  flex justify-end py-4 space-x-2 w-full pt-24">
+                  {selectedIndex>0&& <div onClick={()=>{
+                    setSelectedIndex(selectedIndex-1)
+                  }} className="py-3 px-3 rounded-lg border-slate-400 border cursor-pointer">Prev</div>}
+                 {selectedIndex ==0 && file != null&& <button onClick={()=>{
+                    setSelectedIndex(selectedIndex+1)
+                  }} className="py-3 px-3 rounded-lg text-white border-slate-400 border bg-primary">Next</button>}
+                  {selectedIndex == 1 && role=="Reviewer"?<button
                   type="submit"
-                  className="w-full cursor-pointer rounded-lg border flex justify-center border-primary bg-primary p-4 text-white transition hover:bg-opacity-90">
-                  {loading?<Spinner/>:"Submit details for review"}
-                </button>
+                  className="w-48 cursor-pointer rounded-lg border flex justify-center border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90">
+                  {loading?<Spinner/>:"Complete Registration"}
+                </button>: selectedIndex != 0&&  selectedIndex != 2&& <button onClick={()=>{
+                    setSelectedIndex(selectedIndex+1)
+                  }} className="py-3 px-3 rounded-lg text-white border-slate-400 border bg-primary">Next</button>}
+               
+                {selectedIndex==2? <button
+                  type="submit"
+                  className="w-48 cursor-pointer rounded-lg border flex justify-center border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90">
+                  {loading?<Spinner/>:"Complete Registration"}
+                </button>:role!="Reviewer" && selectedIndex ==3 &&<button
+                  type="submit"
+                  className="w-48 cursor-pointer rounded-lg border flex justify-center border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90">
+                  {loading?<Spinner/>:"Complete Registration"}
+                </button>}
                 </div>
                 <div className="mt-0 text-center">
-            <p>
-              Already registered ?{" "}
-              <Link href="/signin" className="text-primary font-bold">
-                Sign in
-              </Link>
-            </p>
+           
+                    </div>
+                  </div>
+                
           </div>
                 </div>
         
