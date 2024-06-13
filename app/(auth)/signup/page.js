@@ -65,7 +65,7 @@ const [isAlumni, setisAlumni] = useState(false);
   })
 }, []);
   return (
-    <div className=" bg-slate-700 min-h-screen flex items-center">
+    <div className=" bg-slate-800 min-h-screen flex items-center">
       <form onSubmit={(e)=>{
         e.preventDefault()
         setloading(true)
