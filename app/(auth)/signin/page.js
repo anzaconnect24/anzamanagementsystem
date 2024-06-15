@@ -47,7 +47,7 @@ const Page = () => {
 
   return (
     <>
-      <div className="rounded-lg border min-h-screen flex items-center justify-center w-screen bg-slate-800 border-stroke  dark:border-strokedark dark:bg-boxdark">
+      <div className=" min-h-screen flex items-center justify-center w-screen bg-slate-800 dark:border-strokedark dark:bg-boxdark">
         <div className="md:w-4/12 w-11/12 py-18">
         <div className="flex justify-center">
               <Image height={100} width={100} alt="" src={"https://anzaentrepreneurs.co.tz/wp-content/uploads/2023/08/cropped-White-Version-300x92.png"}/>
