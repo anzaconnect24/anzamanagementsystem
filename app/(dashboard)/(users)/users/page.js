@@ -184,13 +184,18 @@ const [adminCount, setadminCount] = useState(0);
           <div className="col-span-1 flex items-center space-x-2">
            
                 <div onClick={()=>{
-                  setselectedItem(key)
+                  if(item.role == "Admin"){
+                    toast.error("You can't delete an admin")
+                  }{
+                    setselectedItem(key)
                     setdeleting(true)
                     deleteUser(item.uuid).then((data)=>{
                     setRefresh(refresh+1)
                     setdeleting(false)
                     toast.success("Deleted successfully")
                   })
+                  }
+                 
                 }} className="bg-danger hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                   {deleting && selectedItem==key?<Spinner/>:"Delete"}
                   
