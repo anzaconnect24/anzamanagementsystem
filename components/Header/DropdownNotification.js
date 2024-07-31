@@ -94,7 +94,7 @@ const DropdownNotification = () => {
         </div>
 
         <ul className="flex h-auto flex-col overflow-y-auto">
-      {notifications.length <1?<div className=' text-bodydark2 ms-5 '>No notifications</div>: notifications.map((item,key)=>{
+      {/* { notifications == null|| notifications.length <1?<div className=' text-bodydark2 ms-5 '>No notifications</div>: notifications.map((item,key)=>{
         return     <li key={key}>
         <Link
           className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
@@ -109,7 +109,7 @@ const DropdownNotification = () => {
           <p className="text-xs">{timeAgo(item.createdAt)}</p>
         </Link>
       </li>
-      })}
+      })} */}
         
         </ul>
       </div>
