@@ -44,7 +44,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
           {title:"Business plan",checked:userDetails.Business.businessPlan?true:false},
           {title:"Financial information",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="financialInformation").length>0},
           {title:"Product/service details",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="service").length>0},
-          {title:"Market Research",checked:userDetails.Business.marketResearch?true:false},
+          {title:"Market Information",checked:userDetails.Business.marketResearch?true:false},
           {title:"Legal and Compliance Documents",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="legalDocumentation").length>0},       
 
         ].map((item,index)=>{

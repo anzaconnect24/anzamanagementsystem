@@ -58,7 +58,7 @@ const Page = () => {
           <div className="grid grid-cols-4 px-6">
               {users.map((item,key)=>(
 
-                <Link href={`investors/${item.uuid}`} className="fflex flex-col items-center justify-center border hover:scale-105 transition-all duration-200 border-t-8 border-t-primary border-bodydark border-opacity-70 py-12 rounded-l" key={key}>
+                <Link href={`investors/${item.uuid}`} className="flex flex-col items-center justify-center border hover:scale-105 transition-all duration-200   border-slate-300 py-12 rounded-lg" key={key}>
                 <div className=" bg-gray h-24 w-24 rounded-full">
                   
                   <Image height={200} alt="" width={200} className=" object-cover rounded-full" src={item.image}/>
