@@ -3,10 +3,11 @@ import { useContext, useEffect, useState } from "react";
 import {getApprovedBusinesses, getPendingBusinesses} from "@/app/controllers/business_controller"
 import {timeAgo} from "@/app/utils/time_ago"
 import Link from "next/link"
-import { deletePitchMaterial, getDocuments } from "@/app/controllers/pitch_material_controller";
+import {getDocuments,deletePitchMaterial } from "@/app/controllers/pitch_material_controller";
 import { UserContext } from "../../layout";
 import NoData from "@/app/component/noData";
 import Image from "next/image"
+import toast from "react-hot-toast";
 
 const Page = () => {
   const [documents, setDocuments] = useState([]);
@@ -41,10 +42,12 @@ const Page = () => {
             <div className="mt-1">{item.fileName}</div>
             {["Admin"].includes(userDetails.role)&&
             <div className="flex space-x-2 justify-between mt-3">
-            <Link href={`/viewer/${item.uuid}`} className="text-sm font-bold opacity-30">Visibility</Link>
+            <Link href={`/viewer/${item.uuid}`} className="text-sm font-bold ">Viewers</Link>
             <h1 onClick={()=>{
               deletePitchMaterial(item.uuid).then((data)=>{
                 setRefresh(refresh+1)
+                toast.success('Deleted successfully')
+                
               })
             }} className="text-sm  cursor-pointer font-bold text-danger">Delete</h1>
 

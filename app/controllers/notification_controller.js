@@ -15,7 +15,7 @@ export const getNotifications = async (page,limit) => {
       });
      return response.data.body
     } catch (error) { 
-      console.notification(error)
+      console.log(error)
       return error.response;
     }
   };

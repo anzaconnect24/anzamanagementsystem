@@ -55,6 +55,7 @@ import { getUser } from "../utils/local_storage";
         return error.response;
       }
   };
+  
   export const deletePitchMaterial = async (uuid) => {
     try {
         const response = await axios.delete(`${server_url}/pitch_material/${uuid}`,{

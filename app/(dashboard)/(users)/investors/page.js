@@ -50,7 +50,7 @@ const Page = () => {
       </div>
       <input onChange={(e)=>{
         setKeyword(e.target.value)
-        setrefresh(refresh+1)
+        setRefresh(refresh+1)
       }} className="py-1 rounded border-bodydark border-opacity-40 " placeholder="Search here"/>
       </div>
       {

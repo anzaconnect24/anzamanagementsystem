@@ -144,7 +144,7 @@ const [adminCount, setadminCount] = useState(0);
               <option value="Admin">Admin</option>
               <option value="Staff">Staff</option>
               <option value="Investor">Investor</option>
-              <option value="Enterprenuer">Enterprenuer</option>
+              <option value="Enterprenuer">Entrepreneur</option>
               <option value="Reviewer">Reviewer</option>
             </select>
           </div>

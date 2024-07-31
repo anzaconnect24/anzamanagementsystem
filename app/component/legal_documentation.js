@@ -8,7 +8,7 @@ const LegalDocumentation = ({refresh,setRefresh}) => {
     const [uploadingDocument, setuploadingDocument] = useState(false);
     const {userDetails,setUserDetails} = useContext(UserContext)
     return ( <div className="py-6 px-8">
-        <div className="font-bold text-2xl text-black mb-4">Legal documentation</div>
+        <div className="font-bold text-2xl text-black mb-4">Legal and Compliance Documents</div>
         <form onSubmit={(e)=>{
            e.preventDefault()
            const data = {

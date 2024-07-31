@@ -35,20 +35,20 @@ const Page = () => {
       <div className="flex justify-between py-6 px-4 md:px-6 xl:px-7.5">
       <div className=" ">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-         Enterprenuers
+        Entrepreneurs
         </h4>
       </div>
       <input onChange={(e)=>{
         setKeyword(e.target.value)
-        setrefresh(refresh+1)
+        setRefresh(refresh+1)
       }} className="py-1 rounded border-bodydark border-opacity-40 " placeholder="Search here"/>
       </div>
      
 {
   users.length <1?<NoData/>:<div className="pb-8">
-  <div className="grid grid-cols-4 gap-4 px-6 py-8 ">
+  <div className="grid grid-cols-4 gap-4 px-6 py-2 ">
       {users.map((item,key)=>(
-        <div  className="flex flex-col items-center justify-center border hover:scale-105 transition-all duration-200 border-t-8 border-t-primary border-bodydark border-opacity-70 py-12 rounded-lg " key={key}>
+        <div  className="flex flex-col items-center justify-center border hover:scale-105 transition-all duration-200  border-bodydark border-opacity-70 py-12 rounded-lg " key={key}>
         <Link href={`businessDetails/${item.Business.uuid}`} className=" bg-gray h-24 w-24 rounded-full">
           <Image height={2000} width={2000} alt="" className=" object-cover rounded-full h-24 w-24 " src={item.image}/>
         </Link>

@@ -45,7 +45,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
           {title:"Financial information",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="financialInformation").length>0},
           {title:"Product/service details",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="service").length>0},
           {title:"Market Research",checked:userDetails.Business.marketResearch?true:false},
-          {title:"Legal Documentation",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="legalDocumentation").length>0},       
+          {title:"Legal and Compliance Documents",checked:userDetails.Business.BusinessDocuments.filter((item)=>item.type =="legalDocumentation").length>0},       
 
         ].map((item,index)=>{
             return <div key={index} onClick={()=>{

@@ -154,7 +154,7 @@ const [isAlumni, setisAlumni] = useState(false);
             setloading(false)
 
           }
-              }} className=" w-11/12 md:w-8/12  mx-auto  ">
+              }} className=" w-11/12 md:w-8/12 2xl:w-6/12  mx-auto  ">
                 <div className=" bg-white  hover:shadow  border-black   rounded-lg  ring-1 ring-stroke ">
                   <div className="grid grid-cols-12">
                     <div className="col-span-4 bg-slate-100 h-full p-8 py-16 rounded-l-lg flex flex-col justify-between ">
@@ -169,7 +169,7 @@ const [isAlumni, setisAlumni] = useState(false);
                         </div>
                       </div>
                         <p className="mt-24">
-              <span className="italic">Already registered ?{" "}</span>
+              <span className="">Already registered ?{" "}</span>
               <Link href="/signin" className="text-primary font-bold">
                 Sign in
               </Link>
@@ -248,7 +248,7 @@ const [isAlumni, setisAlumni] = useState(false);
                         setRole(e.target.value)
                       }} className="form-style" name="role">
                       {["Staff","Enterprenuer","Investor"].map((item)=>
-                        <option  key={item} value={item=="Staff"?"Reviewer":item}>{item}</option>
+                        <option  key={item} value={item=="Staff"?"Reviewer":item}>{item=="Enterprenuer"?"Entrepreneur":item}</option>
                       )}
                     </select>
                   </div>
