@@ -332,7 +332,7 @@ const [isAlumni, setisAlumni] = useState(false);
                   </label>
                   <select onChange={(e)=>{
                     // alert(e.target.value)
-                       setisAlumni(e.target.value == "true"?true:false)
+                      //  setisAlumni(e.target.value == "true"?true:false)
                   }} required name="sdg" className="form-style">
                     { [
                         "No Poverty",
