@@ -654,7 +654,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                         "text-white"
                                       }`}
                                     >
-                                      Consultance programs
+                                      Consultancy programs
                                     </Link>
                                   </li>
                                 </ul>
