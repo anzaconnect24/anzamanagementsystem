@@ -4,6 +4,23 @@
 @tailwind components;
 @tailwind utilities;
 
+table{
+  @apply w-full
+}
+thead{
+  @apply border-b border-slate-200
+}
+th{
+  @apply font-extrabold text-form-input text-start 
+}
+td{
+  @apply  py-2 text-start
+}
+.input-style{
+  @apply w-full rounded border-stroke
+}
+
+
 @layer base {
   body {
     @apply font-satoshi font-normal text-base text-black bg-whiten relative z-1;
