@@ -36,7 +36,7 @@ const Page = () => {
         <tbody>
           {data.map((item) => {
             return (
-              <tr>
+              <tr key={index}>
                 <td>{timeAgo(item.createdAt)}</td>
                 <td>{item.Entreprenuer.name}</td>
                 <td>{item.Entreprenuer.Business.name}</td>
