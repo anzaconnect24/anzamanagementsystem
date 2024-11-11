@@ -34,6 +34,7 @@ const Page = () => {
       setloading(false);
     });
   }, [refresh]);
+  
   return loading ? (
     <Loader />
   ) : (
@@ -72,7 +73,7 @@ const Page = () => {
                 </thead>
                 <tbody>
                   {users.map((item, key) => (
-                    <tr>
+                    <tr key={key}>
                       <td>{timeAgo(item.createdAt)}</td>
                       <td>{item.name}</td>
                       <td>{item.role}</td>

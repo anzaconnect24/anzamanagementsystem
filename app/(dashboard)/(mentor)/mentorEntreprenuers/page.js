@@ -57,7 +57,7 @@ const MentorEntreprenuer = () => {
                   .toLowerCase()
                   .includes(keyword.toLowerCase())
             )
-            .map((item) => {
+            .map((item, index) => {
               return (
                 <tr>
                   <td className="py-3">{timeAgo(item.createdAt)}</td>
