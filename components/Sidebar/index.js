@@ -124,16 +124,19 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   Enterprenuers
                 </Link>
               )}
+              {["Mentor", "Enterprenuer", "Admin"].includes(userDetails.role) ==
+                true && (
+                <Link
+                  href="/mentorReports"
+                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname == "/mentorReports" && "bg-primary dark:bg-primary"
+                  }`}
+                >
+                  <FaWpforms className="text-xl" />
+                  Mentor Reports
+                </Link>
+              )}
 
-              <Link
-                href="/mentorReports"
-                className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                  pathname == "/mentorReports" && "bg-primary dark:bg-primary"
-                }`}
-              >
-                <FaWpforms className="text-xl" />
-                Reports
-              </Link>
               {/* <!-- Menu Item Forms --> */}
 
               {

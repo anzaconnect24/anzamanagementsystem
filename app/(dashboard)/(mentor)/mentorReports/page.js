@@ -3,7 +3,11 @@ import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../layout";
 import Loader from "@/components/common/Loader";
 import { timeAgo } from "@/app/utils/time_ago";
-import { getSpecificMentorReports } from "@/app/controllers/mentorReportsController";
+import {
+  getAllReports,
+  getSpecificEntreprenuerReports,
+  getSpecificMentorReports,
+} from "@/app/controllers/mentorReportsController";
 import Link from "next/link";
 
 const Page = () => {
@@ -12,17 +16,31 @@ const Page = () => {
 
   const { userDetails } = useContext(UserContext);
   useEffect(() => {
-    getSpecificMentorReports(userDetails.uuid).then((res) => {
-      console.log(res);
-      setData(res);
-      setLoading(false);
-    });
+    if (userDetails.role == "Mentor") {
+      getSpecificMentorReports(userDetails.uuid).then((res) => {
+        console.log(res);
+        setData(res);
+        setLoading(false);
+      });
+    } else if (userDetails.role == "Enterprenuer") {
+      getSpecificEntreprenuerReports(userDetails.uuid).then((res) => {
+        console.log(res);
+        setData(res);
+        setLoading(false);
+      });
+    } else {
+      getAllReports(userDetails.uuid).then((res) => {
+        console.log(res);
+        setData(res);
+        setLoading(false);
+      });
+    }
   }, []);
   return loading ? (
     <Loader />
   ) : (
     <div className="bg-white py-6 shadow mt-6 px-6 ">
-      <h1 className="text-2xl font-bold">Reports</h1>
+      <h1 className="text-2xl font-bold">Mentor Reports</h1>
       <table className="mt-8">
         <thead>
           <tr>

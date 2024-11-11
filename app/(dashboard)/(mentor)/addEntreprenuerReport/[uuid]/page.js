@@ -4,11 +4,14 @@ import Spinner from "@/components/spinner";
 import { addMentorReport } from "@/app/controllers/mentorReportsController";
 import { useContext, useState } from "react";
 import Breadcrumb from "@/app/component/Breadcrumb";
+import toast from "react-hot-toast";
+import { useRouter } from "next/navigation";
 
 const Page = ({ params }) => {
   const entreprenuer_uuid = params.uuid;
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
   return (
     <div>
       <Breadcrumb
@@ -46,6 +49,8 @@ const Page = ({ params }) => {
 
             addMentorReport(formData).then((res) => {
               setLoading(false);
+              toast.success("Report uploaded successfully");
+              router.back();
             });
           }}
         >

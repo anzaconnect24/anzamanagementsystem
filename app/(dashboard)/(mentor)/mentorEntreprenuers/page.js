@@ -60,13 +60,15 @@ const MentorEntreprenuer = () => {
             .map((item) => {
               return (
                 <tr>
-                  <td>{timeAgo(item.createdAt)}</td>
-                  <td>{item.Entreprenuer.name}</td>
-                  <td>{item.Entreprenuer.Business.name}</td>
-                  <td>{item.Entreprenuer.Business.BusinessSector.name}</td>
-                  <td>{item.Entreprenuer.email}</td>
-                  <td>{item.Entreprenuer.phone}</td>
-                  <td>
+                  <td className="py-3">{timeAgo(item.createdAt)}</td>
+                  <td className="py-3">{item.Entreprenuer.name}</td>
+                  <td className="py-3">{item.Entreprenuer.Business.name}</td>
+                  <td className="py-3">
+                    {item.Entreprenuer.Business.BusinessSector.name}
+                  </td>
+                  <td className="py-3">{item.Entreprenuer.email}</td>
+                  <td className="py-3">{item.Entreprenuer.phone}</td>
+                  <td className="py-3">
                     <Link
                       href={`/businessDetails/${item.Entreprenuer.Business.uuid}`}
                       className="py-2 px-4 text-primary font-bold  hover:text-opacity-80 transition-all duration-300 rounded"
@@ -74,7 +76,7 @@ const MentorEntreprenuer = () => {
                       View profile
                     </Link>
                   </td>
-                  <td>
+                  <td className="py-3">
                     <Link
                       href={`/addEntreprenuerReport/${item.Entreprenuer.uuid}`}
                       className="py-2 px-4 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded"
