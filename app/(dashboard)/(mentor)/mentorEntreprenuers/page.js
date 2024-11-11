@@ -59,7 +59,7 @@ const MentorEntreprenuer = () => {
             )
             .map((item, index) => {
               return (
-                <tr>
+                <tr key={item.uuid}>
                   <td className="py-3">{timeAgo(item.createdAt)}</td>
                   <td className="py-3">{item.Entreprenuer.name}</td>
                   <td className="py-3">{item.Entreprenuer.Business.name}</td>
