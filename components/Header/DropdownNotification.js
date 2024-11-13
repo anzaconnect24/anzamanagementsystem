@@ -1,7 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import Link from 'next/link';
-import {addNotificationViewer, getNotifications} from "@/app/controllers/notification_controller"
-import {timeAgo} from "@/app/utils/time_ago"
+import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
+import {
+  addNotificationViewer,
+  getNotifications,
+} from "@/app/controllers/notification_controller";
+import { timeAgo } from "@/app/utils/time_ago";
 
 const DropdownNotification = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -21,8 +24,8 @@ const DropdownNotification = () => {
         return;
       setDropdownOpen(false);
     };
-    document.addEventListener('click', clickHandler);
-    return () => document.removeEventListener('click', clickHandler);
+    document.addEventListener("click", clickHandler);
+    return () => document.removeEventListener("click", clickHandler);
   });
 
   // close if the esc key is pressed
@@ -30,17 +33,62 @@ const DropdownNotification = () => {
   const [notifications, setNotifications] = useState([]);
   const [refresh, setRefresh] = useState(0);
   useEffect(() => {
-    getNotifications().then((data)=>{
-      setNotifications(data)
-    })
+    async function fetchNotifications() {
+      try {
+        const data = await getNotifications();
+        setNotifications(data);
+
+        // Get stored notifications
+        const storedNotifications = localStorage.getItem("notifications");
+
+        // Check if the stored data is a valid JSON string
+        let parsedStoredNotifications = [];
+        if (storedNotifications) {
+          try {
+            parsedStoredNotifications = JSON.parse(storedNotifications);
+          } catch (error) {
+            console.error(
+              "Invalid JSON in localStorage, using empty array",
+              error
+            );
+            // Optionally clear the invalid data from localStorage
+            localStorage.removeItem("notifications");
+          }
+        }
+
+        // Helper function to extract UUIDs
+        const extractUUIDs = (notifications) =>
+          notifications ? notifications.map((item) => item.uuid) : [];
+
+        const dataUUIDs = extractUUIDs(data);
+        const storedUUIDs = extractUUIDs(parsedStoredNotifications);
+
+        // Check if the arrays of UUIDs are different
+        const areDifferent = (arr1, arr2) =>
+          arr1.length !== arr2.length ||
+          !arr1.every((uuid, index) => uuid === arr2[index]);
+
+        if (parsedStoredNotifications && areDifferent(dataUUIDs, storedUUIDs)) {
+          setNotifying(true);
+        }
+
+        // Store the latest data in localStorage
+        localStorage.setItem("notifications", JSON.stringify(data));
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      }
+    }
+
+    fetchNotifications();
   }, []);
+
   useEffect(() => {
     const keyHandler = ({ keyCode }) => {
       if (!dropdownOpen || keyCode !== 27) return;
       setDropdownOpen(false);
     };
-    document.addEventListener('keydown', keyHandler);
-    return () => document.removeEventListener('keydown', keyHandler);
+    document.addEventListener("keydown", keyHandler);
+    return () => document.removeEventListener("keydown", keyHandler);
   });
 
   return (
@@ -50,9 +98,11 @@ const DropdownNotification = () => {
         onClick={() => {
           setNotifying(false);
           setDropdownOpen(!dropdownOpen);
-          if(dropdownOpen){
-            const promises = notifications.map((item)=>addNotificationViewer(item.id))
-            Promise.all(promises)
+          if (dropdownOpen) {
+            const promises = notifications.map((item) =>
+              addNotificationViewer(item.id)
+            );
+            Promise.all(promises);
           }
         }}
         href="#"
@@ -60,7 +110,7 @@ const DropdownNotification = () => {
       >
         <span
           className={`absolute z-9 -top-0.5 right-0 h-2 w-2 rounded-full bg-meta-1 ${
-            notifying === false ? 'hidden' : 'inline'
+            notifying === false ? "hidden" : "inline"
           }`}
         >
           <span className="absolute -z-1 inline-flex h-full w-full animate-ping rounded-full bg-meta-1 opacity-75"></span>
@@ -86,7 +136,7 @@ const DropdownNotification = () => {
         onFocus={() => setDropdownOpen(true)}
         onBlur={() => setDropdownOpen(false)}
         className={`absolute z-9 -right-27 mt-2.5 flex h-90 w-75 flex-col rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark sm:right-0 sm:w-80 ${
-          dropdownOpen === true ? 'block' : 'hidden'
+          dropdownOpen === true ? "block" : "hidden"
         }`}
       >
         <div className="px-4.5 py-3">
@@ -94,23 +144,29 @@ const DropdownNotification = () => {
         </div>
 
         <ul className="flex h-auto flex-col overflow-y-auto">
-      {/* { notifications == null|| notifications.length <1?<div className=' text-bodydark2 ms-5 '>No notifications</div>: notifications.map((item,key)=>{
-        return     <li key={key}>
-        <Link
-          className="flex flex-col gap-2.5 border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
-          href="#"
-        >
-          <p className="text-sm">
-            <span className="text-black dark:text-white">
-             {item.message}
-            </span>{' '}
-          </p>
-
-          <p className="text-xs">{timeAgo(item.createdAt)}</p>
-        </Link>
-      </li>
-      })} */}
-        
+          {notifications == null || notifications.length < 1 ? (
+            <div className=" text-bodydark2 ms-5 ">No notifications</div>
+          ) : (
+            notifications.map((item, key) => {
+              return (
+                <li key={key}>
+                  <Link
+                    className="flex flex-col  border-t border-stroke px-4.5 py-3 hover:bg-gray-2 dark:border-strokedark dark:hover:bg-meta-4"
+                    href="#"
+                  >
+                    <p className="text-sm">
+                      <span className="text-black dark:text-white">
+                        {item.message}
+                      </span>{" "}
+                    </p>
+                    <p className="text-xs text-gray-400">
+                      {timeAgo(item.createdAt)}
+                    </p>
+                  </Link>
+                </li>
+              );
+            })
+          )}
         </ul>
       </div>
     </li>
