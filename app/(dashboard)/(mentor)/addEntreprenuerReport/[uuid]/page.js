@@ -22,18 +22,6 @@ const Page = ({ params }) => {
       <div className="bg-white p-5 w-full">
         <div className="flex justify-between">
           <h1 className="font-bold text-2xl">Entreprenuer report</h1>
-          <button
-            type="submit"
-            onClick={() => {
-              window.open(
-                "https://docs.google.com/document/d/1D0fEPdvXVOw1imIYViCD5p3bhNrxT1zJvzxLnw2e_2c/edit?usp=sharing",
-                "_blank"
-              );
-            }}
-            className="py-2 px-4  w-48 flex justify-center text-primary hover:scale-105  font-bold hover:bg-opacity-90 transition-all duration-300 rounded"
-          >
-            {loading ? <Spinner /> : "Use Google form"}
-          </button>
         </div>
         <form
           className="mt-8"
@@ -59,7 +47,7 @@ const Page = ({ params }) => {
             <input className="input-style" required name="title" />
           </div>
           <div>
-            <h1>Description</h1>
+            <h1>Session summary</h1>
             <textarea className="input-style" required name="description" />
           </div>
           <div>
