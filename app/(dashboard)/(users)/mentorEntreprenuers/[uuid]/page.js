@@ -34,7 +34,7 @@ const Page = ({ params }) => {
     getData();
   }, []);
   const getData = () => {
-    getMentorEntreprenuers(uuid).then((response) => {
+    getMentorEntreprenuers(uuid, 1, 5, keyword).then((response) => {
       const body = response.body;
       console.log(body);
       setUsers(body.data);
@@ -64,7 +64,7 @@ const Page = ({ params }) => {
             <input
               onChange={(e) => {
                 setKeyword(e.target.value);
-                setRefresh(refresh + 1);
+                getData();
               }}
               className="py-1 rounded border-bodydark border-opacity-40 "
               placeholder="Search here"
@@ -79,8 +79,7 @@ const Page = ({ params }) => {
                 <thead>
                   <tr>
                     <td>Sent</td>
-                    <td>Username</td>
-                    <td>Role</td>
+                    <td>Company</td>
                     <td>Phone</td>
                     <td>Email</td>
                   </tr>
@@ -89,8 +88,7 @@ const Page = ({ params }) => {
                   {users.map((item, key) => (
                     <tr key={key}>
                       <td>{timeAgo(item.createdAt)}</td>
-                      <td>{item.name}</td>
-                      <td>{item.role}</td>
+                      <td>{item.Business.name}</td>
                       <td>{item.phone}</td>
                       <td>{item.email}</td>
                       <td>

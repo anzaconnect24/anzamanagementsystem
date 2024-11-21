@@ -124,7 +124,18 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   Mentees
                 </Link>
               )}
-
+              {["Enterprenuer"].includes(userDetails.role) == true && (
+                <Link
+                  href="/myMentors"
+                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                    pathname == "/mentorEntreprenuers" &&
+                    "bg-primary dark:bg-primary"
+                  }`}
+                >
+                  <SlPeople className="text-xl" />
+                  Mentors
+                </Link>
+              )}
               {/* <!-- Menu Item Forms --> */}
 
               {
@@ -920,6 +931,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 "Investor",
                 "Staff",
                 "Reviewer",
+                "Mentor",
                 "Admin",
               ].includes(userDetails.role) == true && (
                 <li>
