@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import { usePathname } from "next/navigation";
-import { FaWpforms } from "react-icons/fa6";
+import { FaQuestion, FaWpforms } from "react-icons/fa6";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import Image from "next/image";
 import PitchIcon from "../icons/pitch_icon";
@@ -121,19 +121,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                   }`}
                 >
                   <SlPeople className="text-xl" />
-                  Enterprenuers
-                </Link>
-              )}
-              {["Mentor", "Enterprenuer", "Admin"].includes(userDetails.role) ==
-                true && (
-                <Link
-                  href="/mentorReports"
-                  className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
-                    pathname == "/mentorReports" && "bg-primary dark:bg-primary"
-                  }`}
-                >
-                  <FaWpforms className="text-xl" />
-                  Mentor Reports
+                  Mentees
                 </Link>
               )}
 
@@ -418,9 +406,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                       </Link>
                     </li>
                   )}
-                  {["Investor", "Enterprenuer", "Staff", "Reviewer"].includes(
-                    userDetails.role
-                  ) == true && (
+                  {[
+                    "Investor",
+                    "Enterprenuer",
+                    "Staff",
+                    "Reviewer",
+                    "Mentor",
+                  ].includes(userDetails.role) == true && (
                     <li>
                       <Link
                         href="/enterprenuers"
@@ -572,6 +564,32 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         }}
                       </SidebarLinkGroup>
                     </div>
+                  )}
+                  {["Mentor", "Enterprenuer", "Admin"].includes(
+                    userDetails.role
+                  ) == true && (
+                    <Link
+                      href="/mentorReports"
+                      className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        pathname == "/mentorReports" &&
+                        "bg-primary dark:bg-primary"
+                      }`}
+                    >
+                      <FaWpforms className="text-xl" />
+                      Mentor Reports
+                    </Link>
+                  )}
+                  {["Admin"].includes(userDetails.role) == true && (
+                    <Link
+                      href="/mentorshipRequests"
+                      className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+                        pathname == "/mentorReports" &&
+                        "bg-primary dark:bg-primary"
+                      }`}
+                    >
+                      <FaQuestion className="text-lg" />
+                      Mentorship requests
+                    </Link>
                   )}
                   {["Admin", "Enterprenuer"].includes(userDetails.role) ==
                     true && (
