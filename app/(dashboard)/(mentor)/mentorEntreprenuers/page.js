@@ -23,7 +23,7 @@ const MentorEntreprenuer = () => {
   ) : (
     <div className="bg-white py-6 shadow mt-6 px-6 ">
       <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">My Entrepreneurs</h1>
+        <h1 className="text-2xl font-bold">Mentees</h1>
         <input
           onChange={(e) => {
             setKeyword(e.target.value);
@@ -76,14 +76,18 @@ const MentorEntreprenuer = () => {
                       View profile
                     </Link>
                   </td>
-                  <td className="py-3">
-                    <Link
-                      href={`/addEntreprenuerReport/${item.Entreprenuer.uuid}`}
-                      className="py-2 px-4 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded"
-                    >
-                      Submit report
-                    </Link>
-                  </td>
+                  {item.approved ? (
+                    <td className="py-3">
+                      <Link
+                        href={`/addEntreprenuerReport/${item.Entreprenuer.uuid}`}
+                        className="py-2 px-4 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded"
+                      >
+                        Submit report
+                      </Link>
+                    </td>
+                  ) : (
+                    <td className="py-3">Waiting for approval</td>
+                  )}
                   <td></td>
                   <td></td>
                 </tr>

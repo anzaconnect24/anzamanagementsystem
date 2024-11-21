@@ -75,7 +75,9 @@ const Page = () => {
                         src={item.image}
                       />
                     </Link>
-                    <h1 className="text-lg  text-black">{item.name}</h1>
+                    <h1 className="text-lg  text-black">
+                      {item.Business.name}
+                    </h1>
                     <Link
                       href={`businessDetails/${item.Business.uuid}`}
                       className="flex space-x-1 hover:underline hover:text-primary cursor-pointer items-center"
