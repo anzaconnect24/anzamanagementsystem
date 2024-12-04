@@ -123,7 +123,9 @@ const [adminCount, setadminCount] = useState(0);
             </p>
           </div>
           <div className="col-span-2 flex items-center ">
+            {console.log(item.role)}
             <select disabled={["Investor","Enterprenuer"].includes(item.role)} onChange={(e)=>{
+            
               if(e.target.value == "Investor" || e.target.value == "Enterprenuer"){
                 toast.error("Sorry! You can't just change user to this role")
                 e.target.value = item.role
