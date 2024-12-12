@@ -8,7 +8,8 @@ const nextConfig = {
             "res.cloudinary.com",
             "195.35.8.142",
             "serverapipointer.online",
-            "anzaentrepreneurs.co.tz"
+            "anzaentrepreneurs.co.tz",
+            "api.anzaconnect.co.tz"
         ]
     }
 }

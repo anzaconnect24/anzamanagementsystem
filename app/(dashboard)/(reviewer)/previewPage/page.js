@@ -112,14 +112,15 @@ const Page = () => {
 
     const renderTableRows = (sectionData, section) => {
         return sectionData.map((item, index) => {
-            const narrative = item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
-    
             // States for reviewer comment and rating
             const [reviewerComment, setReviewerComment] = useState(item.reviewer_comment || "");
             const [rating, setRating] = useState(item.rating || "No");
             const [isChanged, setIsChanged] = useState(false);  // Track changes
+            const [narrative, setNarrative] = useState(() => {
+                return item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
+            });
     
-            // Effect hook to set the correct value for rating and reviewer comment when backend data is updated
+            // Effect hook to set the correct value for rating, reviewer comment, and narrative when backend data is updated
             useEffect(() => {
                 if (item.rating) {
                     setRating(item.rating);  // Set rating from the backend response
@@ -127,7 +128,10 @@ const Page = () => {
                 if (item.reviewer_comment !== reviewerComment) {
                     setReviewerComment(item.reviewer_comment || ""); // Update reviewer comment from backend
                 }
-            }, [item.rating, item.reviewer_comment]);  // This will run when either item.rating or item.reviewer_comment changes
+                const updatedNarrative =
+                    item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
+                setNarrative(updatedNarrative);
+            }, [item.rating, item.reviewer_comment, item.score]); // This will run when rating, reviewer_comment, or score changes
     
             // Handle comment change
             const handleCommentChange = (e) => {
@@ -138,6 +142,15 @@ const Page = () => {
             // Handle rating change
             const handleRatingChange = (newRating) => {
                 setRating(newRating);
+    
+                // Update score based on rating
+                const newScore = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
+                item.score = newScore; // Update item score
+    
+                // Update narrative dynamically
+                const updatedNarrative = item.narrative.find((n) => n.score === newScore)?.text || "Narrative not found";
+                setNarrative(updatedNarrative);
+    
                 setIsChanged(true);  // Mark as changed
             };
     
@@ -146,7 +159,7 @@ const Page = () => {
                 publishItem(item.subDomain, index, {
                     score: rating === "No" ? 0 : rating === "Maybe" ? 1 : 2,  // Convert rating
                     reviewer_comment: reviewerComment,
-                    rating: rating
+                    rating: rating,
                 });
                 setIsChanged(false); // Reset change flag after saving
             };
