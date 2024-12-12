@@ -55,9 +55,6 @@ export const attachDocument = async (data) => {
             formData.append(key, data[key]);
         });
 
-        console.log('imepita');
-
-
         const response = await axios.post(`${server_url}/crat_operation/attachment`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',

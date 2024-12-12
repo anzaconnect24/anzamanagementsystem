@@ -7,6 +7,7 @@ import Modal2 from "@/components/Model2";
 import toast from 'react-hot-toast';
 import Loader from "@/components/common/Loader";
 import { getMarketData, createMarketData, updateMarketData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_market_controller"; // Import updated API functions
+import { getUser, getVersion, getStatus } from "../../../utils/local_storage";
 
 const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
 
@@ -20,13 +21,15 @@ const Page = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [deletemodalOpen, deleteModalOpen] = useState(false);
   const [deletemodalMessage, deleteModalMessage] = useState("");
-  const [deleteCache, setDeleteCache] = useState([]);
+  const [status, setStatus] = useState(""); // State for status
+
 
   useEffect(() => {
+    const storedStatus = getStatus();
+    setStatus(storedStatus);
     const fetchData = async () => {
       try {
         const responseData = await getMarketData();
-        console.log(responseData);
         if (!responseData || responseData.length === 0) {
           await createMarketData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
@@ -34,9 +37,10 @@ const Page = () => {
           const updatedData = { ...initialDataTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
+              //console.log('my items', updatedData);
               const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
               return fetchedItem
-                ? { ...item, rating: fetchedItem.rating, score: fetchedItem.score, userId: fetchedItem.userId, attachment: fetchedItem.attachment }
+                ? { ...item, rating: fetchedItem.rating, score: fetchedItem.score, userId: fetchedItem.userId, attachment: fetchedItem.attachment, comments: fetchedItem.comments }
                 : item;
             });
           });
@@ -66,20 +70,49 @@ const Page = () => {
 
   };
 
+  // const submitChanges = async () => {
+  //   try {
+  //     console.log(data);
+  //     await updateMarketData(data);
+  //     setOriginalData(data); 
+  //     setChangesMade(false);
+
+  //     toast.success("Changes successfully submitted");
+  //     console.log("Changes successfully submitted");
+  //   } catch (error) {
+  //     toast.error("Error submitting changes");
+  //     console.error("Error submitting changes:", error);
+  //   }
+  // };
+
   const submitChanges = async () => {
     try {
-      console.log(data);
-      await updateMarketData(data);
-      setOriginalData(data); // Update original data after successful submission
-      setChangesMade(false);
+        await updateMarketData(data);
 
-      toast.success("Changes successfully submitted");
-      console.log("Changes successfully submitted");
+        // Update initialDataTemplate here
+        Object.keys(data).forEach(section => {
+            initialDataTemplate[section] = data[section].map(item => ({
+                subDomain: item.subDomain,
+                rating: item.rating,
+                score: item.score,
+                userId: item.userId,
+                attachment: item.attachment,
+                comments: item.comments,
+                question: item.question, 
+                description: item.description 
+            }));
+        });
+
+        setOriginalData(data); // Update original data after successful submission
+        setChangesMade(false);
+
+        toast.success("Changes successfully submitted");
+        console.log("Changes successfully submitted");
     } catch (error) {
-      toast.error("Error submitting changes");
-      console.error("Error submitting changes:", error);
+        toast.error("Error submitting changes");
+        console.error("Error submitting changes:", error);
     }
-  };
+};
 
   const handleAddFile = async (domain, file, userId) => {
     console.log(domain);
@@ -104,7 +137,7 @@ const Page = () => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
           return fetchedItem
-            ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment }
+            ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment, comment: fetchedItem.comment }
             : item;
         });
       });
@@ -141,7 +174,7 @@ const Page = () => {
               updatedData[section] = updatedData[section].map((item) => {
                   const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
                   return fetchedItem
-                      ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment }
+                      ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment, comments: fetchedItem.comments }
                       : item;
               });
           });
@@ -174,8 +207,12 @@ const Page = () => {
     // }
   };
 
-  const handleEditComment = (updatedComment) => {
-    console.log("Updated comment:", updatedComment);
+  const handleEdit = (domain, index, comment) => {    
+    const newData = [...data[domain]];
+    newData[index].comments = comment;
+    setData({...data, [domain]: newData });
+    submitChanges();
+    toast.success('Comment updated successfully');
   };
 
   const calculateTotalScore = (domain) => {
@@ -216,8 +253,9 @@ const Page = () => {
             onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
             onDelete={() => openDeleteDialog(item.subDomain, item.userId, item.attachment, domain, index)}
             onView={() => handleViewFile(item.attachment)}
+            onEdit={(comment) => handleEdit(domain, index, comment)}
             attachment={item.attachment}
-            comment={item.comment}
+            comment={item.comments}
           />
         </div>
       </div>
@@ -251,23 +289,42 @@ const Page = () => {
           <h4 className="text-xl font-semibold text-black dark:text-white">Market Domain Assessment</h4>
           {changesMade && (
             <div className="flex justify-end mt-4">
-              <button onClick={submitChanges} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              <button
+                onClick={submitChanges}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
                 Submit Changes
               </button>
             </div>
           )}
         </div>
       </div>
-      {renderSection("market", "Market Demand & Share")}
-      {renderSection("salesTraction", "Sales & Traction")}
-      {renderSection("product", "Product Development")}
-      {renderSection("competition", "Competition")}
-      {renderSection("marketing", "Marketing")}
-      <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
-        <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-          <h4 className="text-xl font-semibold text-black dark:text-white">Total Score</h4>
-          <p className="text-lg font-semibold">{calculateOverallTotalScore()} / {calculateOverallMaxScore()}</p>
-        </div>
+      <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        {status === "On review" ? (
+          <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
+            <p className="text-lg font-medium text-black dark:text-white">
+              On Review
+            </p>
+          </div>
+        ) : (
+          <>
+            {renderSection("market", "Market Demand & Share")}
+            {renderSection("salesTraction", "Sales & Traction")}
+            {renderSection("product", "Product Development")}
+            {renderSection("competition", "Competition")}
+            {renderSection("marketing", "Marketing")}
+            <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
+              <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
+                <h4 className="text-xl font-semibold text-black dark:text-white">
+                  Total Score
+                </h4>
+                <p className="text-lg font-semibold">
+                  {calculateOverallTotalScore()} / {calculateOverallMaxScore()}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
       <Modal
         isOpen={modalOpen}
@@ -278,11 +335,17 @@ const Page = () => {
         isOpen={deletemodalOpen}
         onClose={() => deleteModalOpen(false)}
         message={deletemodalMessage}
-        onDelete={() => handleDeleteFile()}  // Directly call handleDeleteFile
-    onCancel={handleDeleteCancel}
+        onDelete={() => handleDeleteFile()} // Directly call handleDeleteFile
+        onCancel={handleDeleteCancel}
+        bgColor="yellow-200"
+        closeButtonText="Cancel"
+        deleteButtonText="Delete"
+        closeButtonColor="gray-500"
+        deleteButtonColor="blue-500"
       />
     </div>
   );
+  
 };
 
 export default Page;

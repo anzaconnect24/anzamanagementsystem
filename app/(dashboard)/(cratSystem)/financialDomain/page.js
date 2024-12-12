@@ -7,6 +7,7 @@ import Loader from "@/components/common/Loader";
 import Modal from "@/components/Model";
 import Modal2 from "@/components/Model2";
 import { getFinancialData, createFinancialData, updateFinancialData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_financials_controller"; // Import updated API functions
+import { getUser, getVersion, getStatus } from "../../../utils/local_storage";
 
 const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
 
@@ -20,12 +21,16 @@ const Page = () => {
   const [deletemodalOpen, deleteModalOpen] = useState(false);
   const [deletemodalMessage, deleteModalMessage] = useState("");
   const [deleteCache, setDeleteCache] = useState([]);
+  const [status, setStatus] = useState(""); // State for status
+
 
   useEffect(() => {
+    const storedStatus = getStatus();
+    setStatus(storedStatus); 
+
     const fetchData = async () => {
       try {
         const responseData = await getFinancialData();
-        console.log(responseData);
         if (!responseData || responseData.length === 0) {
           await createFinancialData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
@@ -65,9 +70,7 @@ const Page = () => {
   };
   
   const submitChanges = async () => {
-    console.log('submitting');
     try {
-        console.log(data);
         await updateFinancialData(data);
 
         // Update initialDataTemplate here
@@ -79,12 +82,11 @@ const Page = () => {
                 userId: item.userId,
                 attachment: item.attachment,
                 comments: item.comments,
-                question: item.question, // Assuming you want to keep the question field
-                description: item.description // Assuming you want to keep the description field
+                question: item.question, 
+                description: item.description 
             }));
         });
 
-        console.log(data['profitability']);
         setOriginalData(data); // Update original data after successful submission
         setChangesMade(false);
 
@@ -113,8 +115,6 @@ const Page = () => {
   // };
   
   const handleAddFile = async (domain, file, userId) => {
-    console.log(domain);
-    console.log(file);
   
     if (!file) return; // Ensure a file is provided
   
@@ -212,7 +212,6 @@ const handleDeleteFile = async () => {
   };
 
   const handleEdit = (domain, index, comment) => {
-    console.log('Editing item:', domain, index, comment);
     
     const newData = [...data[domain]];
     newData[index].comments = comment;
@@ -296,23 +295,40 @@ const handleDeleteFile = async () => {
           <h4 className="text-xl font-semibold text-black dark:text-white">Financial Domain Assessment</h4>
           {changesMade && (
             <div className="flex justify-end mt-4">
-              <button onClick={submitChanges} className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600">
+              <button
+                onClick={submitChanges}
+                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+              >
                 Submit Changes
               </button>
             </div>
           )}
         </div>
       </div>
-          {renderSection("profitability", "1. Profitability")}
-      {renderSection("balanceSheet", "2. Balance Sheet")}
-      {renderSection("cashFlows", "3. Cash Flows")}
-      {renderSection("projections", "4. Projections")}
-      {renderSection("financialManagement", "5. Financial Management")}
-      <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
-        <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-          <h4 className="text-xl font-semibold text-black dark:text-white">Total Score</h4>
-          <p className="text-lg font-semibold">{calculateOverallTotalScore()} / {calculateOverallMaxScore()}</p>
-        </div>
+      <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        {status === "On review" ? (
+          <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
+            <p className="text-lg font-medium text-black dark:text-white">
+              On Review
+            </p>
+          </div>
+        ) : (
+          <>
+            {renderSection("profitability", "1. Profitability")}
+            {renderSection("balanceSheet", "2. Balance Sheet")}
+            {renderSection("cashFlows", "3. Cash Flows")}
+            {renderSection("projections", "4. Projections")}
+            {renderSection("financialManagement", "5. Financial Management")}
+            <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
+              <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
+                <h4 className="text-xl font-semibold text-black dark:text-white">Total Score</h4>
+                <p className="text-lg font-semibold">
+                  {calculateOverallTotalScore()} / {calculateOverallMaxScore()}
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </div>
       <Modal
         isOpen={modalOpen}
@@ -323,11 +339,18 @@ const handleDeleteFile = async () => {
         isOpen={deletemodalOpen}
         onClose={() => deleteModalOpen(false)}
         message={deletemodalMessage}
-        onDelete={() => handleDeleteFile()}  // Directly call handleDeleteFile
-    onCancel={handleDeleteCancel}
+        onDelete={() => handleDeleteFile()}
+        onCancel={handleDeleteCancel}
+        bgColor="yellow-200"
+        closeButtonText="Cancel"
+        deleteButtonText="Delete"
+        closeButtonColor="gray-500"
+        deleteButtonColor="blue-500"
       />
     </div>
   );
+  
+  
 };
 
 export default Page;

@@ -1,6 +1,6 @@
 import axios from "axios";
 import { server_url } from "../utils/endpoint";
-import { getUser, storeUser } from "../utils/local_storage";
+import { getUser, storeStatus, storeUser, storeVersion } from "../utils/local_storage";
 import { headers } from "../utils/headers";
 
 export const register = async (data) => {
@@ -19,6 +19,8 @@ export const register = async (data) => {
     });
     console.log(response.data);
     storeUser(response.data.tokens);
+    storeVersion(response.data.versionCount);
+    storeStatus(response.data.publishStatus);
     console.log(getUser());
     return response.data;
   } catch (error) {
@@ -89,6 +91,9 @@ export const login = async (data) => {
     const response = await axios.post(`${server_url}/user/login`, data);
     //  alert(response.data.tokens)
     storeUser(response.data.tokens);
+    storeVersion(response.data.versionCount);
+    storeStatus(response.data.publishStatus);
+    console.log(response);
     return response.data;
   } catch (error) {
     console.log(error);

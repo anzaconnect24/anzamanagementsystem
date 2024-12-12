@@ -1,34 +1,53 @@
 "use client";
-import { useState, useEffect } from "react";
-import { getReportData, getScoreData, initialData } from "@/app/controllers/crat_general_controller"; // Import updated API functions
+import { useState, useContext, useEffect } from "react";
+import { getReportData, getScoreData, initialData, publishReport } from "@/app/controllers/crat_general_controller"; // Import updated API functions
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-
+import { getUser, getVersion, getStatus, storeStatus } from "../../../utils/local_storage";
+import Modal2 from "@/components/Model2";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+import toast from 'react-hot-toast';
+import { UserContext } from "../../../(dashboard)/layout";
+
+
 
 // Define the table headers
 // const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
-const tableHeaders = ["Sub Domain",  "Report Narrative"];
+const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
 
 
 const Page = () => {
   const [data, setData] = useState(initialData);
   const [scoreData, setScoreData] = useState({}); // State to hold the score data
+  const [deletemodalOpen, publishModalOpen] = useState(false);
+  const [deletemodalMessage, publishModalMessage] = useState("");
+  const [version, setVersion] = useState(""); // State for version
+  const [status, setStatus] = useState(""); // State for status
+  const { userDetails, setUserDetails } = useContext(UserContext)
 
+  
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const responseData = await getReportData();
-        const responseData1 = await getScoreData();
-        setScoreData(responseData1); // Update scoreData with the response
-        updateDataWithBackendResponse(responseData);
-      } catch (error) {
-        console.log("Error fetching data:", error);
-      }
-    };
+    const storedVersion = getVersion();
+    const storedStatus = getStatus();
+    setVersion(storedVersion);
+    setStatus(storedStatus);
+  
 
     fetchData();
   }, []);
+
+
+  const fetchData = async () => {
+    try {
+      const responseData = await getReportData();
+      // console.log('report data', responseData);
+      const responseData1 = await getScoreData();
+      setScoreData(responseData1);
+      updateDataWithBackendResponse(responseData);
+    } catch (error) {
+      console.log("Error fetching data:", error);
+    }
+  };
 
   const updateDataWithBackendResponse = (responseData) => {
     const updatedData = { ...data };
@@ -60,8 +79,63 @@ const Page = () => {
     setData(updatedData);
   };
 
+
+  const publishChanges = async () => {
+    try {
+         await publishReport(userDetails.id);
+        storeStatus('On review');
+        setStatus('On review');
+        publishModalOpen(false)
+        toast.success("Published Successfully");
+        console.log("Changes successfully submitted");
+    } catch (error) {
+        // Handle errors
+        toast.error("Error publishing report");
+        console.error("Error publishing report:", error);
+    }
+};
+
+
+  const openPublishDialog = (data) => {
+    publishModalOpen(true);
+    publishModalMessage('Are you sure you want to publish this report for review?');
+  };
+
+  const handleDeleteCancel = () => {
+    publishModalOpen(false);
+  };
+
+  const handleDeleteFile = async () => {
+    const [domain, id, attachment, section, index] = deleteCache;
+    try {
+      // Proceed with deletion directly
+      await deleteAttachment(domain, id, attachment, section, index);
+      handleRatingChange(section, index, "No");
+      submitChanges();
+      // Fetch updated data
+      const responseData = await getOperationData();
+      const updatedData = { ...initialDataTemplate };
+
+      Object.keys(updatedData).forEach((section) => {
+        updatedData[section] = updatedData[section].map((item) => {
+          const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
+          return fetchedItem
+            ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment }
+            : item;
+        });
+      });
+
+      toast.success('Deleted Successfully');
+      setData(updatedData);
+      publishModalOpen(false); // Close modal
+    } catch (error) {
+      toast.error("Error deleting file");
+      console.error("Error deleting file:", error);
+    }
+  };
+
   const renderTableHeaders = () => (
-    <div className="grid grid-cols-2 border-b border-stroke py-4 px-4 dark:border-strokedark">
+    <div className="grid grid-cols-3 border-b border-stroke py-4 px-4 dark:border-strokedark">
       {tableHeaders.map((header, index) => (
         <div key={index} className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white font-semibold">{header}</p>
@@ -74,13 +148,13 @@ const Page = () => {
     return sectionData.map((item, index) => {
       const narrative = item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
       return (
-        <div className="grid grid-cols-2 border-t border-stroke py-4 px-4 dark:border-strokedark" key={index}>
+        <div className="grid grid-cols-3 border-t border-stroke py-4 px-4 dark:border-strokedark" key={index}>
           <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
           </div>
-          {/* <div className="flex items-center px-2">
+          <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white">{item.score}</p>
-          </div> */}
+          </div>
           <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white">{narrative}</p>
           </div>
@@ -177,10 +251,45 @@ const Page = () => {
 
   return (
     <div className="">
-      <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+      <div className="mb-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-          <h4 className="text-xl font-semibold text-black dark:text-white">Business Assessment Report</h4>
+          <h4 className="text-xl font-semibold text-black dark:text-white">
+            Business Assessment Report - Version {version}
+          </h4>
+          {/* Buttons container aligned to the right */}
+          <div className="flex ml-auto space-x-3">
+            {status === "Draft" ? (
+              <>
+                {userDetails.reportPdf && (
+                  <button
+                    className="px-4 py-2 bg-black-2 text-white rounded hover:bg-zinc-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
+                    onClick={() => window.open(`http://${userDetails.reportPdf}`, "_blank")}
+                  >
+                    View Report
+                  </button>
+                )}
+                <button
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
+                  onClick={openPublishDialog}
+                >
+                  Publish
+                </button>
+              </>
+
+            ) : (
+              <button
+                className="px-4 py-2 bg-slate-400 text-white rounded cursor-not-allowed"
+                disabled
+              >
+                {status}
+              </button>
+            )}
+          </div>
         </div>
+
+      </div>
+
+      <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="p-4">
           {renderOverallChart()} {/* Render the multi-bar chart for the 4 sections */}
         </div>
@@ -190,6 +299,19 @@ const Page = () => {
       {renderSection("Financial", data.financial)}
       {renderSection("Operations", data.operations)}
       {renderSection("Legal", data.legal)}
+
+      <Modal2
+        isOpen={deletemodalOpen}
+        onClose={() => publishModalOpen(false)}
+        message={deletemodalMessage}
+        onDelete={() => publishChanges()}  // Directly call handleDeleteFile
+        onCancel={handleDeleteCancel}
+        bgColor="yellow-200"
+        closeButtonText="Cancel"
+        deleteButtonText="Publish"
+        closeButtonColor="gray-500"
+        deleteButtonColor="blue-500"
+      />
     </div>
   );
 };

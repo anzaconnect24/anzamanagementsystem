@@ -3,31 +3,49 @@ import { headers } from "@/app/utils/headers";
 import { server_url } from "@/app/utils/endpoint";
 import { getUser, getVersion, getStatus, storeStatus } from "../utils/local_storage"; 
 
-export const publishReport = async (id) => {
-  console.log("Publishing report");
 
-  const version = getVersion();
-  const status = getStatus();
+export const publishChanges = async (data) => {
+  try {
+      const response = await axios.post(`${server_url}/reviewer/update`, data, { headers });
+      return response.data;
+  } catch (error) {
+      console.log('Error updating financial data:', error.response);
+      throw error;
+  }
+};
 
-  console.log("Status:", status, "Version:", version);
+export const getApplicationList = async () => {
+  console.log('getting applications');
+
+  try {
+      const response = await axios.get(`${server_url}/reviewer/getCratApplications`, { headers });
+      console.log(response);
+      return response.data.body;
+  } catch (error) {
+      console.log('Error fetching report data:', error.response);
+      throw error;
+  }
+};
+
+export const getReport = async (id) => {
+  console.log("getting report");
+
 
   const data = {
-    version,
-    status,
     id,
   };
 
   try {
-    const response = await axios.post(`${server_url}/crat_general/publish_report`, data, { headers });
+    const response = await axios.post(`${server_url}/reviewer/get_report_byId`, data, { headers });
 
     // Log the response
     console.log("Response:", response.data);
 
-    // // Check for updated status in the response and store it in localStorage
-    // if (response.data.updatedStatus) {
-    //   storeStatus(response.data.updatedStatus);
-    //   console.log("Updated status stored:", response.data.updatedStatus);
-    // }
+    // Check for updated status in the response and store it in localStorage
+    if (response.data.updatedStatus) {
+      storeStatus(response.data.updatedStatus);
+      console.log("Updated status stored:", response.data.updatedStatus);
+    }
 
     return response.data;
   } catch (error) {
@@ -36,33 +54,30 @@ export const publishReport = async (id) => {
   }
 };
 
+export const publishUser = async (data) => {
+  try {
+    const formData = new FormData();
+    formData.append("file", data.file); // Add file
+    formData.append("userId", data.userId); // Add userId
 
-
-
-export const getReportData = async () => {
-    console.log('getting report');
-
-    try {
-        const response = await axios.get(`${server_url}/crat_general/report`, { headers });
-        return response.data.body;
-    } catch (error) {
-        console.log('Error fetching report data:', error.response);
-        throw error;
+    console.log("FormData entries:");
+    for (let [key, value] of formData.entries()) {
+      console.log(`${key}:`, value);
     }
+
+    const response = await axios.post(`${server_url}/reviewer/publish`, formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${getUser().ACCESS_TOKEN}`,
+      },
+    });
+
+    return response.data;
+  } catch (error) {
+    console.log("Error attaching document:", error.response);
+    throw error;
+  }
 };
-
-export const getScoreData = async () => {
-    console.log('getting score data');
-
-    try {
-        const response = await axios.get(`${server_url}/crat_general/score_calculation`, { headers });
-        return response.data.body;
-    } catch (error) {
-        console.log('Error fetching report data:', error.response);
-        throw error;
-    }
-};
-
 
 
 export  const initialData = {
@@ -129,7 +144,7 @@ export  const initialData = {
           ]
         },
         {
-          subDomain: "Product pricing", score: 0, narrative: [
+          subDomain: "Product pricing basis", score: 0, narrative: [
             { score: 0, text: "The company has not yet figured out how to price its products/services and is trying to develop a pricing structure for the same" },
             { score: 1, text: "The company has established pricing for its products but remains open to changes following customer feedback" },
             { score: 2, text: "The company has developed a well-structured pricing system for its products/services" },
@@ -161,7 +176,7 @@ export  const initialData = {
           ]
         },
         {
-          subDomain: "Branding and packaging", score: 0, narrative: [
+          subDomain: "Packaging and branding", score: 0, narrative: [
             { score: 0, text: "The company is not properly branded; no brand guidelines exist" },
             { score: 1, text: "The company is developing its branding and packaging, including such brand and packaging items relevant and consistent with its overall business strategy" },
             { score: 2, text: "The company is properly packaged and branded, manifested by their existing brand guidelines and execution" },
@@ -179,14 +194,14 @@ export  const initialData = {
     financial: {
       "Profitability": [
         {
-          subDomain: "Revenue growth", score: 0, narrative: [
+          subDomain: "Revenue", score: 0, narrative: [
             { score: 0, text: "Revenue has been declining on a month-to-month or quarter-to-quarter basis, with a net negative growth for the past year" },
             { score: 1, text: "Revenue growth trended between negative and positive, alternating between months/quarters, resulting in 0% overall growth in a year" },
             { score: 2, text: "Revenue growth was positive month-on-month or quarter-on-quarter, recording overall positive growth for the year" },
           ]
         },
         {
-          subDomain: "Cost", score: 0, narrative: [
+          subDomain: "Cost management", score: 0, narrative: [
             { score: 0, text: "Unit costs increased in the year" },
             { score: 1, text: "Unit costs remained relatively constant in the year" },
             { score: 2, text: "Unit costs declined in the year" },
@@ -209,7 +224,7 @@ export  const initialData = {
           ]
         },
         {
-          subDomain: "Debt management", score: 0, narrative: [
+          subDomain: "Debt manageability", score: 0, narrative: [
             { score: 0, text: "Debt is mismanaged and is causing stress to the company" },
             { score: 1, text: "Debt is satisfactorily managed but there are visible risks in the near future" },
             { score: 2, text: "Debt is well managed and is proving to be very useful in generating value for shareholders" },
@@ -225,7 +240,7 @@ export  const initialData = {
       ],
       "Cash flows": [
         {
-          subDomain: "Operating cash flows", score: 0, narrative: [
+          subDomain: "Operating cash flow", score: 0, narrative: [
             { score: 0, text: "OCF is negative, and funding for operations came from other sources" },
             { score: 1, text: "OCF was negative but showed substantial improvement across the year, with no additional cash required from other sources to finance operations" },
             { score: 2, text: "OCF was positive and fully funded the company's operations" },
@@ -271,7 +286,7 @@ export  const initialData = {
           ]
         },
         {
-          subDomain: "Tax liabilities", score: 0, narrative: [
+          subDomain: "Tax liability", score: 0, narrative: [
             { score: 0, text: "There are unsettled taxes that might jeopardize the compliance of the company in the future" },
             { score: 1, text: "The tax liabilities existing are being addressed by management" },
             { score: 2, text: "There are no outstanding tax liabilities" },
