@@ -12,6 +12,7 @@ import { MdOutlineDashboard } from "react-icons/md";
 import { TbLogout } from "react-icons/tb";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { SlPeople } from "react-icons/sl";
+
 const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const pathname = usePathname();
   const { userDetails } = useContext(UserContext);
@@ -341,16 +342,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                     Investors
                                   </Link>
                                 </li>
-                                <li>
-                                  <Link
-                                    href="/mentors"
-                                    className={`group relative flex items-center gap-2.5 rounded-md px-4 font-medium text-bodydark2 duration-300 ease-in-out hover:text-white ${
-                                      pathname === "/investors" && "text-white"
-                                    }`}
-                                  >
-                                    Mentors
-                                  </Link>
-                                </li>
+                      
                                 <li>
                                   <Link
                                     href="/reviewers"
@@ -710,6 +702,34 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                 </div>
                 
               }
+
+{["Reviewer"].includes(userDetails.role) && (
+  <li>
+    <Link
+      href="/applicationList"
+      className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-bodydark1 duration-300 ease-in-out hover:bg-graydark dark:hover:bg-meta-4 ${
+        (pathname.includes("applicationList") && !pathname.includes("previewPage")) && "bg-primary dark:bg-primary"
+      }`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        strokeWidth="1.5"
+        stroke="currentColor"
+        className="w-5 h-5"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Zm8.25 2.25a2.625 2.625 0 1 1-5.25 0 2.625 2.625 0 0 1 5.25 0Z"
+        />
+      </svg>
+      CRAT Applications
+    </Link>
+  </li>
+)}
+
               {/* CRAT SYSTEM ITEM */}
                {
                 <div>
