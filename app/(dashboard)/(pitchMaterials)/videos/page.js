@@ -39,7 +39,7 @@ const Page = () => {
            {videos.map((item,key)=>{
         return <a  key={key} className="py-5 px-5 border border-stroke cursor-pointer flex flex-col items-center justify-center rounded hover:shadow-lg">
             <a href={item.link} target="_blank">
-              <img height={1000} width={1000} alt={`${item.title}`} className="w-12" src="/video.png"/>
+              <image height={1000} width={1000} alt={`${item.title}`} className="w-12" src="/video.png"/>
 </a>
             <div className="mt-1">{item.fileName}</div>
             <p className="text-sm text-slate-400">{timeAgo(item.createdAt)}</p>

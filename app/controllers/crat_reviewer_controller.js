@@ -1,7 +1,7 @@
 import axios from "axios";
 import { headers } from "@/app/utils/headers";
 import { server_url } from "@/app/utils/endpoint";
-import { getUser, getVersion, getStatus, storeStatus } from "../utils/local_storage"; 
+import { getUser } from "../utils/local_storage"; 
 
 
 export const publishChanges = async (data) => {
@@ -40,12 +40,6 @@ export const getReport = async (id) => {
 
     // Log the response
     console.log("Response:", response.data);
-
-    // Check for updated status in the response and store it in localStorage
-    if (response.data.updatedStatus) {
-      storeStatus(response.data.updatedStatus);
-      console.log("Updated status stored:", response.data.updatedStatus);
-    }
 
     return response.data;
   } catch (error) {

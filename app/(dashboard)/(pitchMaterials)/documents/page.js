@@ -37,7 +37,7 @@ const Page = () => {
            {documents.map((item,key)=>{
         return <a key={key} className="py-8  px-5 border border-stroke cursor-pointer  flex flex-col justify-center items-center rounded hover:shadow-lg">
             <a href={item.link} target="_blank" >
-                <Image height={1000} width={1000} className="w-16" src="/pdf.png"/>
+                <Image height={1000} width={1000} alt="" className="w-16" src="/pdf.png"/>
             </a>
             <div className="mt-1">{item.fileName}</div>
             {["Admin"].includes(userDetails.role)&&

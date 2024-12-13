@@ -110,98 +110,103 @@ const Page = () => {
     );
 
 
-    const renderTableRows = (sectionData, section) => {
-        return sectionData.map((item, index) => {
-            const [reviewerComment, setReviewerComment] = useState(item.reviewer_comment || "");
-            const [rating, setRating] = useState(item.rating || "No");
-            const [isChanged, setIsChanged] = useState(false);
-            const [narrative, setNarrative] = useState(() => {
-                return item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
-            });
-    
-            useEffect(() => {
-                if (!isChanged) {
-                    setRating(item.rating || "No");
-                    setReviewerComment(item.reviewer_comment || "");
-                    const updatedNarrative = 
-                        item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
-                    setNarrative(updatedNarrative);
-                }
-            }, [item, isChanged]);
-    
-            const handleRatingChange = (newRating) => {
-                setRating(newRating);
-                setIsChanged(true);
-    
-                const newScore = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
-                item.score = newScore;
-    
-                const updatedNarrative = item.narrative.find((n) => n.score === newScore)?.text || "Narrative not found";
-                setNarrative(updatedNarrative);
-            };
-    
-            const handleSave = () => {
-                const updatedItem = {
-                    ...item,
-                    score: rating === "No" ? 0 : rating === "Maybe" ? 1 : 2,
-                    reviewer_comment: reviewerComment,
-                    rating: rating,
-                };
-    
-                // Update the backend or parent component
-                publishItem(item.subDomain, index, updatedItem);
-    
-                // Reflect the updated values in the `item`
-                item.reviewer_comment = reviewerComment;
-                item.rating = rating;
-                item.score = rating === "No" ? 0 : rating === "Maybe" ? 1 : 2;
-    
-                setIsChanged(false); // Reset change flag after saving
-            };
-    
-            return (
-                <div className="grid grid-cols-5 border-t border-stroke py-5 px-5 dark:border-strokedark" key={index}>
-                    <div className="flex items-center px-2">
-                        <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
-                    </div>
-                    <div className="flex items-center px-2">
-                        <DropdownTwo
-                            value={rating}
-                            onChange={(e) => handleRatingChange(e.target.value)}
-                        />
-                    </div>
-                    <div className="flex items-center px-2">
-                        <p className="text-sm text-black dark:text-white">{narrative}</p>
-                    </div>
-                    <div className="flex items-center px-2">
-                        <textarea
-                            className="resize-none p-2 text-sm text-black dark:text-white w-full h-24 border border-stroke dark:border-strokedark bg-gray-100 dark:bg-gray-800"
-                            value={reviewerComment}
-                            onChange={(e) => {
-                                setReviewerComment(e.target.value);
-                                setIsChanged(true);
-                            }}
-                        />
-                    </div>
-                    <div className="flex items-center px-2 justify-center space-x-2">
-                        <button
-                            onClick={() => previewItem(item)}
-                            className="bg-blue-500 text-white px-4 py-2 rounded-lg"
-                        >
-                            Preview
-                        </button>
-                        <button
-                            onClick={handleSave}
-                            className={`px-4 py-2 rounded-lg ${isChanged ? 'bg-green-500' : 'bg-black opacity-10 cursor-not-allowed'} text-white`}
-                            disabled={!isChanged}
-                        >
-                            Save
-                        </button>
-                    </div>
-                </div>
-            );
+    const TableRow = ({ item, index, publishItem }) => {
+        const [reviewerComment, setReviewerComment] = useState(item.reviewer_comment || "");
+        const [rating, setRating] = useState(item.rating || "No");
+        const [isChanged, setIsChanged] = useState(false);
+        const [narrative, setNarrative] = useState(() => {
+            return item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
         });
+    
+        useEffect(() => {
+            if (!isChanged) {
+                setRating(item.rating || "No");
+                setReviewerComment(item.reviewer_comment || "");
+                const updatedNarrative =
+                    item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
+                setNarrative(updatedNarrative);
+            }
+        }, [item, isChanged]);
+    
+        const handleRatingChange = (newRating) => {
+            setRating(newRating);
+            setIsChanged(true);
+    
+            const newScore = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
+            item.score = newScore;
+    
+            const updatedNarrative = item.narrative.find((n) => n.score === newScore)?.text || "Narrative not found";
+            setNarrative(updatedNarrative);
+        };
+    
+        const handleSave = () => {
+            const updatedItem = {
+                ...item,
+                score: rating === "No" ? 0 : rating === "Maybe" ? 1 : 2,
+                reviewer_comment: reviewerComment,
+                rating: rating,
+            };
+    
+            // Update the backend or parent component
+            publishItem(item.subDomain, index, updatedItem);
+    
+            // Reflect the updated values in the `item`
+            item.reviewer_comment = reviewerComment;
+            item.rating = rating;
+            item.score = rating === "No" ? 0 : rating === "Maybe" ? 1 : 2;
+    
+            setIsChanged(false); // Reset change flag after saving
+        };
+    
+        return (
+            <div className="grid grid-cols-5 border-t border-stroke py-5 px-5 dark:border-strokedark" key={index}>
+                <div className="flex items-center px-2">
+                    <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
+                </div>
+                <div className="flex items-center px-2">
+                    <DropdownTwo
+                        value={rating}
+                        onChange={(e) => handleRatingChange(e.target.value)}
+                    />
+                </div>
+                <div className="flex items-center px-2">
+                    <p className="text-sm text-black dark:text-white">{narrative}</p>
+                </div>
+                <div className="flex items-center px-2">
+                    <textarea
+                        className="resize-none p-2 text-sm text-black dark:text-white w-full h-24 border border-stroke dark:border-strokedark bg-gray-100 dark:bg-gray-800"
+                        value={reviewerComment}
+                        onChange={(e) => {
+                            setReviewerComment(e.target.value);
+                            setIsChanged(true);
+                        }}
+                    />
+                </div>
+                <div className="flex items-center px-2 justify-center space-x-2">
+                    <button
+                        onClick={() => previewItem(item)}
+                        className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                    >
+                        Preview
+                    </button>
+                    <button
+                        onClick={handleSave}
+                        className={`px-4 py-2 rounded-lg ${isChanged ? 'bg-green-500' : 'bg-black opacity-10 cursor-not-allowed'} text-white`}
+                        disabled={!isChanged}
+                    >
+                        Save
+                    </button>
+                </div>
+            </div>
+        );
     };
+    
+    const renderTableRows = (sectionData, section) => {
+        return sectionData.map((item, index) => (
+            <TableRow key={index} item={item} index={index} publishItem={publishItem} />
+        ));
+    };
+    
     
     
     
