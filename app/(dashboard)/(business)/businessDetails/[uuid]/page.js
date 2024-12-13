@@ -14,6 +14,7 @@ import { createConversation } from "@/app/controllers/conversation_controller";
 import Image from "next/image";
 import { UserContext } from "../../../layout";
 import { createNotification } from "@/app/controllers/notification_controller";
+import { assignEntreprenuerToMentor } from "@/app/controllers/mentorEntreprenuerController";
 
 const Page = ({ params }) => {
   const uuid = params.uuid;
@@ -21,13 +22,16 @@ const Page = ({ params }) => {
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
   const [loading, setloading] = useState(true);
+  const [requesting, setRequesting] = useState(false);
   useEffect(() => {
+    getData();
+  }, []);
+  const getData = () => {
     getBusiness(uuid).then((data) => {
       setloading(false);
       setBusiness(data);
     });
-  }, []);
-
+  };
   return loading ? (
     <Loader />
   ) : (
@@ -215,6 +219,26 @@ const Page = ({ params }) => {
             >
               Message
             </div>
+            {["Mentor"].includes(userDetails.role) &&
+              !business.linkedWithMentor && (
+                <button
+                  onClick={() => {
+                    setRequesting(true);
+                    const payload = {
+                      mentor_uuid: userDetails.uuid,
+                      entreprenuer_uuid: business.User.uuid,
+                    };
+                    assignEntreprenuerToMentor(payload).then((res) => {
+                      getData();
+                      toast.success("Request sent successfully");
+                      setRequesting(false);
+                    });
+                  }}
+                  className="py-3 px-4 bg-primary w-52 cursor-pointer text-white rounded"
+                >
+                  {requesting ? "requesting..." : "Request to be a mentor"}
+                </button>
+              )}
             {userDetails.role == "Investor" && (
               <Link
                 href={`/investmentApplication/${uuid}`}

@@ -1,18 +1,16 @@
 import { useContext, useEffect, useRef, useState } from "react";
-import Link from "next/link"
-import Loader from "@/components/common/Loader";;
 import Image from "next/image";
 import { logout } from "@/app/utils/local_storage";
 import { useRouter } from "next/navigation";
 import { UserContext } from "@/app/(dashboard)/layout";
+import Link from "next/link";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
- const {userDetails} =  useContext(UserContext)
+  const { userDetails } = useContext(UserContext);
   const trigger = useRef<any>(null);
   const dropdown = useRef<any>(null);
- const router = useRouter()
-
+  const router = useRouter();
 
   useEffect(() => {
     const clickHandler = ({ target }: MouseEvent) => {
@@ -60,7 +58,7 @@ const DropdownUser = () => {
             width={112}
             height={112}
             className=" aspect-square object-cover rounded-full "
-            src={userDetails.image??"/user.png"}
+            src={userDetails.image ?? "/user.png"}
             alt="User"
           />
         </span>
@@ -117,14 +115,15 @@ const DropdownUser = () => {
               My Profile
             </Link>
           </li>
-        
         </ul>
-        <button onClick={()=>{
+        <button
+          onClick={() => {
             // alert("hello there")
-             logout()
-             router.push("/signin")
-             
-        }} className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base">
+            logout();
+            router.push("/signin");
+          }}
+          className="flex items-center gap-3.5 py-4 px-6 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
+        >
           <svg
             className="fill-current"
             width="22"
