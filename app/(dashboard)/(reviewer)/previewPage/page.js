@@ -112,55 +112,50 @@ const Page = () => {
 
     const renderTableRows = (sectionData, section) => {
         return sectionData.map((item, index) => {
-            // States for reviewer comment and rating
             const [reviewerComment, setReviewerComment] = useState(item.reviewer_comment || "");
             const [rating, setRating] = useState(item.rating || "No");
-            const [isChanged, setIsChanged] = useState(false);  // Track changes
+            const [isChanged, setIsChanged] = useState(false);
             const [narrative, setNarrative] = useState(() => {
                 return item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
             });
     
-            // Effect hook to set the correct value for rating, reviewer comment, and narrative when backend data is updated
             useEffect(() => {
-                if (item.rating) {
-                    setRating(item.rating);  // Set rating from the backend response
+                if (!isChanged) {
+                    setRating(item.rating || "No");
+                    setReviewerComment(item.reviewer_comment || "");
+                    const updatedNarrative = 
+                        item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
+                    setNarrative(updatedNarrative);
                 }
-                if (item.reviewer_comment !== reviewerComment) {
-                    setReviewerComment(item.reviewer_comment || ""); // Update reviewer comment from backend
-                }
-                const updatedNarrative =
-                    item.narrative.find((n) => n.score === item.score)?.text || "Narrative not found";
-                setNarrative(updatedNarrative);
-            }, [item.rating, item.reviewer_comment, item.score]); // This will run when rating, reviewer_comment, or score changes
+            }, [item, isChanged]);
     
-            // Handle comment change
-            const handleCommentChange = (e) => {
-                setReviewerComment(e.target.value);
-                setIsChanged(true);  // Mark as changed
-            };
-    
-            // Handle rating change
             const handleRatingChange = (newRating) => {
                 setRating(newRating);
+                setIsChanged(true);
     
-                // Update score based on rating
                 const newScore = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
-                item.score = newScore; // Update item score
+                item.score = newScore;
     
-                // Update narrative dynamically
                 const updatedNarrative = item.narrative.find((n) => n.score === newScore)?.text || "Narrative not found";
                 setNarrative(updatedNarrative);
-    
-                setIsChanged(true);  // Mark as changed
             };
     
-            // Handle save action
             const handleSave = () => {
-                publishItem(item.subDomain, index, {
-                    score: rating === "No" ? 0 : rating === "Maybe" ? 1 : 2,  // Convert rating
+                const updatedItem = {
+                    ...item,
+                    score: rating === "No" ? 0 : rating === "Maybe" ? 1 : 2,
                     reviewer_comment: reviewerComment,
                     rating: rating,
-                });
+                };
+    
+                // Update the backend or parent component
+                publishItem(item.subDomain, index, updatedItem);
+    
+                // Reflect the updated values in the `item`
+                item.reviewer_comment = reviewerComment;
+                item.rating = rating;
+                item.score = rating === "No" ? 0 : rating === "Maybe" ? 1 : 2;
+    
                 setIsChanged(false); // Reset change flag after saving
             };
     
@@ -171,8 +166,8 @@ const Page = () => {
                     </div>
                     <div className="flex items-center px-2">
                         <DropdownTwo
-                            value={rating}  // Set value to rating state
-                            onChange={(e) => handleRatingChange(e.target.value)} // Update rating state
+                            value={rating}
+                            onChange={(e) => handleRatingChange(e.target.value)}
                         />
                     </div>
                     <div className="flex items-center px-2">
@@ -181,8 +176,11 @@ const Page = () => {
                     <div className="flex items-center px-2">
                         <textarea
                             className="resize-none p-2 text-sm text-black dark:text-white w-full h-24 border border-stroke dark:border-strokedark bg-gray-100 dark:bg-gray-800"
-                            value={reviewerComment}  // Bind value to reviewerComment state
-                            onChange={handleCommentChange} // Update reviewerComment on change
+                            value={reviewerComment}
+                            onChange={(e) => {
+                                setReviewerComment(e.target.value);
+                                setIsChanged(true);
+                            }}
                         />
                     </div>
                     <div className="flex items-center px-2 justify-center space-x-2">
@@ -193,9 +191,9 @@ const Page = () => {
                             Preview
                         </button>
                         <button
-                            onClick={handleSave} // Trigger save action
+                            onClick={handleSave}
                             className={`px-4 py-2 rounded-lg ${isChanged ? 'bg-green-500' : 'bg-black opacity-10 cursor-not-allowed'} text-white`}
-                            disabled={!isChanged} // Disable button if no changes
+                            disabled={!isChanged}
                         >
                             Save
                         </button>
@@ -204,6 +202,9 @@ const Page = () => {
             );
         });
     };
+    
+    
+    
     
 
     const cleanTitle = (title) => {

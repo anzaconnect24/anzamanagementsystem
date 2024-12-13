@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import DropdownTwo from "@/components/Dropdowns/DropdownTwo";
 import ReactIcons from "@/components/icons/reactIcons";
 import Modal from "@/components/Model";
@@ -7,7 +7,8 @@ import Modal2 from "@/components/Model2";
 import toast from 'react-hot-toast';
 import Loader from "@/components/common/Loader";
 import { getMarketData, createMarketData, updateMarketData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_market_controller"; // Import updated API functions
-import { getUser, getVersion, getStatus } from "../../../utils/local_storage";
+import { UserContext } from "../../../(dashboard)/layout";
+
 
 const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
 
@@ -21,16 +22,19 @@ const Page = () => {
   const [modalMessage, setModalMessage] = useState("");
   const [deletemodalOpen, deleteModalOpen] = useState(false);
   const [deletemodalMessage, deleteModalMessage] = useState("");
-  const [status, setStatus] = useState(""); // State for status
+  const [deleteCache, setDeleteCache] = useState([]);
+  const { userDetails, setUserDetails } = useContext(UserContext)
+
 
 
   useEffect(() => {
-    const storedStatus = getStatus();
-    setStatus(storedStatus);
+    console.log('then');
+
     const fetchData = async () => {
       try {
         const responseData = await getMarketData();
-        if (!responseData || responseData.length === 0) {
+        console.log('market', responseData);
+        if (responseData == null || responseData.length == 0) {
           await createMarketData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
         } else {
@@ -132,6 +136,7 @@ const Page = () => {
       // Fetch updated data
       const responseData = await getMarketData();
       const updatedData = { ...initialDataTemplate };
+      console.log('this is my res', responseData);
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
@@ -153,7 +158,7 @@ const Page = () => {
 
   
     const openDeleteDialog = (domain, id, attachment, section, index) => {
-      // Open the delete modal with the confirmation message
+      console.log(domain, id, attachment, section, index);
       deleteModalOpen(true);
       deleteModalMessage('Are you sure you want to delete?');
       setDeleteCache([domain, id, attachment, section, index]);
@@ -300,7 +305,7 @@ const Page = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {status === "On review" ? (
+        {userDetails.publishStatus === "On review" ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               On Review

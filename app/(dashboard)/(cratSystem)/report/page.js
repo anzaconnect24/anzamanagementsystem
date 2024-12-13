@@ -3,7 +3,6 @@ import { useState, useContext, useEffect } from "react";
 import { getReportData, getScoreData, initialData, publishReport } from "@/app/controllers/crat_general_controller"; // Import updated API functions
 import { Bar } from "react-chartjs-2";
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
-import { getUser, getVersion, getStatus, storeStatus } from "../../../utils/local_storage";
 import Modal2 from "@/components/Model2";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 import toast from 'react-hot-toast';
@@ -21,17 +20,11 @@ const Page = () => {
   const [scoreData, setScoreData] = useState({}); // State to hold the score data
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
-  const [version, setVersion] = useState(""); // State for version
-  const [status, setStatus] = useState(""); // State for status
   const { userDetails, setUserDetails } = useContext(UserContext)
 
   
   useEffect(() => {
-    const storedVersion = getVersion();
-    const storedStatus = getStatus();
-    setVersion(storedVersion);
-    setStatus(storedStatus);
-  
+  console.log(userDetails.publishStatus);
 
     fetchData();
   }, []);
@@ -82,9 +75,13 @@ const Page = () => {
 
   const publishChanges = async () => {
     try {
-         await publishReport(userDetails.id);
-        storeStatus('On review');
-        setStatus('On review');
+         await publishReport(userDetails.id, userDetails.versionCount, userDetails.publishStatus);
+         
+         setUserDetails((prevDetails) => ({
+          ...prevDetails, // Copy existing properties
+          publishStatus: "On review", // Update the publishStatus property
+      }));
+      
         publishModalOpen(false)
         toast.success("Published Successfully");
         console.log("Changes successfully submitted");
@@ -254,11 +251,11 @@ const Page = () => {
       <div className="mb-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Business Assessment Report - Version {version}
+            Business Assessment Report - Version {userDetails.versionCount}
           </h4>
           {/* Buttons container aligned to the right */}
           <div className="flex ml-auto space-x-3">
-            {status === "Draft" ? (
+            {userDetails.publishStatus === "Draft" ? (
               <>
                 {userDetails.reportPdf && (
                   <button
@@ -281,7 +278,7 @@ const Page = () => {
                 className="px-4 py-2 bg-slate-400 text-white rounded cursor-not-allowed"
                 disabled
               >
-                {status}
+                {userDetails.publishStatus}
               </button>
             )}
           </div>

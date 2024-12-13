@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import DropdownTwo from "@/components/Dropdowns/DropdownTwo";
 import ReactIcons from "@/components/icons/reactIcons";
 import toast from 'react-hot-toast';
@@ -7,9 +7,8 @@ import Loader from "@/components/common/Loader";
 import Modal from "@/components/Model";
 import Modal2 from "@/components/Model2";
 import { getOperationData, createOperationData, updateOperationData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_operation_controller"; // Import updated API functions
-import { getUser, getVersion, getStatus } from "../../../utils/local_storage";
-
 const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
+import { UserContext } from "../../../(dashboard)/layout";
 
 const Page = () => {
  
@@ -23,19 +22,18 @@ const Page = () => {
   const [deletemodalOpen, deleteModalOpen] = useState(false);
   const [deletemodalMessage, deleteModalMessage] = useState("");
   const [deleteCache, setDeleteCache] = useState([]);
-  const [status, setStatus] = useState(""); // State for status
+  const { userDetails, setUserDetails } = useContext(UserContext)
 
 
   useEffect(() => {
-    const storedStatus = getStatus();
-    setStatus(storedStatus);
     const fetchData = async () => {
       try {
         const responseData = await getOperationData();
-        if (!responseData || responseData.length === 0) {
+        if (responseData  == null|| responseData.length == 0) {
           await createOperationData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
         } else {
+          //console.log(responseData);
           const updatedData = { ...initialDataTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
@@ -75,7 +73,6 @@ const Page = () => {
     console.log('submitting');
     try {
         await updateOperationData(data);
-
         // Update initialDataTemplate here
         Object.keys(data).forEach(section => {
             initialDataTemplate[section] = data[section].map(item => ({
@@ -152,6 +149,7 @@ const handleDeleteCancel = () => {
 
   const handleDeleteFile = async () => {
     const [domain, id, attachment, section, index] = deleteCache;
+    console.log(domain, id, attachment, section, index);
       try {
           // Proceed with deletion directly
           await deleteAttachment(domain, id, attachment, section, index);
@@ -285,7 +283,7 @@ const handleDeleteCancel = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {status === "On review" ? (
+        {userDetails.publishStatus === "On review" ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               On Review

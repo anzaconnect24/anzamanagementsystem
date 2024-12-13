@@ -1,14 +1,12 @@
 import axios from "axios";
 import { headers } from "@/app/utils/headers";
 import { server_url } from "@/app/utils/endpoint";
-import { getUser, getVersion, getStatus, storeStatus } from "../utils/local_storage"; 
+import {  useContext } from "react";
+import { getUser} from "../utils/local_storage"; 
 
-export const publishReport = async (id) => {
+
+export const publishReport = async (id, version,status ) => {
   console.log("Publishing report");
-
-  const version = getVersion();
-  const status = getStatus();
-
   console.log("Status:", status, "Version:", version);
 
   const data = {
