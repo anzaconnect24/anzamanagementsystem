@@ -6,7 +6,7 @@ interface DropdownTwoProps {
   value: string; // Type of the value prop
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void; // Type of the onChange handler
 }
-
+ 
 const DropdownTwo: React.FC<DropdownTwoProps> = ({ value, onChange }) => {
   return (
     <div className="relative w-32"> {/* Container div with relative positioning */}

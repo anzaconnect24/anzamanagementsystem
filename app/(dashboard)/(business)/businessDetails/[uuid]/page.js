@@ -45,15 +45,9 @@ const Page = ({ params }) => {
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <div className="space-y-3">
             {[
-              {
-                title: "Enterprenuer name",
-                value: business.User && business.User.name,
-              },
+              { title: "Enterprenuer name", value: business.User && business.User.name },
               { title: "Company Name", value: business.name },
-              {
-                title: "Anza Alumni ?",
-                value: business.isAlumni ? "Yes" : "false",
-              },
+              { title: "Anza Alumni ?", value: business.isAlumni ? "Yes" : "false" },
               { title: "Attended (program)", value: business.completedProgram },
               { title: "Sustainable Development Goal", value: business.sdg },
               { title: "Company phone", value: business.phone },
@@ -64,7 +58,33 @@ const Page = ({ params }) => {
               { title: "Problem statement", value: business.problem },
               { title: "Solution", value: business.solution },
               { title: "Traction", value: business.traction },
+              { title: "Assessment Report", value: business.User.reportPdf },
             ].map((item, key) => {
+              // Render the Assessment Report as a link
+              if (item.title === "Assessment Report") {
+                console.log(business.User.reportPdf);
+                return (
+                  <div className="flex" key={key}>
+                    <div className="w-4/12">{item.title}:</div>
+                    <div className="w-8/12 text-black">
+                      <a
+                        href={
+                          business.User.reportPdf.startsWith("http")
+                            ? business.User.reportPdf
+                            : `http://${business.User.reportPdf}`
+                        }
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-500 underline"
+                      >
+                        Open Report
+                      </a>
+
+                    </div>
+                  </div>
+                );
+              }
+              // For all other items, display the value normally
               return (
                 <div className="flex" key={key}>
                   <div className="w-4/12">{item.title}:</div>
@@ -73,6 +93,7 @@ const Page = ({ params }) => {
               );
             })}
           </div>
+
           {business.companyProfile != null && (
             <div className="flex mt-4">
               <div className="w-4/12">Company profile:</div>
