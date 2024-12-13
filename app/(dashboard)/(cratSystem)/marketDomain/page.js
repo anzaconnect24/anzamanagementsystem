@@ -33,7 +33,6 @@ const Page = () => {
     const fetchData = async () => {
       try {
         const responseData = await getMarketData();
-        console.log('market', responseData);
         if (responseData == null || responseData.length == 0) {
           await createMarketData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
