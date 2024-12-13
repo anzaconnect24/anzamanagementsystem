@@ -87,7 +87,7 @@ export const login = async (data) => {
   try {
     const response = await axios.post(`${server_url}/user/login`, data);
     //  alert(response.data.tokens)
-    console.log('this is the login data', response.data);
+   // console.log('this is the login data', response.data);
     storeUser(response.data.tokens);
     return response.data;
     
