@@ -7,8 +7,7 @@ import Modal2 from "@/components/Model2";
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 import toast from 'react-hot-toast';
 import { UserContext } from "../../../(dashboard)/layout";
-
-
+import Loader from "@/components/common/Loader";
 
 // Define the table headers
 // const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
@@ -21,12 +20,15 @@ const Page = () => {
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
   const { userDetails, setUserDetails } = useContext(UserContext)
+  const [loading, setLoading] = useState(true);
 
   
   useEffect(() => {
-  console.log(userDetails.publishStatus);
+
+  console.log(userDetails);
 
     fetchData();
+    setLoading(false);
   }, []);
 
 
@@ -246,7 +248,7 @@ const Page = () => {
     );
   };
 
-  return (
+  return!loading ? (
     <div className="">
       <div className="mb-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
@@ -310,7 +312,7 @@ const Page = () => {
         deleteButtonColor="blue-500"
       />
     </div>
-  );
+  ):(<Loader />);
 };
 
 export default Page;

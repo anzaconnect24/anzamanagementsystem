@@ -13,8 +13,7 @@ import { UserContext } from "../../../(dashboard)/layout";
 const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
 
 const Page = () => {
-
-
+  const [loading, setLoading] = useState(true);
   const [data, setData] = useState(initialDataTemplate);
   const [originalData, setOriginalData] = useState(initialDataTemplate);
   const [changesMade, setChangesMade] = useState(false);
@@ -56,6 +55,7 @@ const Page = () => {
     };
 
     fetchData();
+    setLoading(false);
   }, []);
 
   const handleRatingChange = (section, index, newRating) => {
@@ -286,7 +286,7 @@ const Page = () => {
     </div>
   );
 
-  return (
+  return  !loading ?  (
     <div>
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
@@ -348,7 +348,7 @@ const Page = () => {
         deleteButtonColor="blue-500"
       />
     </div>
-  );
+  ):(<Loader />);
   
 };
 
