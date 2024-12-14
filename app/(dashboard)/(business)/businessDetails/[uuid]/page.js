@@ -62,23 +62,27 @@ const Page = ({ params }) => {
             ].map((item, key) => {
               // Render the Assessment Report as a link
               if (item.title === "Assessment Report") {
-                console.log(business.User.reportPdf);
                 return (
                   <div className="flex" key={key}>
                     <div className="w-4/12">{item.title}:</div>
                     <div className="w-8/12 text-black">
-                      <a
-                        href={
-                          business.User.reportPdf.startsWith("http")
-                            ? business.User.reportPdf
-                            : `http://${business.User.reportPdf}`
-                        }
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 underline"
-                      >
-                        Open Report
-                      </a>
+                    {business?.User?.reportPdf ? (
+  <a
+    href={
+      business.User.reportPdf.startsWith("http")
+        ? business.User.reportPdf
+        : `http://${business.User.reportPdf}`
+    }
+    target="_blank"
+    rel="noopener noreferrer"
+    className="text-blue-500 underline"
+  >
+    Open Report
+  </a>
+) : (
+  <span className="text-gray-500">No Report</span>
+)}
+
 
                     </div>
                   </div>

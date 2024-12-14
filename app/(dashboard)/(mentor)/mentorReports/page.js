@@ -58,14 +58,15 @@ const Page = () => {
           </thead>
           <tbody>
             {data.map((item) => {
+              console.log('this is item', item);
               return (
                 <tr key={item.uuid}>
                   <td>{timeAgo(item.createdAt)}</td>
                   <td>
-                    {userDetails.role == "Enterprenuer"
-                      ? item.Mentor.name
-                      : item.Entreprenuer.name}
-                  </td>
+  {userDetails.role === "Enterprenuer"
+    ? item.Mentor?.name || "N/A"
+    : item.Entreprenuer?.name || "N/A"}
+</td>
                   <td>{item.title}</td>
                   <td>
                     <Link

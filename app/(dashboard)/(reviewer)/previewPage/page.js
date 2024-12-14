@@ -263,7 +263,6 @@ const Page = () => {
 
 
     const publishItem = (subDomain, index, changedData) => {
-        console.log('Publishing changes for:', subDomain, index, changedData);
 
         // Assuming you have parsedData with userId from sessionStorage
         const userId = selectedData?.id; // Get the userId from the parsedData
@@ -278,7 +277,6 @@ const Page = () => {
     };
 
     const submitChanges = async (subDomain, changedData, userId) => {
-        console.log('Submitting changes for:', subDomain, changedData);
 
         try {
             const payload = {
@@ -505,7 +503,6 @@ const Page = () => {
         try {
             // Call `publishUser` with the data
             const response = await publishUser(publishData);
-            console.log("Publish response:", response);
 
             closePublishModal();
             toast.success("Document published successfully!");
@@ -537,7 +534,6 @@ const Page = () => {
                         <button
                             className="px-4 py-2 bg-green-500 text-white rounded"
                             onClick={() => {
-                                console.log('Publish button clicked');
                                 setPublishModalOpen(true); // Open publish modal      
                             }}                            
                         >
