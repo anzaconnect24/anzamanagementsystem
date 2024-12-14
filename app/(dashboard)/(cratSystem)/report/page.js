@@ -25,7 +25,7 @@ const Page = () => {
   
   useEffect(() => {
 
-  console.log(userDetails);
+  //console.log(userDetails);
 
     fetchData();
     setLoading(false);
