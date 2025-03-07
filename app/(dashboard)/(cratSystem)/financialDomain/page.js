@@ -201,7 +201,7 @@ const handleDeleteFile = async () => {
 
 
   const handleViewFile = (attachment) => {
-    window.open(`http://${attachment}`, '_blank');
+    window.open(`${attachment}`, '_blank');
 
     // const fileName = data[domain][index].attachment;
     // if (fileName) {

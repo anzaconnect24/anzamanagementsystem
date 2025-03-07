@@ -17,6 +17,7 @@ export const createMarketData = async (data) => {
 
 // Fetch market data
 export const getMarketData = async () => {
+    console.log('marketData: ' + headers);
     try {
         const response = await axios.get(`${server_url}/crat_market/data`, { headers });
         return response.data.body;
@@ -28,6 +29,7 @@ export const getMarketData = async () => {
 
 // Update market data
 export const updateMarketData = async (data) => {
+    console.log(headers);
     try {
         const response = await axios.post(`${server_url}/crat_market/update`, data, { headers });
         return response.data;
@@ -67,10 +69,14 @@ export const attachDocument = async (data) => {
 };
 
 export const deleteAttachment = async (domain, userId, attachment) => {
+    console.log('Deleting attachment:', domain, 'userID:' + userId, attachment);
     try {
-        const response = await axios.delete(`${server_url}/crat_market/attachment`, {
-            headers,
-            data: { subDomain: domain, userId, attachment } // Send data in the request body
+        const response = await axios.post(`${server_url}/crat_market/delete_attachment`, {
+            subDomain: domain,
+            userId,
+            attachment
+        }, {
+            headers
         });
 
         return response.data;
@@ -79,6 +85,7 @@ export const deleteAttachment = async (domain, userId, attachment) => {
         throw error; // Rethrow the error for further handling if needed
     }
 };
+
 
 export   const initialDataTemplate = {
     market: [

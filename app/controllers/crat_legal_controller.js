@@ -74,9 +74,12 @@ export const attachDocument = async (data) => {
 
 export const deleteAttachment = async (domain, userId, attachment) => {
     try {
-        const response = await axios.delete(`${server_url}/crat_legal/attachment`, {
-            headers,
-            data: { subDomain: domain, userId, attachment } // Send data in the request body
+        const response = await axios.post(`${server_url}/crat_legal/delete_attachment`,{
+            subDomain: domain,
+            userId,
+            attachment
+        }, {
+            headers
         });
 
         return response.data;
