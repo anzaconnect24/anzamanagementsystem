@@ -6,7 +6,7 @@ import Modal from "@/components/Model";
 import Modal2 from "@/components/Model2";
 import toast from 'react-hot-toast';
 import Loader from "@/components/common/Loader";
-import { getMarketData, createMarketData, updateMarketData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_market_controller"; // Import updated API functions
+import { getMarketData, createMarketData, updateMarketData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_market_controller"; 
 import { UserContext } from "../../../(dashboard)/layout";
 
 

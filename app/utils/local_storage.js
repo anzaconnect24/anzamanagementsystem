@@ -10,7 +10,9 @@ export const getUser = ()=>{
 
 export const logout = ()=>{
     storeUser(null);
+    localStorage.clear();
     localStorage.removeItem('user');
+
 }
 
 
