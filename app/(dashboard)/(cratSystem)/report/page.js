@@ -12,16 +12,13 @@ import Loader from "@/components/common/Loader";
 // Define the table headers
 // const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
 const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
-var generalStatus = 'Not ready';
-
-
-
 
 const Page = () => {
   const [data, setData] = useState(initialData);
   const [scoreData, setScoreData] = useState({}); // State to hold the score data
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
+  const [generalStatus, setGeneralStatus] = useState("Not Ready"); // Add this
   const { userDetails, setUserDetails } = useContext(UserContext)
   const [loading, setLoading] = useState(true);
   
@@ -41,8 +38,8 @@ const Page = () => {
       //  console.log('report data', responseData);
        const responseData1 = await getScoreData();
       setScoreData(responseData1);
-      // console.log('general data:', scoreData.general_status);
-      generalStatus = scoreData.general_status;
+       setGeneralStatus(responseData1?.general_status || "Not Ready");
+       console.log('general status:', scoreData.general_status);
 
       updateDataWithBackendResponse(responseData);
     } catch (error) {
