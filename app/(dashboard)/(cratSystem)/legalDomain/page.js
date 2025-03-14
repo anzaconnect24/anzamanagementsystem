@@ -99,12 +99,21 @@ const Page = () => {
 
   
   const handleAddFile = async (domain, file, userId) => {
+    if (!file) return;
+
+    // Extract the file extension
+    const fileExtension = file.name.split('.').pop();
   
-    if (!file) return; // Ensure a file is provided
+    // Append timestamp to the filename
+    const timestamp = Date.now();
+    const uniqueFileName = `${domain}_${timestamp}.${fileExtension}`;
+  
+    // Create a new file with the updated name
+    const updatedFile = new File([file], uniqueFileName, { type: file.type });
   
     const fileData = {
-      file: file, // Attach the file
-      subDomain: domain, // Include the subDomain
+      file: updatedFile, // Use the updated file
+      subDomain: domain,
       userId: userId
     };
   

@@ -12,6 +12,9 @@ import Loader from "@/components/common/Loader";
 // Define the table headers
 // const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
 const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
+var generalStatus = 'Not ready';
+
+
 
 
 const Page = () => {
@@ -21,11 +24,11 @@ const Page = () => {
   const [deletemodalMessage, publishModalMessage] = useState("");
   const { userDetails, setUserDetails } = useContext(UserContext)
   const [loading, setLoading] = useState(true);
-
   
+
+
   useEffect(() => {
 
-  //console.log(userDetails);
 
     fetchData();
     setLoading(false);
@@ -35,9 +38,12 @@ const Page = () => {
   const fetchData = async () => {
     try {
       const responseData = await getReportData();
-      // console.log('report data', responseData);
-      const responseData1 = await getScoreData();
+      //  console.log('report data', responseData);
+       const responseData1 = await getScoreData();
       setScoreData(responseData1);
+      // console.log('general data:', scoreData.general_status);
+      generalStatus = scoreData.general_status;
+
       updateDataWithBackendResponse(responseData);
     } catch (error) {
       console.log("Error fetching data:", error);
@@ -77,25 +83,26 @@ const Page = () => {
 
   const publishChanges = async () => {
     try {
-         await publishReport(userDetails.id, userDetails.versionCount, userDetails.publishStatus);
-         
-         setUserDetails((prevDetails) => ({
-          ...prevDetails, // Copy existing properties
-          publishStatus: "On review", // Update the publishStatus property
+      await publishReport(userDetails.id, userDetails.versionCount, userDetails.publishStatus);
+
+      setUserDetails((prevDetails) => ({
+        ...prevDetails, // Copy existing properties
+        publishStatus: "On review", // Update the publishStatus property
       }));
-      
-        publishModalOpen(false)
-        toast.success("Published Successfully");
-        console.log("Changes successfully submitted");
+
+      publishModalOpen(false)
+      toast.success("Published Successfully");
+      console.log("Changes successfully submitted");
     } catch (error) {
-        // Handle errors
-        toast.error("Error publishing report");
-        console.error("Error publishing report:", error);
+      // Handle errors
+      toast.error("Error publishing report");
+      console.error("Error publishing report:", error);
     }
-};
+  };
 
 
   const openPublishDialog = (data) => {
+    console.log(userDetails)
     publishModalOpen(true);
     publishModalMessage('Are you sure you want to publish this report for review?');
   };
@@ -215,7 +222,7 @@ const Page = () => {
 
     // Get the score status and percentage from scoreData
     const sectionScore = scoreData[domainKey]?.percentage || 0;
-    const sectionStatus = scoreData[domainKey]?.status || "Not ready";
+     const sectionStatus = scoreData[domainKey]?.status || "Not ready";
 
     // Determine the status color
     const overallStatusColor = sectionStatus === "Ready" ? "text-green-500" : "text-red-500";
@@ -248,7 +255,8 @@ const Page = () => {
     );
   };
 
-  return!loading ? (
+  
+  return !loading ? (
     <div className="">
       <div className="mb-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
@@ -257,32 +265,35 @@ const Page = () => {
           </h4>
           {/* Buttons container aligned to the right */}
           <div className="flex ml-auto space-x-3">
-            {userDetails.publishStatus === "Draft" ? (
-              <>
-                {userDetails.reportPdf && (
-                  <button
-                    className="px-4 py-2 bg-black-2 text-white rounded hover:bg-zinc-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
-                    onClick={() => window.open(`http://${userDetails.reportPdf}`, "_blank")}
-                  >
-                    View Report
-                  </button>
-                )}
-                <button
-                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
-                  onClick={openPublishDialog}
-                >
-                  Publish
-                </button>
-              </>
+          {userDetails.publishStatus === "Draft" ? (
+  <>
+    {userDetails.reportPdf && (
+      <button
+        className="px-4 py-2 bg-black-2 text-white rounded hover:bg-zinc-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
+        onClick={() => window.open(`http://${userDetails.reportPdf}`, '_blank')}
+      >
+        View Report
+      </button>
+    )}
+   <button
+  className={`px-4 py-2 text-white rounded ${
+    generalStatus === 'Not ready' 
+      ? 'bg-slate-400 text-black cursor-not-allowed' 
+      : 'bg-green-500 hover:bg-green-600 hover:text-gray-200 hover:shadow-lg cursor-pointer'
+  }`}
+  onClick={openPublishDialog}
+  disabled={generalStatus === 'Not ready'}
+>
+  Publish
+</button>
 
-            ) : (
-              <button
-                className="px-4 py-2 bg-slate-400 text-white rounded cursor-not-allowed"
-                disabled
-              >
-                {userDetails.publishStatus}
-              </button>
-            )}
+  </>
+) : (
+  <button className="px-4 py-2 bg-slate-400 text-white rounded cursor-not-allowed" disabled>
+    {userDetails.publishStatus}
+  </button>
+)}
+
           </div>
         </div>
 
@@ -312,7 +323,7 @@ const Page = () => {
         deleteButtonColor="blue-500"
       />
     </div>
-  ):(<Loader />);
+  ) : (<Loader />);
 };
 
 export default Page;
