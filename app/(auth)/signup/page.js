@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 // Code snippet for Signup page
 "use client";
 import React, { useEffect, useState } from "react";
