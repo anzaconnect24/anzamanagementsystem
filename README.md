@@ -1,88 +1,129 @@
-# TailAdmin Next.js - Free Next.js Tailwind Admin Dashboard Template
+# Anza Connect
 
-TailAdmin is a free and open-source admin dashboard template built on **Next.js and Tailwind CSS** providing developers with everything they need to create a feature-rich and data-driven: back-end, dashboard, or admin panel solution for any sort of web project.
+Anza Connect is a platform designed to bridge the gap between entrepreneurs and investors, creating opportunities for collaboration, mentorship, and funding. The system provides personalized dashboards for **entrepreneurs**, **investors**, **mentors**, and **reviewers**, offering tailored functionalities to streamline interactions and enhance productivity.
 
-[![tailwind nextjs admin template](https://github.com/TailAdmin/free-nextjs-admin-dashboard/blob/main/tailadmin-nextjs.jpg)](https://nextjs-demo.tailadmin.com/)
+---
 
-With TailAdmin Next.js, you get access to all the necessary dashboard UI components, elements, and pages required to build a high-quality and complete dashboard or admin panel. Whether you're building a dashboard or admin panel for a complex web application or a simple website. 
+## Features
 
-TailAdmin utilizes the powerful features of **Next.js 13** and common features of Next.js such as server-side rendering (SSR), static site generation (SSG), and seamless API route integration. Combined with the advancements of **React 18** and the robustness of **TypeScript**, TailAdmin is the perfect solution to help get your project up and running quickly.
+### For Entrepreneurs
+- **Registration**: Create detailed profiles showcasing business ideas, goals, and funding needs.
+- **Dashboard**: Track funding progress, manage mentorship sessions, and interact with investors.
+- **Pitch Submission**: Submit business proposals for review.
+- **Notifications**: Stay updated on feedback, investor interest, and upcoming mentorship sessions.
 
-### [✨ Visit Website](https://tailadmin.com/)
-### [🚀 PRO Demo](https://nextjs-demo.tailadmin.com/)
-### [🚀 FREE Demo](https://nextjs-free-demo.tailadmin.com/)
+### For Investors
+- **Search and Filter**: Discover entrepreneurs based on industry, stage, or funding requirements.
+- **Dashboard**: View submitted pitches, track investments, and communicate with entrepreneurs.
+- **Review and Feedback**: Evaluate proposals and provide constructive feedback.
+- **Portfolio Management**: Monitor funded projects and their performance.
 
-### TailAdmin Next.js PRO vs TailAdmin Next.js FREE Comparison 📊
+### For Mentors
+- **Connect with Entrepreneurs**: Schedule mentorship sessions and track progress.
+- **Dashboard**: Manage assigned entrepreneurs and view session history.
+- **Resource Sharing**: Provide educational resources to entrepreneurs.
 
-#### [TailAdmin Next.js PRO](https://nextjs-demo.tailadmin.com/)
-- 4 Unique Dashboards: Analytics, Ecommerce, Marketing, and CRM (More will be added)
-- 120+ Dashboard UI Components
-- 200+ Total UI Elements
-- 45+ HTML Files
-- All Essential Elements and Files
-- Full Figma Design Source - As Shown on Demo
-___
+### For Reviewers
+- **Proposal Assessment**: Review and evaluate business proposals.
+- **Dashboard**: Track assigned proposals, submit reviews, and recommend next steps.
 
-#### [TailAdmin Next.js FREE](https://free-nextjs-demo.tailadmin.com/)
-- 1 Unique Dashboard
-- 30+ Dashboard UI Components
-- 50+ Total UI Elements 
-- 10+ HTML Files
-- TypeScript Support
-- Basic UI Kit Elements and Files
-- Figma Design Source - Free Sample
-___
+---
 
-### [⬇️ Download Now](https://tailadmin.com/download)
+## Tech Stack
 
-### [⚡ Get PRO Version](https://tailadmin.com/pricing)
+- **Frontend**: [Next.js](https://nextjs.org/) for building a fast, SEO-friendly user interface.
+- **Backend**: Node.js with APIs for managing data and logic.
+- **Database**: MySQL for data persistence.
+- **Styling**: Tailwind CSS for a responsive and modern design.
+- **Authentication**: Secure login and role-based access using JWT.
+- **Deployment**: Hosted on [Vercel](https://vercel.com/) and VPS for backend services.
 
-### [📄 Documentation/Installation](https://tailadmin.com/docs)
+---
 
-### [🖌️ TailAdmin Figma Free Sample](https://www.figma.com/community/file/1214477970819985778)
+## Installation and Setup
 
-### [👉 TailAdmin HTML Version](https://github.com/TailAdmin/tailadmin-free-tailwind-dashboard-template)
+### Prerequisites
+Ensure you have the following installed:
+- Node.js (v16 or higher)
+- npm or yarn
 
+### Steps
 
-## Installation
+1. **Clone the Repository**
+   ```bash
+   git clone https://github.com/yourusername/anza-connect.git
+   ```
 
-Here are the steps you need to follow to install the dependencies.
+2. **Navigate to the Project Directory**
+   ```bash
+   cd anza-connect
+   ```
 
-1. Download and extract the template from Next.js Templates.
+3. **Install Dependencies**
+   ```bash
+   npm install
+   ```
 
-2. After that **cd** into the template directory then run this command to install all the dependencies
+4. **Set Up Environment Variables**
+   Create a `.env.local` file in the root directory and add the following:
+   ```env
+   DATABASE_URL=mysql://user:password@host:port/database
+   JWT_SECRET=your_jwt_secret
+   NEXT_PUBLIC_API_URL=http://localhost:3000/api
+   ```
+
+5. **Run the Development Server**
+   ```bash
+   npm run dev
+   ```
+   The app will be available at [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Folder Structure
 
 ```
-npm install
-```
-or
-
-```
-yarn install
-```
-
-3. Now run this command to start the developement server
-
-```
-npm run dev
-```
-
-or 
-
-```
-yarn dev
+anza-connect/
+├── public/          # Static assets
+├── src/
+│   ├── components/  # Reusable React components
+│   ├── pages/       # Next.js pages
+│   ├── styles/      # Tailwind CSS configuration
+│   ├── utils/       # Helper functions
+│   └── hooks/       # Custom React hooks
+├── .env.local       # Environment variables
+├── package.json     # Dependencies and scripts
+└── README.md        # Project documentation
 ```
 
+---
 
-## Free Admin Dashboard Template for Next.js Built-with Tailwind CSS, React 18 and TypeScript
-TailAdmin Next.js is a free dashboard template, which uses Tailwind CSS, is a great starting point for dashboard UI. This template uses the Next.js JavaScript framework and the easy-to-use Tailwind CSS framework. The Tailwind CSS and Next.js Dashboard Template comes with ready-made components like navigation menus, charts, tables, and forms. These components can be easily adjusted and added to any Next.js web application.
+## Scripts
 
-TailAdmin for Next.js provides all essential Next.js + Tailwind CSS UI components that can be copied and pasted directly into your dashboard projects. The range of components includes charts, graphs, navbars, tabs, buttons, cards, tables, profiles, forms, modals, app pages, calendars, web app example templates, and more, all coded for Next.js React and styled using Tailwind CSS.
+- **`npm run dev`**: Starts the development server.
+- **`npm run build`**: Builds the application for production.
+- **`npm start`**: Runs the built application.
+- **`npm run lint`**: Lints the code for errors and style issues.
 
-If you're on the hunt for a top-quality Next.js-Tailwind Dashboard, Admin Panel Template, or UI Kit, TailAdmin is the perfect choice for you!
+---
 
-### 📄 License
-TailAdmin Next.js Free is 100% free and open-source; feel free to use it with your personal and commercial projects.
+## Contribution
 
-### 💜 Support
-If you like the template, please star this repository to inspire the team to create more stuff like this and reach more users like you!
+We welcome contributions to Anza Connect! To contribute:
+1. Fork the repository.
+2. Create a new branch for your feature or bug fix.
+3. Commit your changes and push the branch.
+4. Open a pull request.
+
+---
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
+
+## Contact
+
+For any inquiries or support, please reach out to **support@anzaconnect.co.tz**.
+
