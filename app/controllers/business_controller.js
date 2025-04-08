@@ -111,7 +111,6 @@ export const createBusiness = async (data) => {
       const response = await axios.get(`${server_url}/business/${uuid}`,{
         headers
       });
-      console.log(response.data.body)
       return response.data.body
     } catch (error) {
       console.log(error.response);

@@ -1,16 +1,18 @@
-export const storeUser = (user)=>{
+export const storeUser = (user) => {
     if (typeof window !== 'undefined') {
-         localStorage.setItem('user', JSON.stringify(user)); 
-      }
-
-}
+        localStorage.setItem('user', JSON.stringify(user));
+    }
+};
 
 export const getUser = ()=>{
     return typeof window !== 'undefined' && JSON.parse(localStorage.getItem('user'))
 }
 
 export const logout = ()=>{
+    storeUser(null);
+    localStorage.clear();
     localStorage.removeItem('user');
+
 }
 
 

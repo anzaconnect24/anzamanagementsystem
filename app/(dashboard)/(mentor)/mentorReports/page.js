@@ -19,19 +19,16 @@ const Page = () => {
   useEffect(() => {
     if (userDetails.role == "Mentor") {
       getSpecificMentorReports(userDetails.uuid).then((res) => {
-        console.log(res);
         setData(res);
         setLoading(false);
       });
     } else if (userDetails.role == "Enterprenuer") {
       getSpecificEntreprenuerReports(userDetails.uuid).then((res) => {
-        console.log(res);
         setData(res);
         setLoading(false);
       });
     } else {
       getAllReports(userDetails.uuid).then((res) => {
-        console.log(res);
         setData(res);
         setLoading(false);
       });
@@ -62,10 +59,10 @@ const Page = () => {
                 <tr key={item.uuid}>
                   <td>{timeAgo(item.createdAt)}</td>
                   <td>
-                    {userDetails.role == "Enterprenuer"
-                      ? item.Mentor.name
-                      : item.Entreprenuer.name}
-                  </td>
+  {userDetails.role === "Enterprenuer"
+    ? item.Mentor?.name || "N/A"
+    : item.Entreprenuer?.name || "N/A"}
+</td>
                   <td>{item.title}</td>
                   <td>
                     <Link

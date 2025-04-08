@@ -52,7 +52,7 @@ const Services = () => {
         <div className="grid grid-cols-3 gap-4 mt-8">
         {userDetails.Business.BusinessDocuments.filter((item)=>item.type =="service").map((item,key)=>  {
             return <div key={key} className="p-4 flex rounded shadow cursor-pointer text-center border border-stroke flex-col justify-start items-center text-lg font-bold">
-                <div><Image src={item.link} className="w-full aspect-video object-cover rounded " height={1000} width={1000}  /></div>
+                <div><Image src={item.link} className="w-full aspect-video object-cover rounded " height={1000} width={1000} alt=""  /></div>
                 <div className="mt-2">{item.title}</div>
                 <div className="flex space-x-2">
                  <div onClick={()=>{

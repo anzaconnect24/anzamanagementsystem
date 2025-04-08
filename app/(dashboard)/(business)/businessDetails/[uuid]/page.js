@@ -41,46 +41,41 @@ const Page = ({ params }) => {
 
   return loading ? (
     <Loader />
-  ) : !business ? (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-boxdark">
-      <div className="text-center">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Business not found</h2>
-        <p className="text-gray-600 dark:text-gray-400">The business you're looking for doesn't exist or has been removed.</p>
-      </div>
-    </div>
   ) : (
-    <div className="min-h-screen bg-gray-50 dark:bg-boxdark">
-      {/* Hero Section - Full Width */}
-      <div className="bg-gradient-to-r from-[#23283a] to-[#2a3045] text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-            <div className="flex items-center gap-6">
-              {/* Business Profile Image */}
-              <div className="flex-shrink-0 relative w-32 h-32 rounded-full border-4 border-white/20 shadow-xl overflow-hidden">
-                <Image
-                  src={business?.Image || `https://ui-avatars.com/api/?name=${encodeURIComponent(business?.name || 'Business')}&background=random`}
-                  alt={`${business?.name || 'Business'} profile`}
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-              <div className="max-w-3xl">
-                <div className="flex items-center gap-4">
-                  <h1 className="text-5xl font-bold mb-3 bg-clip-text text-transparent bg-gradient-to-r from-white to-blue-100">
-                    {business?.name || 'Business Name'}
-                  </h1>
-                  {userDetails?.uuid === business?.User?.uuid && (
-                    <Link
-                      href="/accountInformation"
-                      className="inline-flex items-center px-4 py-2 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all duration-200 backdrop-blur-sm"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                      Edit Profile
-                    </Link>
-                  )}
+    <div>
+      <Breadcrumb
+        prevLink=""
+        prevPage="Businesses"
+        pageName="Business details"
+      />
+      <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        <div className="py-6 px-4 md:px-6 xl:px-7.5">
+          <div className="space-y-3">
+            {[
+              {
+                title: "Enterprenuer name",
+                value: business.User && business.User.name,
+              },
+              { title: "Company Name", value: business.name },
+              {
+                title: "Anza Alumni ?",
+                value: business.isAlumni ? "Yes" : "false",
+              },
+              { title: "Attended (program)", value: business.completedProgram },
+              { title: "Sustainable Development Goal", value: business.sdg },
+              { title: "Company phone", value: business.phone },
+              { title: "Company email", value: business.email },
+              { title: "Business sector", value: business.BusinessSector.name },
+              { title: "Registration", value: business.registration },
+              { title: "Company stage", value: business.stage },
+              { title: "Problem statement", value: business.problem },
+              { title: "Solution", value: business.solution },
+              { title: "Traction", value: business.traction },
+            ].map((item, key) => {
+              return (
+                <div className="flex" key={key}>
+                  <div className="w-4/12">{item.title}:</div>
+                  <div className="w-8/12 text-black">{item.value}</div>
                 </div>
                 <p className="text-xl text-blue-100 mb-4 font-medium">
                   {business?.BusinessSector?.name || 'Business Sector'}
@@ -119,43 +114,30 @@ const Page = ({ params }) => {
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">Stage</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Business Bio */}
-            <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
-              <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
-                <span className="text-3xl mr-3">📝</span>
-                BUSINESS BIO
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {business?.businessBio || "No business bio available"}
-              </p>
-            </div>
-
-            {/* Problem & Solution */}
-            <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
-              <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
-                <span className="text-3xl mr-3">🔮</span>
-                PROBLEM & SOLUTION
-              </h2>
-              <div className="space-y-6">
-                <div>
-                  <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Problem</h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                    {business?.problem || "No problem description available"}
-                  </p>
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">Solution</h3>
-                  <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                    {business?.solution || "No solution description available"}
-                  </p>
+          {business.companyProfile != null && (
+            <div className="flex mt-4">
+              <div className="w-4/12">Company profile:</div>
+              <div className="w-8/12 grid grid-cols-3 text-black">
+                <div className="h-full">
+                  <a
+                    target="_blank"
+                    href={business.companyProfile}
+                    className="py-4 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center  ring-stroke hover:shadow"
+                  >
+                    {/* {item.link} */}
+                    <div>
+                      <Image
+                        height="1000"
+                        alt=""
+                        width="1000"
+                        className="h-16 w-16"
+                        src="/pdf.png"
+                      />
+                    </div>
+                    <div className="mt-3 text-black text-center">
+                      Company profile
+                    </div>
+                  </a>
                 </div>
               </div>
             </div>
