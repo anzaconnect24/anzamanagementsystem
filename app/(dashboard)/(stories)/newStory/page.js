@@ -11,12 +11,7 @@ import toast from 'react-hot-toast';
 import Spinner from "@/components/spinner";
 import { getApprovedBusinesses } from "@/app/controllers/business_controller";
 import { createSuccessStory } from "@/app/controllers/stories_controller";
-import dynamic from 'next/dynamic';
-import 'react-quill/dist/quill.snow.css';
 import { UserContext } from "../../layout";
-
-// Dynamically import ReactQuill to prevent SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
 
 const Page = () => {
     const [fields, setFields] = useState([]);
@@ -29,7 +24,6 @@ const Page = () => {
     const [applications, setApplications] = useState([]);
     const [ShowOptions, setShowOptions] = useState(false);
     const [uploadStory, setuploadStory] = useState(false);
-    // const {setSelectedBusiness} = useContext(BusinessContext)
     const [loading, setloading] = useState(true);
 
     useEffect(() => {
@@ -40,10 +34,9 @@ const Page = () => {
     }, []);
 
     return (loading ? <Loader /> : <div>
-        {/* {applications.length} */}
         <Breadcrumb prevLink={``} prevPage="Stories" pageName="Create new story" />
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-            <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4 ">
+            <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4">
                 <h4 className="text-xl font-semibold text-black dark:text-white">
                     Compose a story
                 </h4>
@@ -88,7 +81,7 @@ const Page = () => {
                                 Select business
                             </label>
                             
-                            <select  name="business" defaultValue={userDetails.role=="Enterprenuer"&&userDetails.Business.uuid} disabled={userDetails.role=="Enterprenuer"}  className="w-full rounded border-stroke"
+                            <select name="business" defaultValue={userDetails.role=="Enterprenuer"&&userDetails.Business?.uuid} disabled={userDetails.role=="Enterprenuer"} className="w-full rounded border-stroke"
                                 placeholder="Enter sector name">
                                 <option>Select business</option>
                                 {applications.map((item, key) => {
@@ -101,7 +94,12 @@ const Page = () => {
                         <label className="mb-2.5 block font-medium text-black dark:text-white">
                             Story
                         </label>
-                        <ReactQuill theme="snow" placeholder="Write description here" value={description} onChange={setDescription} />
+                        <textarea
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Write your story here..."
+                            className="w-full rounded-lg border border-stroke bg-transparent py-3 px-5 outline-none focus:border-primary min-h-[300px]"
+                        />
                     </div>
                     <button type="submit" className="py-3 px-4 mt-4 hover:opacity-95 rounded flex justify-center
                         bg-primary text-white">

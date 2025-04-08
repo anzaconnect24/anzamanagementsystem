@@ -13,7 +13,7 @@ const Page = ({params}) => {
     const [loading, setloading] = useState(true);
   useEffect(() => {
         getBusiness(uuid).then((data)=>setBusiness(data))
-    }, []);
+    }, [uuid]);
 
     return ( business&&<div>
       

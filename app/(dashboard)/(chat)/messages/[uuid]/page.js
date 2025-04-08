@@ -25,7 +25,7 @@ useEffect(() => {
     
   }
  
-}, []);
+}, [uuid]);
 
 const {userDetails} = useContext(UserContext)
   return (

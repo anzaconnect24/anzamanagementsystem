@@ -20,7 +20,7 @@ const Page = ({params}) => {
           setloading(false)
             setUsers(body.data)
         })
-  }, [refresh]);
+  }, [uuid]);
     return loading?<Loader/>:(
         <div className="">
       <div>

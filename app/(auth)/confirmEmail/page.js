@@ -14,7 +14,11 @@ const router  = useRouter()
         <div className="text-center w-5/12 mx-auto h-screen flex items-center justify-center">
             <div className="">
             <Link href="/signin" className="flex justify-center">
-                      <Image height={100} width={100} src={"/anza.png"}/>
+                      <Image 
+                        alt="Email confirmation logo"
+                        height={100} 
+                        width={100} 
+                        src={"/anza.png"}/>
 
                       </Link>
             <div className="text-4xl font-bold text-black pb-3 pt-2">Email confirmaton</div>

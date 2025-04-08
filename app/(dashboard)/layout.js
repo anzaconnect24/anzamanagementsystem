@@ -18,7 +18,7 @@ export default function RootLayout({
 }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-
+  
   const [userDetails, setUserDetails] = useState(null);
  const pathname = usePathname()
 const router  = useRouter()
@@ -30,7 +30,7 @@ const [data, setData] = useState(null);
     // console.log(getUser().ACCESS_TOKEN)
     setUserDetails(null)
     if(getUser()){
-      getMyInfo().then((data)=>{
+      getMyInfo().then((data)=> {
       if(data){
         setUserDetails(data)
         createLog({action:"Logged in to the system"})
@@ -78,6 +78,8 @@ const [data, setData] = useState(null);
       setTimeout(() => setLoading(false), 4000);
     }
    }, []);
+
+
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>

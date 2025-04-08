@@ -9,6 +9,7 @@ import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/app/component/Breadcrumb";
 
 
+
 const Page = ({params}) => {
     const uuid = params.uuid;
   const [users, setUsers] = useState([]);
@@ -27,7 +28,7 @@ const [totalPages, settotalPages] = useState(1);
           settotalPages(body.totalPages)
           setloading(false)
         })
-  }, [refresh]);
+  }, [uuid, currentPage, limit]);
     return  loading?<Loader/>:(
       <div className="">
     <div>

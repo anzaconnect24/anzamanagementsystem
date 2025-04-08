@@ -1,4 +1,3 @@
-
 "use client";
 
 import React, { useContext, useState } from "react";
@@ -49,7 +48,12 @@ const Page = () => {
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
               <div className="shadow-2xl px-8 py-10 ring-1 bg-white ring-stroke rounded-lg">
               <div className="flex justify-center">
-              <Image height={100} width={100} src={"/anza.png"}/>
+              <Image 
+                alt="Forgot password logo"
+                height={100} 
+                width={100} 
+                src={"/anza.png"}
+              />
 
               </div>
               {/* <span className="mb-1.5 block text-center text-primary font-bold">Forgot password ?</span> */}

@@ -4,7 +4,6 @@ import {getApprovedBusinesses, getPendingBusinesses} from "../../../controllers/
 import {timeAgo} from "../../../utils/time_ago"
 import Link from "next/link"
 import Loader from "@/components/common/Loader";
-import { BusinessContext } from "../layout";
 import NoData from "@/app/component/noData";
 const Page = () => {
   const [applications, setApplications] = useState([]);

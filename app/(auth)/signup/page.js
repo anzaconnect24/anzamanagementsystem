@@ -46,6 +46,38 @@ const SignUp = () => {
     investorTicketSize: "",
     investorGeography: "",
     investorStructure: "",
+    businessBio: "",
+    industry: "",
+    otherIndustry: "",
+    customerCount: "",
+    targetMarket: "",
+    businessLocation: "",
+    businessImpact: "",
+    growthPlans: "",
+    fundraisingNeeds: "",
+    anzaPrograms: [],
+    programYear: "",
+    investorLinkedIn: "",
+    investorWebsite: "",
+    investorFocus: [],
+    investorOtherFocus: "",
+    investorBio: "",
+    investorNotableInvestments: "",
+    investorMentoringPreference: "",
+    investorPortfolio: null,
+    investorContactConsent: false,
+    investorMatchingConsent: false,
+    mentorLinkedIn: "",
+    mentorCompany: "",
+    mentorPosition: "",
+    mentorExpertise: [],
+    mentorOtherExpertise: "",
+    mentorFrequency: "",
+    mentorHours: "",
+    mentorFormat: [],
+    mentorExperience: "",
+    mentorContactConsent: false,
+    mentorMatchingConsent: false,
   });
   const router = useRouter();
   const [loading, setloading] = useState(false);
@@ -93,6 +125,17 @@ const SignUp = () => {
               stage: e.target.stage.value,
               business_sector_uuid: e.target.business_sector_uuid.value,
               team: e.target.team.value,
+              businessBio: e.target.businessBio.value,
+              industry: e.target.industry.value,
+              otherIndustry: e.target.otherIndustry.value,
+              customerCount: e.target.customerCount.value,
+              targetMarket: e.target.targetMarket.value,
+              businessLocation: e.target.businessLocation.value,
+              businessImpact: e.target.businessImpact.value,
+              growthPlans: e.target.growthPlans.value,
+              fundraisingNeeds: e.target.fundraisingNeeds.value,
+              anzaPrograms: Array.from(e.target.anzaPrograms.selectedOptions).map(option => option.value),
+              programYear: e.target.programYear.value,
             };
           }
           let investorData;
@@ -255,7 +298,7 @@ const SignUp = () => {
                         name="userName"
                         defaultValue={formValues.userName}
                         required
-                        className=" form-style"
+                        className="form-style"
                         placeholder="Username"
                         type="text"
                       />
@@ -300,8 +343,7 @@ const SignUp = () => {
                       <label className="mb-2.5 block font-medium text-black dark:text-white">
                         Registering as
                       </label>
-                      {/* <div>Register as</div> */}
-                      <div className="flex flex-col  space-y-2  ">
+                      <div className="flex flex-col space-y-2">
                         <select
                           defaultValue={role}
                           onChange={(e) => {
@@ -337,11 +379,9 @@ const SignUp = () => {
                           type={`${showPassword ? "text" : "password"}`}
                           name="password"
                           defaultValue={formValues.password}
-                          // aria-invalid={touched.password && !!errors.password}
                           placeholder="Enter password"
-                          className={`form-style`}
+                          className="form-style"
                         />
-
                         <span
                           onClick={() => setshowPassword(!showPassword)}
                           className="absolute right-4 top-2 cursor-pointer"
@@ -399,11 +439,9 @@ const SignUp = () => {
                           defaultValue={formValues.repeatPassword}
                           type={`${showPassword2 ? "text" : "password"}`}
                           name="repeatPassword"
-                          // aria-invalid={touched.password && !!errors.password}
                           placeholder="Re-enter password"
-                          className={`form-style`}
+                          className="form-style"
                         />
-
                         <span
                           onClick={() => setshowPassword2(!showPassword2)}
                           className="absolute right-4 top-2 cursor-pointer"
@@ -448,7 +486,82 @@ const SignUp = () => {
                       </div>
                     </div>
 
-                    <div></div>
+                    {/* New Employment Details Section for Staff/Reviewer */}
+                    {role === "Reviewer" && (
+                      <>
+                        <div className="col-span-2">
+                          <h3 className="text-lg font-semibold text-black dark:text-white mb-4">Employment Details</h3>
+                        </div>
+                        <div>
+                          <label className="mb-2.5 block font-medium text-black dark:text-white">
+                            Job Title
+                          </label>
+                          <input
+                            name="jobTitle"
+                            required
+                            className="form-style"
+                            placeholder="Enter your job title"
+                            type="text"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2.5 block font-medium text-black dark:text-white">
+                            Department
+                          </label>
+                          <select
+                            required
+                            name="department"
+                            className="form-style"
+                          >
+                            <option value="">Select Department</option>
+                            <option value="Business Advisory">Business Advisory</option>
+                            <option value="Capital">Capital</option>
+                            <option value="Community">Community</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Operations">Operations</option>
+                            <option value="Partnerships">Partnerships</option>
+                            <option value="Other">Other</option>
+                          </select>
+                        </div>
+                        <div>
+                          <label className="mb-2.5 block font-medium text-black dark:text-white">
+                            Employee ID (if applicable)
+                          </label>
+                          <input
+                            name="employeeId"
+                            className="form-style"
+                            placeholder="Enter your employee ID"
+                            type="text"
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2.5 block font-medium text-black dark:text-white">
+                            Year of Employment
+                          </label>
+                          <input
+                            name="employmentYear"
+                            required
+                            className="form-style"
+                            placeholder="Enter year of employment"
+                            type="number"
+                            min="2000"
+                            max={new Date().getFullYear()}
+                          />
+                        </div>
+                        <div>
+                          <label className="mb-2.5 block font-medium text-black dark:text-white">
+                            Supervisor's Name
+                          </label>
+                          <input
+                            name="supervisorName"
+                            required
+                            className="form-style"
+                            placeholder="Enter supervisor's name"
+                            type="text"
+                          />
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
@@ -540,9 +653,165 @@ const SignUp = () => {
                             <input
                               required
                               name="businessName"
-                              className=" form-style"
+                              className="form-style"
                               placeholder="Company name"
                               type="text"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Short Business Bio/Profile
+                            </label>
+                            <textarea
+                              required
+                              name="businessBio"
+                              className="form-style"
+                              placeholder="Brief description of your business"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Industry/Sector
+                            </label>
+                            <select
+                              required
+                              name="industry"
+                              className="form-style"
+                            >
+                              <option value="">Select Industry/Sector</option>
+                              <option value="Agriculture & Agribusiness">Agriculture & Agribusiness</option>
+                              <option value="Clean Energy">Clean Energy</option>
+                              <option value="Fintech & Digital Solutions">Fintech & Digital Solutions</option>
+                              <option value="Manufacturing & Supply Chain">Manufacturing & Supply Chain</option>
+                              <option value="Health & Well-being">Health & Well-being</option>
+                              <option value="Other">Other</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Other Industry (if selected)
+                            </label>
+                            <input
+                              name="otherIndustry"
+                              className="form-style"
+                              placeholder="Specify other industry"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Number of Customers
+                            </label>
+                            <input
+                              required
+                              name="customerCount"
+                              className="form-style"
+                              placeholder="Enter number of customers"
+                              type="number"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Potential Market & Target Audience
+                            </label>
+                            <textarea
+                              required
+                              name="targetMarket"
+                              className="form-style"
+                              placeholder="Describe your target market and audience"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Business Location
+                            </label>
+                            <select
+                              required
+                              name="businessLocation"
+                              className="form-style"
+                            >
+                              <option value="">Select Region</option>
+                              <option value="Arusha">Arusha</option>
+                              <option value="Dar es Salaam">Dar es Salaam</option>
+                              <option value="Dodoma">Dodoma</option>
+                              <option value="Geita">Geita</option>
+                              <option value="Iringa">Iringa</option>
+                              <option value="Kagera">Kagera</option>
+                              <option value="Katavi">Katavi</option>
+                              <option value="Kigoma">Kigoma</option>
+                              <option value="Kilimanjaro">Kilimanjaro</option>
+                              <option value="Lindi">Lindi</option>
+                              <option value="Manyara">Manyara</option>
+                              <option value="Mara">Mara</option>
+                              <option value="Mbeya">Mbeya</option>
+                              <option value="Mjini Magharibi">Mjini Magharibi</option>
+                              <option value="Morogoro">Morogoro</option>
+                              <option value="Mtwara">Mtwara</option>
+                              <option value="Mwanza">Mwanza</option>
+                              <option value="Njombe">Njombe</option>
+                              <option value="Pemba North">Pemba North</option>
+                              <option value="Pemba South">Pemba South</option>
+                              <option value="Pwani">Pwani</option>
+                              <option value="Rukwa">Rukwa</option>
+                              <option value="Ruvuma">Ruvuma</option>
+                              <option value="Shinyanga">Shinyanga</option>
+                              <option value="Simiyu">Simiyu</option>
+                              <option value="Singida">Singida</option>
+                              <option value="Songwe">Songwe</option>
+                              <option value="Tabora">Tabora</option>
+                              <option value="Tanga">Tanga</option>
+                              <option value="Unguja North">Unguja North</option>
+                              <option value="Unguja South">Unguja South</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Describe Your Solution
+                            </label>
+                            <textarea
+                              required
+                              name="solution"
+                              className="form-style"
+                              placeholder="Describe your business solution"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Current Business Impact
+                            </label>
+                            <textarea
+                              required
+                              name="businessImpact"
+                              className="form-style"
+                              placeholder="Describe your current business impact"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Future Milestones & Growth Plans
+                            </label>
+                            <textarea
+                              required
+                              name="growthPlans"
+                              className="form-style"
+                              placeholder="Describe your future milestones and growth plans"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Current Fundraising Needs
+                            </label>
+                            <textarea
+                              required
+                              name="fundraisingNeeds"
+                              className="form-style"
+                              placeholder="Describe your current fundraising needs"
+                              rows="3"
                             />
                           </div>
                           <div>
@@ -680,96 +949,398 @@ const SignUp = () => {
 
                   {role == "Investor" && (
                     <div>
-                      {/* <div className=" text-2xl text-black pt-8 pb-4">Investor profile</div> */}
                       <div className="space-y-2">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                          {/* Personal & Contact Information */}
                           <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Company name (optional)
+                              LinkedIn Profile
                             </label>
                             <input
-                              name="investorCompany"
-                              className=" form-style"
-                              placeholder="Company name"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Role/title
-                            </label>
-                            <input
-                              required
-                              name="investorRole"
+                              name="investorLinkedIn"
                               className="form-style"
-                              placeholder="Enter your role/title"
+                              placeholder="Your LinkedIn profile URL"
                               type="text"
                             />
                           </div>
                           <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Current address
+                              Website (if applicable)
                             </label>
                             <input
-                              required
-                              name="investorGeography"
+                              name="investorWebsite"
                               className="form-style"
-                              placeholder="Write your address"
+                              placeholder="Your company website"
                               type="text"
                             />
                           </div>
+
+                          {/* Investment Focus */}
+                          <div className="col-span-2">
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Investment Focus
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {[
+                                "Early-Stage Startups",
+                                "Growth-Stage Businesses",
+                                "Impact Investing",
+                                "Climate & Sustainability",
+                                "Fintech & Digital Solutions",
+                                "Agriculture & Agribusiness",
+                                "Manufacturing & Supply Chain",
+                              ].map((focus) => (
+                                <label key={focus} className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    name="investorFocus"
+                                    value={focus}
+                                    className="form-checkbox"
+                                  />
+                                  <span>{focus}</span>
+                                </label>
+                              ))}
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  name="investorFocus"
+                                  value="Other"
+                                  className="form-checkbox"
+                                />
+                                <input
+                                  type="text"
+                                  name="investorOtherFocus"
+                                  placeholder="Specify other focus"
+                                  className="form-style"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Investment Size */}
                           <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Avarage ticket size
+                              Typical Investment Size
                             </label>
-                            <input
+                            <select
                               required
                               name="investorTicketSize"
                               className="form-style"
-                              placeholder="Tell us your avarage ticket size"
-                              type="text"
+                            >
+                              <option value="">Select investment size</option>
+                              <option value="<$50,000">&lt;$50,000</option>
+                              <option value="$50,000 - $100,000">$50,000 - $100,000</option>
+                              <option value="$100,000 - $500,000">$100,000 - $500,000</option>
+                              <option value="$500,000 - $1M">$500,000 - $1M</option>
+                              <option value="$1M+">$1M+</option>
+                            </select>
+                          </div>
+
+                          {/* Investment Type */}
+                          <div className="col-span-2">
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Investment Type Preference
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {[
+                                "Equity",
+                                "Debt Financing",
+                                "Convertible Notes",
+                                "Grants",
+                              ].map((type) => (
+                                <label key={type} className="flex items-center space-x-2">
+                                  <input
+                                    type="checkbox"
+                                    name="investorStructure"
+                                    value={type.toLowerCase()}
+                                    className="form-checkbox"
+                                  />
+                                  <span>{type}</span>
+                                </label>
+                              ))}
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  name="investorStructure"
+                                  value="other"
+                                  className="form-checkbox"
+                                />
+                                <input
+                                  type="text"
+                                  name="investorOtherStructure"
+                                  placeholder="Specify other type"
+                                  className="form-style"
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Bio & Experience */}
+                          <div className="col-span-2">
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Brief Bio
+                            </label>
+                            <textarea
+                              name="investorBio"
+                              className="form-style"
+                              placeholder="Tell us about yourself & investment background"
+                              rows="4"
                             />
                           </div>
 
-                          <div>
+                          <div className="col-span-2">
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Structures
+                              Notable Investments
                             </label>
-                            <select
-                              required
-                              name="investorStructure"
+                            <textarea
+                              name="investorNotableInvestments"
                               className="form-style"
-                            >
-                              <option>Select structure</option>
-                              <option value="equity">Equity</option>
-                              <option value="dept">Dept</option>
-                              <option value="mezzanine">Mezzanine</option>
-                            </select>
+                              placeholder="List your notable investments (if applicable)"
+                              rows="4"
+                            />
                           </div>
 
-                          <div>
+                          {/* Mentoring Preference */}
+                          <div className="col-span-2">
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Business sector
+                              Preferred Mentoring or Advisory Role?
                             </label>
-                            <select
-                              required
-                              name="investorSector"
+                            <div className="space-y-2">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  name="investorMentoringPreference"
+                                  value="yes"
+                                  className="form-radio"
+                                />
+                                <span>Yes, I am open to mentoring startups</span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  name="investorMentoringPreference"
+                                  value="no"
+                                  className="form-radio"
+                                />
+                                <span>No, I am only interested in investing</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Supporting Documents */}
+                          <div className="col-span-2">
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Upload Investment Portfolio (Optional)
+                            </label>
+                            <input
+                              type="file"
+                              name="investorPortfolio"
                               className="form-style"
-                            >
-                              <option>Select business sector</option>
-                              {sectors.map((item) => {
-                                return (
-                                  <option key={item.id} value={item.uuid}>
-                                    {item.name}
-                                  </option>
-                                );
-                              })}
-                            </select>
+                              accept=".pdf,.doc,.docx"
+                            />
+                          </div>
+
+                          {/* Agreement & Consent */}
+                          <div className="col-span-2 space-y-4">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="investorContactConsent"
+                                required
+                                className="form-checkbox"
+                              />
+                              <span>I agree to be contacted regarding investment opportunities</span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="investorMatchingConsent"
+                                required
+                                className="form-checkbox"
+                              />
+                              <span>I consent to my information being used for investor matching/mentors or any other platform that can help</span>
+                            </label>
                           </div>
                         </div>
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {role == "Mentor" && (
+                <div>
+                  <div className="space-y-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                      {/* Personal Information */}
+                      <div>
+                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                          LinkedIn Profile
+                        </label>
+                        <input
+                          name="mentorLinkedIn"
+                          className="form-style"
+                          placeholder="Your LinkedIn profile URL"
+                          type="text"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                          Organization/Company Name
+                        </label>
+                        <input
+                          name="mentorCompany"
+                          className="form-style"
+                          placeholder="Your organization name"
+                          type="text"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                          Current Position/Title
+                        </label>
+                        <input
+                          name="mentorPosition"
+                          className="form-style"
+                          placeholder="Your current position"
+                          type="text"
+                        />
+                      </div>
+
+                      {/* Expertise & Areas of Support */}
+                      <div className="col-span-2">
+                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                          Select Your Areas of Expertise
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {[
+                            "Business Strategy & Growth",
+                            "Finance & Fundraising",
+                            "Marketing & Branding",
+                            "Operations & Supply Chain",
+                            "Leadership & Team Development",
+                            "Legal & Compliance",
+                            "Impact & Sustainability",
+                          ].map((expertise) => (
+                            <label key={expertise} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="mentorExpertise"
+                                value={expertise}
+                                className="form-checkbox"
+                              />
+                              <span>{expertise}</span>
+                            </label>
+                          ))}
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              name="mentorExpertise"
+                              value="Other"
+                              className="form-checkbox"
+                            />
+                            <input
+                              type="text"
+                              name="mentorOtherExpertise"
+                              placeholder="Specify other expertise"
+                              className="form-style"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Availability & Commitment */}
+                      <div className="col-span-2">
+                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                          How often can you mentor?
+                        </label>
+                        <div className="space-y-2">
+                          {[
+                            { value: "weekly", label: "Weekly" },
+                            { value: "biweekly", label: "Biweekly" },
+                            { value: "monthly", label: "Monthly" },
+                            { value: "flexible", label: "Flexible" },
+                          ].map((option) => (
+                            <div key={option.value} className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                name="mentorFrequency"
+                                value={option.value}
+                                className="form-radio"
+                              />
+                              <span>{option.label}</span>
+                              <input
+                                type="number"
+                                name="mentorHours"
+                                placeholder="Hours"
+                                className="form-style w-24"
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Preferred Mentoring Format */}
+                      <div className="col-span-2">
+                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                          Preferred Mentoring Format
+                        </label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {[
+                            "One-on-One Sessions",
+                            "Group Mentorship",
+                            "Online/Virtual Mentorship",
+                            "In-Person Mentorship",
+                          ].map((format) => (
+                            <label key={format} className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="mentorFormat"
+                                value={format}
+                                className="form-checkbox"
+                              />
+                              <span>{format}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Experience & Support */}
+                      <div className="col-span-2">
+                        <label className="mb-2.5 block font-medium text-black dark:text-white">
+                          Tell Us About Your Experience and How You Can Support Entrepreneurs
+                        </label>
+                        <textarea
+                          name="mentorExperience"
+                          className="form-style"
+                          placeholder="Share your experience and how you can help entrepreneurs"
+                          rows="4"
+                        />
+                      </div>
+
+                      {/* Agreement & Consent */}
+                      <div className="col-span-2 space-y-4">
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            name="mentorContactConsent"
+                            required
+                            className="form-checkbox"
+                          />
+                          <span>I agree to be contacted regarding mentorship opportunities</span>
+                        </label>
+                        <label className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            name="mentorMatchingConsent"
+                            required
+                            className="form-checkbox"
+                          />
+                          <span>I consent to my information being used for mentorship matching</span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 

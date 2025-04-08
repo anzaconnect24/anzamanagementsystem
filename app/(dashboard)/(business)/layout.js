@@ -1,16 +1,27 @@
 "use client"
-import { createContext, useEffect, useState } from "react";
-import {useRouter} from "next/navigation"
-export const BusinessContext = createContext();
+import React, { useState, createContext } from "react";
+import { useRouter } from "next/navigation";
+
+// Define BusinessContext
+export const BusinessContext = createContext({
+  selectedBusiness: null,
+  setSelectedBusiness: () => {},
+});
+
 const Layout = ({children}) => {
     const router = useRouter();
-    const [user, setUser] = useState(null);
+    const [selectedBusiness, setSelectedBusiness] = useState(null);
    
-    return ( <div>
-        <BusinessContext.Provider value={{ user,setUser }}>
-        {children}
-        </BusinessContext.Provider>
-    </div> );
+    return (
+        <div>
+            <BusinessContext.Provider value={{
+                selectedBusiness,
+                setSelectedBusiness
+            }}>
+                {children}
+            </BusinessContext.Provider>
+        </div>
+    );
 }
  
 export default Layout;
