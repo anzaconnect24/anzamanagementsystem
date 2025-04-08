@@ -10,7 +10,7 @@ const nextConfig = {
       "anzaentrepreneurs.co.tz",
       "api.anzaconnect.co.tz",
     ],
-  }
+  },
 };
 
 module.exports = nextConfig;
