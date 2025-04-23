@@ -21,7 +21,7 @@ const Page = () => {
   const [generalStatus, setGeneralStatus] = useState("Not Ready"); // Add this
   const { userDetails, setUserDetails } = useContext(UserContext)
   const [loading, setLoading] = useState(true);
-  
+
 
 
   useEffect(() => {
@@ -36,10 +36,10 @@ const Page = () => {
     try {
       const responseData = await getReportData();
       //  console.log('report data', responseData);
-       const responseData1 = await getScoreData();
+      const responseData1 = await getScoreData();
       setScoreData(responseData1);
-       setGeneralStatus(responseData1?.general_status || "Not Ready");
-       console.log('general status:', scoreData.general_status);
+      setGeneralStatus(responseData1?.general_status || "Not Ready");
+      console.log('general status:', userDetails);
 
       updateDataWithBackendResponse(responseData);
     } catch (error) {
@@ -219,7 +219,7 @@ const Page = () => {
 
     // Get the score status and percentage from scoreData
     const sectionScore = scoreData[domainKey]?.percentage || 0;
-     const sectionStatus = scoreData[domainKey]?.status || "Not ready";
+    const sectionStatus = scoreData[domainKey]?.status || "Not ready";
 
     // Determine the status color
     const overallStatusColor = sectionStatus === "Ready" ? "text-green-500" : "text-red-500";
@@ -252,7 +252,7 @@ const Page = () => {
     );
   };
 
-  
+
   return !loading ? (
     <div className="">
       <div className="mb-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -262,34 +262,33 @@ const Page = () => {
           </h4>
           {/* Buttons container aligned to the right */}
           <div className="flex ml-auto space-x-3">
-          {userDetails.publishStatus === "Draft" ? (
-  <>
-    {userDetails.reportPdf && (
-      <button
-        className="px-4 py-2 bg-black-2 text-white rounded hover:bg-zinc-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
-        onClick={() => window.open(`http://${userDetails.reportPdf}`, '_blank')}
-      >
-        View Report
-      </button>
-    )}
-   <button
-  className={`px-4 py-2 text-white rounded ${
-    generalStatus === 'Not ready' 
-      ? 'bg-slate-400 text-black cursor-not-allowed' 
-      : 'bg-green-500 hover:bg-green-600 hover:text-gray-200 hover:shadow-lg cursor-pointer'
-  }`}
-  onClick={openPublishDialog}
-  disabled={generalStatus === 'Not ready'}
->
-  Publish
-</button>
+            {userDetails.publishStatus === "Draft" ? (
+              <>
+                {userDetails.reportPdf && (
+                  <button
+                    className="px-4 py-2 bg-black-2 text-white rounded hover:bg-zinc-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
+                    onClick={() => window.open(`http://${userDetails.reportPdf}`, '_blank')}
+                  >
+                    View Report
+                  </button>
+                )}
+                <button
+                  className={`px-4 py-2 text-white rounded ${generalStatus === 'Not ready'
+                      ? 'bg-slate-400 text-black cursor-not-allowed'
+                      : 'bg-green-500 hover:bg-green-600 hover:text-gray-200 hover:shadow-lg cursor-pointer'
+                    }`}
+                  onClick={openPublishDialog}
+                  disabled={generalStatus === 'Not ready'}
+                >
+                  Publish
+                </button>
 
-  </>
-) : (
-  <button className="px-4 py-2 bg-slate-400 text-white rounded cursor-not-allowed" disabled>
-    {userDetails.publishStatus}
-  </button>
-)}
+              </>
+            ) : (
+              <button className="px-4 py-2 bg-slate-400 text-white rounded cursor-not-allowed" disabled>
+                {userDetails.publishStatus}
+              </button>
+            )}
 
           </div>
         </div>

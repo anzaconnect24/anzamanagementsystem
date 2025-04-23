@@ -15,7 +15,7 @@ import Link from "next/link";
 import { checkIfProfileIsComplete } from "@/app/utils/check_profile";
 import { getMentorOverviewStats } from "@/app/controllers/statsControllers";
 import MentorEntreprenuer from "@/app/(dashboard)/(mentor)/mentorEntreprenuers/page";
-import TanzaniaMap from "../Maps/TanzaniaMap";
+// import TanzaniaMap from "../Maps/TanzaniaMap";
 
 const ECommerce = () => {
   const { data, userDetails } = useContext(UserContext);
