@@ -57,7 +57,7 @@ const ProfileImage = ({ user }) => {
 
 const Page = ({ params }) => {
   // Unwrap params using React.use()
-  const unwrappedParams = React.use(params);
+  const unwrappedParams = params;
   const uuid = unwrappedParams.uuid;
 
   const { userDetails } = useContext(UserContext);
