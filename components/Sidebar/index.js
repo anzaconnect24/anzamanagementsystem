@@ -213,6 +213,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       });
     }
 
+
+
     // Programs & Resources
     const programsItems = [];
     
@@ -226,6 +228,31 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           { name: "Investment Readiness Accelerator", path: "/ira" },
           { name: "Consultancy Programs", path: "/consultance" }
         ]
+      });
+    }
+
+    if (["Enterprenuer"].includes(role)) {
+      programsItems.push({
+        name: "CRAT System",
+        path: "/financialDomain",
+        icon: <MdBusinessCenter className="text-xl" />,
+        submenu: [
+          { name: "Introduction", path: "/introduction" },
+          { name: "Readiness", path: "/scoreReadiness" },
+          { name: "Commercial Domain", path: "/marketDomain" },
+          { name: "Financial Domain", path: "/financialDomain" },
+          { name: "Operation Domain", path: "/operationsDomain" },
+          { name: "Legal Domain", path: "/legalDomain" },
+          { name: "Report", path: "/report" },
+        ]
+      });
+    }
+
+    if (["Reviewer"].includes(role)) {
+      programsItems.push({
+        name: "Reviewer",
+        path: "/applicationList",
+        icon: <MdBusinessCenter className="text-xl" />,
       });
     }
     
