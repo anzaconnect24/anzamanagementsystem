@@ -328,13 +328,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             <div key={category.id} className="mb-6">
               <h3 className="mb-3 ml-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 {category.title}
-              </h3>
+            </h3>
 
               <ul className="mb-6 flex flex-col gap-1">
                 {category.items.map((item) => {
                   if (item.submenu) {
                     // Item with submenu
-                    return (
+                        return (
                       <SidebarLinkGroup
                           key={item.name}
                           activeCondition={pathname.includes(item.path)}
@@ -397,9 +397,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                     );
                   } else {
                     // Regular item without submenu
-                    return (
+                      return (
                       <li key={item.name}>
-                        <Link
+                          <Link
                           href={item.path}
                           className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-300 duration-300 ease-in-out hover:bg-slate-700 ${
                             pathname === item.path && "bg-slate-700/50 text-white"
@@ -407,13 +407,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         >
                           {item.icon}
                           <span>{item.name}</span>
-                        </Link>
-                      </li>
+                                </Link>
+                              </li>
                     );
                   }
                 })}
-              </ul>
-            </div>
+                            </ul>
+                          </div>
           ))}
         </nav>
       </div>

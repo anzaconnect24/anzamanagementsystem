@@ -305,9 +305,9 @@ const Page = ({params}) => {
                                         {new Date(user.createdAt).toLocaleDateString()}
                                     </span>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+</div>
+</div>
 
                     <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden">
                         <div className="px-6 py-4 border-b border-stroke dark:border-strokedark">
@@ -337,7 +337,7 @@ const Page = ({params}) => {
                     </div>
                 </div>
             </div>
-        </div>
+</div>
     );
 };
  
