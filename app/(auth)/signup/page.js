@@ -91,7 +91,6 @@ const SignUp = () => {
               isAlumni: isAlumni,
               completedProgram: e.target.completedProgram.value,
               solution: e.target.solution.value,
-              traction: e.target.traction.value,
               registration: e.target.registration.value,
               stage: e.target.stage.value,
               business_sector_uuid: e.target.business_sector_uuid.value,
@@ -657,6 +656,85 @@ dark:text-white"
                             />
                           </div>
                           <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Business email adress
+                            </label>
+                            <input
+                              required
+                              name="businessEmail"
+                              className="form-style"
+                              placeholder="Company email address"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Business phone number
+                            </label>
+                            <input
+                              required
+                              name="businessPhone"
+                              className="form-style"
+                              placeholder="Company phone number"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Business sector
+                            </label>
+                            <select
+                              required
+                              name="business_sector_uuid"
+                              className="form-style"
+                            >
+                              <option>Select business sector</option>
+                              {sectors.map((item) => {
+                                return (
+                                  <option key={item.id} value={item.uuid}>
+                                    {item.name}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Business stage
+                            </label>
+                            <select
+                              required
+                              name="stage"
+                              className="form-style"
+                            >
+                              <option>Select business stage</option>
+                              <option value="Startup">Startup</option>
+                              <option value="Growth stage">Growth stage</option>
+                              <option value="Expansion stage">
+                                Expansion stage
+                              </option>
+                              <option value="Maturity stage">
+                                Maturity stage
+                              </option>
+                            </select>
+                          </div>
+
+
+
+
+                          <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
                               Short Business Bio/Profile
                             </label>
@@ -666,35 +744,6 @@ dark:text-white"
                               className="form-style"
                               placeholder="Brief description of your business"
                               rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Industry/Sector
-                            </label>
-                            <select
-                              required
-                              name="industry"
-                              className="form-style"
-                            >
-                              <option value="">Select Industry/Sector</option>
-                              <option value="Agriculture & Agribusiness">Agriculture & Agribusiness</option>
-                              <option value="Clean Energy">Clean Energy</option>
-                              <option value="Fintech & Digital Solutions">Fintech & Digital Solutions</option>
-                              <option value="Manufacturing & Supply Chain">Manufacturing & Supply Chain</option>
-                              <option value="Health & Well-being">Health & Well-being</option>
-                              <option value="Other">Other</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Other Industry (if selected)
-                            </label>
-                            <input
-                              name="otherIndustry"
-                              className="form-style"
-                              placeholder="Specify other industry"
-                              type="text"
                             />
                           </div>
                           <div>
@@ -766,13 +815,25 @@ dark:text-white"
                           </div>
                           <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Describe Your Solution
+                              What problems does your business solve ?
+                            </label>
+                            <textarea
+                              required
+                              name="problem"
+                              className="form-style"
+                              placeholder="What problems does your business solve ?"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              What solution does your business provide ?
                             </label>
                             <textarea
                               required
                               name="solution"
                               className="form-style"
-                              placeholder="Describe your business solution"
+                              placeholder="What solution does your business provide ?"
                               rows="3"
                             />
                           </div>
@@ -800,6 +861,7 @@ dark:text-white"
                               rows="3"
                             />
                           </div>
+                         
                           <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
                               Current Fundraising Needs
@@ -812,234 +874,7 @@ dark:text-white"
                               rows="3"
                             />
                           </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Short Business Bio/Profile
-                            </label>
-                            <textarea
-                              required
-                              name="businessBio"
-                              className="form-style"
-                              placeholder="Brief description of your business"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Industry/Sector
-                            </label>
-                            <select
-                              required
-                              name="industry"
-                              className="form-style"
-                            >
-                              <option value="">Select Industry/Sector</option>
-                              <option value="Agriculture & Agribusiness">
-                                Agriculture & Agribusiness
-                              </option>
-                              <option value="Clean Energy">Clean Energy</option>
-                              <option value="Fintech & Digital Solutions">
-                                Fintech & Digital Solutions
-                              </option>
-                              <option value="Manufacturing & Supply Chain">
-                                Manufacturing & Supply Chain
-                              </option>
-                              <option value="Health & Well-being">
-                                Health & Well-being
-                              </option>
-                              <option value="Other">Other</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Other Industry (if selected)
-                            </label>
-                            <input
-                              name="otherIndustry"
-                              className="form-style"
-                              placeholder="Specify other industry"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Number of Customers
-                            </label>
-                            <input
-                              required
-                              name="customerCount"
-                              className="form-style"
-                              placeholder="Enter number of customers"
-                              type="number"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Potential Market & Target Audience
-                            </label>
-                            <textarea
-                              required
-                              name="targetMarket"
-                              className="form-style"
-                              placeholder="Describe your target market and audience"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business Location
-                            </label>
-                            <select
-                              required
-                              name="businessLocation"
-                              className="form-style"
-                            >
-                              <option value="">Select Region</option>
-                              <option value="Arusha">Arusha</option>
-                              <option value="Dar es Salaam">
-                                Dar es Salaam
-                              </option>
-                              <option value="Dodoma">Dodoma</option>
-                              <option value="Geita">Geita</option>
-                              <option value="Iringa">Iringa</option>
-                              <option value="Kagera">Kagera</option>
-                              <option value="Katavi">Katavi</option>
-                              <option value="Kigoma">Kigoma</option>
-                              <option value="Kilimanjaro">Kilimanjaro</option>
-                              <option value="Lindi">Lindi</option>
-                              <option value="Manyara">Manyara</option>
-                              <option value="Mara">Mara</option>
-                              <option value="Mbeya">Mbeya</option>
-                              <option value="Mjini Magharibi">
-                                Mjini Magharibi
-                              </option>
-                              <option value="Morogoro">Morogoro</option>
-                              <option value="Mtwara">Mtwara</option>
-                              <option value="Mwanza">Mwanza</option>
-                              <option value="Njombe">Njombe</option>
-                              <option value="Pemba North">Pemba North</option>
-                              <option value="Pemba South">Pemba South</option>
-                              <option value="Pwani">Pwani</option>
-                              <option value="Rukwa">Rukwa</option>
-                              <option value="Ruvuma">Ruvuma</option>
-                              <option value="Shinyanga">Shinyanga</option>
-                              <option value="Simiyu">Simiyu</option>
-                              <option value="Singida">Singida</option>
-                              <option value="Songwe">Songwe</option>
-                              <option value="Tabora">Tabora</option>
-                              <option value="Tanga">Tanga</option>
-                              <option value="Unguja North">Unguja North</option>
-                              <option value="Unguja South">Unguja South</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Describe Your Solution
-                            </label>
-                            <textarea
-                              required
-                              name="solution"
-                              className="form-style"
-                              placeholder="Describe your business solution"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Current Business Impact
-                            </label>
-                            <textarea
-                              required
-                              name="businessImpact"
-                              className="form-style"
-                              placeholder="Describe your current business impact"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Future Milestones & Growth Plans
-                            </label>
-                            <textarea
-                              required
-                              name="growthPlans"
-                              className="form-style"
-                              placeholder="Describe your future milestones and growth plans"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Current Fundraising Needs
-                            </label>
-                            <textarea
-                              required
-                              name="fundraisingNeeds"
-                              className="form-style"
-                              placeholder="Describe your current fundraising needs"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business email adress
-                            </label>
-                            <input
-                              required
-                              name="businessEmail"
-                              className="form-style"
-                              placeholder="Company email address"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business phone number
-                            </label>
-                            <input
-                              required
-                              name="businessPhone"
-                              className="form-style"
-                              placeholder="Company phone number"
-                              type="text"
-                            />
-                          </div>
+                 
                           <div>
                             <label
                               className="mb-2.5 block font-medium text-black
@@ -1079,91 +914,6 @@ dark:text-white"
                               </option>
                             </select>
                           </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business sector
-                            </label>
-                            <select
-                              required
-                              name="business_sector_uuid"
-                              className="form-style"
-                            >
-                              <option>Select business sector</option>
-                              {sectors.map((item) => {
-                                return (
-                                  <option key={item.id} value={item.uuid}>
-                                    {item.name}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business stage
-                            </label>
-                            <select
-                              required
-                              name="stage"
-                              className="form-style"
-                            >
-                              <option>Select business stage</option>
-                              <option value="Startup">Startup</option>
-                              <option value="Growth stage">Growth stage</option>
-                              <option value="Expansion stage">
-                                Expansion stage
-                              </option>
-                              <option value="Maturity stage">
-                                Maturity stage
-                              </option>
-                            </select>
-                          </div>
-                        </div>
-                        <div>
-                          <label
-                            className="mb-2.5 block font-medium text-black
-dark:text-white"
-                          >
-                            What problems does your business solve ?
-                          </label>
-                          <textarea
-                            name="problem"
-                            className="form-style"
-                            placeholder="What problem does your business solve ?"
-                          ></textarea>
-                        </div>
-                        <div>
-                          <label
-                            className="mb-2.5 block font-medium text-black
-dark:text-white"
-                          >
-                            What solution does your business provide ?
-                          </label>
-                          <textarea
-                            name="solution"
-                            className="form-style"
-                            placeholder="What solution does your business provide ?"
-                          ></textarea>
-                        </div>
-                        <div>
-                          <label
-                            className="mb-2.5 block font-medium text-black
-dark:text-white"
-                          >
-                            What is your commercial traction ? (Number of paying
-                            customers or revenue per year)
-                          </label>
-                          <textarea
-                            name="traction"
-                            className="form-style"
-                            placeholder="What is your commecial traction ?"
-                          />
                         </div>
                       </div>
                     </div>
