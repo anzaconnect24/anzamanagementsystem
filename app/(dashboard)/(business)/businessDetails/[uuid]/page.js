@@ -14,6 +14,8 @@ import { UserContext } from "../../../layout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { createNotification } from "@/app/controllers/notification_controller";
 import { assignEntreprenuerToMentor } from "@/app/controllers/mentorEntreprenuerController";
+import Spinner from "@/components/spinner";
+import { updateUser } from "@/app/controllers/user_controller";
 
 const Page = ({ params }) => {
   const { uuid } = params;
@@ -22,7 +24,7 @@ const Page = ({ params }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(false);
-
+  const [approving, setApproving] = useState(false);
   const getData = async () => {
     try {
       const data = await getBusiness(uuid);
@@ -46,17 +48,16 @@ const Page = ({ params }) => {
       <Breadcrumb
         prevLink=""
         prevPage="Businesses"
-        pageName={`${business.name} details`}
+        pageName="Business details"
       />
       {/* Stats Section - Full Width */}
-      <div className="bg-primary bg-opacity-5 dark:bg-boxdark backdrop-blur-sm border border-primary border-opacity-30  rounded-xl">
+      <div className="bg-white/50 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">👥</div>
-              <h3 className=" text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.numberOfCustomers || "N/A"}{" "}
-                {/* Updated to use numberOfCustomers */}
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {business?.customerCount || "0"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Customers
@@ -64,8 +65,8 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">📍</div>
-              <h3 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.location || "N/A"} {/* Updated to use location */}
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {business?.businessLocation || "N/A"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Location
@@ -73,9 +74,8 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">🏢</div>
-              <h3 className=" text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.BusinessSector?.name || "N/A"}{" "}
-                {/* Updated to use BusinessSector.name */}
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {business?.industry || "N/A"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Industry
@@ -83,7 +83,7 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">💡</div>
-              <h3 className="text-xl md:text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
                 {business?.stage || "N/A"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -93,6 +93,34 @@ const Page = ({ params }) => {
           </div>
         </div>
       </div>
+
+      {business.companyProfile != null && (
+        <div className="flex mt-4">
+          <div className="w-4/12">Company profile:</div>
+          <div className="w-8/12 grid grid-cols-3 text-black">
+            <div className="h-full">
+              <a
+                target="_blank"
+                href={business.companyProfile}
+                className="py-4 cursor-pointer px-4 ring-1 flex flex-col items-center justify-center ring-stroke hover:shadow"
+              >
+                <div>
+                  <Image
+                    height="1000"
+                    alt=""
+                    width="1000"
+                    className="h-16 w-16"
+                    src="/pdf.png"
+                  />
+                </div>
+                <div className="mt-3 text-black text-center">
+                  Company profile
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-8">
         {/* Left Column - Main Content */}
@@ -110,33 +138,8 @@ const Page = ({ params }) => {
                 <p className="text-xl text-black-100 mb-4 font-medium">
                   {business?.BusinessSector?.name || "Business Sector"}
                 </p>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                <p className="text-gray-100/80 text-lg leading-relaxed">
                   {business?.description || "Description not available"}
-                </p>
-              </div>
-              {/* Added Problem, Solution, and Traction */}
-              <div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Problem
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.problem || "No problem description available"}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Solution
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.solution || "No solution description available"}
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Traction
-                </h3>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.traction || "No traction information available"}
                 </p>
               </div>
             </div>
@@ -146,7 +149,7 @@ const Page = ({ params }) => {
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">🎯</span>
-              MARKET POTENTIAL
+              MARKET PONTENTIAL
             </h2>
             <div className="space-y-6">
               <div>
@@ -154,8 +157,8 @@ const Page = ({ params }) => {
                   Target Market
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.market || "No target market description available"}{" "}
-                  {/* Updated to use market */}
+                  {business?.targetMarket ||
+                    "No target market description available"}
                 </p>
               </div>
               <div>
@@ -163,15 +166,15 @@ const Page = ({ params }) => {
                   Current Impact
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.impact || "No impact description available"}{" "}
-                  {/* Updated to use impact */}
+                  {business?.businessImpact ||
+                    "No impact description available"}
                 </p>
               </div>
             </div>
           </div>
 
           {/* Growth & Funding */}
-          <div className="bg-white dark:bg-boxdark  rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">📈</span>
               GROWTH & FUNDING
@@ -181,9 +184,8 @@ const Page = ({ params }) => {
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
                   Growth Plans
                 </h3>
-                <p className="text-black  text-gray-600  text-lg leading-relaxed">
-                  {business?.growthPlan || "No growth plans available"}{" "}
-                  {/* Updated to use growthPlan */}
+                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                  {business?.growthPlans || "No growth plans available"}
                 </p>
               </div>
               <div>
@@ -205,7 +207,6 @@ const Page = ({ params }) => {
                 <span className="text-3xl mr-3">📑</span>
                 Documents
               </h2>
-
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {[
                   {
@@ -213,7 +214,6 @@ const Page = ({ params }) => {
                     url: business.companyProfile,
                     icon: "📋",
                   },
-                  // Only include businessPlan and marketResearch if they exist
                   ...(business.businessPlan
                     ? [
                         {
@@ -232,24 +232,47 @@ const Page = ({ params }) => {
                         },
                       ]
                     : []),
-                ].map((doc, idx) => (
-                  <a
-                    key={idx}
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group flex flex-col items-center p-6 bg-gray-50 dark:bg-boxdark-2 rounded-xl hover:shadow-lg transition-all duration-300"
-                  >
-                    <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                      {doc.icon}
-                    </span>
-                    <span className="text-base font-semibold text-gray-900 dark:text-white">
-                      {doc.title}
-                    </span>
-                  </a>
-                ))}
+                ]
+                  .filter((doc) => doc.url)
+                  .map((doc, idx) => (
+                    <a
+                      key={idx}
+                      href={doc.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex flex-col items-center p-6 bg-gray-50 dark:bg-boxdark-2 rounded-xl hover:shadow-lg transition-all duration-300"
+                    >
+                      <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                        {doc.icon}
+                      </span>
+                      <span className="text-base font-semibold text-gray-900 dark:text-white">
+                        {doc.title}
+                      </span>
+                    </a>
+                  ))}
               </div>
             </div>
+          )}
+          {business.status == "waiting" && (
+            <button
+              onClick={() => {
+                setApproving(true);
+                updateBusiness({ status: "accepted" }, business.uuid).then(
+                  (res) => {
+                    updateUser({ activated: true }, business.User.uuid).then(
+                      () => {
+                        toast.success("Approved successfully");
+                        setApproving(false);
+                        router.back();
+                      }
+                    );
+                  }
+                );
+              }}
+              className="inline-flex items-center w-64 justify-center px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
+            >
+              {approving ? <Spinner /> : "Approve Entrepreneur"}
+            </button>
           )}
         </div>
 
@@ -275,12 +298,12 @@ const Page = ({ params }) => {
                   icon: "📄",
                 },
                 { label: "SDG", value: business?.sdg, icon: "🎯" },
+                { label: "Industry", value: business?.industry, icon: "🏢" },
                 {
-                  label: "Industry",
-                  value: business?.BusinessSector?.name,
-                  icon: "🏢",
+                  label: "Location",
+                  value: business?.businessLocation,
+                  icon: "📍",
                 },
-                { label: "Location", value: business?.location, icon: "📍" },
                 { label: "Team Size", value: business?.team, icon: "👥" },
                 {
                   label: "Program",
@@ -291,15 +314,6 @@ const Page = ({ params }) => {
                   label: "Anza Alumni",
                   value: business?.isAlumni ? "Yes" : "No",
                   icon: "🎓",
-                },
-                { label: "Status", value: business?.status, icon: "📊" },
-                {
-                  label: "Seeking Investment",
-                  value: business?.lookingForInvestment ? "Yes" : "No",
-                  icon: "💰",
-                },
-                {
-                  /* Added lookingForInvestment */
                 },
               ].map((item, idx) => (
                 <div
@@ -312,7 +326,7 @@ const Page = ({ params }) => {
                       {item.label}
                     </p>
                     <p className="font-semibold text-gray-900 dark:text-white">
-                      {item.value || ""}
+                      {item.value || "N/A"}
                     </p>
                   </div>
                 </div>
@@ -348,9 +362,9 @@ const Page = ({ params }) => {
               {userDetails.role === "Investor" && (
                 <Link
                   href={`/investmentApplication/${uuid}`}
-                  className="inline-flex items-center justify-center px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
+                  className="flex justify-center items-center w-full px-5 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 font-medium text-base shadow"
                 >
-                  <span className="mr-2 text-xl">💰</span>
+                  <span className="mr-2 text-lg">💰</span>
                   Express Interest
                 </Link>
               )}

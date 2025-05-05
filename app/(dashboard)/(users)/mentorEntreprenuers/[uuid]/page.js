@@ -81,10 +81,10 @@ const Page = ({ params }) => {
                   />
                 </svg>
               </div>
-              <div>
+      <div>
                 <h4 className="text-2xl font-bold text-black dark:text-white">
                   Assigned Entrepreneurs
-                </h4>
+              </h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Manage your assigned entrepreneurs and their progress
                 </p>
@@ -92,11 +92,11 @@ const Page = ({ params }) => {
             </div>
             
             <div className="relative w-full md:w-80">
-              <input
-                onChange={(e) => {
-                  setKeyword(e.target.value);
-                  getData();
-                }}
+            <input
+              onChange={(e) => {
+                setKeyword(e.target.value);
+                getData();
+              }}
                 className="w-full rounded-lg border border-stroke bg-white px-4 py-3 pl-10 text-sm focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                 placeholder="Search entrepreneurs..."
               />
@@ -125,7 +125,7 @@ const Page = ({ params }) => {
               </span>
             </div>
           </div>
-        </div>
+          </div>
 
         {/* Table Section */}
         <div className="p-6">
