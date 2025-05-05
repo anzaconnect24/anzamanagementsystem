@@ -13,82 +13,71 @@ import { usePathname, useRouter } from "next/navigation";
 import { getDashboardData } from "../controllers/dashboard_controller";
 import { createLog } from "../controllers/log_controller";
 export const UserContext = createContext();
-export default function RootLayout({
-  children,
-}) {
+export default function RootLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  
   const [userDetails, setUserDetails] = useState(null);
- const pathname = usePathname()
-const router  = useRouter()
-const [data, setData] = useState(null);
-
+  const pathname = usePathname();
+  const router = useRouter();
+  const [data, setData] = useState(null);
 
   const [loading, setLoading] = useState(true);
   useEffect(() => {
     // console.log(getUser().ACCESS_TOKEN)
-    setUserDetails(null)
-    if(getUser()){
-      getMyInfo().then((data)=> {
-      if(data){
-        setUserDetails(data)
-        createLog({action:"Logged in to the system"})
-        getDashboardData().then((ddata)=>{
-          setData(ddata)
-          if(data.activated == 1){
-            if(data.role != "Enterprenuer"){
-              if(data.role == "Staff"){
-                router.push("/authorizationPage")
-                setTimeout(() => setLoading(false), 4000);
-              }else{
-                router.push(pathname)
-                setTimeout(() => setLoading(false), 4000);
+    setUserDetails(null);
+    if (getUser()) {
+      getMyInfo().then((data) => {
+        if (data) {
+          setUserDetails(data);
+          createLog({ action: "Logged in to the system" });
+          getDashboardData().then((ddata) => {
+            setData(ddata);
+            if (data.activated == 1) {
+              if (data.role != "Enterprenuer") {
+                if (data.role == "Staff") {
+                  router.push("/authorizationPage");
+                  setTimeout(() => setLoading(false), 4000);
+                } else {
+                  router.push(pathname);
+                  setTimeout(() => setLoading(false), 4000);
+                }
+              } else {
+                if (data.Business.status == "accepted") {
+                  router.push(pathname);
+                  setTimeout(() => setLoading(false), 4000);
+                } else {
+                  router.push("/authorizationPage");
+                  setTimeout(() => setLoading(false), 4000);
+                }
               }
-             
+            } else {
+              // alert(`${data.email} not activated`)
+              router.push("/authorizationPage");
+              setTimeout(() => setLoading(false), 4000);
             }
-            else{
-              if(data.Business.status == "accepted"){
-                router.push(pathname)
-                setTimeout(() => setLoading(false), 4000);
-              }
-              else{
-                router.push("/authorizationPage")
-                setTimeout(() => setLoading(false), 4000);
-              }    
-            }
-           }
-           else{
-            // alert(`${data.email} not activated`)
-            router.push("/authorizationPage")
-            setTimeout(() => setLoading(false), 4000);
-           }
-        })
-        
-      }
-      else{
-        router.push("/signin")
-        setTimeout(() => setLoading(false), 4000);
-      }
-       
-      })
-    }
-    else{
-      router.push("/signin")
+          });
+        } else {
+          router.push("/signin");
+          setTimeout(() => setLoading(false), 4000);
+        }
+      });
+    } else {
+      router.push("/signin");
       setTimeout(() => setLoading(false), 4000);
     }
-   }, []);
-
+  }, []);
 
   return (
     <html lang="en">
       <body suppressHydrationWarning={true}>
-      <div><Toaster position="top-right"/></div>
-      <UserContext.Provider value={{ userDetails,setUserDetails,data }}>
-      <div className="dark:bg-boxdark-2 dark:text-bodydark">
-          {loading ? (
-            <Loader height={"h-screen"} />
-          ) : (
+        <div>
+          <Toaster position="top-right" />
+        </div>
+        <UserContext.Provider value={{ userDetails, setUserDetails, data }}>
+          <div className="dark:bg-boxdark-2 dark:text-bodydark">
+            {loading ? (
+              <Loader height={"h-screen"} />
+            ) : (
               <div className="flex h-screen overflow-hidden">
                 <Sidebar
                   sidebarOpen={sidebarOpen}
@@ -106,11 +95,9 @@ const [data, setData] = useState(null);
                   </main>
                 </div>
               </div>
-          )}
-        </div>
+            )}
+          </div>
         </UserContext.Provider>
-
-      
       </body>
     </html>
   );
