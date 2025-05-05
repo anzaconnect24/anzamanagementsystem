@@ -9,7 +9,7 @@ import NoData from "@/app/component/noData";
 const Page = () => {
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-  const {setSelectedBusiness} = useContext(BusinessContext)
+  // const {setSelectedBusiness} = useContext(BusinessContext)
   const [loading, setloading] = useState(true);
   useEffect(() => {
         getApprovedBusinesses(1,10).then((data)=>{
@@ -72,10 +72,10 @@ const Page = () => {
           <div onClick={()=>{
                   if(item.uuid == ShowOptions){
                     setShowOptions("")
-                    setSelectedBusiness(item)
+                    // setSelectedBusiness(item)
                   }else{
                   setShowOptions(item.uuid)
-                  setSelectedBusiness(null)
+                  // setSelectedBusiness(null)
                   }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
                    Options
