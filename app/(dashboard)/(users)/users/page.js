@@ -427,7 +427,7 @@ const Page = () => {
                 onChange={(e) => setlimit(Number(e.target.value))}
                 className="rounded-lg border-stroke bg-transparent px-3 py-1 outline-none focus:border-primary dark:border-strokedark"
               >
-                <option value={20}>20</option>
+                <option value={10}>10</option>
                 <option value={50}>50</option>
                 <option value={100}>100</option>
                 <option value={200}>200</option>

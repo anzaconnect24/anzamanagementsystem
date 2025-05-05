@@ -202,7 +202,7 @@ const Page = ({ params }) => {
               </div>
             </div>
           )}
-          {business.status == "accepted" && (
+          {business.status == "waiting" && (
             <button
               onClick={() => {
                 setApproving(true);
