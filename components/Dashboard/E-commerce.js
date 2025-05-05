@@ -15,17 +15,92 @@ import Link from "next/link";
 import { checkIfProfileIsComplete } from "@/app/utils/check_profile";
 import { getMentorOverviewStats } from "@/app/controllers/statsControllers";
 import MentorEntreprenuer from "@/app/(dashboard)/(mentor)/mentorEntreprenuers/page";
+import { getScoreData } from "@/app/controllers/crat_general_controller";
 // import TanzaniaMap from "../Maps/TanzaniaMap";
+
+const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 const ECommerce = () => {
   const { data, userDetails } = useContext(UserContext);
   const [mentorStats, setMentorStats] = useState(null);
+  // Bar chart state for Enterprenuer
+  const [scoreData, setScoreData] = useState({});
+  const [loadingBar, setLoadingBar] = useState(true);
+
   useEffect(() => {
     getMentorOverviewStats().then((res) => {
       console.log(res);
       setMentorStats(res);
     });
   }, []);
+
+  // Fetch bar chart data for Enterprenuer
+  useEffect(() => {
+    if (userDetails.role === "Enterprenuer") {
+      setLoadingBar(true);
+      getScoreData().then((res) => {
+        setScoreData(res);
+        setLoadingBar(false);
+      });
+    }
+  }, [userDetails.role]);
+
+  // Bar chart options and series
+  const barChartOptions = {
+    chart: {
+      type: 'bar',
+      height: 350,
+      toolbar: { show: false }
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 8,
+        columnWidth: '40%',
+        distributed: true,
+        dataLabels: { position: 'top' }
+      }
+    },
+    dataLabels: {
+      enabled: true,
+      formatter: function (val) { return val + '%'; },
+      offsetY: -20,
+      style: { fontSize: '12px', colors: ['#6B7280'] }
+    },
+    xaxis: {
+      categories: ['Commercial', 'Financial', 'Operations', 'Legal'],
+      labels: {
+        style: { colors: '#6B7280', fontSize: '12px', fontWeight: 500 }
+      },
+      axisBorder: { show: false },
+      axisTicks: { show: false }
+    },
+    yaxis: {
+      max: 100,
+      labels: {
+        formatter: function (val) { return val + '%'; },
+        style: { colors: '#6B7280', fontSize: '12px', fontWeight: 500 }
+      }
+    },
+    grid: {
+      borderColor: '#E5E7EB',
+      strokeDashArray: 4,
+      xaxis: { lines: { show: false } }
+    },
+    tooltip: {
+      y: { formatter: function (val) { return val + '%'; } }
+    },
+    colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444']
+  };
+  const barChartSeries = [{
+    name: 'Score',
+    data: [
+      scoreData.commercial?.percentage || 0,
+      scoreData.financial?.percentage || 0,
+      scoreData.operations?.percentage || 0,
+      scoreData.legal?.percentage || 0
+    ]
+  }];
+
   return (
     <>
       {["Enterprenuer"].includes(userDetails.role) && (
@@ -43,6 +118,23 @@ const ECommerce = () => {
               </div>
             </div>
           )}
+          {/* Bar Chart Card */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">Business Domain Scores</h2>
+            <p className="text-md text-gray-500 mb-6">Your readiness across key business domains</p>
+            {loadingBar ? (
+              <div className="flex items-center justify-center h-64">
+                <span className="text-gray-400">Loading chart...</span>
+              </div>
+            ) : (
+              <ReactApexChart
+                options={barChartOptions}
+                series={barChartSeries}
+                type="bar"
+                height={350}
+              />
+            )}
+          </div>
         </div>
       )}
       {["Mentor"].includes(userDetails.role) && mentorStats && (

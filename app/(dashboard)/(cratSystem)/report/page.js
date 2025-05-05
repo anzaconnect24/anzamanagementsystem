@@ -1,13 +1,12 @@
 "use client";
 import { useState, useContext, useEffect } from "react";
 import { getReportData, getScoreData, initialData, publishReport } from "@/app/controllers/crat_general_controller"; // Import updated API functions
-import { Bar } from "react-chartjs-2";
-import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
 import Modal2 from "@/components/Model2";
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 import toast from 'react-hot-toast';
 import { UserContext } from "../../../(dashboard)/layout";
 import Loader from "@/components/common/Loader";
+import dynamic from 'next/dynamic';
+const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
 
 // Define the table headers
 // const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
@@ -172,45 +171,82 @@ const Page = () => {
 
   // Multi-bar chart for the 4 sections
   const renderOverallChart = () => {
-    const data = {
+    const donutChartOptions = {
+      chart: {
+        type: 'donut',
+        height: 350
+      },
       labels: ['Commercial', 'Financial', 'Operations', 'Legal'],
-      datasets: [
-        {
-          label: 'Overall Score',
-          data: [
-            scoreData.commercial?.percentage || 0,
-            scoreData.financial?.percentage || 0,
-            scoreData.operations?.percentage || 0,
-            scoreData.legal?.percentage || 0
-          ],
-          backgroundColor: [
-            'rgba(75, 192, 192, 0.6)',
-            'rgba(54, 162, 235, 0.6)',
-            'rgba(255, 206, 86, 0.6)',
-            'rgba(255, 99, 132, 0.6)'
-          ],
-          borderColor: [
-            'rgba(75, 192, 192, 1)',
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(255, 99, 132, 1)'
-          ],
-          borderWidth: 1
+      colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
+      plotOptions: {
+        pie: {
+          donut: {
+            size: '70%',
+            labels: {
+              show: true,
+              name: {
+                show: true,
+                fontSize: '14px',
+                fontWeight: 500,
+                color: '#6B7280'
+              },
+              value: {
+                show: true,
+                fontSize: '16px',
+                fontWeight: 600,
+                color: '#111827',
+                formatter: function (val) {
+                  return val + '%';
+                }
+              },
+              total: {
+                show: true,
+                label: 'Total',
+                formatter: function (w) {
+                  return w.globals.seriesTotals.reduce((a, b) => a + b, 0) / w.globals.series.length + '%';
+                }
+              }
+            }
+          }
         }
-      ]
-    };
-
-    const options = {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100
+      },
+      dataLabels: {
+        enabled: false
+      },
+      legend: {
+        position: 'bottom',
+        horizontalAlign: 'center',
+        fontSize: '12px',
+        markers: {
+          width: 12,
+          height: 12,
+          radius: 12
+        },
+        itemMargin: {
+          horizontal: 8
         }
       }
     };
 
-    return <Bar data={data} options={options} />;
+    const donutChartSeries = [
+      scoreData.commercial?.percentage || 0,
+      scoreData.financial?.percentage || 0,
+      scoreData.operations?.percentage || 0,
+      scoreData.legal?.percentage || 0
+    ];
+
+    return (
+      <div className="bg-white rounded-lg shadow-sm p-6">
+        <h3 className="text-lg font-semibold text-gray-700 mb-2">Performance Distribution</h3>
+        <p className="text-sm text-gray-500 mb-4">Overall distribution across domains</p>
+        <ReactApexChart 
+          options={donutChartOptions} 
+          series={donutChartSeries} 
+          type="donut" 
+          height={350}
+        />
+      </div>
+    );
   };
 
   const renderSection = (title, sectionData) => {
@@ -254,50 +290,47 @@ const Page = () => {
 
 
   return !loading ? (
-    <div className="">
-      <div className="mb-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-          <h4 className="text-xl font-semibold text-black dark:text-white">
-            Business Assessment Report - Version {userDetails.versionCount}
-          </h4>
-          {/* Buttons container aligned to the right */}
-          <div className="flex ml-auto space-x-3">
-            {userDetails.publishStatus === "Draft" ? (
-              <>
-                {userDetails.reportPdf && (
+    <div className="space-y-6">
+      <div className="bg-white rounded-lg shadow-sm">
+        <div className="p-6 border-b border-gray-200">
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-800">Business Assessment Report</h2>
+              <p className="text-sm text-gray-500 mt-1">Version {userDetails.versionCount}</p>
+            </div>
+            <div className="flex space-x-3">
+              {userDetails.publishStatus === "Draft" ? (
+                <>
+                  {userDetails.reportPdf && (
+                    <button
+                      className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      onClick={() => window.open(`http://${userDetails.reportPdf}`, '_blank')}
+                    >
+                      View Report
+                    </button>
+                  )}
                   <button
-                    className="px-4 py-2 bg-black-2 text-white rounded hover:bg-zinc-600 hover:text-gray-200 hover:shadow-lg cursor-pointer"
-                    onClick={() => window.open(`http://${userDetails.reportPdf}`, '_blank')}
-                  >
-                    View Report
-                  </button>
-                )}
-                <button
-                  className={`px-4 py-2 text-white rounded ${generalStatus === 'Not ready'
-                      ? 'bg-slate-400 text-black cursor-not-allowed'
-                      : 'bg-green-500 hover:bg-green-600 hover:text-gray-200 hover:shadow-lg cursor-pointer'
+                    className={`px-4 py-2 text-white rounded-lg transition-colors ${
+                      generalStatus === 'Not ready'
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-green-600 hover:bg-green-700'
                     }`}
-                  onClick={openPublishDialog}
-                  disabled={generalStatus === 'Not ready'}
-                >
-                  Publish
+                    onClick={openPublishDialog}
+                    disabled={generalStatus === 'Not ready'}
+                  >
+                    Publish
+                  </button>
+                </>
+              ) : (
+                <button className="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed" disabled>
+                  {userDetails.publishStatus}
                 </button>
-
-              </>
-            ) : (
-              <button className="px-4 py-2 bg-slate-400 text-white rounded cursor-not-allowed" disabled>
-                {userDetails.publishStatus}
-              </button>
-            )}
-
+              )}
+            </div>
           </div>
         </div>
-
-      </div>
-
-      <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="p-4">
-          {renderOverallChart()} {/* Render the multi-bar chart for the 4 sections */}
+        <div className="p-6">
+          {renderOverallChart()}
         </div>
       </div>
 
@@ -310,7 +343,7 @@ const Page = () => {
         isOpen={deletemodalOpen}
         onClose={() => publishModalOpen(false)}
         message={deletemodalMessage}
-        onDelete={() => publishChanges()}  // Directly call handleDeleteFile
+        onDelete={() => publishChanges()}
         onCancel={handleDeleteCancel}
         bgColor="yellow-200"
         closeButtonText="Cancel"

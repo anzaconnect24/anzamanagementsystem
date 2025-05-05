@@ -301,44 +301,6 @@ const BusinessInformation = () => {
                 )}
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Industry/Sector
-                  </label>
-                  <select
-                    defaultValue={business.industry || ""}
-                    name="industry"
-                    className="form-style"
-                  >
-                    <option value="">Select Industry/Sector</option>
-                    <option value="Agriculture & Agribusiness">
-                      Agriculture & Agribusiness
-                    </option>
-                    <option value="Clean Energy">Clean Energy</option>
-                    <option value="Fintech & Digital Solutions">
-                      Fintech & Digital Solutions
-                    </option>
-                    <option value="Manufacturing & Supply Chain">
-                      Manufacturing & Supply Chain
-                    </option>
-                    <option value="Health & Well-being">
-                      Health & Well-being
-                    </option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Other Industry (if selected)
-                  </label>
-                  <input
-                    defaultValue={business.otherIndustry}
-                    name="otherIndustry"
-                    className="form-style"
-                    placeholder="Specify other industry"
-                    type="text"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
                     Number of Customers
                   </label>
                   <input
@@ -429,8 +391,7 @@ const BusinessInformation = () => {
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  What is your commercial traction? (Number of paying customers
-                  or revenue per year)
+                  What is your  traction? 
                 </label>
                 <textarea
                   defaultValue={business.traction}
@@ -441,7 +402,7 @@ const BusinessInformation = () => {
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Potential Market & Target Audience
+                  What is your target market?
                 </label>
                 <textarea
                   defaultValue={business.market}

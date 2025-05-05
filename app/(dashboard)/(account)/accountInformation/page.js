@@ -58,8 +58,7 @@ const [selectedIndex, setselectedIndex] = useState(0);
               <div>
               {item.title}
               </div>
-
-              </div>
+            </div>
           })}
         </div>
         <div className="w-9/12 rounded-lg border  border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
