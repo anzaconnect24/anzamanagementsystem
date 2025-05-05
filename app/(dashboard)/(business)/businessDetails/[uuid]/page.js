@@ -14,6 +14,8 @@ import { UserContext } from "../../../layout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { createNotification } from "@/app/controllers/notification_controller";
 import { assignEntreprenuerToMentor } from "@/app/controllers/mentorEntreprenuerController";
+import Spinner from "@/components/spinner";
+import { updateUser } from "@/app/controllers/user_controller";
 
 const Page = ({ params }) => {
   const { uuid } = params;
@@ -22,7 +24,7 @@ const Page = ({ params }) => {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [requesting, setRequesting] = useState(false);
-
+  const [approving, setApproving] = useState(false);
   const getData = async () => {
     try {
       const data = await getBusiness(uuid);
@@ -250,6 +252,27 @@ const Page = ({ params }) => {
                 ))}
               </div>
             </div>
+          )}
+          {business.status == "accepted" && (
+            <button
+              onClick={() => {
+                setApproving(true);
+                updateBusiness({ status: "accepted" }, business.uuid).then(
+                  (res) => {
+                    updateUser({ activated: true }, business.User.uuid).then(
+                      () => {
+                        toast.success("Approved successfully");
+                        setApproving(false);
+                        router.back();
+                      }
+                    );
+                  }
+                );
+              }}
+              className="inline-flex items-center w-64 justify-center px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
+            >
+              {approving ? <Spinner /> : "Approve Entrepreneur"}
+            </button>
           )}
         </div>
 

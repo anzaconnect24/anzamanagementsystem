@@ -5,7 +5,11 @@ import { timeAgo } from "../../../utils/time_ago";
 import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
-import { HiOutlineSearch, HiOutlineEye, HiOutlineUserGroup } from "react-icons/hi";
+import {
+  HiOutlineSearch,
+  HiOutlineEye,
+  HiOutlineUserGroup,
+} from "react-icons/hi";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { BiFilterAlt } from "react-icons/bi";
 
@@ -20,14 +24,16 @@ const Page = () => {
   useEffect(() => {
     getPendingBusinesses(1, 10).then((data) => {
       setloading(false);
+      console.log(data);
       setApplications(data.data);
     });
   }, []);
 
-  const filteredApplications = applications.filter(item =>
-    item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.phone.includes(searchTerm)
+  const filteredApplications = applications.filter(
+    (item) =>
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.phone.includes(searchTerm)
   );
 
   const getStatusColor = (daysAgo) => {
@@ -37,7 +43,7 @@ const Page = () => {
   };
 
   return loading ? (
-    <div className="flex items-center justify-center min-h-[400px]">
+    <div className="flex items-center justify-center min-h-[400px] bg-white">
       <Loader />
     </div>
   ) : (
@@ -94,34 +100,55 @@ const Page = () => {
             {/* Modern Table Header */}
             <div className="grid grid-cols-6 sm:grid-cols-8 gap-4 mb-4 px-4 py-3 bg-gray-1 dark:bg-meta-4 rounded-lg">
               <div className="col-span-1">
-                <p className="text-sm font-semibold text-black dark:text-white">Status</p>
+                <p className="text-sm font-semibold text-black dark:text-white">
+                  Status
+                </p>
               </div>
               <div className="col-span-2 hidden sm:block">
-                <p className="text-sm font-semibold text-black dark:text-white">Business Name</p>
+                <p className="text-sm font-semibold text-black dark:text-white">
+                  Business Name
+                </p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm font-semibold text-black dark:text-white">Contact</p>
+                <p className="text-sm font-semibold text-black dark:text-white">
+                  Contact
+                </p>
               </div>
               <div className="col-span-2">
-                <p className="text-sm font-semibold text-black dark:text-white">Timeline</p>
+                <p className="text-sm font-semibold text-black dark:text-white">
+                  Timeline
+                </p>
               </div>
               <div className="col-span-1">
-                <p className="text-sm font-semibold text-black dark:text-white">Actions</p>
+                <p className="text-sm font-semibold text-black dark:text-white">
+                  Actions
+                </p>
               </div>
             </div>
 
             {/* Enhanced Table Body */}
             <div className="space-y-3">
               {filteredApplications.map((item, key) => {
-                const daysAgo = Math.floor((new Date() - new Date(item.createdAt)) / (1000 * 60 * 60 * 24));
+                const daysAgo = Math.floor(
+                  (new Date() - new Date(item.createdAt)) /
+                    (1000 * 60 * 60 * 24)
+                );
                 return (
                   <div
                     key={key}
                     className="group grid grid-cols-6 sm:grid-cols-8 gap-4 px-4 py-4 rounded-xl border border-stroke dark:border-strokedark hover:bg-gray-1 dark:hover:bg-meta-4 transition-all duration-300 hover:shadow-md"
                   >
                     <div className="col-span-1 flex items-center">
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(daysAgo)}`}>
-                        {daysAgo < 2 ? "New" : daysAgo < 5 ? "Pending" : "Urgent"}
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          daysAgo
+                        )}`}
+                      >
+                        {daysAgo < 2
+                          ? "New"
+                          : daysAgo < 5
+                          ? "Pending"
+                          : "Urgent"}
                       </span>
                     </div>
                     <div className="col-span-2 hidden sm:flex items-center">
@@ -130,8 +157,12 @@ const Page = () => {
                       </p>
                     </div>
                     <div className="col-span-2 flex flex-col gap-1">
-                      <p className="text-sm text-black dark:text-white">{item.phone}</p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">{item.email}</p>
+                      <p className="text-sm text-black dark:text-white">
+                        {item.phone}
+                      </p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400">
+                        {item.email}
+                      </p>
                     </div>
                     <div className="col-span-2 flex items-center">
                       <div className="flex flex-col">
@@ -180,7 +211,9 @@ const Page = () => {
                         {/* Enhanced Dropdown Menu */}
                         <div
                           className={`absolute right-0 mt-2 w-48 rounded-xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark z-50 transition-all duration-300 ${
-                            ShowOptions === item.uuid ? "opacity-100 visible translate-y-0" : "opacity-0 invisible translate-y-2"
+                            ShowOptions === item.uuid
+                              ? "opacity-100 visible translate-y-0"
+                              : "opacity-0 invisible translate-y-2"
                           }`}
                         >
                           {[
