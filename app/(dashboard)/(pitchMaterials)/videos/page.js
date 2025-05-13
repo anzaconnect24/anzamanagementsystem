@@ -21,8 +21,11 @@ const Page = () => {
   const { userDetails } = useContext(UserContext);
   const [loading, setloading] = useState(true);
   const [refresh, setRefresh] = useState(0);
+  const [currentPage, setcurrentPage] = useState(1);
+  const [totalPages, settotalPages] = useState(1);
+  const [limit, setlimit] = useState(20);
   useEffect(() => {
-    getVideos(1, 5).then((body) => {
+    getVideos(currentPage, limit).then((body) => {
       setloading(false);
       setVideos(body.data);
     });
@@ -95,6 +98,45 @@ const Page = () => {
               </div>
             </div>
           )}
+        </div>
+        <div className="flex items-center justify-between p-6 border-t border-stroke dark:border-strokedark mt-6">
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Page {currentPage} of {totalPages}
+          </p>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                if (currentPage > 1) {
+                  setcurrentPage(currentPage - 1);
+                  setRefresh(refresh + 1);
+                }
+              }}
+              disabled={currentPage === 1}
+              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                currentPage === 1
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-primary text-white hover:bg-primary/90"
+              }`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => {
+                if (currentPage < totalPages) {
+                  setcurrentPage(currentPage + 1);
+                  setRefresh(refresh + 1);
+                }
+              }}
+              disabled={currentPage === totalPages}
+              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
+                currentPage === totalPages
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-primary text-white hover:bg-primary/90"
+              }`}
+            >
+              Next
+            </button>
+          </div>
         </div>
       </div>
     </div>
