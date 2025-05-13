@@ -50,7 +50,7 @@ const Page = () => {
             <NoData />
           ) : (
             <div>
-              <div className="grid grid-cols-1 2xl:grid-cols-4 gap-3 mt-4  ">
+              <div className="grid grid-cols-1 md:grid-cols-3 2xl:grid-cols-4 gap-3 mt-4  ">
                 {videos.map((item, key) => {
                   return (
                     <a
