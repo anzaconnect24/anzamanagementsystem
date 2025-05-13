@@ -89,7 +89,7 @@ const SignUp = () => {
               phone: e.target.businessPhone.value,
               problem: e.target.problem.value,
               isAlumni: isAlumni,
-              completedProgram: e.target.completedProgram.value,
+              completedProgram: e.target.completedProgram?.value,
               solution: e.target.solution.value,
               registration: e.target.registration.value,
               stage: e.target.stage.value,
@@ -141,7 +141,8 @@ const SignUp = () => {
           }
           if (formValues.password == formValues.repeatPassword) {
             register(userData).then((data) => {
-              if (true) {
+              console.log(data);
+              if (data.status) {
                 createNotification({
                   message: `${userData.name} has joined as ${userData.role}`,
                   for: "Admin",
@@ -731,9 +732,6 @@ dark:text-white"
                             </select>
                           </div>
 
-
-
-
                           <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
                               Short Business Bio/Profile
@@ -781,7 +779,9 @@ dark:text-white"
                             >
                               <option value="">Select Region</option>
                               <option value="Arusha">Arusha</option>
-                              <option value="Dar es Salaam">Dar es Salaam</option>
+                              <option value="Dar es Salaam">
+                                Dar es Salaam
+                              </option>
                               <option value="Dodoma">Dodoma</option>
                               <option value="Geita">Geita</option>
                               <option value="Iringa">Iringa</option>
@@ -793,7 +793,9 @@ dark:text-white"
                               <option value="Manyara">Manyara</option>
                               <option value="Mara">Mara</option>
                               <option value="Mbeya">Mbeya</option>
-                              <option value="Mjini Magharibi">Mjini Magharibi</option>
+                              <option value="Mjini Magharibi">
+                                Mjini Magharibi
+                              </option>
                               <option value="Morogoro">Morogoro</option>
                               <option value="Mtwara">Mtwara</option>
                               <option value="Mwanza">Mwanza</option>
@@ -861,7 +863,7 @@ dark:text-white"
                               rows="3"
                             />
                           </div>
-                         
+
                           <div>
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
                               Current Fundraising Needs
@@ -874,7 +876,7 @@ dark:text-white"
                               rows="3"
                             />
                           </div>
-                 
+
                           <div>
                             <label
                               className="mb-2.5 block font-medium text-black
@@ -1047,8 +1049,17 @@ border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
                   selectedIndex != 0 &&
                   selectedIndex != 2 && (
                     <button
-                      onClick={() => {
-                        setSelectedIndex(selectedIndex + 1);
+                      onClick={(e) => {
+                        e.preventDefault();
+                        console.log(
+                          formValues.password,
+                          formValues.repeatPassword
+                        );
+                        if (formValues.password === formValues.repeatPassword) {
+                          setSelectedIndex(selectedIndex + 1);
+                        } else {
+                          toast.error("Passwords don't match");
+                        }
                       }}
                       className="py-3 px-3 rounded-lg text-white border-slate-400 border
 bg-primary"
