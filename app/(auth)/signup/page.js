@@ -48,7 +48,7 @@ const SignUp = () => {
     investorSector: "",
     investorTicketSize: "",
     investorGeography: "",
-    investorStructure: "",
+    investorStructure: {},
   });
   const router = useRouter();
   const [loading, setloading] = useState(false);
@@ -926,87 +926,336 @@ dark:text-white"
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
                           {/* Personal & Contact Information */}
                           <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Company name (optional)
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              LinkedIn Profile
                             </label>
                             <input
-                              name="investorCompany"
-                              className=" form-style"
-                              placeholder="Company name"
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.investorLinkedIn = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              name="investorLinkedIn"
+                              className="form-style"
+                              placeholder="Your LinkedIn profile URL"
                               type="text"
                             />
                           </div>
                           <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Role/title
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Website (if applicable)
                             </label>
                             <input
-                              required
-                              name="investorRole"
+                              name="investorWebsite"
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.investorWebsite = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
                               className="form-style"
                               placeholder="Your company website"
                               type="text"
                             />
                           </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Current address
+                          {/* Investment Focus */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Investment Focus
                             </label>
-                            <input
-                              required
-                              name="investorGeography"
-                              className="form-style"
-                              placeholder="Write your address"
-                              type="text"
-                            />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {[
+                                "Early-Stage Startups",
+                                "Growth-Stage Businesses",
+                                "Impact Investing",
+                                "Climate & Sustainability",
+                                "Fintech & Digital Solutions",
+                                "Agriculture & Agribusiness",
+                                "Manufacturing & Supply Chain",
+                              ].map((focus) => (
+                                <label
+                                  key={focus}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    name="investorFocus"
+                                    onChange={(e) => {
+                                      let newFormValues = {
+                                        investorFocus: {},
+                                        ...formValues,
+                                      };
+                                      newFormValues.investorFocus[
+                                        Object.keys(
+                                          newFormValues.investorFocus
+                                        ).length
+                                      ] = e.target.value;
+                                      setFormValues(newFormValues);
+                                    }}
+                                    value={focus}
+                                    className="form-checkbox"
+                                  />
+                                  <span>{focus}</span>
+                                </label>
+                              ))}
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  name="investorFocus"
+                                  value="Other"
+                                  className="form-checkbox"
+                                />
+                                <input
+                                  onChange={(e) => {
+                                    let newFormValues = {
+                                      investorFocus: {},
+                                      ...formValues,
+                                    };
+                                    newFormValues.investorFocus[
+                                      Object.keys(
+                                        newFormValues.investorFocus
+                                      ).length
+                                    ] = e.target.value;
+                                    setFormValues(newFormValues);
+                                  }}
+                                  type="text"
+                                  name="investorOtherFocus"
+                                  placeholder="Specify other focus"
+                                  className="form-style"
+                                />
+                              </div>
+                            </div>
                           </div>
+                          {/* Investment Size */}
                           <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Avarage ticket size
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Typical Investment Size
                             </label>
-                            <input
+                            <select
                               required
                               name="investorTicketSize"
+                              onChange={(e) => {
+                                let newFormValues = {
+                                  ...formValues,
+                                };
+                                newFormValues.investorTicketSize =
+                                  e.target.value;
+                                setFormValues(newFormValues);
+                              }}
                               className="form-style"
-                              placeholder="Tell us your avarage ticket size"
-                              type="text"
+                            >
+                              <option value="">Select investment size</option>
+                              <option value="<$50,000">&lt;$50,000</option>
+                              <option value="$50,000 - $100,000">
+                                $50,000 - $100,000
+                              </option>
+                              <option value="$100,000 - $500,000">
+                                $100,000 - $500,000
+                              </option>
+                              <option value="$500,000 - $1M">
+                                $500,000 - $1M
+                              </option>
+                              <option value="$1M+">$1M+</option>
+                            </select>
+                          </div>
+                          {/* Investment Type */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Investment Type Preference
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {[
+                                "Equity",
+                                "Debt Financing",
+                                "Convertible Notes",
+                                "Grants",
+                              ].map((type) => (
+                                <label
+                                  key={type}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    onChange={(e) => {
+                                      let newFormValues = {
+                                        ...formValues,
+                                      };
+                                      newFormValues.investorStructure[
+                                        Object.keys(
+                                          newFormValues.investorStructure
+                                        ).length
+                                      ] = e.target.value;
+                                      setFormValues(newFormValues);
+                                    }}
+                                    name="investorStructure"
+                                    value={type.toLowerCase()}
+                                    className="form-checkbox"
+                                  />
+                                  <span>{type}</span>
+                                </label>
+                              ))}
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  name="investorStructure"
+                                  value="other"
+                                  className="form-checkbox"
+                                />
+                                <input
+                                  onChange={(e) => {
+                                    let newFormValues = {
+                                      ...formValues,
+                                    };
+                                    newFormValues.investorStructure[
+                                      Object.keys(
+                                        newFormValues.investorStructure
+                                      ).length
+                                    ] = e.target.value;
+                                    setFormValues(newFormValues);
+                                  }}
+                                  type="text"
+                                  name="investorOtherStructure"
+                                  placeholder="Specify other type"
+                                  className="form-style"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {/* Bio & Experience */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Brief Bio
+                            </label>
+                            <textarea
+                              name="investorBio"
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.investorBio = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              className="form-style"
+                              placeholder="Tell us about yourself & investment background"
+                              rows="4"
                             />
                           </div>
-
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Structures
-                            </label>
-                            <select
-                              required
-                              name="investorStructure"
-                              className="form-style"
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
                             >
-                              <option>Select structure</option>
-                              <option value="equity">Equity</option>
-                              <option value="dept">Dept</option>
-                              <option value="mezzanine">Mezzanine</option>
-                            </select>
+                              Notable Investments
+                            </label>
+                            <textarea
+                              name="investorNotableInvestments"
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.investorNotableInvestments =
+                                  e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              className="form-style"
+                              placeholder="List your notable investments (if applicable)"
+                              rows="4"
+                            />
                           </div>
-
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Business sector
-                            </label>
-                            <select
-                              required
-                              name="investorSector"
-                              className="form-style"
+                          {/* Mentoring Preference */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
                             >
-                              <option>Select business sector</option>
-                              {sectors.map((item) => {
-                                return (
-                                  <option key={item.id} value={item.uuid}>
-                                    {item.name}
-                                  </option>
-                                );
-                              })}
-                            </select>
+                              Preferred Mentoring or Advisory Role?
+                            </label>
+                            <div className="space-y-2">
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  name="investorMentoringPreference"
+                                  value="true"
+                                  className="form-radio"
+                                />
+                                <span>
+                                  Yes, I am open to mentoring startups
+                                </span>
+                              </label>
+                              <label className="flex items-center space-x-2">
+                                <input
+                                  type="radio"
+                                  name="investorMentoringPreference"
+                                  value="false"
+                                  className="form-radio"
+                                />
+                                <span>
+                                  No, I am only interested in investing
+                                </span>
+                              </label>
+                            </div>
+                          </div>
+                          {/* Supporting Documents */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Upload Investment Portfolio (Optional)
+                            </label>
+                            <input
+                              type="file"
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.investorPortfolio =
+                                  e.target.files[0];
+                                setFormValues(newFormValues);
+                              }}
+                              name="investorPortfolio"
+                              className="form-style"
+                              accept=".pdf,.doc,.docx"
+                            />
+                          </div>
+                          {/* Agreement & Consent */}
+                          <div className="col-span-2 space-y-4">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="investorContactConsent"
+                                required
+                                className="form-checkbox"
+                              />
+                              <span>
+                                I agree to be contacted regarding investment
+                                opportunities
+                              </span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="investorMatchingConsent"
+                                required
+                                className="form-checkbox"
+                              />
+                              <span>
+                                I consent to my information being used for
+                                investor matching/mentors or any other platform
+                                that can help
+                              </span>
+                            </label>
                           </div>
                         </div>
                       </div>

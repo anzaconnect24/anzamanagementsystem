@@ -48,7 +48,7 @@ const Page = ({ params }) => {
       <Breadcrumb
         prevLink=""
         prevPage="Businesses"
-        pageName="Business details"
+        pageName={`${business?.name} details`}
       />
       {/* Stats Section - Full Width */}
       <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
