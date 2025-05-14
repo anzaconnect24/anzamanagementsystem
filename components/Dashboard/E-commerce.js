@@ -18,7 +18,9 @@ import MentorEntreprenuer from "@/app/(dashboard)/(mentor)/mentorEntreprenuers/p
 import { getScoreData } from "@/app/controllers/crat_general_controller";
 // import TanzaniaMap from "../Maps/TanzaniaMap";
 
-const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 
 const ECommerce = () => {
   const { data, userDetails } = useContext(UserContext);
@@ -48,66 +50,76 @@ const ECommerce = () => {
   // Bar chart options and series
   const barChartOptions = {
     chart: {
-      type: 'bar',
+      type: "bar",
       height: 350,
-      toolbar: { show: false }
+      toolbar: { show: false },
     },
     plotOptions: {
       bar: {
         borderRadius: 8,
-        columnWidth: '40%',
+        columnWidth: "40%",
         distributed: true,
-        dataLabels: { position: 'top' }
-      }
+        dataLabels: { position: "top" },
+      },
     },
     dataLabels: {
       enabled: true,
-      formatter: function (val) { return val + '%'; },
+      formatter: function (val) {
+        return val + "%";
+      },
       offsetY: -20,
-      style: { fontSize: '12px', colors: ['#6B7280'] }
+      style: { fontSize: "12px", colors: ["#6B7280"] },
     },
     xaxis: {
-      categories: ['Commercial', 'Financial', 'Operations', 'Legal'],
+      categories: ["Commercial", "Financial", "Operations", "Legal"],
       labels: {
-        style: { colors: '#6B7280', fontSize: '12px', fontWeight: 500 }
+        style: { colors: "#6B7280", fontSize: "12px", fontWeight: 500 },
       },
       axisBorder: { show: false },
-      axisTicks: { show: false }
+      axisTicks: { show: false },
     },
     yaxis: {
       max: 100,
       labels: {
-        formatter: function (val) { return val + '%'; },
-        style: { colors: '#6B7280', fontSize: '12px', fontWeight: 500 }
-      }
+        formatter: function (val) {
+          return val + "%";
+        },
+        style: { colors: "#6B7280", fontSize: "12px", fontWeight: 500 },
+      },
     },
     grid: {
-      borderColor: '#E5E7EB',
+      borderColor: "#E5E7EB",
       strokeDashArray: 4,
-      xaxis: { lines: { show: false } }
+      xaxis: { lines: { show: false } },
     },
     tooltip: {
-      y: { formatter: function (val) { return val + '%'; } }
+      y: {
+        formatter: function (val) {
+          return val + "%";
+        },
+      },
     },
-    colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444']
+    colors: ["#3B82F6", "#10B981", "#F59E0B", "#EF4444"],
   };
-  const barChartSeries = [{
-    name: 'Score',
-    data: [
-      scoreData.commercial?.percentage || 0,
-      scoreData.financial?.percentage || 0,
-      scoreData.operations?.percentage || 0,
-      scoreData.legal?.percentage || 0
-    ]
-  }];
+  const barChartSeries = [
+    {
+      name: "Score",
+      data: [
+        scoreData.commercial?.percentage || 0,
+        scoreData.financial?.percentage || 0,
+        scoreData.operations?.percentage || 0,
+        scoreData.legal?.percentage || 0,
+      ],
+    },
+  ];
 
   return (
     <>
       {["Enterprenuer"].includes(userDetails.role) && (
         <div>
           {checkIfProfileIsComplete(userDetails) == false && (
-            <div className="bg-white shadow mb-8">
-              <div className="flex justify-between bg-danger bg-opacity-10 shadow-lg px-4 py-4 text-black items-center rounded">
+            <div className="bg-white shadow mb-8 rounded-lg">
+              <div className="flex justify-between bg-danger bg-opacity-[6%] border border-danger border-opacity-40 shadow-lg px-4 py-4 text-black items-center rounded-lg">
                 <h1 className="text-lg">Please complete your profile </h1>
                 <Link
                   href="/accountInformation"
@@ -118,10 +130,112 @@ const ECommerce = () => {
               </div>
             </div>
           )}
+
+          {["Enterprenuer"].includes(userDetails.role) && (
+            <div>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+                <CardDataStats
+                  link="/enterprenuers"
+                  title="Total Entrepreneurs"
+                  total={data.enterprenuers || 0}
+                  rate="0.95%"
+                  levelUp
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-6 h-6 text-primary dark:text-white"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z"
+                    />
+                  </svg>
+                </CardDataStats>
+
+                <CardDataStats
+                  link="/investors"
+                  title="Total Investors"
+                  total={data.investors || 0}
+                  rate="0.43%"
+                  levelUp
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-6 h-6 text-primary dark:text-white"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                </CardDataStats>
+
+                <CardDataStats
+                  link="/interested-investors"
+                  title="Interested Investors"
+                  total={data.investorsInterested || 0}
+                  rate="2.59%"
+                  levelUp
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-6 h-6 text-primary dark:text-white"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904"
+                    />
+                  </svg>
+                </CardDataStats>
+
+                <CardDataStats
+                  link="/investments"
+                  title="Investments Made"
+                  total={data.investmentsMade || 0}
+                  rate="4.35%"
+                  levelUp
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth="1.5"
+                    stroke="currentColor"
+                    className="w-6 h-6 text-primary dark:text-white"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"
+                    />
+                  </svg>
+                </CardDataStats>
+              </div>
+            </div>
+          )}
           {/* Bar Chart Card */}
-          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
-            <h2 className="text-2xl font-bold text-gray-800 mb-1">Business Domain Scores</h2>
-            <p className="text-md text-gray-500 mb-6">Your readiness across key business domains</p>
+          <div className="bg-white rounded-2xl shadow-lg p-8 my-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-1">
+              Capital Readiness Assesment Scores
+            </h2>
+            <p className="text-md text-gray-500 mb-6">
+              Your readiness across key business domains
+            </p>
             {loadingBar ? (
               <div className="flex items-center justify-center h-64">
                 <span className="text-gray-400">Loading chart...</span>
@@ -137,6 +251,7 @@ const ECommerce = () => {
           </div>
         </div>
       )}
+
       {["Mentor"].includes(userDetails.role) && mentorStats && (
         <div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
@@ -263,103 +378,7 @@ const ECommerce = () => {
           </div>
         </div>
       )}
-      {["Enterprenuer"].includes(userDetails.role) && (
-        <div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
-            <CardDataStats
-              link="/enterprenuers"
-              title="Total Entrepreneurs"
-              total={data.enterprenuers || 0}
-              rate="0.95%"
-              levelUp
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="w-6 h-6 text-primary dark:text-white"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19.128a9.38 9.38 0 0 0 2.625.372 9.337 9.337 0 0 0 4.121-.952 4.125 4.125 0 0 0-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 0 1 8.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0 1 11.964-3.07M12 6.375a3.375 3.375 0 1 1-6.75 0 3.375 3.375 0 0 1 6.75 0Z"
-                />
-              </svg>
-            </CardDataStats>
 
-            <CardDataStats
-              link="/investors"
-              title="Total Investors"
-              total={data.investors || 0}
-              rate="0.43%"
-              levelUp
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="w-6 h-6 text-primary dark:text-white"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-            </CardDataStats>
-
-            <CardDataStats
-              link="/interested-investors"
-              title="Interested Investors"
-              total={data.investorsInterested || 0}
-              rate="2.59%"
-              levelUp
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="w-6 h-6 text-primary dark:text-white"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6.633 10.25c.806 0 1.533-.446 2.031-1.08a9.041 9.041 0 0 1 2.861-2.4c.723-.384 1.35-.956 1.653-1.715a4.498 4.498 0 0 0 .322-1.672V2.75a.75.75 0 0 1 .75-.75 2.25 2.25 0 0 1 2.25 2.25c0 1.152-.26 2.243-.723 3.218-.266.558.107 1.282.725 1.282m0 0h3.126c1.026 0 1.945.694 2.054 1.715.045.422.068.85.068 1.285a11.95 11.95 0 0 1-2.649 7.521c-.388.482-.987.729-1.605.729H13.48c-.483 0-.964-.078-1.423-.23l-3.114-1.04a4.501 4.501 0 0 0-1.423-.23H5.904"
-                />
-              </svg>
-            </CardDataStats>
-
-            <CardDataStats
-              link="/investments"
-              title="Investments Made"
-              total={data.investmentsMade || 0}
-              rate="4.35%"
-              levelUp
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth="1.5"
-                stroke="currentColor"
-                className="w-6 h-6 text-primary dark:text-white"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 18.75a60.07 60.07 0 0115.797 2.101c.727.198 1.453-.342 1.453-1.096V18.75M3.75 4.5v.75A.75.75 0 013 6h-.75m0 0v-.375c0-.621.504-1.125 1.125-1.125H20.25M2.25 6v9m18-10.5v.75c0 .414.336.75.75.75h.75m-1.5-1.5h.375c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125h-.375m1.5-1.5H21a.75.75 0 00-.75.75v.75m0 0H3.75m0 0h-.375a1.125 1.125 0 01-1.125-1.125V15m1.5 1.5v-.75A.75.75 0 003 15h-.75M15 10.5a3 3 0 11-6 0 3 3 0 016 0zm3 0h.008v.008H18V10.5zm-12 0h.008v.008H6V10.5z"
-                />
-              </svg>
-            </CardDataStats>
-          </div>
-        </div>
-      )}
       {["Investor"].includes(userDetails.role) && (
         <div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 xl:grid-cols-5 2xl:gap-7.5">
@@ -478,7 +497,7 @@ const ECommerce = () => {
       )}
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        {userDetails.role != "Mentor" && <ChartOne />}
+        {!["Mentor", "Enterprenuer"].includes(userDetails.role) && <ChartOne />}
         {/* {userDetails.role == "Admin" && <ChartTwo />} */}
         {/* {userDetails.role == "Admin" && <TanzaniaMap />} */}
         {/* {userDetails.role == "Admin" && <ChartThree />} */}
