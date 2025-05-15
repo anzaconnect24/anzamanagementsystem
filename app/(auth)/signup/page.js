@@ -100,11 +100,11 @@ const SignUp = () => {
           let investorData;
           if (role == "Investor") {
             investorData = {
-              // role: e.target.investorRole.value,
-              // company: e.target.investorCompany.value,
-              // sector: e.target.investorSector.value,
-              // ticketSize: e.target.investorTicketSize.value,
-              // geography: e.target.investorGeography.value,
+              role: e.target.position.value,
+              company: e.target.company.value,
+              sector: e.target.sector.value,
+              ticketSize: e.target.investmentSize.value,
+              geography: e.target.location.value,
               // structure: e.target.investorStructure.value,
               linkedinURL: formValues.investorLinkedIn,
               website: formValues.investorWebsite,
@@ -930,6 +930,84 @@ dark:text-white"
                               className="mb-2.5 block font-medium text-black
 dark:text-white"
                             >
+                              Company Name
+                            </label>
+                            <input
+                              name="company"
+                              className="form-style"
+                              placeholder="Your company name"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Location
+                            </label>
+                            <input
+                              name="location"
+                              className="form-style"
+                              placeholder="Your location"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Investment Size
+                            </label>
+                            <input
+                              name="investmentSize"
+                              className="form-style"
+                              placeholder="Your investment size"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Position
+                            </label>
+                            <input
+                              name="position"
+                              className="form-style"
+                              placeholder="Your position in the company"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Business sector
+                            </label>
+                            <select
+                              required
+                              name="sector"
+                              className="form-style"
+                            >
+                              <option>Select business sector</option>
+                              {sectors.map((item) => {
+                                return (
+                                  <option key={item.id} value={item.uuid}>
+                                    {item.name}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
                               LinkedIn Profile
                             </label>
                             <input
@@ -944,6 +1022,7 @@ dark:text-white"
                               type="text"
                             />
                           </div>
+
                           <div>
                             <label
                               className="mb-2.5 block font-medium text-black

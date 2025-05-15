@@ -89,8 +89,13 @@ const Page = ({ params }) => {
     if (!user) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <div className="text-xl font-medium text-gray-600 dark:text-gray-400 mb-2">Investor not found</div>
-          <p className="text-gray-500 dark:text-gray-500">The investor profile you're looking for doesn't exist or has been removed.</p>
+          <div className="text-xl font-medium text-gray-600 dark:text-gray-400 mb-2">
+            Investor not found
+          </div>
+          <p className="text-gray-500 dark:text-gray-500">
+            The investor profile you're looking for doesn't exist or has been
+            removed.
+          </p>
         </div>
       );
     }
@@ -99,39 +104,134 @@ const Page = ({ params }) => {
     const contactSection = {
       title: "Contact Information",
       items: [
-        { icon: <HiOutlineUserCircle className="w-5 h-5" />, label: "Name", value: user.name },
-        { icon: <HiOutlineMail className="w-5 h-5" />, label: "Email", value: user.email },
-        { icon: <HiOutlinePhone className="w-5 h-5" />, label: "Phone", value: user.phone },
-        { icon: <HiOutlineLocationMarker className="w-5 h-5" />, label: "Location", value: user.InvestorProfile?.geography || "Not specified" },
-        { icon: <HiOutlineOfficeBuilding className="w-5 h-5" />, label: "Company", value: user.InvestorProfile?.company || "Not specified" },
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Position", value: user.InvestorProfile?.role || "Not specified" },
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "LinkedIn", value: user.InvestorProfile?.linkedIn ? <a href={user.InvestorProfile.linkedIn} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">View Profile</a> : "Not provided" },
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Website", value: user.InvestorProfile?.website ? <a href={user.InvestorProfile.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Visit Website</a> : "Not provided" }
-      ]
+        {
+          icon: <HiOutlineUserCircle className="w-5 h-5" />,
+          label: "Name",
+          value: user.name,
+        },
+        {
+          icon: <HiOutlineMail className="w-5 h-5" />,
+          label: "Email",
+          value: user.email,
+        },
+        {
+          icon: <HiOutlinePhone className="w-5 h-5" />,
+          label: "Phone",
+          value: user.phone,
+        },
+        {
+          icon: <HiOutlineLocationMarker className="w-5 h-5" />,
+          label: "Location",
+          value: user.InvestorProfile?.geography || "Not specified",
+        },
+        {
+          icon: <HiOutlineOfficeBuilding className="w-5 h-5" />,
+          label: "Company",
+          value: user.InvestorProfile?.company || "Not specified",
+        },
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Position",
+          value: user.InvestorProfile?.role || "Not specified",
+        },
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "LinkedIn",
+          value: user.InvestorProfile?.linkedinURL ? (
+            <a
+              href={user.InvestorProfile.linkedinURL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              View Profile
+            </a>
+          ) : (
+            "Not provided"
+          ),
+        },
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Website",
+          value: user.InvestorProfile?.website ? (
+            <a
+              href={user.InvestorProfile.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              Visit Website
+            </a>
+          ) : (
+            "Not provided"
+          ),
+        },
+      ],
     };
 
     const investmentSection = {
       title: "Investment Preferences",
       items: [
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Sector", value: user.InvestorProfile?.BusinessSector?.name || "Not specified" },
-        { icon: <HiOutlineCash className="w-5 h-5" />, label: "Investment Size", value: user.InvestorProfile?.ticketSize || "Not specified" },
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Investment Types", value: user.InvestorProfile?.structure || "Not specified" },
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Investment Focus", value: user.InvestorProfile?.focus?.join(", ") || "Not specified" },
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Mentoring Preference", value: user.InvestorProfile?.mentoringPreference === "yes" ? "Open to mentoring startups" : "Investment only" }
-      ]
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Sector",
+          value: user.InvestorProfile?.BusinessSector?.name || "Not specified",
+        },
+        {
+          icon: <HiOutlineCash className="w-5 h-5" />,
+          label: "Investment Size",
+          value: user.InvestorProfile?.ticketSize || "Not specified",
+        },
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Investment Types",
+          value:
+            Object.values(user.InvestorProfile?.investmentType || {}).join(
+              ", "
+            ) || "Not specified",
+        },
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Investment Focus",
+          value:
+            Object.values(user.InvestorProfile?.investmentFocus || {}).join(
+              ", "
+            ) || "Not specified",
+        },
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Mentoring Preference",
+          value:
+            user.InvestorProfile?.mentoringPreference === "yes"
+              ? "Open to mentoring startups"
+              : "Investment only",
+        },
+      ],
     };
 
     const bioSection = {
       title: "Background & Experience",
       items: [
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Bio", value: user.InvestorProfile?.bio || "Not provided" },
-        { icon: <HiOutlineDocumentText className="w-5 h-5" />, label: "Notable Investments", value: user.InvestorProfile?.notableInvestments || "Not provided" }
-      ]
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Bio",
+          value: user.InvestorProfile?.bio || "Not provided",
+        },
+        {
+          icon: <HiOutlineDocumentText className="w-5 h-5" />,
+          label: "Notable Investments",
+          value: user.InvestorProfile?.notableInvestment || "Not provided",
+        },
+      ],
     };
 
     return (
       <div className="container mx-auto px-4 py-8">
-        <Breadcrumb prevLink={`/investors`} prevPage="Investors" pageName="Investor Profile" />
+        <Breadcrumb
+          prevLink={`/investors`}
+          prevPage="Investors"
+          pageName={user.InvestorProfile?.company || "No Company"}
+        />
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Profile Header Card */}
           <div className="lg:col-span-3 bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden">
@@ -141,8 +241,13 @@ const Page = ({ params }) => {
                   <ProfileImage user={user} />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-black dark:text-white">{user.name}</h1>
-                  <p className="text-gray-600 dark:text-gray-400">{user.InvestorProfile?.role || "Investor"} at {user.InvestorProfile?.company || "Company"}</p>
+                  <h1 className="text-2xl font-bold text-black dark:text-white">
+                    {user.name}
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400">
+                    {user.InvestorProfile?.role || "Investor"} at{" "}
+                    {user.InvestorProfile?.company || "Company"}
+                  </p>
                 </div>
               </div>
             </div>
@@ -188,7 +293,9 @@ const Page = ({ params }) => {
             {isAdmin ? (
               <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-stroke dark:border-strokedark">
-                  <h2 className="text-lg font-semibold text-black dark:text-white">{contactSection.title}</h2>
+                  <h2 className="text-lg font-semibold text-black dark:text-white">
+                    {contactSection.title}
+                  </h2>
                 </div>
                 <div className="p-6">
                   <div className="space-y-4">
@@ -198,8 +305,12 @@ const Page = ({ params }) => {
                           {item.icon}
                         </div>
                         <div className="flex-grow">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">{item.label}</div>
-                          <div className="text-base font-medium text-black dark:text-white">{item.value}</div>
+                          <div className="text-sm text-gray-500 dark:text-gray-400">
+                            {item.label}
+                          </div>
+                          <div className="text-base font-medium text-black dark:text-white">
+                            {item.value}
+                          </div>
                         </div>
                       </div>
                     ))}
@@ -209,7 +320,9 @@ const Page = ({ params }) => {
             ) : (
               <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-stroke dark:border-strokedark">
-                  <h2 className="text-lg font-semibold text-black dark:text-white">Contact Information</h2>
+                  <h2 className="text-lg font-semibold text-black dark:text-white">
+                    Contact Information
+                  </h2>
                 </div>
                 <div className="p-6 flex flex-col items-center justify-center text-center">
                   <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-meta-4 flex items-center justify-center mb-3">
@@ -222,16 +335,19 @@ const Page = ({ params }) => {
                     Contact information is only available to administrators.
                   </p>
                   <p className="text-sm text-gray-500 dark:text-gray-400">
-                    You can use the "Start Conversation" button to connect with this investor.
+                    You can use the "Start Conversation" button to connect with
+                    this investor.
                   </p>
                 </div>
               </div>
             )}
-            
+
             {/* Investment Preferences - Visible to everyone */}
             <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-stroke dark:border-strokedark">
-                <h2 className="text-lg font-semibold text-black dark:text-white">{investmentSection.title}</h2>
+                <h2 className="text-lg font-semibold text-black dark:text-white">
+                  {investmentSection.title}
+                </h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -241,8 +357,12 @@ const Page = ({ params }) => {
                         {item.icon}
                       </div>
                       <div className="flex-grow">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{item.label}</div>
-                        <div className="text-base font-medium text-black dark:text-white">{item.value}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {item.label}
+                        </div>
+                        <div className="text-base font-medium text-black dark:text-white">
+                          {item.value}
+                        </div>
                       </div>
                     </div>
                   ))}
@@ -253,7 +373,9 @@ const Page = ({ params }) => {
             {/* Background & Experience */}
             <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden">
               <div className="px-6 py-4 border-b border-stroke dark:border-strokedark">
-                <h2 className="text-lg font-semibold text-black dark:text-white">{bioSection.title}</h2>
+                <h2 className="text-lg font-semibold text-black dark:text-white">
+                  {bioSection.title}
+                </h2>
               </div>
               <div className="p-6">
                 <div className="space-y-4">
@@ -263,8 +385,12 @@ const Page = ({ params }) => {
                         {item.icon}
                       </div>
                       <div className="flex-grow">
-                        <div className="text-sm text-gray-500 dark:text-gray-400">{item.label}</div>
-                        <div className="text-base font-medium text-black dark:text-white">{item.value}</div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          {item.label}
+                        </div>
+                        <div className="text-base font-medium text-black dark:text-white">
+                          {item.value}
+                        </div>
                       </div>
                     </div>
                   ))}

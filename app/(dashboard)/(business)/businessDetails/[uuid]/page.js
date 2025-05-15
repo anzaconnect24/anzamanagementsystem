@@ -48,7 +48,7 @@ const Page = ({ params }) => {
       <Breadcrumb
         prevLink=""
         prevPage="Businesses"
-        pageName={`${business?.name} details`}
+        pageName={`${business?.name}`}
       />
       {/* Stats Section - Full Width */}
       <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
@@ -100,18 +100,12 @@ const Page = ({ params }) => {
         {/* Left Column - Main Content */}
         <div className="lg:col-span-2 space-y-8">
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
-            <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
+            <h2 className="text-2xl font-bold mb-6 capitalize flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">ℹ️</span>
-              BUSINESS OVERVIEW
+              Business Overview
             </h2>
             <div className="space-y-8">
               <div>
-                <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Description
-                </h3>
-                <p className="text-xl text-black-100 mb-4 font-medium">
-                  {business?.BusinessSector?.name || "Business Sector"}
-                </p>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
                   {business?.description || "Description not available"}
                 </p>
@@ -148,7 +142,7 @@ const Page = ({ params }) => {
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">🎯</span>
-              MARKET POTENTIAL
+              Market Potential
             </h2>
             <div className="space-y-6">
               <div>
@@ -176,7 +170,7 @@ const Page = ({ params }) => {
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">📈</span>
-              GROWTH & FUNDING
+              Growth & Funding
             </h2>
             <div className="space-y-6">
               <div>

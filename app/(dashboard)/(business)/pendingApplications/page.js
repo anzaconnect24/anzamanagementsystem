@@ -48,7 +48,7 @@ const Page = () => {
     </div>
   ) : (
     <div className="container mx-auto px-4 py-8">
-      <div className="rounded-2xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark overflow-hidden">
+      <div className="rounded-2xl border border-stroke bg-white shadow-default min-h-[80vh] dark:border-strokedark dark:bg-boxdark overflow-hidden">
         {/* Enhanced Header Section with Background Pattern */}
         <div className="relative p-6 border-b border-stroke dark:border-strokedark bg-gradient-to-r from-primary/5 to-transparent">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
