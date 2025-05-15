@@ -164,7 +164,7 @@ const SignUp = () => {
                   });
 
                   createBusiness(businessData).then((data) => {
-                    // router.push("/confirmEmail");
+                    router.push("/confirmEmail");
                     setloading(false);
                   });
                 } else if (role == "Investor") {
