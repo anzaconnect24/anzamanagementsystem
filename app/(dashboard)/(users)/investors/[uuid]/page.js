@@ -214,11 +214,6 @@ const Page = ({ params }) => {
       items: [
         {
           icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Bio",
-          value: user.InvestorProfile?.bio || "Not provided",
-        },
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
           label: "Notable Investments",
           value: user.InvestorProfile?.notableInvestment || "Not provided",
         },
