@@ -934,6 +934,7 @@ dark:text-white"
                             </label>
                             <input
                               name="company"
+                              required
                               className="form-style"
                               placeholder="Your company name"
                               type="text"
@@ -948,6 +949,7 @@ dark:text-white"
                             </label>
                             <input
                               name="location"
+                              required
                               className="form-style"
                               placeholder="Your location"
                               type="text"
@@ -962,6 +964,7 @@ dark:text-white"
                             </label>
                             <input
                               name="investmentSize"
+                              required
                               className="form-style"
                               placeholder="Your investment size"
                               type="text"
@@ -976,6 +979,7 @@ dark:text-white"
                             </label>
                             <input
                               name="position"
+                              required
                               className="form-style"
                               placeholder="Your position in the company"
                               type="text"
@@ -993,7 +997,7 @@ dark:text-white"
                               name="sector"
                               className="form-style"
                             >
-                              <option>Select business sector</option>
+                              <option value={""}>Select business sector</option>
                               {sectors.map((item) => {
                                 return (
                                   <option key={item.id} value={item.uuid}>
@@ -1017,9 +1021,10 @@ dark:text-white"
                                 setFormValues(newFormValues);
                               }}
                               name="investorLinkedIn"
+                              required
                               className="form-style"
                               placeholder="Your LinkedIn profile URL"
-                              type="text"
+                              type="url"
                             />
                           </div>
 
@@ -1223,6 +1228,7 @@ dark:text-white"
                               Brief Bio
                             </label>
                             <textarea
+                              required
                               name="investorBio"
                               onChange={(e) => {
                                 const newFormValues = formValues;
@@ -1266,6 +1272,7 @@ dark:text-white"
                               <label className="flex items-center space-x-2">
                                 <input
                                   type="radio"
+                                  required
                                   name="investorMentoringPreference"
                                   value="true"
                                   className="form-radio"
@@ -1277,6 +1284,7 @@ dark:text-white"
                               <label className="flex items-center space-x-2">
                                 <input
                                   type="radio"
+                                  required
                                   name="investorMentoringPreference"
                                   value="false"
                                   className="form-radio"
