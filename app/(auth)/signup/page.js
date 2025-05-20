@@ -1348,6 +1348,291 @@ dark:text-white"
                       </div>
                     </div>
                   )}
+                  {role == "Mentor" && (
+                    <div>
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
+                          {/* Personal Information */}
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              LinkedIn Profile
+                            </label>
+                            <input
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.mentorLinkedIn = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              name="mentorLinkedIn"
+                              required
+                              className="form-style"
+                              placeholder="Your LinkedIn profile URL"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Organization/Company Name
+                            </label>
+                            <input
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.mentorOrganisation =
+                                  e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              name="mentorCompany"
+                              required
+                              className="form-style"
+                              placeholder="Your organization name"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Current Position/Title
+                            </label>
+                            <input
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.mentorPosition = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              name="mentorPosition"
+                              required
+                              className="form-style"
+                              placeholder="Your current position"
+                              type="text"
+                            />
+                          </div>
+                          {/* Expertise & Areas of Support */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Select Your Areas of Expertise
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {[
+                                "Business Strategy & Growth",
+                                "Finance & Fundraising",
+                                "Marketing & Branding",
+                                "Operations & Supply Chain",
+                                "Leadership & Team Development",
+                                "Legal & Compliance",
+                                "Impact & Sustainability",
+                              ].map((expertise) => (
+                                <label
+                                  key={expertise}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    onChange={(e) => {
+                                      let newFormValues = {
+                                        mentorExpertise: {},
+                                        ...formValues,
+                                      };
+                                      newFormValues.mentorExpertise[
+                                        Object.keys(
+                                          newFormValues.mentorExpertise
+                                        ).length
+                                      ] = e.target.value;
+                                      setFormValues(newFormValues);
+                                    }}
+                                    name="mentorExpertise"
+                                    value={expertise}
+                                    className="form-checkbox"
+                                  />
+                                  <span>{expertise}</span>
+                                </label>
+                              ))}
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="checkbox"
+                                  name="mentorExpertise"
+                                  value="Other"
+                                  className="form-checkbox"
+                                />
+                                <input
+                                  type="text"
+                                  required
+                                  onChange={(e) => {
+                                    if (e.target.value != "") {
+                                      let newFormValues = formValues;
+                                      newFormValues.mentorExpertise[
+                                        Object.keys(
+                                          newFormValues.mentorExpertise
+                                        ).length
+                                      ] = e.target.value;
+                                    }
+                                    setFormValues(newFormValues);
+                                  }}
+                                  name="mentorOtherExpertise"
+                                  placeholder="Specify other expertise"
+                                  className="form-style"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                          {/* Availability & Commitment */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              How often can you mentor?
+                            </label>
+                            <div className="space-y-2">
+                              {[
+                                { value: "weekly", label: "Weekly" },
+                                { value: "biweekly", label: "Biweekly" },
+                                { value: "monthly", label: "Monthly" },
+                                { value: "flexible", label: "Flexible" },
+                              ].map((option) => (
+                                <div
+                                  key={option.value}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="radio"
+                                    onChange={(e) => {
+                                      const newFormValues = formValues;
+                                      newFormValues.mentorAvailability =
+                                        e.target.value;
+                                      setFormValues(newFormValues);
+                                    }}
+                                    name="mentorFrequency"
+                                    
+                                    value={option.value}
+                                    className="form-radio"
+                                  />
+                                  <span>{option.label}</span>
+                                  <input
+                                    type="number"
+                                    onChange={(e) => {
+                                      const newFormValues = formValues;
+                                      newFormValues.mentorHours =
+                                        e.target.value;
+                                      setFormValues(newFormValues);
+                                    }}
+                                    name="mentorHours"
+                                    required
+                                    placeholder="Hours"
+                                    className="form-style w-24"
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Preferred Mentoring Format */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Preferred Mentoring Format
+                            </label>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                              {[
+                                "One-on-One Sessions",
+                                "Group Mentorship",
+                                "Online/Virtual Mentorship",
+                                "In-Person Mentorship",
+                              ].map((format) => (
+                                <label
+                                  key={format}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    onChange={(e) => {
+                                      // let newFormValues = formValues;
+                                      let newFormValues = {
+                                        mentorFormat: {},
+                                        ...formValues,
+                                      };
+                                      newFormValues.mentorFormat[
+                                        Object.keys(
+                                          newFormValues.mentorFormat
+                                        ).length
+                                      ] = e.target.value;
+                                      setFormValues(newFormValues);
+                                    }}
+                                    name="mentorFormat"
+                                    value={format}
+                                    className="form-checkbox"
+                                  />
+                                  <span>{format}</span>
+                                </label>
+                              ))}
+                            </div>
+                          </div>
+                          {/* Experience & Support */}
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Tell Us About Your Experience and How You Can
+                              Support Entrepreneurs
+                            </label>
+                            <textarea
+                              name="mentorExperience"
+                              required
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.mentorDescription =
+                                  e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              className="form-style"
+                              placeholder="Share your experience and how you can help
+entrepreneurs"
+                              rows="4"
+                            />
+                          </div>
+                          {/* Agreement & Consent */}
+                          <div className="col-span-2 space-y-4">
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="mentorContactConsent"
+                                required
+                                className="form-checkbox"
+                              />
+                              <span>
+                                I agree to be contacted regarding mentorship
+                                opportunities
+                              </span>
+                            </label>
+                            <label className="flex items-center space-x-2">
+                              <input
+                                type="checkbox"
+                                name="mentorMatchingConsent"
+                                required
+                                className="form-checkbox"
+                              />
+                              <span>
+                                I consent to my information being used for
+                                mentorship matching
+                              </span>
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
               <div className=" flex justify-end py-4 space-x-2 w-full pt-24">
@@ -1373,7 +1658,7 @@ bg-primary"
                   </button>
                 )}
                 {(selectedIndex == 1 && role == "Reviewer") ||
-                role == "Mentor" ? (
+                role == "Mentorrr" ? (
                   <button
                     type="submit"
                     className="w-48 cursor-pointer rounded-lg border flex justify-center
