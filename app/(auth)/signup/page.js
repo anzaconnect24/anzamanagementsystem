@@ -129,12 +129,17 @@ const SignUp = () => {
           let mentorData;
           if (role == "Mentor") {
             mentorData = {
+              business_sector_uuid: e.target.business_sector_uuid.value,
               linkedinURL: formValues.mentorLinkedIn,
               position: formValues.mentorPosition,
               organisation: formValues.mentorOrganisation,
               areasOfExperties: formValues.mentorExpertise,
               mentorAvailability: formValues.mentorAvailability,
               mentorHours: formValues.mentorHours,
+              language: e.target.language.value,
+              location: e.target.location.value,
+              smeFocus: formValues.smeFocus,
+              mentorshipFocus: formValues.mentorshipFocus,
               mentoringFormat: formValues.mentorFormat,
               description: formValues.mentorDescription,
             };
@@ -1399,6 +1404,28 @@ dark:text-white"
                               className="mb-2.5 block font-medium text-black
 dark:text-white"
                             >
+                              Business sector
+                            </label>
+                            <select
+                              required
+                              name="business_sector_uuid"
+                              className="form-style"
+                            >
+                              <option>Select business sector</option>
+                              {sectors.map((item) => {
+                                return (
+                                  <option key={item.id} value={item.uuid}>
+                                    {item.name}
+                                  </option>
+                                );
+                              })}
+                            </select>
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
                               Current Position/Title
                             </label>
                             <input
@@ -1411,6 +1438,50 @@ dark:text-white"
                               required
                               className="form-style"
                               placeholder="Your current position"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Language
+                            </label>
+                            <select
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.mentorPosition = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              name="language"
+                              required
+                              className="form-style"
+                              placeholder="Your language"
+                              type="text"
+                            >
+                              <option value={"English"}>English</option>
+                              <option value={"Swahili"}>Swahili</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Location
+                            </label>
+                            <input
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.location = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              name="location"
+                              required
+                              className="form-style"
+                              placeholder="Your location"
                               type="text"
                             />
                           </div>
@@ -1466,7 +1537,6 @@ dark:text-white"
                                 />
                                 <input
                                   type="text"
-                                  required
                                   onChange={(e) => {
                                     if (e.target.value != "") {
                                       let newFormValues = formValues;
@@ -1513,7 +1583,6 @@ dark:text-white"
                                       setFormValues(newFormValues);
                                     }}
                                     name="mentorFrequency"
-                                    
                                     value={option.value}
                                     className="form-radio"
                                   />
@@ -1526,8 +1595,6 @@ dark:text-white"
                                         e.target.value;
                                       setFormValues(newFormValues);
                                     }}
-                                    name="mentorHours"
-                                    required
                                     placeholder="Hours"
                                     className="form-style w-24"
                                   />
@@ -1599,6 +1666,46 @@ dark:text-white"
                               className="form-style"
                               placeholder="Share your experience and how you can help
 entrepreneurs"
+                              rows="4"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Mentorship Focus
+                            </label>
+                            <textarea
+                              name="mentorshipFocus"
+                              required
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.mentorshipFocus = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              className="form-style"
+                              placeholder="Share your mentorship focus"
+                              rows="4"
+                            />
+                          </div>
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              SME Focus
+                            </label>
+                            <textarea
+                              name="smeFocus"
+                              required
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.smeFocus = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                              className="form-style"
+                              placeholder="Share your SME Focus"
                               rows="4"
                             />
                           </div>

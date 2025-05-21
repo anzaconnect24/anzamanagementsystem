@@ -53,8 +53,8 @@ const Page = ({ params }) => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 ">
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">👥</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                {user?.numberOfCustomers || "N/A"}{" "}
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                {user?.MentorProfile?.smeFocus || "N/A"}{" "}
                 {/* Updated to use numberOfCustomers */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -63,8 +63,9 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">📍</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                {user?.location || "N/A"} {/* Updated to use location */}
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
+                {user?.MentorProfile?.location || "N/A"}{" "}
+                {/* Updated to use location */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Location
@@ -72,10 +73,10 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">🏢</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 overflow-y-hidden">
-                {Object.values(user?.MentorProfile?.areasOfExperties).join(
-                  ", "
-                ) || "N/A"}{" "}
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 overflow-y-hidden">
+                {Object.values(
+                  user?.MentorProfile?.areasOfExperties || {}
+                ).join(", ") || "N/A"}{" "}
                 {/* Updated to use UserSector.name */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -84,8 +85,8 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">💡</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
-                {user?.stage || "N/A"}
+              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 ">
+                {user?.MentorProfile?.BusinessSector?.name || "N/A"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Sector
@@ -114,7 +115,8 @@ const Page = ({ params }) => {
                 Mentorship focus
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {user?.MentorProfile?.focus || "No Information Available"}
+                {user?.MentorProfile?.mentorshipFocus ||
+                  "No Information Available"}
               </p>
             </div>
           </div>
@@ -125,9 +127,9 @@ const Page = ({ params }) => {
                 Areas of expertise
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {Object.values(user?.MentorProfile?.areasOfExperties).join(
-                  ", "
-                ) || "No Information Available"}
+                {Object.values(
+                  user?.MentorProfile?.areasOfExperties || {}
+                ).join(", ") || "No Information Available"}
               </p>
             </div>
             <div className="mb-4">
@@ -136,8 +138,7 @@ const Page = ({ params }) => {
                 Languages
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {user?.MentorProfile?.organisation ||
-                  "No Information Available"}
+                {user?.MentorProfile?.language || "No Information Available"}
               </p>
             </div>
             <div className="mb-4">

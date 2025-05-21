@@ -138,7 +138,7 @@ const Page = () => {
             return 0;
         }
       });
-
+      console.log(filteredData);
       setUsers(filteredData);
       setTotalPages(isFiltering ? 1 : body.totalPages);
       setLoading(false);
