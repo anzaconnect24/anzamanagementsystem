@@ -153,14 +153,6 @@ const Page = ({ params }) => {
             </div>
           </div>
           <div className="flex space-x-4">
-            {userDetails && userDetails.role === "Enterprenuer" && (
-              <Link
-                href={`/investmentApplication/${user.uuid}`}
-                className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
-              >
-                Ask for Investment
-              </Link>
-            )}
             <button
               onClick={() => {
                 const data = {
