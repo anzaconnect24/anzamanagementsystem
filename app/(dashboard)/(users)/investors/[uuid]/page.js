@@ -269,7 +269,7 @@ const Page = ({ params }) => {
                 )}
               </div>
               <div className="flex gap-3">
-                {userDetails && userDetails.role === "Entrepreneur" && (
+                {userDetails && userDetails.role === "Enterprenuer" && (
                   <Link
                     href={`/investmentApplication/${uuid}`}
                     className="inline-flex items-center gap-2 px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"

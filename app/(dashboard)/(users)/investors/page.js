@@ -6,9 +6,12 @@ import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { UserContext } from "../../layout";
 
 const Page = () => {
   const router = useRouter();
+  const { userDetails } = useContext(UserContext);
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -227,7 +230,12 @@ const Page = () => {
       console.error("Invalid investor UUID");
       return;
     }
-    router.push(`/investors/${uuid}`);
+    console.log(userDetails.role);
+    if (userDetails.role === "Enterprenuer") {
+      router.push(`/investors/details/${uuid}`);
+    } else {
+      router.push(`/investors/${uuid}`);
+    }
   };
 
   // Render error state
@@ -259,19 +267,6 @@ const Page = () => {
         {/* Member Count and Search */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
             <span className="text-xl text-gray-600 dark:text-gray-300">
               {users.length} investors
             </span>
@@ -283,27 +278,26 @@ const Page = () => {
               placeholder="Search investors..."
               value={keyword}
               onChange={handleSearch}
-              className="w-64 px-4 py-2 rounded-md border border-gray-200 bg-white dark:bg-boxdark dark:border-gray-700 focus:outline-none focus:border-primary"
+              className="w-64 px-4 py-2 rounded-md  bg-white dark:bg-boxdark border border-white focus:outline-none focus:border-primary"
             />
           </div>
         </div>
 
-        {/* Filters and Sort */}
-        <div className="flex flex-wrap gap-3 relative z-50">
+        <div className="flex flex-wrap gap-3">
           {/* Filter Dropdowns */}
           {Object.entries(filterOptions).map(([key, value]) => (
-            <div key={key} className="relative inline-block dropdown-container">
+            <div key={key} className="relative inline-block">
               <button
                 onClick={() => toggleDropdown(key)}
-                className={`px-4 py-2 rounded-md border ${
+                className={`px-4 py-2 rounded-md  ${
                   filters[key] !== `All ${value.label}`
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-gray-200 bg-white dark:bg-boxdark dark:border-gray-700"
-                } flex items-center gap-2 hover:border-primary transition-colors min-w-[160px] justify-between`}
+                    ? "border-primary bg-white "
+                    : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
+                } flex items-center gap-2 y transition-colors`}
               >
-                <span className="truncate">{filters[key]}</span>
+                <span>{filters[key]}</span>
                 <svg
-                  className={`w-4 h-4 transition-transform flex-shrink-0 ${
+                  className={`w-4 h-4 transition-transform ${
                     openDropdown === key ? "rotate-180" : ""
                   }`}
                   fill="none"
@@ -320,91 +314,81 @@ const Page = () => {
               </button>
 
               {openDropdown === key && (
-                <div className="absolute z-50 mt-2 w-[200px] rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700 overflow-hidden">
-                  <div className="max-h-60 overflow-y-auto">
-                    {value.options.map((option) => (
-                      <button
-                        key={option}
-                        onClick={() => handleFilterChange(key, option)}
-                        className={`block w-full text-left px-4 py-2 text-sm ${
-                          filters[key] === option
-                            ? "bg-primary/10 text-primary"
-                            : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
-                        }`}
-                      >
-                        {option}
-                      </button>
-                    ))}
-                  </div>
+                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700">
+                  {value.options.map((option) => (
+                    <button
+                      key={option}
+                      onClick={() => handleFilterChange(key, option)}
+                      className={`block w-full text-left px-4 py-2 text-sm ${
+                        filters[key] === option
+                          ? "bg-primary/10 text-primary"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
+                      }`}
+                    >
+                      {option}
+                    </button>
+                  ))}
                 </div>
               )}
             </div>
           ))}
 
           {/* Sort Dropdown */}
-          <div className="relative inline-block dropdown-container">
+          <div className="relative inline-block">
             <button
               onClick={() => toggleDropdown("sort")}
-              className="px-4 py-2 rounded-md border border-gray-200 bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors min-w-[160px] justify-between"
+              className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
             >
-              <span className="truncate">
+              <span>
                 Sort:{" "}
                 {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
               </span>
-              <div className="flex items-center flex-shrink-0">
-                <span className="mr-1">
-                  {sortConfig.direction === "asc" ? "↑" : "↓"}
-                </span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    openDropdown === "sort" ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </div>
+              <svg
+                className={`w-4 h-4 transition-transform ${
+                  openDropdown === "sort" ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
+              </svg>
             </button>
 
             {openDropdown === "sort" && (
-              <div className="absolute z-50 mt-2 w-[200px] rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700">
-                <div className="max-h-60 overflow-y-auto">
-                  {sortOptions.map((option) => (
-                    <button
-                      key={option.value}
-                      onClick={() => handleSortChange(option.value)}
-                      className={`block w-full text-left px-4 py-2 text-sm ${
-                        sortConfig.key === option.value
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
-                      }`}
-                    >
-                      <div className="flex items-center justify-between">
-                        <span>{option.label}</span>
-                        {sortConfig.key === option.value && (
-                          <span>
-                            {sortConfig.direction === "asc" ? "↑" : "↓"}
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
+              <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => handleSortChange(option.value)}
+                    className={`block w-full text-left px-4 py-2 text-sm ${
+                      sortConfig.key === option.value
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
+                    }`}
+                  >
+                    {option.label}{" "}
+                    {sortConfig.key === option.value && (
+                      <span className="float-right">
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
+                      </span>
+                    )}
+                  </button>
+                ))}
               </div>
             )}
           </div>
         </div>
 
         {/* Active Filters */}
-        {isFiltering && (
-          <div className="mt-4 flex flex-wrap gap-2 relative z-40">
+        {(Object.values(filters).some((v) => !v.startsWith("All")) ||
+          keyword) && (
+          <div className="mt-4 flex flex-wrap gap-2">
             {Object.entries(filters).map(
               ([key, value]) =>
                 value !== `All ${filterOptions[key].label}` && (
@@ -427,7 +411,7 @@ const Page = () => {
                   </span>
                 )
             )}
-            {keyword.trim() !== "" && (
+            {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
                 Search: {keyword}
                 <button
