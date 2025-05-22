@@ -9,6 +9,23 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false })
 const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
   const [scoreData, setScoreData] = useState(initialScoreData || {});
   const [loading, setLoading] = useState(!initialScoreData);
+  const [chartHeight, setChartHeight] = useState(350);
+
+  // Handle responsive chart height
+  useEffect(() => {
+    const handleResize = () => {
+      setChartHeight(window.innerWidth < 768 ? 280 : 350);
+    };
+    
+    // Set initial height
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Clean up
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch data if not provided as prop
   useEffect(() => {
@@ -40,11 +57,15 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
   const overallScore = calculateOverallScore();
   const remainingScore = 100 - overallScore;
 
+  // Determine chart color based on score threshold
+  const chartColor = overallScore >= 70 ? '#10B981' : '#EF4444';
+  const scoreStatus = overallScore >= 70 ? 'Good' : 'Needs Improvement';
+
   // Donut chart options and series
   const donutChartOptions = {
     chart: {
       type: 'donut',
-      height: 350,
+      height: chartHeight,
       fontFamily: 'Inter, sans-serif',
       background: 'transparent'
     },
@@ -61,7 +82,7 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
               show: true,
               fontSize: '36px',
               fontWeight: 600,
-              color: '#111827',
+              color: chartColor,
               formatter: function(val) {
                 return overallScore + '%';
               }
@@ -89,7 +110,7 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
     stroke: {
       width: 0
     },
-    colors: ['#10B981', '#E5E7EB'],
+    colors: [chartColor, '#E5E7EB'],
     tooltip: {
       enabled: false
     }
@@ -100,9 +121,14 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
   return (
     <div className="bg-white rounded-sm border border-stroke p-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 mb-8">
       <div className="mb-6">
-        <h3 className="text-xl font-bold text-black dark:text-white">
-          Performance Distribution
-        </h3>
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
+          <h3 className="text-xl font-bold text-black dark:text-white mb-2 sm:mb-0">
+            Overall Readiness
+          </h3>
+          <div className={`px-2 py-1 rounded-md text-white text-sm font-medium self-start sm:self-auto ${overallScore >= 70 ? 'bg-success' : 'bg-danger'}`}>
+            {scoreStatus}
+          </div>
+        </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           Overall assessment score across domains
         </p>
@@ -122,12 +148,12 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
         </div>
       ) : (
         <div className="flex justify-center">
-          <div style={{ width: '100%', maxWidth: '400px' }}>
+          <div style={{ width: '100%', maxWidth: '100%' }}>
             <ReactApexChart
               options={donutChartOptions}
               series={donutChartSeries}
               type="donut"
-              height={350}
+              height={chartHeight}
             />
           </div>
         </div>
