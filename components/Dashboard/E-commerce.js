@@ -159,14 +159,20 @@ const ECommerce = () => {
           </div>
           
           {/* Business Domain Scores Chart */}
-          <BusinessDomainScores 
-            userDetails={userDetails} 
-            initialScoreData={!loadingBar ? scoreData : null} 
-          />
-          <PerformanceDistribution
-            userDetails={userDetails}
-            initialScoreData={!loadingBar ? scoreData : null}
-          />
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
+            <div className="col-span-1 md:col-span-3">
+              <BusinessDomainScores 
+                userDetails={userDetails} 
+                initialScoreData={!loadingBar ? scoreData : null} 
+              />
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <PerformanceDistribution
+                userDetails={userDetails}
+                initialScoreData={!loadingBar ? scoreData : null}
+              />
+            </div>
+          </div>
         </div>
       )}
       {["Mentor"].includes(userDetails.role) && mentorStats && (

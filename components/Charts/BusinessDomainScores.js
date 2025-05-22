@@ -27,10 +27,10 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
   // Calculate bar colors based on scores
   const getBarColors = () => {
     return [
-      scoreData.commercial?.percentage >= 50 ? '#10B981' : '#EF4444',
-      scoreData.financial?.percentage >= 50 ? '#10B981' : '#EF4444',
-      scoreData.operations?.percentage >= 50 ? '#10B981' : '#EF4444',
-      scoreData.legal?.percentage >= 50 ? '#10B981' : '#EF4444'
+      scoreData.commercial?.percentage >= 70 ? '#10B981' : '#EF4444',
+      scoreData.financial?.percentage >= 70 ? '#10B981' : '#EF4444',
+      scoreData.operations?.percentage >= 70 ? '#10B981' : '#EF4444',
+      scoreData.legal?.percentage >= 70 ? '#10B981' : '#EF4444'
     ];
   };
 
