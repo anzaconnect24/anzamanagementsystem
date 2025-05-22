@@ -5,11 +5,9 @@ import Modal2 from "@/components/Model2";
 import toast from 'react-hot-toast';
 import { UserContext } from "../../../(dashboard)/layout";
 import Loader from "@/components/common/Loader";
-import dynamic from 'next/dynamic';
-const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 
 // Define the table headers
-// const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
 const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
 
 const Page = () => {
@@ -21,15 +19,10 @@ const Page = () => {
   const { userDetails, setUserDetails } = useContext(UserContext)
   const [loading, setLoading] = useState(true);
 
-
-
   useEffect(() => {
-
-
     fetchData();
     setLoading(false);
   }, []);
-
 
   const fetchData = async () => {
     try {
@@ -76,7 +69,6 @@ const Page = () => {
     setData(updatedData);
   };
 
-
   const publishChanges = async () => {
     try {
       await publishReport(userDetails.id, userDetails.versionCount, userDetails.publishStatus);
@@ -95,7 +87,6 @@ const Page = () => {
       console.error("Error publishing report:", error);
     }
   };
-
 
   const openPublishDialog = (data) => {
     console.log(userDetails)
@@ -169,86 +160,6 @@ const Page = () => {
     return title.replace(/^\d+\.\s*/, "").replace(/Report\s*$/, "");
   };
 
-  // Multi-bar chart for the 4 sections
-  const renderOverallChart = () => {
-    const donutChartOptions = {
-      chart: {
-        type: 'donut',
-        height: 350
-      },
-      labels: ['Commercial', 'Financial', 'Operations', 'Legal'],
-      colors: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
-      plotOptions: {
-        pie: {
-          donut: {
-            size: '70%',
-            labels: {
-              show: true,
-              name: {
-                show: true,
-                fontSize: '14px',
-                fontWeight: 500,
-                color: '#6B7280'
-              },
-              value: {
-                show: true,
-                fontSize: '16px',
-                fontWeight: 600,
-                color: '#111827',
-                formatter: function (val) {
-                  return val + '%';
-                }
-              },
-              total: {
-                show: true,
-                label: 'Total',
-                formatter: function (w) {
-                  return w.globals.seriesTotals.reduce((a, b) => a + b, 0) / w.globals.series.length + '%';
-                }
-              }
-            }
-          }
-        }
-      },
-      dataLabels: {
-        enabled: false
-      },
-      legend: {
-        position: 'bottom',
-        horizontalAlign: 'center',
-        fontSize: '12px',
-        markers: {
-          width: 12,
-          height: 12,
-          radius: 12
-        },
-        itemMargin: {
-          horizontal: 8
-        }
-      }
-    };
-
-    const donutChartSeries = [
-      scoreData.commercial?.percentage || 0,
-      scoreData.financial?.percentage || 0,
-      scoreData.operations?.percentage || 0,
-      scoreData.legal?.percentage || 0
-    ];
-
-    return (
-      <div className="bg-white rounded-lg shadow-sm p-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">Performance Distribution</h3>
-        <p className="text-sm text-gray-500 mb-4">Overall distribution across domains</p>
-        <ReactApexChart 
-          options={donutChartOptions} 
-          series={donutChartSeries} 
-          type="donut" 
-          height={350}
-        />
-      </div>
-    );
-  };
-
   const renderSection = (title, sectionData) => {
     // Generate the key from the title
     const domainKey = title.toLowerCase().replace(/[^a-z]/g, "");
@@ -288,15 +199,13 @@ const Page = () => {
     );
   };
 
-
   return !loading ? (
     <div className="space-y-6">
       <div className="bg-white rounded-lg shadow-sm">
         <div className="p-6 border-b border-gray-200">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">Business Assessment Report</h2>
-              <p className="text-sm text-gray-500 mt-1">Version {userDetails.versionCount}</p>
+              <h2 className="text-2xl font-bold text-gray-800">Capital Readiness Assessment Report</h2>
             </div>
             <div className="flex space-x-3">
               {userDetails.publishStatus === "Draft" ? (
@@ -330,7 +239,7 @@ const Page = () => {
           </div>
         </div>
         <div className="p-6">
-          {renderOverallChart()}
+          <PerformanceDistribution  />
         </div>
       </div>
 
