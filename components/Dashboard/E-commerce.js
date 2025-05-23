@@ -180,10 +180,20 @@ const ECommerce = () => {
 
       {["Mentor"].includes(userDetails.role) && mentorStats && (
         <div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 xl:grid-cols-5 2xl:gap-7.5">
             <CardDataStats
               link="/mentor-entreprenuers"
-              title="My Entreprenuers"
+              title="Active Mentees"
+              total={mentorStats.mentorEnterprenuers}
+              rate="0.43%"
+              levelUp
+            >
+              <SlPeople className="text-primary dark:text-white text-lg" />
+            </CardDataStats>
+
+            <CardDataStats
+              link="/"
+              title="Pending Mentorship Request"
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
               levelUp
@@ -192,7 +202,25 @@ const ECommerce = () => {
             </CardDataStats>
             <CardDataStats
               link="/"
-              title="Submitted Reports"
+              title="Total Entrerenuers"
+              total={data.enterprenuers}
+              rate="0.43%"
+              levelUp
+            >
+              <SlPeople className="text-primary dark:text-white text-lg" />
+            </CardDataStats>
+            <CardDataStats
+              link="/"
+              title="Entreprenuers Supported"
+              total={mentorStats.mentorEnterprenuers}
+              rate="0.43%"
+              levelUp
+            >
+              <SlPeople className="text-primary dark:text-white text-lg" />
+            </CardDataStats>
+            <CardDataStats
+              link="/"
+              title="Reports Submitted"
               total={mentorStats.mentorReports}
               rate="0.43%"
               levelUp
@@ -200,7 +228,7 @@ const ECommerce = () => {
               <SlPeople className="text-primary dark:text-white text-lg" />
             </CardDataStats>
           </div>
-          <MentorEntreprenuer />
+          {/* <MentorEntreprenuer /> */}
         </div>
       )}
       {["Admin", "Reviewer"].includes(userDetails.role) && (
@@ -422,9 +450,7 @@ const ECommerce = () => {
       )}
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        {userDetails.role != "Mentor" && userDetails.role != "Enterprenuer" && (
-          <ChartOne />
-        )}
+        {userDetails.role != "Enterprenuer" && <ChartOne />}
         {/* {userDetails.role == "Admin" && <ChartTwo />} */}
         {/* {userDetails.role == "Admin" && <TanzaniaMap />} */}
         {/* {userDetails.role == "Admin" && <ChartThree />} */}
