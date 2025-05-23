@@ -425,7 +425,7 @@ const ECommerce = () => {
           <ChartOne />
         )}
         {/* {userDetails.role == "Admin" && <ChartTwo />} */}
-        {(userDetails.role === "Admin" || userDetails.role === "Investor" || userDetails.role === "Mentor") && <TanzaniaMap />}
+        {/* {(userDetails.role === "Admin" || userDetails.role === "Investor" || userDetails.role === "Mentor") && <TanzaniaMap />} */}
         {/* {userDetails.role == "Admin" && <ChartThree />} */}
       </div>
     </>
