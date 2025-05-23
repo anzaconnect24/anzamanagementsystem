@@ -340,7 +340,7 @@ const ChartOne = () => {
             <ReactApexChart
               options={options}
               series={chartData.series}
-              type="area"
+              type="bar"
               width="100%"
               height="100%"
             />
