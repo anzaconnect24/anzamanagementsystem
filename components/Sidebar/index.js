@@ -3,13 +3,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
 import { UserContext } from "@/app/(dashboard)/layout";
-import SidebarLinkGroup from './SidebarLinkGroup';
+import SidebarLinkGroup from "./SidebarLinkGroup";
 
 // Icons
 import { MdOutlineDashboard, MdBusinessCenter } from "react-icons/md";
 import { TbLogout } from "react-icons/tb";
 import { SlPeople } from "react-icons/sl";
-import { FaUserTie, FaHandshake, FaQuestion, FaWpforms, FaRegLightbulb } from "react-icons/fa";
+import {
+  FaUserTie,
+  FaHandshake,
+  FaQuestion,
+  FaWpforms,
+  FaRegLightbulb,
+} from "react-icons/fa";
 import { RiTeamLine, RiMoneyDollarCircleLine } from "react-icons/ri";
 import { BsCalendar3, BsCardChecklist } from "react-icons/bs";
 import { BiMessageDetail } from "react-icons/bi";
@@ -73,95 +79,98 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           name: "Dashboard",
           path: "/",
           icon: <MdOutlineDashboard className="text-xl" />,
-          roles: ["Admin", "Enterprenuer", "Investor", "Mentor", "Reviewer", "Staff"]
-        }
-      ]
+          roles: [
+            "Admin",
+            "Enterprenuer",
+            "Investor",
+            "Mentor",
+            "Reviewer",
+            "Staff",
+          ],
+        },
+      ],
     });
 
     // People - Different based on roles
     const peopleItems = [];
-    
+
     if (["Admin"].includes(role)) {
-      peopleItems.push(
-        {
-          name: "Users",
-          path: "/users",
-          icon: <SlPeople className="text-xl" />,
-          submenu: [
-            { name: "All Users", path: "/users" },
-            { name: "Entrepreneurs", path: "/enterprenuers" },
-            { name: "Investors", path: "/investors" },
-            { name: "Mentors", path: "/mentors" },
-            { name: "Staff", path: "/reviewers" },
-            { name: "Admins", path: "/admins" }
-          ]
-        }
-      );
+      peopleItems.push({
+        name: "Users",
+        path: "/users",
+        icon: <SlPeople className="text-xl" />,
+        submenu: [
+          { name: "All Users", path: "/users" },
+          { name: "Entrepreneurs", path: "/enterprenuers" },
+          { name: "Investors", path: "/investors" },
+          { name: "Mentors", path: "/mentors" },
+          { name: "Staff", path: "/reviewers" },
+          { name: "Admins", path: "/admins" },
+        ],
+      });
     }
-    
+
     if (["Mentor"].includes(role)) {
       peopleItems.push({
         name: "Mentees",
         path: "/mentorEntreprenuers",
-        icon: <SlPeople className="text-xl" />
+        icon: <SlPeople className="text-xl" />,
       });
     }
-    
+
     if (["Enterprenuer"].includes(role)) {
       peopleItems.push({
         name: "Mentors",
-        path: "/myMentors",
+        path: "/mentors",
         icon: <FaUserTie className="text-xl" />,
-        submenu: [
-          { name: "My Mentors", path: "/myMentors" },
-          { name: "Mentor Reports", path: "/mentorReports" }
-        ]
       });
     }
-    
-    if (["Investor", "Enterprenuer", "Staff", "Reviewer", "Mentor"].includes(role)) {
+
+    if (
+      ["Investor", "Enterprenuer", "Staff", "Reviewer", "Mentor"].includes(role)
+    ) {
       peopleItems.push({
         name: "Entrepreneurs",
         path: "/enterprenuers",
-        icon: <RiTeamLine className="text-xl" />
+        icon: <RiTeamLine className="text-xl" />,
       });
     }
-    
+
     if (["Enterprenuer", "Reviewer"].includes(role)) {
       peopleItems.push({
         name: "Investors",
         path: "/investors",
-        icon: <RiMoneyDollarCircleLine className="text-xl" />
+        icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
     }
-    
+
     if (["Investor"].includes(role)) {
       peopleItems.push({
         name: "Interested Entrepreneurs",
         path: "/interestedEnterprenuers",
-        icon: <FaHandshake className="text-xl" />
+        icon: <FaHandshake className="text-xl" />,
       });
     }
-    
+
     if (peopleItems.length > 0) {
       categories.push({
         id: "users",
         title: "Users",
-        items: peopleItems
+        items: peopleItems,
       });
     }
 
     // Business Operations
     const businessItems = [];
-    
+
     if (["Investor"].includes(role)) {
       businessItems.push({
         name: "My Investment Requests",
         path: "/myInvestmentRequests",
-        icon: <RiMoneyDollarCircleLine className="text-xl" />
+        icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
     }
-    
+
     if (["Admin"].includes(role)) {
       businessItems.push({
         name: "Investment Requests",
@@ -170,10 +179,10 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         submenu: [
           { name: "Requests in Progress", path: "/pendingRequests" },
           { name: "Matched Requests", path: "/acceptedRequests" },
-          { name: "Mismatched Requests", path: "/rejectedRequests" }
-        ]
+          { name: "Mismatched Requests", path: "/rejectedRequests" },
+        ],
       });
-      
+
       businessItems.push({
         name: "Applications",
         path: "/pendingApplications",
@@ -181,43 +190,44 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         submenu: [
           { name: "Pending Applications", path: "/pendingApplications" },
           { name: "Approved Applications", path: "/approvedApplications" },
-          { name: "Rejected Applications", path: "/rejectedApplications" }
-        ]
+          { name: "Rejected Applications", path: "/rejectedApplications" },
+        ],
       });
-      
+
       businessItems.push({
         name: "Mentorship Requests",
         path: "/mentorshipRequests",
-        icon: <FaQuestion className="text-lg" />
+        icon: <FaQuestion className="text-lg" />,
       });
     }
-    
+
     if (["Reviewer"].includes(role)) {
       businessItems.push({
         name: "Assignments",
         path: "/reviewerAssignedInvestmentRequests",
         icon: <BsCalendar3 className="text-xl" />,
         submenu: [
-          { name: "Investment Requests", path: "/reviewerAssignedInvestmentRequests" },
+          {
+            name: "Investment Requests",
+            path: "/reviewerAssignedInvestmentRequests",
+          },
           { name: "Business Assignments", path: "/businessAssignments" },
-          { name: "Program Assignments", path: "/programAssignments" }
-        ]
+          { name: "Program Assignments", path: "/programAssignments" },
+        ],
       });
     }
-    
+
     if (businessItems.length > 0) {
       categories.push({
         id: "business",
         title: "Business Operations",
-        items: businessItems
+        items: businessItems,
       });
     }
 
-
-
     // Programs & Resources
     const programsItems = [];
-    
+
     if (["Admin", "Enterprenuer"].includes(role)) {
       programsItems.push({
         name: "Programs",
@@ -226,8 +236,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         submenu: [
           { name: "Business Foundation Accelerator", path: "/bfa" },
           { name: "Investment Readiness Accelerator", path: "/ira" },
-          { name: "Consultancy Programs", path: "/consultance" }
-        ]
+          { name: "Consultancy Programs", path: "/consultance" },
+        ],
       });
     }
 
@@ -244,7 +254,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           { name: "Operation Domain", path: "/operationsDomain" },
           { name: "Legal Domain", path: "/legalDomain" },
           { name: "Report", path: "/report" },
-        ]
+        ],
       });
     }
 
@@ -255,15 +265,15 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         icon: <MdBusinessCenter className="text-xl" />,
       });
     }
-    
+
     if (["Mentor", "Admin"].includes(role)) {
       programsItems.push({
         name: "Mentor Reports",
         path: "/mentorReports",
-        icon: <FaWpforms className="text-xl" />
+        icon: <FaWpforms className="text-xl" />,
       });
     }
-    
+
     if (["Admin", "Enterprenuer", "Reviewer", "Mentor"].includes(role)) {
       programsItems.push({
         name: "Resources Library",
@@ -271,29 +281,38 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         icon: <IoDocumentTextOutline className="text-xl" />,
         submenu: [
           { name: "Videos", path: "/videos" },
-          { name: "Documents", path: "/documents" }
-        ]
+          { name: "Documents", path: "/documents" },
+        ],
       });
     }
-    
+
     if (["Admin", "Enterprenuer"].includes(role)) {
       programsItems.push({
         name: "Success Stories",
         path: "/successStories",
-        icon: <FaRegLightbulb className="text-xl" />
+        icon: <FaRegLightbulb className="text-xl" />,
       });
     }
-    
+
     if (programsItems.length > 0) {
       categories.push({
         id: "programs",
         title: "Programs & Resources",
-        items: programsItems
+        items: programsItems,
       });
     }
 
     // Communication - For all roles
-    if (["Enterprenuer", "Investor", "Staff", "Reviewer", "Mentor", "Admin"].includes(role)) {
+    if (
+      [
+        "Enterprenuer",
+        "Investor",
+        "Staff",
+        "Reviewer",
+        "Mentor",
+        "Admin",
+      ].includes(role)
+    ) {
       categories.push({
         id: "communication",
         title: "Communication",
@@ -301,9 +320,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           {
             name: "Chats",
             path: "/conversations",
-            icon: <BiMessageDetail className="text-xl" />
-          }
-        ]
+            icon: <BiMessageDetail className="text-xl" />,
+          },
+        ],
       });
     }
 
@@ -322,7 +341,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       {/* SIDEBAR HEADER */}
       <div className="flex items-center justify-between gap-2 px-6 py-5 border-b border-slate-700/50">
         <Link href="/" className="flex items-center">
-          <Image width={120} height={10} src={"/logo.png"} alt="Logo" className="h-9 w-auto" />
+          <Image
+            width={120}
+            height={10}
+            src={"/logo.png"}
+            alt="Logo"
+            className="h-9 w-auto"
+          />
         </Link>
 
         <button
@@ -355,99 +380,104 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             <div key={category.id} className="mb-6">
               <h3 className="mb-3 ml-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
                 {category.title}
-            </h3>
+              </h3>
 
               <ul className="mb-6 flex flex-col gap-1">
                 {category.items.map((item) => {
                   if (item.submenu) {
                     // Item with submenu
-                        return (
+                    return (
                       <SidebarLinkGroup
-                          key={item.name}
-                          activeCondition={pathname.includes(item.path)}
+                        key={item.name}
+                        activeCondition={pathname.includes(item.path)}
                       >
-                          {(handleClick, open) => (
-                            <React.Fragment>
-                              <div
-                                className={`group relative flex cursor-pointer items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-300 duration-300 ease-in-out hover:bg-slate-700 ${
-                                  pathname.includes(item.path) && "bg-slate-700/50 text-white"
+                        {(handleClick, open) => (
+                          <React.Fragment>
+                            <div
+                              className={`group relative flex cursor-pointer items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-300 duration-300 ease-in-out hover:bg-slate-700 ${
+                                pathname.includes(item.path) &&
+                                "bg-slate-700/50 text-white"
+                              }`}
+                              onClick={() => {
+                                handleClick();
+                                sidebarExpanded
+                                  ? null
+                                  : setSidebarExpanded(true);
+                              }}
+                            >
+                              {item.icon}
+                              {item.name}
+                              <svg
+                                className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current text-slate-400 ${
+                                  open && "rotate-180"
                                 }`}
-                                onClick={() => {
-                                  handleClick();
-                                  sidebarExpanded ? null : setSidebarExpanded(true);
-                                }}
+                                width="16"
+                                height="16"
+                                viewBox="0 0 20 20"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
                               >
-                                {item.icon}
-                                {item.name}
-                                <svg
-                                  className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current text-slate-400 ${
-                                    open && "rotate-180"
-                                  }`}
-                                  width="16"
-                                  height="16"
-                                  viewBox="0 0 20 20"
-                                  fill="none"
-                                  xmlns="http://www.w3.org/2000/svg"
-                                >
-                                  <path
-                                    fillRule="evenodd"
-                                    clipRule="evenodd"
-                                    d="M4.41107 6.9107C4.73651 6.58527 5.26414 6.58527 5.58958 6.9107L10.0003 11.3214L14.4111 6.91071C14.7365 6.58527 15.2641 6.58527 15.5896 6.91071C15.915 7.23614 15.915 7.76378 15.5896 8.08922L10.5896 13.0892C10.2641 13.4147 9.73651 13.4147 9.41107 13.0892L4.41107 8.08922C4.08563 7.76378 4.08563 7.23614 4.41107 6.9107Z"
-                                    fill=""
-                                  />
-                                </svg>
-                              </div>
+                                <path
+                                  fillRule="evenodd"
+                                  clipRule="evenodd"
+                                  d="M4.41107 6.9107C4.73651 6.58527 5.26414 6.58527 5.58958 6.9107L10.0003 11.3214L14.4111 6.91071C14.7365 6.58527 15.2641 6.58527 15.5896 6.91071C15.915 7.23614 15.915 7.76378 15.5896 8.08922L10.5896 13.0892C10.2641 13.4147 9.73651 13.4147 9.41107 13.0892L4.41107 8.08922C4.08563 7.76378 4.08563 7.23614 4.41107 6.9107Z"
+                                  fill=""
+                                />
+                              </svg>
+                            </div>
 
-                              <div
-                                className={`mt-1 overflow-hidden rounded-md bg-slate-800/40 duration-300 ${
-                                  !open && "hidden"
-                                }`}
-                              >
-                                <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
-                                  {item.submenu.map((subItem) => (
-                                    <li key={subItem.name}>
-                                      <Link
-                                        href={subItem.path}
-                                        className={`flex items-center py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
-                                          pathname === subItem.path && "bg-slate-700/50 text-white"
-                                        }`}
-                                      >
-                                        <span>{subItem.name}</span>
-                                      </Link>
-                                    </li>
-                                  ))}
-                                </ul>
-                              </div>
-                            </React.Fragment>
-                          )}
+                            <div
+                              className={`mt-1 overflow-hidden rounded-md bg-slate-800/40 duration-300 ${
+                                !open && "hidden"
+                              }`}
+                            >
+                              <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
+                                {item.submenu.map((subItem) => (
+                                  <li key={subItem.name}>
+                                    <Link
+                                      href={subItem.path}
+                                      className={`flex items-center py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
+                                        pathname === subItem.path &&
+                                        "bg-slate-700/50 text-white"
+                                      }`}
+                                    >
+                                      <span>{subItem.name}</span>
+                                    </Link>
+                                  </li>
+                                ))}
+                              </ul>
+                            </div>
+                          </React.Fragment>
+                        )}
                       </SidebarLinkGroup>
                     );
                   } else {
                     // Regular item without submenu
-                      return (
+                    return (
                       <li key={item.name}>
-                          <Link
+                        <Link
                           href={item.path}
                           className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-300 duration-300 ease-in-out hover:bg-slate-700 ${
-                            pathname === item.path && "bg-slate-700/50 text-white"
+                            pathname === item.path &&
+                            "bg-slate-700/50 text-white"
                           }`}
                         >
                           {item.icon}
                           <span>{item.name}</span>
-                                </Link>
-                              </li>
+                        </Link>
+                      </li>
                     );
                   }
                 })}
-                            </ul>
-                          </div>
+              </ul>
+            </div>
           ))}
         </nav>
       </div>
 
       {/* SIDEBAR FOOTER */}
       <div className="mt-auto border-t border-slate-700/50 p-4">
-        <button 
+        <button
           className="flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white"
           onClick={() => {
             localStorage.removeItem("token");
