@@ -380,7 +380,9 @@ const Page = () => {
                   {/* Sector Badge - Positioned over image */}
                   <div className="absolute bottom-4 left-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                      {item?.MentorProfile?.BusinessSector?.name || "No Sector"}
+                      {Object.values(
+                        item?.MentorProfile?.areasOfExperties || {}
+                      ).join(", ") || "No Sector"}
                     </span>
                   </div>
                 </div>

@@ -58,7 +58,7 @@ const Page = ({ params }) => {
                 {/* Updated to use numberOfCustomers */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                SME Impact
+                SME Focus
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
