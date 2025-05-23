@@ -9,7 +9,6 @@ import Image from "next/image";
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refresh, setRefresh] = useState(0);
   const [keyword, setKeyword] = useState("");
   const [filters, setFilters] = useState({
     sector: "All Sectors",
@@ -67,83 +66,129 @@ const Page = () => {
 
   // Check if any filters are active
   const isFiltering =
-    Object.values(filters).some((value) => !value.startsWith("All")) || keyword;
+    Object.values(filters).some((value) => !value.startsWith("All")) || keyword.trim();
 
   // Helper function for mentor names
   const getMentorName = (item) => {
     return item?.name || "Unnamed Mentor";
   };
 
+  // Helper function to get mentor sector
+  const getMentorSector = (item) => {
+    return item?.MentorProfile?.BusinessSector?.name || 
+           Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") || 
+           "No Sector";
+  };
+
+  // Helper function to check if mentor matches search keyword
+  const matchesSearchKeyword = (item, searchTerm) => {
+    if (!searchTerm.trim()) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
+    const name = getMentorName(item).toLowerCase();
+    const email = (item?.email || "").toLowerCase();
+    const expertise = (item?.MentorProfile?.expertise || "").toLowerCase();
+    const sector = getMentorSector(item).toLowerCase();
+    const role = (item?.role || "").toLowerCase();
+    
+    return name.includes(searchLower) ||
+           email.includes(searchLower) ||
+           expertise.includes(searchLower) ||
+           sector.includes(searchLower) ||
+           role.includes(searchLower);
+  };
+
   useEffect(() => {
-    // If filtering, get all data at once
-    const pageSize = isFiltering ? 1000 : limit;
-    const pageNumber = isFiltering ? 1 : currentPage;
+    const fetchAndFilterData = async () => {
+      try {
+        setLoading(true);
+        
+        // If filtering, get all data at once
+        const pageSize = isFiltering ? 1000 : limit;
+        const pageNumber = isFiltering ? 1 : currentPage;
 
-    setLoading(true);
-    getMentors(pageSize, pageNumber, keyword).then((body) => {
-      let filteredData = [...body.data];
+        const body = await getMentors(pageSize, pageNumber);
+        let filteredData = [...body.data];
 
-      // Apply filters if any are active
-      if (isFiltering) {
+        // Apply search filter first
+        if (keyword.trim()) {
+          filteredData = filteredData.filter(item => matchesSearchKeyword(item, keyword));
+        }
+
+        // Apply other filters if any are active
         if (filters.sector !== "All Sectors") {
           filteredData = filteredData.filter(
-            (item) =>
-              item?.MentorProfile?.BusinessSector?.name === filters.sector
+            (item) => {
+              const sector = getMentorSector(item);
+              return sector.includes(filters.sector);
+            }
           );
         }
 
         if (filters.expertise !== "All Expertise") {
           filteredData = filteredData.filter(
-            (item) => item?.MentorProfile?.expertise === filters.expertise
+            (item) => {
+              const expertise = item?.MentorProfile?.expertise || "";
+              return expertise.toLowerCase().includes(filters.expertise.toLowerCase());
+            }
           );
         }
 
         if (filters.year !== "All Years") {
           filteredData = filteredData.filter(
-            (item) =>
-              new Date(item?.createdAt).getFullYear().toString() ===
-              filters.year
+            (item) => {
+              const createdYear = item?.createdAt 
+                ? new Date(item.createdAt).getFullYear().toString() 
+                : "";
+              return createdYear === filters.year;
+            }
           );
         }
+
+        // Apply sorting
+        filteredData.sort((a, b) => {
+          const direction = sortConfig.direction === "asc" ? 1 : -1;
+
+          switch (sortConfig.key) {
+            case "name":
+              return (
+                direction *
+                (getMentorName(a).localeCompare(getMentorName(b)) || 0)
+              );
+            case "sector":
+              return (
+                direction *
+                (getMentorSector(a).localeCompare(getMentorSector(b)) || 0)
+              );
+            case "expertise":
+              return (
+                direction *
+                ((a?.MentorProfile?.expertise || "").localeCompare(
+                  b?.MentorProfile?.expertise || ""
+                ) || 0)
+              );
+            case "date":
+              return (
+                direction * (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
+              );
+            default:
+              return 0;
+          }
+        });
+
+        console.log('Filtered data:', filteredData);
+        setUsers(filteredData);
+        setTotalPages(isFiltering ? 1 : body.totalPages);
+      } catch (error) {
+        console.error('Error fetching mentors:', error);
+        setUsers([]);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      // Apply sorting
-      filteredData.sort((a, b) => {
-        const direction = sortConfig.direction === "asc" ? 1 : -1;
-
-        switch (sortConfig.key) {
-          case "name":
-            return (
-              direction *
-              (getMentorName(a).localeCompare(getMentorName(b)) || 0)
-            );
-          case "sector":
-            return (
-              direction *
-              (a?.MentorProfile?.BusinessSector?.name?.localeCompare(
-                b?.MentorProfile?.BusinessSector?.name
-              ) || 0)
-            );
-          case "expertise":
-            return (
-              direction *
-              (a?.MentorProfile?.expertise?.localeCompare(
-                b?.MentorProfile?.expertise
-              ) || 0)
-            );
-            caseencha: return (
-              direction * (new Date(a?.createdAt) - new Date(b?.createdAt))
-            );
-          default:
-            return 0;
-        }
-      });
-      console.log(filteredData);
-      setUsers(filteredData);
-      setTotalPages(isFiltering ? 1 : body.totalPages);
-      setLoading(false);
-    });
-  }, [refresh, sortConfig, filters, currentPage, limit, keyword]);
+    fetchAndFilterData();
+  }, [sortConfig, filters, currentPage, limit, keyword, isFiltering]);
 
   // Handle dropdown toggle
   const toggleDropdown = (name) => {
@@ -156,6 +201,7 @@ const Page = () => {
       ...prev,
       [type]: value,
     }));
+    setCurrentPage(1); // Reset to first page when filtering
     setOpenDropdown(null);
   };
 
@@ -169,6 +215,24 @@ const Page = () => {
     setOpenDropdown(null);
   };
 
+  // Handle search input change with debouncing
+  const handleSearchChange = (e) => {
+    const value = e.target.value;
+    setKeyword(value);
+    setCurrentPage(1); // Reset to first page when searching
+  };
+
+  // Clear all filters
+  const clearAllFilters = () => {
+    setFilters({
+      sector: "All Sectors",
+      expertise: "All Expertise",
+      year: "All Years",
+    });
+    setKeyword("");
+    setCurrentPage(1);
+  };
+
   return loading ? (
     <Loader />
   ) : (
@@ -178,32 +242,29 @@ const Page = () => {
         {/* Member Count and Search */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            {/* <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg> */}
             <span className="text-xl text-gray-600 dark:text-gray-300">
-              {users.length} mentors
+              {users.length} mentors {isFiltering && "(filtered)"}
             </span>
           </div>
 
           <div className="relative">
             <input
               type="text"
-              placeholder="Search mentors..."
+              placeholder="Search mentors by name, email, expertise..."
               value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              className="w-64 px-4 py-2 rounded-md border border-white bg-white  focus:outline-none focus:border-primary"
+              onChange={handleSearchChange}
+              className="w-64 px-4 py-2 rounded-md border border-gray-300 bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
+            {keyword && (
+              <button
+                onClick={() => setKeyword("")}
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
           </div>
         </div>
 
@@ -214,11 +275,11 @@ const Page = () => {
             <div key={key} className="relative inline-block">
               <button
                 onClick={() => toggleDropdown(key)}
-                className={`px-4 py-2 rounded-md  ${
+                className={`px-4 py-2 rounded-md border transition-colors ${
                   filters[key] !== `All ${value.label}`
-                    ? "border-primary bg-white "
-                    : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
-                } flex items-center gap-2 y transition-colors`}
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-gray-300 bg-white dark:bg-boxdark dark:border-gray-600 hover:border-primary"
+                } flex items-center gap-2`}
               >
                 <span>{filters[key]}</span>
                 <svg
@@ -262,7 +323,7 @@ const Page = () => {
           <div className="relative inline-block">
             <button
               onClick={() => toggleDropdown("sort")}
-              className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
+              className="px-4 py-2 rounded-md border border-gray-300 bg-white dark:bg-boxdark dark:border-gray-600 flex items-center gap-2 hover:border-primary transition-colors"
             >
               <span>
                 Sort:{" "}
@@ -308,6 +369,16 @@ const Page = () => {
               </div>
             )}
           </div>
+
+          {/* Clear Filters Button */}
+          {isFiltering && (
+            <button
+              onClick={clearAllFilters}
+              className="px-4 py-2 rounded-md border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+            >
+              Clear All
+            </button>
+          )}
         </div>
 
         {/* Active Filters */}
@@ -364,26 +435,41 @@ const Page = () => {
             >
               <div className="bg-white dark:bg-boxdark-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden h-full flex flex-col">
                 {/* Card Image Header - Full Width */}
-                <div className="relative w-full h-48 overflow-hidden bg-black/10">
+                <div className="relative w-full h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
                   <Image
-                    src={item?.image || "/images/default-avatar.png"}
+                    src={item?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(getMentorName(item))}&background=6366f1&color=fff&size=400`}
                     alt={`${getMentorName(item)} profile`}
                     fill
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    priority={key < 4} // Prioritize loading first 4 images
+                    className="object-cover w-full h-full group-hover:scale-110 transition-all duration-500 ease-out"
+                    style={{
+                      objectPosition: 'center top'
+                    }}
                     onError={(e) => {
-                      e.target.src =
-                        "https://ui-avatars.com/api/?name=" +
-                        encodeURIComponent(getMentorName(item)) +
-                        "&background=6366f1&color=fff&size=400";
+                      const target = e.currentTarget;
+                      if (!target.getAttribute('data-fallback')) {
+                        target.setAttribute('data-fallback', 'true');
+                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getMentorName(item))}&background=random&color=fff&size=400&font-size=0.4&rounded=true`;
+                      }
                     }}
                   />
+                  
+                  {/* Image Overlay for better text readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  
                   {/* Sector Badge - Positioned over image */}
                   <div className="absolute bottom-4 left-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                      {Object.values(
-                        item?.MentorProfile?.areasOfExperties || {}
-                      ).join(", ") || "No Sector"}
+                      {item?.MentorProfile?.expertise || 
+                       Object.values(item?.MentorProfile?.areasOfExperties || {}).slice(0, 2).join(", ") || 
+                       "General Expertise"}
                     </span>
+                  </div>
+
+                  {/* Status indicator */}
+                  <div className="absolute top-3 right-3">
+                    <div className="w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
                   </div>
                 </div>
 
@@ -539,12 +625,7 @@ const Page = () => {
           </p>
           <div className="flex gap-2">
             <button
-              onClick={() => {
-                if (currentPage > 1) {
-                  setCurrentPage(currentPage - 1);
-                  setRefresh(refresh + 1);
-                }
-              }}
+              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
               className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                 currentPage === 1
@@ -555,12 +636,7 @@ const Page = () => {
               Previous
             </button>
             <button
-              onClick={() => {
-                if (currentPage < totalPages) {
-                  setCurrentPage(currentPage + 1);
-                  setRefresh(refresh + 1);
-                }
-              }}
+              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
               disabled={currentPage === totalPages}
               className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                 currentPage === totalPages
