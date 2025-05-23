@@ -7,7 +7,6 @@ import CardDataStats from "../CardDataStats";
 import { SlPeople } from "react-icons/sl";
 import BusinessDomainScores from "../Charts/BusinessDomainScores";
 import PerformanceDistribution from "../Charts/PerformanceDistribution";
-// import Map from "../Maps/TestMap";
 
 // without this the component renders on server and throws an error
 import dynamic from "next/dynamic";
@@ -426,7 +425,7 @@ const ECommerce = () => {
           <ChartOne />
         )}
         {/* {userDetails.role == "Admin" && <ChartTwo />} */}
-        {/* {userDetails.role == "Admin" && <TanzaniaMap />} */}
+        {(userDetails.role === "Admin" || userDetails.role === "Investor" || userDetails.role === "Mentor") && <TanzaniaMap />}
         {/* {userDetails.role == "Admin" && <ChartThree />} */}
       </div>
     </>
