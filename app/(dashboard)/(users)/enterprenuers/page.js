@@ -18,7 +18,7 @@ const Page = () => {
   });
   const [sortConfig, setSortConfig] = useState({
     key: "name",
-    direction: "asc"
+    direction: "asc",
   });
   const [currentPage, setcurrentPage] = useState(1);
   const [totalPages, settotalPages] = useState(1);
@@ -39,19 +39,12 @@ const Page = () => {
         "Agriculture",
         "Clean Energy",
         "Water Sanitation and Hygiene",
-        "Fintech"
-      ]
+        "Fintech",
+      ],
     },
     year: {
       label: "Year",
-      options: [
-        "All Years",
-        "2024",
-        "2023",
-        "2022",
-        "2021",
-        "2020"
-      ]
+      options: ["All Years", "2024", "2023", "2022", "2021", "2020"],
     },
     program: {
       label: "Program",
@@ -60,20 +53,21 @@ const Page = () => {
         "Investment Readiness",
         "Business Foundation",
         "Mentorship Program",
-        "Accelerator"
-      ]
-    }
+        "Accelerator",
+      ],
+    },
   };
 
   const sortOptions = [
     { value: "name", label: "Name" },
     { value: "sector", label: "Sector" },
     { value: "date", label: "Date" },
-    { value: "program", label: "Program" }
+    { value: "program", label: "Program" },
   ];
 
   // Check if any filters are active
-  const isFiltering = Object.values(filters).some(value => !value.startsWith('All')) || keyword;
+  const isFiltering =
+    Object.values(filters).some((value) => !value.startsWith("All")) || keyword;
 
   useEffect(() => {
     // If filtering, get all data at once
@@ -87,36 +81,53 @@ const Page = () => {
       if (isFiltering) {
         if (filters.sector !== "All Sectors") {
           filteredData = filteredData.filter(
-            item => item.Business?.BusinessSector?.name === filters.sector
+            (item) => item.Business?.BusinessSector?.name === filters.sector
           );
         }
 
         if (filters.year !== "All Years") {
           filteredData = filteredData.filter(
-            item => new Date(item.Business?.createdAt).getFullYear().toString() === filters.year
+            (item) =>
+              new Date(item.Business?.createdAt).getFullYear().toString() ===
+              filters.year
           );
         }
 
         if (filters.program !== "All Programs") {
           filteredData = filteredData.filter(
-            item => item.Business?.program === filters.program
+            (item) => item.Business?.program === filters.program
           );
         }
       }
 
       // Apply sorting
       filteredData.sort((a, b) => {
-        const direction = sortConfig.direction === 'asc' ? 1 : -1;
-        
-        switch(sortConfig.key) {
-          case 'name':
-            return direction * (a.Business?.name?.localeCompare(b.Business?.name) || 0);
-          case 'sector':
-            return direction * (a.Business?.BusinessSector?.name?.localeCompare(b.Business?.BusinessSector?.name) || 0);
-          case 'date':
-            return direction * (new Date(a.Business?.createdAt) - new Date(b.Business?.createdAt));
-          case 'program':
-            return direction * (a.Business?.program?.localeCompare(b.Business?.program) || 0);
+        const direction = sortConfig.direction === "asc" ? 1 : -1;
+
+        switch (sortConfig.key) {
+          case "name":
+            return (
+              direction *
+              (a.Business?.name?.localeCompare(b.Business?.name) || 0)
+            );
+          case "sector":
+            return (
+              direction *
+              (a.Business?.BusinessSector?.name?.localeCompare(
+                b.Business?.BusinessSector?.name
+              ) || 0)
+            );
+          case "date":
+            return (
+              direction *
+              (new Date(a.Business?.createdAt) -
+                new Date(b.Business?.createdAt))
+            );
+          case "program":
+            return (
+              direction *
+              (a.Business?.program?.localeCompare(b.Business?.program) || 0)
+            );
           default:
             return 0;
         }
@@ -135,25 +146,26 @@ const Page = () => {
 
   // Handle filter changes
   const handleFilterChange = (type, value) => {
-    setFilters(prev => ({
+    setFilters((prev) => ({
       ...prev,
-      [type]: value
+      [type]: value,
     }));
     setOpenDropdown(null);
   };
 
   // Handle sort changes
   const handleSortChange = (key) => {
-    setSortConfig(prev => ({
+    setSortConfig((prev) => ({
       key,
-      direction: prev.key === key ? (prev.direction === 'asc' ? 'desc' : 'asc') : 'asc'
+      direction:
+        prev.key === key ? (prev.direction === "asc" ? "desc" : "asc") : "asc",
     }));
     setOpenDropdown(null);
   };
 
   // Add this helper function at the top of the component
   const getBusinessName = (item) => {
-    return item?.Business?.name || 'Unnamed Business';
+    return item?.Business?.name || "Unnamed Business";
   };
 
   return loading ? (
@@ -165,8 +177,18 @@ const Page = () => {
         {/* Member Count and Search */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            <svg
+              className="w-5 h-5 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
             </svg>
             <span className="text-xl text-gray-600 dark:text-gray-300">
               {users.length} members
@@ -192,15 +214,26 @@ const Page = () => {
               <button
                 onClick={() => toggleDropdown(key)}
                 className={`px-4 py-2 rounded-md border ${
-                  filters[key] !== `All ${value.label}s` 
-                    ? 'border-primary bg-primary/10 text-primary'
-                    : 'border-gray-200 bg-white dark:bg-boxdark dark:border-gray-700'
+                  filters[key] !== `All ${value.label}s`
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
                 } flex items-center gap-2 hover:border-primary transition-colors`}
               >
                 <span>{filters[key]}</span>
-                <svg className={`w-4 h-4 transition-transform ${openDropdown === key ? 'rotate-180' : ''}`} 
-                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                <svg
+                  className={`w-4 h-4 transition-transform ${
+                    openDropdown === key ? "rotate-180" : ""
+                  }`}
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
 
@@ -212,8 +245,8 @@ const Page = () => {
                       onClick={() => handleFilterChange(key, option)}
                       className={`block w-full text-left px-4 py-2 text-sm ${
                         filters[key] === option
-                          ? 'bg-primary/10 text-primary'
-                          : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2'
+                          ? "bg-primary/10 text-primary"
+                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
                       }`}
                     >
                       {option}
@@ -227,17 +260,31 @@ const Page = () => {
           {/* Sort Dropdown */}
           <div className="relative inline-block">
             <button
-              onClick={() => toggleDropdown('sort')}
-              className="px-4 py-2 rounded-md border border-gray-200 bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
+              onClick={() => toggleDropdown("sort")}
+              className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
             >
-              <span>Sort: {sortOptions.find(opt => opt.value === sortConfig.key)?.label}</span>
-              <svg className={`w-4 h-4 transition-transform ${openDropdown === 'sort' ? 'rotate-180' : ''}`} 
-                   fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <span>
+                Sort:{" "}
+                {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
+              </span>
+              <svg
+                className={`w-4 h-4 transition-transform ${
+                  openDropdown === "sort" ? "rotate-180" : ""
+                }`}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </button>
 
-            {openDropdown === 'sort' && (
+            {openDropdown === "sort" && (
               <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700">
                 {sortOptions.map((option) => (
                   <button
@@ -245,13 +292,14 @@ const Page = () => {
                     onClick={() => handleSortChange(option.value)}
                     className={`block w-full text-left px-4 py-2 text-sm ${
                       sortConfig.key === option.value
-                        ? 'bg-primary/10 text-primary'
-                        : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2'
+                        ? "bg-primary/10 text-primary"
+                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
                     }`}
                   >
-                    {option.label} {sortConfig.key === option.value && (
+                    {option.label}{" "}
+                    {sortConfig.key === option.value && (
                       <span className="float-right">
-                        {sortConfig.direction === 'asc' ? '↑' : '↓'}
+                        {sortConfig.direction === "asc" ? "↑" : "↓"}
                       </span>
                     )}
                   </button>
@@ -262,21 +310,31 @@ const Page = () => {
         </div>
 
         {/* Active Filters */}
-        {(Object.values(filters).some(v => !v.startsWith('All')) || keyword) && (
+        {(Object.values(filters).some((v) => !v.startsWith("All")) ||
+          keyword) && (
           <div className="mt-4 flex flex-wrap gap-2">
-            {Object.entries(filters).map(([key, value]) => (
-              value !== `All ${filterOptions[key].label}s` && (
-                <span key={key} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                  {value}
-                  <button
-                    onClick={() => handleFilterChange(key, `All ${filterOptions[key].label}s`)}
-                    className="hover:text-primary-dark"
+            {Object.entries(filters).map(
+              ([key, value]) =>
+                value !== `All ${filterOptions[key].label}s` && (
+                  <span
+                    key={key}
+                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
                   >
-                    ×
-                  </button>
-                </span>
-              )
-            ))}
+                    {value}
+                    <button
+                      onClick={() =>
+                        handleFilterChange(
+                          key,
+                          `All ${filterOptions[key].label}s`
+                        )
+                      }
+                      className="hover:text-primary-dark"
+                    >
+                      ×
+                    </button>
+                  </span>
+                )
+            )}
             {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
                 Search: {keyword}
@@ -299,7 +357,7 @@ const Page = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {users.map((item, key) => (
             <Link
-              href={`businessDetails/${item?.Business?.uuid || '#'}`}
+              href={`businessDetails/${item?.Business?.uuid || "#"}`}
               key={key}
               className="group h-full"
             >
@@ -326,9 +384,9 @@ const Page = () => {
                     <h2 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition-colors line-clamp-2">
                       {getBusinessName(item)}
                     </h2>
-                    
+
                     <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                      {item?.Business?.email || 'No email provided'}
+                      {item?.Business?.email || "No email provided"}
                     </p>
                   </div>
 
@@ -337,45 +395,81 @@ const Page = () => {
                     {/* Program Details */}
                     {item?.Business?.program && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" 
+                        <svg
+                          className="w-4 h-4 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                           />
                         </svg>
-                        <span className="line-clamp-1">{item.Business.program}</span>
+                        <span className="line-clamp-1">
+                          {item.Business.program}
+                        </span>
                       </div>
                     )}
 
                     {/* Location if available */}
                     {item?.Business?.location && (
                       <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" 
+                        <svg
+                          className="w-4 h-4 flex-shrink-0"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
                           />
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" 
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
                           />
                         </svg>
-                        <span className="line-clamp-1">{item.Business.location}</span>
+                        <span className="line-clamp-1">
+                          {item.Business.location}
+                        </span>
                       </div>
                     )}
 
                     {/* Founding Date */}
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" 
+                      <svg
+                        className="w-4 h-4 flex-shrink-0"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                       </svg>
-                      <span>Founded {item?.Business?.createdAt ? new Date(item.Business.createdAt).getFullYear() : 'N/A'}</span>
+                      <span>
+                        Founded{" "}
+                        {item?.Business?.createdAt
+                          ? new Date(item.Business.createdAt).getFullYear()
+                          : "N/A"}
+                      </span>
                     </div>
                   </div>
 
                   {/* Social Links */}
                   <div className="flex items-center gap-3 pt-3">
                     {item?.Business?.facebook && (
-                      <a 
+                      <a
                         href={item.Business.facebook}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -392,7 +486,7 @@ const Page = () => {
                       </a>
                     )}
                     {item?.Business?.linkedin && (
-                      <a 
+                      <a
                         href={item.Business.linkedin}
                         target="_blank"
                         rel="noopener noreferrer"
@@ -415,8 +509,18 @@ const Page = () => {
                 <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
                   <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
                     <span>View Details</span>
-                    <svg className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    <svg
+                      className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M9 5l7 7-7 7"
+                      />
                     </svg>
                   </div>
                 </div>
@@ -443,8 +547,8 @@ const Page = () => {
               disabled={currentPage === 1}
               className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                 currentPage === 1
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-primary text-white hover:bg-primary/90'
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-primary text-white hover:bg-primary/90"
               }`}
             >
               Previous
@@ -459,8 +563,8 @@ const Page = () => {
               disabled={currentPage === totalPages}
               className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                 currentPage === totalPages
-                  ? 'bg-gray-100 text-gray-400'
-                  : 'bg-primary text-white hover:bg-primary/90'
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-primary text-white hover:bg-primary/90"
               }`}
             >
               Next

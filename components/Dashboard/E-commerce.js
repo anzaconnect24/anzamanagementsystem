@@ -20,7 +20,9 @@ import MentorEntreprenuer from "@/app/(dashboard)/(mentor)/mentorEntreprenuers/p
 import { getScoreData } from "@/app/controllers/crat_general_controller";
 import TanzaniaMap from "../Maps/TanzaniaMap";
 
-const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 
 const ECommerce = () => {
   const { data, userDetails } = useContext(UserContext);
@@ -51,8 +53,8 @@ const ECommerce = () => {
       {["Enterprenuer"].includes(userDetails.role) && (
         <div>
           {checkIfProfileIsComplete(userDetails) == false && (
-            <div className="bg-white shadow mb-8">
-              <div className="flex justify-between bg-danger bg-opacity-10 shadow-lg px-4 py-4 text-black items-center rounded">
+            <div className="bg-white shadow mb-8 rounded-lg">
+              <div className="flex justify-between bg-danger bg-opacity-[6%] border border-danger border-opacity-40 shadow-lg px-4 py-4 text-black items-center rounded-lg">
                 <h1 className="text-lg">Please complete your profile </h1>
                 <Link
                   href="/accountInformation"
@@ -63,7 +65,7 @@ const ECommerce = () => {
               </div>
             </div>
           )}
-          
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5 mb-8">
             <CardDataStats
               link="/enterprenuers"
@@ -157,13 +159,13 @@ const ECommerce = () => {
               </svg>
             </CardDataStats>
           </div>
-          
+
           {/* Business Domain Scores Chart */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
             <div className="col-span-1 md:col-span-3">
-              <BusinessDomainScores 
-                userDetails={userDetails} 
-                initialScoreData={!loadingBar ? scoreData : null} 
+              <BusinessDomainScores
+                userDetails={userDetails}
+                initialScoreData={!loadingBar ? scoreData : null}
               />
             </div>
             <div className="col-span-1 md:col-span-2">
@@ -175,6 +177,7 @@ const ECommerce = () => {
           </div>
         </div>
       )}
+
       {["Mentor"].includes(userDetails.role) && mentorStats && (
         <div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
@@ -419,9 +422,11 @@ const ECommerce = () => {
       )}
 
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
-        {userDetails.role != "Mentor" && userDetails.role != "Enterprenuer" && <ChartOne />}
+        {userDetails.role != "Mentor" && userDetails.role != "Enterprenuer" && (
+          <ChartOne />
+        )}
         {/* {userDetails.role == "Admin" && <ChartTwo />} */}
-        {userDetails.role == "Admin" && <TanzaniaMap />}
+        {/* {userDetails.role == "Admin" && <TanzaniaMap />} */}
         {/* {userDetails.role == "Admin" && <ChartThree />} */}
       </div>
     </>

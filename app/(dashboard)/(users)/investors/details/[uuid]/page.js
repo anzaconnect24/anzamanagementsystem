@@ -22,7 +22,7 @@ import {
 } from "react-icons/hi";
 import React from "react";
 import Link from "next/link";
-import { UserContext } from "../../../layout";
+import { UserContext } from "../../../../layout";
 import Image from "next/image";
 
 // ProfileImage component for better organization and reuse
@@ -227,6 +227,7 @@ const Page = ({ params }) => {
           prevPage="Investors"
           pageName={user.InvestorProfile?.company || "No Company"}
         />
+
         <div className=" bg-primary/5 border border-primary/5 p-8 mt-6 rounded-xl">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 ">
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
@@ -272,119 +273,57 @@ const Page = ({ params }) => {
             </div>
           </div>
         </div>
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Profile Header Card */}
-
-          <div className="col-span-2">
-            <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-                  <span className="text-xl mr-3">🙍</span>
-                  Bio
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {user?.InvestorProfile?.bio || "No Information Available"}
-                </p>
-              </div>
-              <div className="mb-4">
-                <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-                  <span className="text-xl mr-3">💰</span>
-                  Notable investments
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {user?.InvestorProfile?.notableInvestment ||
-                    "No Information Available"}
-                </p>
-              </div>
-            </div>
-            <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-              <div className="mb-4">
-                <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-                  <span className="text-xl mr-3">📪</span>
-                  Seeking
-                </h2>
-                <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {user?.InvestorProfile?.seeking || "No Information Available"}
-                </p>
-              </div>
-            </div>
-            <div className="flex space-x-4 mt-4">
-              {/* {userDetails.role} */}
-              {userDetails.role === "Enterprenuer" && (
-                <Link
-                  href={`/investmentApplication/${user.uuid}`}
-                  className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
-                >
-                  Ask for Investment
-                </Link>
-              )}
-              <button
-                onClick={handleStartChat}
-                className=" px-6 py-3 bg-green-500 text-white rounded-lg  transition-colors"
-              >
-                <span className="flex items-center justify-center gap-2">
-                  <HiOutlineChat className="w-5 h-5" />
-                  Message
-                </span>
-              </button>
-            </div>
+        <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+              <span className="text-xl mr-3">🙍</span>
+              Bio
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+              {user?.InvestorProfile?.bio || "No Information Available"}
+            </p>
           </div>
-
-          {/* Profile Details */}
-          <div className="lg:col-span-1 ">
-            {/* Contact Information - Only visible to admins */}
-            {isAdmin ? (
-              <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden mt-6 ">
-                <div className="px-6 py-4 border-b border-stroke dark:border-strokedark">
-                  <h2 className="text-lg font-semibold text-black dark:text-white">
-                    {contactSection.title}
-                  </h2>
-                </div>
-                <div className="p-6">
-                  <div className="space-y-4">
-                    {contactSection.items.map((item, itemIndex) => (
-                      <div key={itemIndex} className="flex items-start gap-3">
-                        <div className="flex-shrink-0 mt-1 text-gray-500 dark:text-gray-400">
-                          {item.icon}
-                        </div>
-                        <div className="flex-grow">
-                          <div className="text-sm text-gray-500 dark:text-gray-400">
-                            {item.label}
-                          </div>
-                          <div className="text-base font-medium text-black dark:text-white">
-                            {item.value}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-white dark:bg-boxdark rounded-xl shadow-sm overflow-hidden ">
-                <div className="px-6 py-4 border-b border-stroke dark:border-strokedark ">
-                  <h2 className="text-lg font-semibold text-black dark:text-white">
-                    Contact Information
-                  </h2>
-                </div>
-                <div className="p-6 flex flex-col items-center justify-center text-center">
-                  <div className="w-12 h-12 rounded-full bg-gray-100 dark:bg-meta-4 flex items-center justify-center mb-3">
-                    <HiOutlineLockClosed className="w-6 h-6 text-gray-500 dark:text-gray-400" />
-                  </div>
-                  <h3 className="text-base font-medium text-black dark:text-white mb-2">
-                    Contact Details Restricted
-                  </h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md mb-3">
-                    Contact information is only available to administrators.
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    You can use the "Start Conversation" button to connect with
-                    this investor.
-                  </p>
-                </div>
-              </div>
-            )}
+          <div className="mb-4">
+            <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+              <span className="text-xl mr-3">💰</span>
+              Notable investments
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+              {user?.InvestorProfile?.notableInvestment ||
+                "No Information Available"}
+            </p>
           </div>
+        </div>
+        <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+              <span className="text-xl mr-3">📪</span>
+              Seeking
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+              {user?.InvestorProfile?.seeking || "No Information Available"}
+            </p>
+          </div>
+        </div>
+        <div className="flex space-x-4 mt-4">
+          {/* {userDetails.role} */}
+          {userDetails.role === "Enterprenuer" && (
+            <Link
+              href={`/investmentApplication/${user.uuid}`}
+              className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
+            >
+              Ask for Investment
+            </Link>
+          )}
+          <button
+            onClick={handleStartChat}
+            className=" px-6 py-3 bg-green-500 text-white rounded-lg  transition-colors"
+          >
+            <span className="flex items-center justify-center gap-2">
+              <HiOutlineChat className="w-5 h-5" />
+              Message
+            </span>
+          </button>
         </div>
       </div>
     );
