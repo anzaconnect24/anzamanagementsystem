@@ -105,6 +105,8 @@ const SignUp = () => {
               sector: e.target.sector.value,
               ticketSize: e.target.investmentSize.value,
               geography: e.target.location.value,
+              seeking: e.target.seeking.value,
+
               // structure: e.target.investorStructure.value,
               linkedinURL: formValues.investorLinkedIn,
               website: formValues.investorWebsite,
@@ -1265,6 +1267,21 @@ dark:text-white"
                               rows="4"
                             />
                           </div>
+                          <div className="col-span-2">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Seeking
+                            </label>
+                            <textarea
+                              name="seeking"
+                              required
+                              className="form-style"
+                              placeholder="What are you seeking"
+                              rows="4"
+                            />
+                          </div>
                           {/* Mentoring Preference */}
                           <div className="col-span-2">
                             <label
@@ -1709,6 +1726,7 @@ dark:text-white"
                               rows="4"
                             />
                           </div>
+
                           {/* Agreement & Consent */}
                           <div className="col-span-2 space-y-4">
                             <label className="flex items-center space-x-2">

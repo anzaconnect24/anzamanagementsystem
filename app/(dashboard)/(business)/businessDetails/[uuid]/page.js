@@ -16,6 +16,8 @@ import { createNotification } from "@/app/controllers/notification_controller";
 import { assignEntreprenuerToMentor } from "@/app/controllers/mentorEntreprenuerController";
 import Spinner from "@/components/spinner";
 import { updateUser } from "@/app/controllers/user_controller";
+import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
+import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 
 const Page = ({ params }) => {
   const { uuid } = params;
@@ -51,7 +53,7 @@ const Page = ({ params }) => {
         pageName={`${business?.name}`}
       />
       {/* Stats Section - Full Width */}
-      <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
+      <div className="bg-primary/5 rounded-2xl border border-primary/10 border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
@@ -191,6 +193,20 @@ const Page = ({ params }) => {
                     "No fundraising needs specified"}
                 </p>
               </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-12 gap-6 items-stretch">
+            <div className=" col-span-7">
+              <BusinessDomainScores
+                userDetails={business?.User}
+                initialScoreData={{}}
+              />
+            </div>
+            <div className="col-span-5">
+              <PerformanceDistribution
+                userDetails={business?.User}
+                initialScoreData={{}}
+              />
             </div>
           </div>
 
