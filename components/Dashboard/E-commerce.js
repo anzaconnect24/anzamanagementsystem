@@ -40,7 +40,7 @@ const ECommerce = () => {
   useEffect(() => {
     if (userDetails.role === "Enterprenuer") {
       setLoadingBar(true);
-      getScoreData().then((res) => {
+      getScoreData({ uuid: userDetails.uuid }).then((res) => {
         setScoreData(res);
         setLoadingBar(false);
       });
