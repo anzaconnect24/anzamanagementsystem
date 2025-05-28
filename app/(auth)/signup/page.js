@@ -52,6 +52,7 @@ const SignUp = () => {
   });
   const router = useRouter();
   const [loading, setloading] = useState(false);
+  
   const [sectors, setSectors] = useState([]);
   const [showPassword, setshowPassword] = useState(false);
   const [showPassword2, setshowPassword2] = useState(false);
