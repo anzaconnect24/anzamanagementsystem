@@ -25,6 +25,17 @@ export const addProgram = async (data) => {
       return error.response;
     }
   };
+  export const getPrograms = async (page,limit) => {
+    try {
+      const response = await axios.get(`${server_url}/program/?page=${page}&limit=${limit}`,{
+         headers
+      });
+     return response.data.body
+    } catch (error) { 
+      console.log(error.response)
+      return error.response;
+    }
+  };
   export const getConsultancePrograms = async (page,limit) => {
     try {
       const response = await axios.get(`${server_url}/program/consultance/?page=${page}&limit=${limit}`,{

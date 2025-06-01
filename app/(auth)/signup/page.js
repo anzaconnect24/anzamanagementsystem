@@ -52,7 +52,7 @@ const SignUp = () => {
   });
   const router = useRouter();
   const [loading, setloading] = useState(false);
-  
+
   const [sectors, setSectors] = useState([]);
   const [showPassword, setshowPassword] = useState(false);
   const [showPassword2, setshowPassword2] = useState(false);
@@ -96,6 +96,9 @@ const SignUp = () => {
               stage: e.target.stage.value,
               business_sector_uuid: e.target.business_sector_uuid.value,
               team: e.target.team.value,
+              revenue: e.target.revenue.value,
+              instagramLink: e.target.instagramLink.value,
+              websiteLink: e.target.websiteLink.value,
             };
           }
           let investorData;
@@ -692,6 +695,49 @@ dark:text-white"
                               className="form-style"
                               placeholder="Company phone number"
                               type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Website Link
+                            </label>
+                            <input
+                              name="websiteLink"
+                              className="form-style"
+                              placeholder="Enter website link"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Instagram Link
+                            </label>
+                            <input
+                              name="instagramLink"
+                              className="form-style"
+                              placeholder="Paste instagram Link"
+                              type="text"
+                            />
+                          </div>
+                          <div>
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              Revenue
+                            </label>
+                            <input
+                              required
+                              name="revenue"
+                              className="form-style"
+                              placeholder="Company revenue"
+                              type="number"
                             />
                           </div>
                           <div>

@@ -37,12 +37,16 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ),
 });
 
-const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
+const PerformanceDistribution = ({
+  userDetails,
+  initialScoreData,
+  chartHeight = 350,
+}) => {
   const [scoreData, setScoreData] = useState(initialScoreData || {});
   const [loading, setLoading] = useState(
     !initialScoreData || Object.keys(initialScoreData).length === 0
   );
-  const [chartHeight, setChartHeight] = useState(350);
+  // const [chartHeight, setChartHeight] = useState(350);
   const [isClient, setIsClient] = useState(false);
 
   // Ensure we're on the client side
@@ -51,20 +55,6 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
   }, []);
 
   // Handle responsive chart height
-  useEffect(() => {
-    const handleResize = () => {
-      setChartHeight(window.innerWidth < 768 ? 280 : 350);
-    };
-
-    // Set initial height
-    handleResize();
-
-    // Add event listener
-    window.addEventListener("resize", handleResize);
-
-    // Clean up
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   // Update scoreData when initialScoreData prop changes
   useEffect(() => {
@@ -125,7 +115,7 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
     plotOptions: {
       pie: {
         donut: {
-          size: "75%",
+          // size: "75%",
           labels: {
             show: true,
             name: {
@@ -227,7 +217,7 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
         </div>
       ) : (
         <div className="flex items-center justify-center">
-          <div className="w-full max-w-md">
+          <div className="w-full ">
             <ReactApexChart
               options={donutChartOptions}
               series={donutChartSeries}

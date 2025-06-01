@@ -174,6 +174,14 @@ const Page = ({ params }) => {
             >
               Send Message
             </button>
+            {userDetails.role == "Enterprenuer" && (
+              <Link
+                href={`/mentorshipApplicationForm/${uuid}`}
+                className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
+              >
+                Request for mentorship
+              </Link>
+            )}
           </div>
         </div>
       </div>

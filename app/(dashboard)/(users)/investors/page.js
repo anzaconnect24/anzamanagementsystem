@@ -492,7 +492,7 @@ const Page = () => {
                           />
                         </svg>
                         <span className="line-clamp-1">
-                          {investor?.InvestorProfile?.ticketSize ||
+                          {investor?.InvestorProfile?.investmentSize ||
                             "Ticket size not specified"}
                         </span>
                       </div>
@@ -513,8 +513,9 @@ const Page = () => {
                           />
                         </svg>
                         <span className="line-clamp-1">
-                          {investor?.InvestorProfile?.structure ||
-                            "Structure not specified"}
+                          {Object.values(
+                            investor?.InvestorProfile?.investmentType
+                          ).join(", ") || "Structure not specified"}
                         </span>
                       </div>
 

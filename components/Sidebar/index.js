@@ -121,8 +121,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     if (["Enterprenuer"].includes(role)) {
       peopleItems.push({
         name: "Mentors",
-        path: "/mentors",
         icon: <FaUserTie className="text-xl" />,
+        submenu: [
+          { name: "My Mentors", path: "/myMentors" },
+          { name: "All Mentors", path: "/mentors" },
+        ],
       });
     }
 
@@ -230,14 +233,9 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
     if (["Admin", "Enterprenuer"].includes(role)) {
       programsItems.push({
-        name: "Programs",
-        path: "/bfa",
+        name: "Programs Applications",
         icon: <MdBusinessCenter className="text-xl" />,
-        submenu: [
-          { name: "Business Foundation Accelerator", path: "/bfa" },
-          { name: "Investment Readiness Accelerator", path: "/ira" },
-          { name: "Consultancy Programs", path: "/consultance" },
-        ],
+        path: "/programsApplications",
       });
     }
 
@@ -276,12 +274,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
     if (["Admin", "Enterprenuer", "Reviewer", "Mentor"].includes(role)) {
       programsItems.push({
-        name: "Resources Library",
-        path: "/videos",
+        name: "Learn & Grow",
         icon: <IoDocumentTextOutline className="text-xl" />,
         submenu: [
-          { name: "Videos", path: "/videos" },
-          { name: "Documents", path: "/documents" },
+          { name: "General Resources", path: "/generalResources" },
+          { name: "Class Rooms", path: "/classRooms" },
         ],
       });
     }

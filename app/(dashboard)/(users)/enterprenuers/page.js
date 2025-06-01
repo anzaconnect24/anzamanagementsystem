@@ -177,19 +177,6 @@ const Page = () => {
         {/* Member Count and Search */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
             <span className="text-xl text-gray-600 dark:text-gray-300">
               {users.length} members
             </span>
@@ -201,7 +188,7 @@ const Page = () => {
               placeholder="Search entrepreneurs..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="w-64 px-4 py-2 rounded-md border border-gray-200 bg-white dark:bg-boxdark dark:border-gray-700 focus:outline-none focus:border-primary"
+              className="w-64 px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 focus:outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -349,7 +336,7 @@ const Page = () => {
           </div>
         )}
       </div>
-
+    
       {/* Grid Section */}
       {users.length < 1 ? (
         <NoData />
@@ -458,7 +445,7 @@ const Page = () => {
                         />
                       </svg>
                       <span>
-                        Founded{" "}
+                        Joined{" "}
                         {item?.Business?.createdAt
                           ? new Date(item.Business.createdAt).getFullYear()
                           : "N/A"}

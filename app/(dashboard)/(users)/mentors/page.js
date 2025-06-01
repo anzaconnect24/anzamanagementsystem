@@ -66,7 +66,8 @@ const Page = () => {
 
   // Check if any filters are active
   const isFiltering =
-    Object.values(filters).some((value) => !value.startsWith("All")) || keyword.trim();
+    Object.values(filters).some((value) => !value.startsWith("All")) ||
+    keyword.trim();
 
   // Helper function for mentor names
   const getMentorName = (item) => {
@@ -75,34 +76,38 @@ const Page = () => {
 
   // Helper function to get mentor sector
   const getMentorSector = (item) => {
-    return item?.MentorProfile?.BusinessSector?.name || 
-           Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") || 
-           "No Sector";
+    return (
+      item?.MentorProfile?.BusinessSector?.name ||
+      Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") ||
+      "No Sector"
+    );
   };
 
   // Helper function to check if mentor matches search keyword
   const matchesSearchKeyword = (item, searchTerm) => {
     if (!searchTerm.trim()) return true;
-    
+
     const searchLower = searchTerm.toLowerCase();
     const name = getMentorName(item).toLowerCase();
     const email = (item?.email || "").toLowerCase();
     const expertise = (item?.MentorProfile?.expertise || "").toLowerCase();
     const sector = getMentorSector(item).toLowerCase();
     const role = (item?.role || "").toLowerCase();
-    
-    return name.includes(searchLower) ||
-           email.includes(searchLower) ||
-           expertise.includes(searchLower) ||
-           sector.includes(searchLower) ||
-           role.includes(searchLower);
+
+    return (
+      name.includes(searchLower) ||
+      email.includes(searchLower) ||
+      expertise.includes(searchLower) ||
+      sector.includes(searchLower) ||
+      role.includes(searchLower)
+    );
   };
 
   useEffect(() => {
     const fetchAndFilterData = async () => {
       try {
         setLoading(true);
-        
+
         // If filtering, get all data at once
         const pageSize = isFiltering ? 1000 : limit;
         const pageNumber = isFiltering ? 1 : currentPage;
@@ -112,37 +117,35 @@ const Page = () => {
 
         // Apply search filter first
         if (keyword.trim()) {
-          filteredData = filteredData.filter(item => matchesSearchKeyword(item, keyword));
+          filteredData = filteredData.filter((item) =>
+            matchesSearchKeyword(item, keyword)
+          );
         }
 
         // Apply other filters if any are active
         if (filters.sector !== "All Sectors") {
-          filteredData = filteredData.filter(
-            (item) => {
-              const sector = getMentorSector(item);
-              return sector.includes(filters.sector);
-            }
-          );
+          filteredData = filteredData.filter((item) => {
+            const sector = getMentorSector(item);
+            return sector.includes(filters.sector);
+          });
         }
 
         if (filters.expertise !== "All Expertise") {
-          filteredData = filteredData.filter(
-            (item) => {
-              const expertise = item?.MentorProfile?.expertise || "";
-              return expertise.toLowerCase().includes(filters.expertise.toLowerCase());
-            }
-          );
+          filteredData = filteredData.filter((item) => {
+            const expertise = item?.MentorProfile?.expertise || "";
+            return expertise
+              .toLowerCase()
+              .includes(filters.expertise.toLowerCase());
+          });
         }
 
         if (filters.year !== "All Years") {
-          filteredData = filteredData.filter(
-            (item) => {
-              const createdYear = item?.createdAt 
-                ? new Date(item.createdAt).getFullYear().toString() 
-                : "";
-              return createdYear === filters.year;
-            }
-          );
+          filteredData = filteredData.filter((item) => {
+            const createdYear = item?.createdAt
+              ? new Date(item.createdAt).getFullYear().toString()
+              : "";
+            return createdYear === filters.year;
+          });
         }
 
         // Apply sorting
@@ -169,18 +172,19 @@ const Page = () => {
               );
             case "date":
               return (
-                direction * (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
+                direction *
+                (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
               );
             default:
               return 0;
           }
         });
 
-        console.log('Filtered data:', filteredData);
+        console.log("Filtered data:", filteredData);
         setUsers(filteredData);
         setTotalPages(isFiltering ? 1 : body.totalPages);
       } catch (error) {
-        console.error('Error fetching mentors:', error);
+        console.error("Error fetching mentors:", error);
         setUsers([]);
       } finally {
         setLoading(false);
@@ -253,15 +257,25 @@ const Page = () => {
               placeholder="Search mentors by name, email, expertise..."
               value={keyword}
               onChange={handleSearchChange}
-              className="w-64 px-4 py-2 rounded-md border border-gray-300 bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-64 px-4 py-2 rounded-md border border-white bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
             />
             {keyword && (
               <button
                 onClick={() => setKeyword("")}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
               >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-4 h-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             )}
@@ -275,10 +289,10 @@ const Page = () => {
             <div key={key} className="relative inline-block">
               <button
                 onClick={() => toggleDropdown(key)}
-                className={`px-4 py-2 rounded-md border transition-colors ${
+                className={`px-4 py-2 rounded-md border border-white transition-colors ${
                   filters[key] !== `All ${value.label}`
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-gray-300 bg-white dark:bg-boxdark dark:border-gray-600 hover:border-primary"
+                    ? " bg-white "
+                    : " bg-white "
                 } flex items-center gap-2`}
               >
                 <span>{filters[key]}</span>
@@ -300,7 +314,7 @@ const Page = () => {
               </button>
 
               {openDropdown === key && (
-                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700">
+                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-white dark:border-gray-700">
                   {value.options.map((option) => (
                     <button
                       key={option}
@@ -323,7 +337,7 @@ const Page = () => {
           <div className="relative inline-block">
             <button
               onClick={() => toggleDropdown("sort")}
-              className="px-4 py-2 rounded-md border border-gray-300 bg-white dark:bg-boxdark dark:border-gray-600 flex items-center gap-2 hover:border-primary transition-colors"
+              className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-600 flex items-center gap-2 hover:border-primary transition-colors"
             >
               <span>
                 Sort:{" "}
@@ -437,33 +451,44 @@ const Page = () => {
                 {/* Card Image Header - Full Width */}
                 <div className="relative w-full h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
                   <Image
-                    src={item?.image || `https://ui-avatars.com/api/?name=${encodeURIComponent(getMentorName(item))}&background=6366f1&color=fff&size=400`}
+                    src={
+                      item?.image ||
+                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                        getMentorName(item)
+                      )}&background=6366f1&color=fff&size=400`
+                    }
                     alt={`${getMentorName(item)} profile`}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
                     priority={key < 4} // Prioritize loading first 4 images
                     className="object-cover w-full h-full group-hover:scale-110 transition-all duration-500 ease-out"
                     style={{
-                      objectPosition: 'center top'
+                      objectPosition: "center top",
                     }}
                     onError={(e) => {
                       const target = e.currentTarget;
-                      if (!target.getAttribute('data-fallback')) {
-                        target.setAttribute('data-fallback', 'true');
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(getMentorName(item))}&background=random&color=fff&size=400&font-size=0.4&rounded=true`;
+                      if (!target.getAttribute("data-fallback")) {
+                        target.setAttribute("data-fallback", "true");
+                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          getMentorName(item)
+                        )}&background=random&color=fff&size=400&font-size=0.4&rounded=true`;
                       }
                     }}
                   />
-                  
+
                   {/* Image Overlay for better text readability */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  
+
                   {/* Sector Badge - Positioned over image */}
                   <div className="absolute bottom-4 left-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                      {item?.MentorProfile?.expertise || 
-                       Object.values(item?.MentorProfile?.areasOfExperties || {}).slice(0, 2).join(", ") || 
-                       "General Expertise"}
+                      {item?.MentorProfile?.expertise ||
+                        Object.values(
+                          item?.MentorProfile?.areasOfExperties || {}
+                        )
+                          .slice(0, 2)
+                          .join(", ") ||
+                        "General Expertise"}
                     </span>
                   </div>
 
@@ -625,7 +650,7 @@ const Page = () => {
           </p>
           <div className="flex gap-2">
             <button
-              onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
               className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                 currentPage === 1
@@ -636,7 +661,9 @@ const Page = () => {
               Previous
             </button>
             <button
-              onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
               disabled={currentPage === totalPages}
               className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                 currentPage === totalPages
