@@ -109,13 +109,46 @@ const Page = ({ params }) => {
                 {user?.MentorProfile?.description || "No Information Available"}
               </p>
             </div>
+          </div>
+          <div className="bg-white p-5 rounded-lg">
             <div>
               <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-                <span className="text-xl mr-3">🧠</span>
+                <span className="text-xl mr-3">🎯</span>
                 Mentorship focus
               </h2>
+              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed flex flex-wrap gap-3">
+                {Object.values(user?.MentorProfile?.mentorshipFocus || {}).map(
+                  (item) => (
+                    <div
+                      key={item}
+                      className="bg-primary/10 px-4 py-2 text-sm rounded-lg"
+                    >
+                      {item}
+                    </div>
+                  )
+                ) || "N/A"}{" "}
+              </p>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-lg">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+                <span className="text-xl mr-3">🗣️</span>
+                Languages
+              </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {user?.MentorProfile?.mentorshipFocus ||
+                {user?.MentorProfile?.language || "No Information Available"}
+              </p>
+            </div>
+          </div>
+          <div className="bg-white p-5 rounded-lg">
+            <div className="mb-4">
+              <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+                <span className="text-xl mr-3">📅 </span>
+                Availability
+              </h2>
+              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+                {user?.MentorProfile?.mentorAvailability ||
                   "No Information Available"}
               </p>
             </div>
@@ -126,29 +159,17 @@ const Page = ({ params }) => {
                 <span className="text-xl mr-3">🌎</span>
                 Areas of expertise
               </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {Object.values(
-                  user?.MentorProfile?.areasOfExperties || {}
-                ).join(", ") || "No Information Available"}
-              </p>
-            </div>
-            <div className="mb-4">
-              <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-                <span className="text-xl mr-3">🗣️</span>
-                Languages
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {user?.MentorProfile?.language || "No Information Available"}
-              </p>
-            </div>
-            <div className="mb-4">
-              <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-                <span className="text-xl mr-3">📅 </span>
-                Availability
-              </h2>
-              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {user?.MentorProfile?.mentorAvailability ||
-                  "No Information Available"}
+              <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed flex flex-wrap gap-3">
+                {Object.values(user?.MentorProfile?.areasOfExperties || {}).map(
+                  (item) => (
+                    <div
+                      key={item}
+                      className="bg-primary/10 px-4 py-2 text-sm rounded-lg"
+                    >
+                      {item}
+                    </div>
+                  )
+                ) || "No Information Available"}
               </p>
             </div>
           </div>

@@ -3,15 +3,15 @@ import { ApexOptions } from "apexcharts";
 import React, { useContext, useState } from "react";
 import dynamic from "next/dynamic";
 import { UserContext } from "@/app/(dashboard)/layout";
-const ReactApexChart = dynamic(() => import("react-apexcharts"), { ssr: false });
-
-
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 
 const options = {
   chart: {
     type: "donut",
   },
-  colors: ["#10B981", "#375E83", "#259AE6", "#FFA70B"],
+  colors: ["#219654", "#375E83", "#259AE6", "#FFA70B"],
   labels: ["Admin", "Reviewer", "Entrepreneur", "Investor"],
   legend: {
     show: true,
@@ -50,10 +50,15 @@ const options = {
 };
 
 const ChartThree = () => {
-  const {data} = useContext(UserContext)
+  const { data } = useContext(UserContext);
 
   const [state, setState] = useState({
-    series: [(data.admins*100/data.totalUsers), (data.reviewers*100/data.totalUsers), (data.enterprenuers*100/data.totalUsers), (data.investors*100/data.totalUsers)],
+    series: [
+      (data.admins * 100) / data.totalUsers,
+      (data.reviewers * 100) / data.totalUsers,
+      (data.enterprenuers * 100) / data.totalUsers,
+      (data.investors * 100) / data.totalUsers,
+    ],
   });
 
   return (

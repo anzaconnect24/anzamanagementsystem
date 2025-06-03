@@ -101,7 +101,7 @@ const PerformanceDistribution = ({
   const remainingScore = 100 - overallScore;
 
   // Determine chart color based on score threshold
-  const chartColor = overallScore >= 70 ? "#10B981" : "#EF4444";
+  const chartColor = overallScore >= 70 ? "#219654" : "#EF4444";
   const scoreStatus = overallScore >= 70 ? "Good" : "Needs Improvement";
 
   // Donut chart options and series

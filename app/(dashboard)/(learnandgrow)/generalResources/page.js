@@ -16,7 +16,15 @@ const Page = ({ params }) => {
   ) : (
     <div>
       {/* Stats Section - Full Width */}
-      <h1 className="text-2xl font-bold">Welcome back {userDetails.name}!</h1>
+      <div className="flex justify-between">
+        <h1 className="text-2xl font-bold">Welcome back {userDetails.name}!</h1>
+        <Link
+          href={"/uploadMaterial/document"}
+          className="text-white bg-primary py-2 px-3 cursor-pointer rounded"
+        >
+          Add Material
+        </Link>
+      </div>
       <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
         <p>
           Welcome to your one-stop hub for actionable tools , templates , guides

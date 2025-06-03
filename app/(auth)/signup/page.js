@@ -1592,31 +1592,6 @@ dark:text-white"
                                   <span>{expertise}</span>
                                 </label>
                               ))}
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  name="mentorExpertise"
-                                  value="Other"
-                                  className="form-checkbox"
-                                />
-                                <input
-                                  type="text"
-                                  onChange={(e) => {
-                                    if (e.target.value != "") {
-                                      let newFormValues = formValues;
-                                      newFormValues.mentorExpertise[
-                                        Object.keys(
-                                          newFormValues.mentorExpertise
-                                        ).length
-                                      ] = e.target.value;
-                                    }
-                                    setFormValues(newFormValues);
-                                  }}
-                                  name="mentorOtherExpertise"
-                                  placeholder="Specify other expertise"
-                                  className="form-style"
-                                />
-                              </div>
                             </div>
                           </div>
                           {/* Availability & Commitment */}
@@ -1734,24 +1709,71 @@ entrepreneurs"
                             />
                           </div>
                           <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Mentorship Focus
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Select Your Top 3 Mentorship Focus Areas
                             </label>
-                            <textarea
-                              name="mentorshipFocus"
-                              required
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.mentorshipFocus = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              className="form-style"
-                              placeholder="Share your mentorship focus"
-                              rows="4"
-                            />
+                            <div className="grid gap-4">
+                              {[
+                                "Business Strategy & Planning",
+                                "Financial Management",
+                                "Operations & Systems",
+                                "Sales & Marketing",
+                                "Product & Service Development",
+                                "Team & Leadership",
+                                "Legal & Compliance",
+                                "Impact & Sustainability",
+                                "Technology & Digital Transformation",
+                                "Investor & Partnership Readiness",
+                                "Export Readiness & Market Access",
+                                "Personal Development & Soft Skills",
+                              ].map((area) => (
+                                <label
+                                  key={area}
+                                  className="flex items-center space-x-2"
+                                >
+                                  <input
+                                    type="checkbox"
+                                    name="mentorshipFocus"
+                                    value={area}
+                                    onChange={(e) => {
+                                      const newFormValues = { ...formValues };
+                                      const selectedAreas =
+                                        newFormValues.mentorshipFocus || [];
+                                      if (
+                                        e.target.checked &&
+                                        selectedAreas.length < 3
+                                      ) {
+                                        newFormValues.mentorshipFocus = [
+                                          ...selectedAreas,
+                                          area,
+                                        ];
+                                      } else if (!e.target.checked) {
+                                        newFormValues.mentorshipFocus =
+                                          selectedAreas.filter(
+                                            (item) => item !== area
+                                          );
+                                      }
+                                      setFormValues(newFormValues);
+                                    }}
+                                    disabled={
+                                      !formValues.mentorshipFocus?.includes(
+                                        area
+                                      ) &&
+                                      formValues.mentorshipFocus?.length >= 3
+                                    }
+                                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                  />
+                                  <span className="text-gray-700 dark:text-gray-300">
+                                    {area}
+                                  </span>
+                                </label>
+                              ))}
+                            </div>
+                            {formValues.mentorshipFocus?.length > 3 && (
+                              <p className="text-red-500 text-sm mt-2">
+                                Please select only up to 3 focus areas.
+                              </p>
+                            )}
                           </div>
                           <div className="col-span-2">
                             <label
@@ -1760,18 +1782,23 @@ dark:text-white"
                             >
                               SME Focus
                             </label>
-                            <textarea
+                            <select
                               name="smeFocus"
-                              required
                               onChange={(e) => {
                                 const newFormValues = formValues;
                                 newFormValues.smeFocus = e.target.value;
                                 setFormValues(newFormValues);
                               }}
-                              className="form-style"
-                              placeholder="Share your SME Focus"
-                              rows="4"
-                            />
+                            >
+                              {[
+                                "Startups",
+                                "Growth stage",
+                                "Expansion stage",
+                                "Maturity Stage",
+                              ].map((item) => {
+                                return <option key={item}>{item}</option>;
+                              })}
+                            </select>
                           </div>
 
                           {/* Agreement & Consent */}

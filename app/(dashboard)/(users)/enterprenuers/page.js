@@ -5,7 +5,7 @@ import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import Image from "next/image";
-
+import Pagination from "@/app/component/pagination";
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
@@ -22,7 +22,9 @@ const Page = () => {
   });
   const [currentPage, setcurrentPage] = useState(1);
   const [totalPages, settotalPages] = useState(1);
-  const [limit, setlimit] = useState(20);
+  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+  const [count, setCount] = useState(0);
   // Add states for dropdown visibility
   const [openDropdown, setOpenDropdown] = useState(null);
   const [allUsers, setAllUsers] = useState([]); // New state for all users
@@ -74,71 +76,71 @@ const Page = () => {
     const pageSize = isFiltering ? 1000 : limit;
     const pageNumber = isFiltering ? 1 : currentPage;
 
-    getEnterprenuers(pageSize, pageNumber, keyword).then((body) => {
+    getEnterprenuers(limit, page, keyword).then((body) => {
+      console.log(body);
       let filteredData = [...body.data];
-
-      // Apply filters if any are active
-      if (isFiltering) {
-        if (filters.sector !== "All Sectors") {
-          filteredData = filteredData.filter(
-            (item) => item.Business?.BusinessSector?.name === filters.sector
-          );
-        }
-
-        if (filters.year !== "All Years") {
-          filteredData = filteredData.filter(
-            (item) =>
-              new Date(item.Business?.createdAt).getFullYear().toString() ===
-              filters.year
-          );
-        }
-
-        if (filters.program !== "All Programs") {
-          filteredData = filteredData.filter(
-            (item) => item.Business?.program === filters.program
-          );
-        }
-      }
-
-      // Apply sorting
-      filteredData.sort((a, b) => {
-        const direction = sortConfig.direction === "asc" ? 1 : -1;
-
-        switch (sortConfig.key) {
-          case "name":
-            return (
-              direction *
-              (a.Business?.name?.localeCompare(b.Business?.name) || 0)
-            );
-          case "sector":
-            return (
-              direction *
-              (a.Business?.BusinessSector?.name?.localeCompare(
-                b.Business?.BusinessSector?.name
-              ) || 0)
-            );
-          case "date":
-            return (
-              direction *
-              (new Date(a.Business?.createdAt) -
-                new Date(b.Business?.createdAt))
-            );
-          case "program":
-            return (
-              direction *
-              (a.Business?.program?.localeCompare(b.Business?.program) || 0)
-            );
-          default:
-            return 0;
-        }
-      });
-
+      applyFilters(filteredData);
+      setCount(body.count);
       setUsers(filteredData);
       settotalPages(isFiltering ? 1 : body.totalPages);
       setloading(false);
     });
-  }, [refresh, sortConfig, filters, currentPage, limit, keyword]);
+  }, [refresh, sortConfig, filters, page, keyword]);
 
+  const applyFilters = (filteredData) => {
+    if (isFiltering) {
+      if (filters.sector !== "All Sectors") {
+        filteredData = filteredData.filter(
+          (item) => item.Business?.BusinessSector?.name === filters.sector
+        );
+      }
+
+      if (filters.year !== "All Years") {
+        filteredData = filteredData.filter(
+          (item) =>
+            new Date(item.Business?.createdAt).getFullYear().toString() ===
+            filters.year
+        );
+      }
+
+      if (filters.program !== "All Programs") {
+        filteredData = filteredData.filter(
+          (item) => item.Business?.program === filters.program
+        );
+      }
+    }
+
+    // Apply sorting
+    filteredData.sort((a, b) => {
+      const direction = sortConfig.direction === "asc" ? 1 : -1;
+
+      switch (sortConfig.key) {
+        case "name":
+          return (
+            direction * (a.Business?.name?.localeCompare(b.Business?.name) || 0)
+          );
+        case "sector":
+          return (
+            direction *
+            (a.Business?.BusinessSector?.name?.localeCompare(
+              b.Business?.BusinessSector?.name
+            ) || 0)
+          );
+        case "date":
+          return (
+            direction *
+            (new Date(a.Business?.createdAt) - new Date(b.Business?.createdAt))
+          );
+        case "program":
+          return (
+            direction *
+            (a.Business?.program?.localeCompare(b.Business?.program) || 0)
+          );
+        default:
+          return 0;
+      }
+    });
+  };
   // Handle dropdown toggle
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
@@ -178,7 +180,7 @@ const Page = () => {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <span className="text-xl text-gray-600 dark:text-gray-300">
-              {users.length} members
+              {count} members
             </span>
           </div>
 
@@ -336,7 +338,7 @@ const Page = () => {
           </div>
         )}
       </div>
-    
+
       {/* Grid Section */}
       {users.length < 1 ? (
         <NoData />
@@ -517,48 +519,7 @@ const Page = () => {
         </div>
       )}
 
-      {/* Pagination - Only show if not filtering */}
-      {!isFiltering && (
-        <div className="flex items-center justify-between p-6 border-t border-stroke dark:border-strokedark mt-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Page {currentPage} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                if (currentPage > 1) {
-                  setcurrentPage(currentPage - 1);
-                  setRefresh(refresh + 1);
-                }
-              }}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                currentPage === 1
-                  ? "bg-gray-100 text-gray-400"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => {
-                if (currentPage < totalPages) {
-                  setcurrentPage(currentPage + 1);
-                  setRefresh(refresh + 1);
-                }
-              }}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination limit={limit} count={count} setPage={setPage} page={page} />
     </div>
   );
 };

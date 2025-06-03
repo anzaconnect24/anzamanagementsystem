@@ -7,6 +7,7 @@ import NoData from "@/app/component/noData";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserContext } from "../../layout";
+import Pagination from "@/app/component/pagination";
 
 const Page = () => {
   const router = useRouter();
@@ -30,6 +31,8 @@ const Page = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+  const [count, setCount] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
 
   // Define filter and sort options
@@ -93,7 +96,7 @@ const Page = () => {
       const pageSize = isFiltering ? 1000 : limit;
       const pageNumber = isFiltering ? 1 : currentPage;
 
-      const response = await getInvestors(pageSize, pageNumber, keyword);
+      const response = await getInvestors(limit, page, keyword);
 
       if (!response || !response.data) {
         throw new Error("Failed to fetch investors data");
@@ -160,7 +163,7 @@ const Page = () => {
       });
 
       setUsers(processedData);
-      setTotal(response.count || 0);
+      setCount(response.count || 0);
       setTotalPages(isFiltering ? 1 : response.totalPages || 1);
     } catch (err) {
       setError(err.message || "An error occurred while fetching data");
@@ -173,7 +176,7 @@ const Page = () => {
   // Effect to fetch data when dependencies change
   useEffect(() => {
     fetchData();
-  }, [refresh, currentPage, limit]);
+  }, [refresh, page, limit]);
 
   // Separate effect for filtering and sorting to avoid redundant fetches
   useEffect(() => {
@@ -268,7 +271,7 @@ const Page = () => {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <span className="text-xl text-gray-600 dark:text-gray-300">
-              {users.length} investors
+              {count} investors
             </span>
           </div>
 
@@ -598,46 +601,7 @@ const Page = () => {
           </div>
         )}
 
-        {/* Pagination - Only show if not filtering */}
-        {!isFiltering && totalPages > 1 && (
-          <div className="flex items-center justify-between p-6 border-t border-stroke dark:border-strokedark mt-6">
-            <p className="text-sm text-gray-600 dark:text-gray-400">
-              Page {currentPage} of {totalPages}
-            </p>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  if (currentPage > 1) {
-                    setCurrentPage(currentPage - 1);
-                  }
-                }}
-                disabled={currentPage === 1}
-                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                  currentPage === 1
-                    ? "bg-gray-100 text-gray-400"
-                    : "bg-primary text-white hover:bg-primary/90"
-                }`}
-              >
-                Previous
-              </button>
-              <button
-                onClick={() => {
-                  if (currentPage < totalPages) {
-                    setCurrentPage(currentPage + 1);
-                  }
-                }}
-                disabled={currentPage === totalPages}
-                className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                  currentPage === totalPages
-                    ? "bg-gray-100 text-gray-400"
-                    : "bg-primary text-white hover:bg-primary/90"
-                }`}
-              >
-                Next
-              </button>
-            </div>
-          </div>
-        )}
+        <Pagination limit={limit} count={count} setPage={setPage} page={page} />
       </div>
     </div>
   );
