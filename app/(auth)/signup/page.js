@@ -1528,7 +1528,32 @@ dark:text-white"
                               <option value={"Swahili"}>Swahili</option>
                             </select>
                           </div>
-
+                          <div className="col-span-1">
+                            <label
+                              className="mb-2.5 block font-medium text-black
+dark:text-white"
+                            >
+                              SME Focus
+                            </label>
+                            <select
+                              name="smeFocus"
+                              className="form-style"
+                              onChange={(e) => {
+                                const newFormValues = formValues;
+                                newFormValues.smeFocus = e.target.value;
+                                setFormValues(newFormValues);
+                              }}
+                            >
+                              {[
+                                "Startups",
+                                "Growth stage",
+                                "Expansion stage",
+                                "Maturity Stage",
+                              ].map((item) => {
+                                return <option key={item}>{item}</option>;
+                              })}
+                            </select>
+                          </div>
                           <div>
                             <label
                               className="mb-2.5 block font-medium text-black
@@ -1712,7 +1737,7 @@ entrepreneurs"
                             <label className="mb-2.5 block font-medium text-black dark:text-white">
                               Select Your Top 3 Mentorship Focus Areas
                             </label>
-                            <div className="grid gap-4">
+                            <div className="flex flex-wrap gap-4">
                               {[
                                 "Business Strategy & Planning",
                                 "Financial Management",
@@ -1775,34 +1800,9 @@ entrepreneurs"
                               </p>
                             )}
                           </div>
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              SME Focus
-                            </label>
-                            <select
-                              name="smeFocus"
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.smeFocus = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                            >
-                              {[
-                                "Startups",
-                                "Growth stage",
-                                "Expansion stage",
-                                "Maturity Stage",
-                              ].map((item) => {
-                                return <option key={item}>{item}</option>;
-                              })}
-                            </select>
-                          </div>
 
                           {/* Agreement & Consent */}
-                          <div className="col-span-2 space-y-4">
+                          <div className="col-span-2 space-y-4 mt-12">
                             <label className="flex items-center space-x-2">
                               <input
                                 type="checkbox"

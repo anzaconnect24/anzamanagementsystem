@@ -33,14 +33,11 @@ export const getVideos = async (page, limit) => {
   }
 };
 
-export const getDocuments = async (page, limit) => {
+export const getDocuments = async () => {
   try {
-    const response = await axios.get(
-      `${server_url}/pitch_material/document/?page=${page}&limit=${limit}`,
-      {
-        headers,
-      }
-    );
+    const response = await axios.get(`${server_url}/pitch_material/document/`, {
+      headers,
+    });
     return response.data.body;
   } catch (error) {
     console.log(error.response);

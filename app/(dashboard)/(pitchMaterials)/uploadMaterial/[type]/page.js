@@ -1,5 +1,8 @@
 "use client";
-import { uploadPitchMaterial } from "@/app/controllers/pitch_material_controller";
+import {
+  getDocuments,
+  uploadPitchMaterial,
+} from "@/app/controllers/pitch_material_controller";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Loader from "@/components/common/Loader";
@@ -12,6 +15,7 @@ const Page = ({ params }) => {
   const type = params.type;
   const router = useRouter();
   const [loading, setloading] = useState(false);
+ 
   return (
     <div>
       <Breadcrumb prevLink={``} prevPage={`Back`} pageName="Upload Material" />
@@ -25,8 +29,8 @@ const Page = ({ params }) => {
               type,
               fileName: e.target.fileName.value,
               category: e.target.category.value,
-              materialUrl,
-              thumbnailUrl,
+              materialUrl: null,
+              thumbnailUrl: null,
             };
             if (type == "video") {
               payload.materialUrl = e.target.url.value;
