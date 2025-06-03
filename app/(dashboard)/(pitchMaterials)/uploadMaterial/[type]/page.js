@@ -15,7 +15,7 @@ const Page = ({ params }) => {
   const type = params.type;
   const router = useRouter();
   const [loading, setloading] = useState(false);
- 
+
   return (
     <div>
       <Breadcrumb prevLink={``} prevPage={`Back`} pageName="Upload Material" />
@@ -86,7 +86,7 @@ const Page = ({ params }) => {
                 type="text"
               >
                 {[
-                  "Financing and fundraising",
+                  "Finance and Fundraising",
                   "Marketing & Sales",
                   "Technology & Innovation",
                   "Leadership & Personal Development",

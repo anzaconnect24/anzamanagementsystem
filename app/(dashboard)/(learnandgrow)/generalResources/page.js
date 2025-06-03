@@ -5,8 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "@/app/(dashboard)/layout";
-import { getDocuments } from "@/app/controllers/pitch_material_controller";
+import {
+  deletePitchMaterial,
+  getDocuments,
+} from "@/app/controllers/pitch_material_controller";
 import Image from "next/image";
+import { BsTrash } from "react-icons/bs";
+import { deleteBusinessDocument } from "@/app/controllers/business_controller";
+import toast from "react-hot-toast";
 
 const Page = ({ params }) => {
   const { uuid } = params;
@@ -15,6 +21,9 @@ const Page = ({ params }) => {
   const [data, setData] = useState([]);
 
   useEffect(() => {
+    loadData();
+  }, []);
+  const loadData = () => {
     setLoading(true);
     getDocuments()
       .then((res) => {
@@ -22,8 +31,7 @@ const Page = ({ params }) => {
         setData(res);
       })
       .finally(() => setLoading(false));
-  }, []);
-
+  };
   // Define categories
   const categories = [
     "Finance and Fundraising",
@@ -71,10 +79,8 @@ const Page = ({ params }) => {
             <div className="grid grid-cols-4 gap-4 pt-4">
               {groupedDocuments[category]?.length > 0 ? (
                 groupedDocuments[category].map((item) => (
-                  <Link
+                  <div
                     key={item.id}
-                    target="_blank"
-                    href={item.materialUrl || "/generalResources"}
                     className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start space-y-4"
                   >
                     <Image
@@ -87,11 +93,28 @@ const Page = ({ params }) => {
                     <div>
                       <h1 className="font-bold text-lg">{item.fileName}</h1>
                       <p>{item.description}</p>
-                      <button className="bg-primary px-4 py-2 rounded-lg text-white mt-2">
-                        Access Material
-                      </button>
+                      <div className="flex space-x-2  mt-2 items-center">
+                        <Link
+                          target="_blank"
+                          href={item.materialUrl || "/generalResources"}
+                          className="bg-primary px-4 py-2 rounded-lg text-white"
+                        >
+                          Access Material
+                        </Link>
+                        {["Admin"].includes(userDetails.role) && (
+                          <BsTrash
+                            className="text-red-400 hover:text-red-300 cursor-pointer"
+                            onClick={() => {
+                              toast.success("Deleted successfully");
+                              deletePitchMaterial(item.uuid).then((res) => {
+                                loadData();
+                              });
+                            }}
+                          />
+                        )}
+                      </div>
                     </div>
-                  </Link>
+                  </div>
                 ))
               ) : (
                 <p>No materials available in this category.</p>
