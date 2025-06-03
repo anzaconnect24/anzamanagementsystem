@@ -89,7 +89,9 @@ const Page = ({ params }) => {
                   "Impact & Sustainability",
                   "Legal & Compliance",
                 ].map((item) => (
-                  <option value={item}>{item}</option>
+                  <option key={item} value={item}>
+                    {item}
+                  </option>
                 ))}
               </select>
             </div>
