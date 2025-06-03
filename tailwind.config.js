@@ -12,8 +12,7 @@ module.exports = {
     fontFamily: {
       satoshi: ["Satoshi", "sans-serif"],
     },
-  
-   
+
     screens: {
       "2xsm": "375px",
       xsm: "425px",
@@ -47,7 +46,7 @@ module.exports = {
         "form-input": "#1d2a39",
         "meta-1": "#DC3545",
         "meta-2": "#EFF2F7",
-        "meta-3": "#10B981",
+        "meta-3": "#219654",
         "meta-4": "#313D4A",
         "meta-5": "#259AE6",
         "meta-6": "#FFBA00",
@@ -256,7 +255,5 @@ module.exports = {
       },
     },
   },
-  plugins: [
-    require('@tailwindcss/forms')
-  ],
+  plugins: [require("@tailwindcss/forms")],
 };
