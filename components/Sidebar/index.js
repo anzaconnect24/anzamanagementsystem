@@ -123,7 +123,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         name: "Mentors",
         icon: <FaUserTie className="text-xl" />,
         submenu: [
-          { name: "My Mentors", path: "/myMentors" },
+          { name: "My Mentor", path: "/myMentors" },
           { name: "All Mentors", path: "/mentors" },
         ],
       });
