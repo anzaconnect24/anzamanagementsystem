@@ -204,21 +204,23 @@ const Page = ({ params }) => {
               </div>
             </div>
           </div>
-          <div className="grid grid-cols-12 gap-6 items-stretch">
-            <div className=" col-span-7">
-              <BusinessDomainScores
-                userDetails={business?.User}
-                initialScoreData={{}}
-              />
+          {["Admin", "Mentor", "Investor"].includes(userDetails.role) && (
+            <div className="grid grid-cols-12 gap-6 items-stretch">
+              <div className=" col-span-7">
+                <BusinessDomainScores
+                  userDetails={business?.User}
+                  initialScoreData={{}}
+                />
+              </div>
+              <div className="col-span-5">
+                <PerformanceDistribution
+                  userDetails={business?.User}
+                  chartHeight={250}
+                  initialScoreData={{}}
+                />
+              </div>
             </div>
-            <div className="col-span-5">
-              <PerformanceDistribution
-                userDetails={business?.User}
-                chartHeight={250}
-                initialScoreData={{}}
-              />
-            </div>
-          </div>
+          )}
 
           {/* Documents Section */}
           {business.companyProfile && (
@@ -343,7 +345,7 @@ const Page = ({ params }) => {
                 },
                 {
                   label: "Website",
-                  value: business?.websiteLink ,
+                  value: business?.websiteLink,
                   icon: "🌐",
                 },
                 {

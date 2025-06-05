@@ -265,6 +265,8 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+
       {/* Search and Filter Bar */}
       <div className="mb-8">
         {/* Member Count and Search */}

@@ -6,6 +6,7 @@ import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import Image from "next/image";
 import Pagination from "@/app/component/pagination";
+import { UserContext } from "../../layout";
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
@@ -28,6 +29,7 @@ const Page = () => {
   // Add states for dropdown visibility
   const [openDropdown, setOpenDropdown] = useState(null);
   const [allUsers, setAllUsers] = useState([]); // New state for all users
+  const { userDetails } = useContext(UserContext);
 
   // Define filter and sort options
   const filterOptions = {
@@ -174,6 +176,8 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+
       {/* Search and Filter Bar */}
       <div className="mb-8">
         {/* Member Count and Search */}

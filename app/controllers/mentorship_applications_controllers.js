@@ -25,23 +25,8 @@ export const sendMentorshipApplication = async (data) => {
 export const getMentorReport = async (uuid) => {
   try {
     const user = getUser();
-    const response = await axios.get(`${server_url}/mentor-reports/${uuid}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
-      },
-    });
-    return response.data.body;
-  } catch (error) {
-    console.log(error);
-    return error.response;
-  }
-};
-export const getSpecificMentorReports = async (uuid) => {
-  try {
-    const user = getUser();
     const response = await axios.get(
-      `${server_url}/mentor-reports/mentor/${uuid}`,
+      `${server_url}/mentorship-applications/${uuid}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -55,11 +40,11 @@ export const getSpecificMentorReports = async (uuid) => {
     return error.response;
   }
 };
-export const getSpecificEntreprenuerReports = async (uuid) => {
+export const getEntreprenuerMentors = async (uuid, page, limit, keyword) => {
   try {
     const user = getUser();
     const response = await axios.get(
-      `${server_url}/mentor-reports/entreprenuer/${uuid}`,
+      `${server_url}/mentorship-applications/entreprenuer/${uuid}?page=${page}&limit=${limit}&keyword=${keyword}`,
       {
         headers: {
           "Content-Type": "application/json",
@@ -73,41 +58,12 @@ export const getSpecificEntreprenuerReports = async (uuid) => {
     return error.response;
   }
 };
-export const getAllReports = async (uuid) => {
-  try {
-    const user = getUser();
-    const response = await axios.get(`${server_url}/mentor-reports/`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
-      },
-    });
-    return response.data.body;
-  } catch (error) {
-    console.log(error);
-    return error.response;
-  }
-};
-export const getSpecificReport = async (uuid) => {
-  try {
-    const user = getUser();
-    const response = await axios.get(`${server_url}/mentor-reports/${uuid}`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
-      },
-    });
-    return response.data.body;
-  } catch (error) {
-    console.log(error);
-    return error.response;
-  }
-};
+
 export const deleteMentorReport = async (uuid) => {
   try {
     const user = getUser();
     const response = await axios.delete(
-      `${server_url}/mentor-reports/${uuid}`,
+      `${server_url}/mentorship-applications/${uuid}`,
       {
         headers: {
           "Content-Type": "application/json",

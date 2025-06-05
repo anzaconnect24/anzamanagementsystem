@@ -1,10 +1,11 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { getMentors } from "../../../controllers/user_controller";
 import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import Image from "next/image";
+import { UserContext } from "../../layout";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
@@ -23,6 +24,7 @@ const Page = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [limit, setLimit] = useState(20);
   const [openDropdown, setOpenDropdown] = useState(null);
+  const { userDetails } = useContext(UserContext);
 
   // Define filter and sort options
   const filterOptions = {
@@ -241,6 +243,8 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+
       {/* Search and Filter Bar */}
       <div className="mb-8">
         {/* Member Count and Search */}

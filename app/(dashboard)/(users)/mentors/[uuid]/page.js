@@ -45,7 +45,7 @@ const Page = ({ params }) => {
     <Loader />
   ) : (
     <div>
-      <Breadcrumb prevLink="" prevPage="Mentors" pageName={`${user?.name}`} />
+      <Breadcrumb prevLink="" prevPage="Back" pageName={`${user?.name}`} />
       <p>{user?.MentorProfile?.position}</p>
       {/* Stats Section - Full Width */}
       <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary/5 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark mt-6">
