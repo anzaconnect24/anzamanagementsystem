@@ -64,7 +64,7 @@ const Page = ({ params }) => {
                 <h1 className="font-bold text-lg">{item.label}</h1>
                 <p className="mb-4">{item.description}</p>
                 <Link
-                  href={`/modules/${item.label}`}
+                  href={`/modules/${encodeURIComponent(item.label)}`}
                   className="bg-primary px-4 py-2 rounded-lg text-white mt-2"
                 >
                   Access Classes

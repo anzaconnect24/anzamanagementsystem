@@ -33,7 +33,7 @@ const Page = ({ params }) => {
     <div>
       <Breadcrumb
         prevLink={""}
-        pageName={`${course} Modules`}
+        pageName={`${decodeURIComponent(course)} Modules`}
         prevPage={"Back"}
       />
 
@@ -56,7 +56,7 @@ const Page = ({ params }) => {
                 src={item.image}
               />
               <div>
-                <h1 className="font-bold text-lg">{item.title}</h1>
+                <h1 className="font-bold text-lg line-clamp-1">{item.title}</h1>
                 <p className="mb-3 line-clamp-3">{item.description}</p>
                 <div className="flex space-x-2 mt-2 items-center">
                   <Link
