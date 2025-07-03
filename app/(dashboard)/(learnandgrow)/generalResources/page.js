@@ -93,7 +93,7 @@ const Page = ({ params }) => {
                     <div>
                       <h1 className="font-bold text-lg">{item.fileName}</h1>
                       <p>{item.description}</p>
-                      <div className="flex space-x-2  mt-2 items-center">
+                      <div className="flex space-x-2  mt-2 items-center mt-3">
                         <Link
                           target="_blank"
                           href={item.materialUrl || "/generalResources"}

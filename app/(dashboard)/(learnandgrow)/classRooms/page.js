@@ -57,15 +57,18 @@ const Page = ({ params }) => {
             <Link
               key={item.label}
               href={item.path}
-              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-center  space-y-4"
+              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-center  "
             >
               <img className="h-48" src={item.icon} />
               <div>
                 <h1 className="font-bold text-lg">{item.label}</h1>
-                <p>{item.description}</p>
-                <button className="bg-primary px-4 py-2 rounded-lg text-white mt-2">
+                <p className="mb-4">{item.description}</p>
+                <Link
+                  href={`/modules/${item.label}`}
+                  className="bg-primary px-4 py-2 rounded-lg text-white mt-2"
+                >
                   Access Classes
-                </button>
+                </Link>
               </div>
             </Link>
           );
