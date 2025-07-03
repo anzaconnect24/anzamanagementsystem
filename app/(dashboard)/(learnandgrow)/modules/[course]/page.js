@@ -49,7 +49,7 @@ const Page = ({ params }) => {
               className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start space-y-4"
             >
               <Image
-                className="h-48 w-full"
+                className="h-48 w-full object-cover"
                 alt="adf"
                 width={1000}
                 height={1000}
