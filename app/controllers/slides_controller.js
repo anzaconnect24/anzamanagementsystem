@@ -38,6 +38,21 @@ export const createSlide = async (data) => {
   }
 };
 
+export const markRead = async (data) => {
+  try {
+    const user = getUser();
+    const response = await axios.post(`${server_url}/slides/mark-read`, data, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+      },
+    });
+    return response.data.body;
+  } catch (error) {
+    return error.response;
+  }
+};
+
 export const editSlide = async (uuid, data) => {
   try {
     const user = getUser();
