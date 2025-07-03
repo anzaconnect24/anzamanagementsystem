@@ -21,7 +21,7 @@ const Page = ({ params }) => {
     loadData();
   }, []);
   const loadData = () => {
-    getModules({ course }).then((res) => {
+    getModules({ course: decodeURIComponent(course) }).then((res) => {
       console.log(res);
       setModules(res.data);
       setLoading(false);
@@ -43,6 +43,12 @@ const Page = ({ params }) => {
 
       <div className="grid grid-cols-3 gap-6 pt-4">
         {modules.map((item) => {
+          let length = item.Slides.length;
+          let progress = item.Slides.reduce(
+            (prev, curr) => prev + (curr.SlideReaders.length > 0 ? 1 : 0),
+            0
+          );
+          let percentage = length > 0 ? (progress / length) * 100 : 0;
           return (
             <div
               key={item.uuid}
@@ -56,15 +62,39 @@ const Page = ({ params }) => {
                 src={item.image}
               />
               <div>
-                <h1 className="font-bold text-lg line-clamp-1">{item.title}</h1>
+                {percentage > 0 && (
+                  <div>
+                    <p className="text-sm mb-1">
+                      {progress}/{length} slides completed
+                    </p>
+                    <div className="w-full bg-black/10 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${percentage}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                )}
+                <h1 className="font-bold text-lg line-clamp-1 mt-2">
+                  {item.title}
+                </h1>
                 <p className="mb-3 line-clamp-3">{item.description}</p>
                 <div className="flex space-x-2 mt-2 items-center">
-                  <Link
-                    href={`/slides/${item.uuid}`}
-                    className="bg-primary px-4 py-2 rounded-lg text-white "
-                  >
-                    Start Learning
-                  </Link>
+                  {percentage > 0 ? (
+                    <Link
+                      href={`/slides/${item.uuid}`}
+                      className="bg-primary px-4 py-2 rounded-lg text-white "
+                    >
+                      Resume
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/slides/${item.uuid}`}
+                      className="bg-primary px-4 py-2 rounded-lg text-white "
+                    >
+                      Start Learning
+                    </Link>
+                  )}
                   {["Admin"].includes(userDetails.role) && (
                     <BsTrash
                       className="hover:text-red-400"

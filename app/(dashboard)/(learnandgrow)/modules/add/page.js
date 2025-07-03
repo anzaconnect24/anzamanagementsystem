@@ -30,7 +30,7 @@ const Page = () => {
               uploadFile(formData).then((url) => {
                 const payload = {
                   image: url,
-                  course,
+                  course: decodeURIComponent(course),
                   title: e.target.title.value,
                   description: e.target.description.value,
                 };

@@ -3,7 +3,11 @@ import { useContext, useEffect, useState } from "react";
 import { getModules } from "../../../../controllers/modules_controller";
 import Link from "next/link";
 import { UserContext } from "../../../layout";
-import { deleteSlide, getSlides } from "@/app/controllers/slides_controller";
+import {
+  deleteSlide,
+  getSlides,
+  markRead,
+} from "@/app/controllers/slides_controller";
 import {
   createComment,
   getComments,
@@ -25,6 +29,7 @@ const Page = ({ params }) => {
   const [activeTab, setActiveTab] = useState("content");
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -35,6 +40,12 @@ const Page = ({ params }) => {
     getSlides({ module_uuid: uuid }).then((res) => {
       console.log(res);
       setModules(res.data);
+      setProgress(
+        res.data.reduce(
+          (prev, curr) => prev + (curr.SlideReaders.length > 0 ? 1 : 0),
+          0
+        )
+      );
       setModule(res.module);
       setLoading(false);
     });
@@ -57,12 +68,27 @@ const Page = ({ params }) => {
     });
   };
 
+  // Calculate progress percentage
+  const progressPercentage =
+    modules.length > 0 ? (progress / modules.length) * 100 : 0;
+
   return loading ? (
     <Loader />
   ) : (
     <div>
       <Breadcrumb prevLink={""} pageName={module.title} prevPage={"Back"} />
-
+      {/* Progress Bar */}
+      <div className="mt-4">
+        <p className="text-sm text-gray-600 mb-1 text-green-700">
+          Progress: {progress}/{modules.length} slides completed
+        </p>
+        <div className="w-full bg-black/10 rounded-full h-4">
+          <div
+            className="bg-green-500 h-4 rounded-full transition-all duration-300"
+            style={{ width: `${progressPercentage}%` }}
+          ></div>
+        </div>
+      </div>
       <div className="bg-primary/10 p-6 rounded-lg mb-4 mt-4">
         <p>{module.description}</p>
       </div>
@@ -92,11 +118,32 @@ const Page = ({ params }) => {
         <div className="w-3/12 border-r-2 border-black/10 p-5 h-[70vh] overflow-y-auto">
           <div className="space-y-4">
             {modules.map((item, index) => {
+              const isRead = item.SlideReaders.length > 0;
               return (
                 <div
+                  onClick={() => {
+                    if (isRead) {
+                      setCurrentSlide(index);
+                    } else {
+                      if (index == currentSlide + 1) {
+                        if (modules[currentSlide].SlideReaders.length == 0) {
+                          setCurrentSlide(index);
+                          markRead({
+                            slide_uuid: modules[currentSlide].uuid,
+                          }).then((res) => {
+                            loadData();
+                          });
+                        } else {
+                          setCurrentSlide(index);
+                        }
+                      } else {
+                        toast.error("You need to read in order");
+                      }
+                    }
+                  }}
                   className={`${
                     index == currentSlide ? "text-primary" : "text-graydark"
-                  } flex space-x-3 items-center justify-between w-full `}
+                  } flex space-x-3 items-center justify-between w-full cursor-pointer `}
                   key={item.uuid}
                 >
                   <p>
@@ -155,11 +202,19 @@ const Page = ({ params }) => {
                   Previous
                 </button>
                 <button
-                  onClick={() =>
+                  onClick={() => {
+                    if (modules[currentSlide].SlideReaders.length == 0) {
+                      console.log("marking read");
+                      markRead({ slide_uuid: modules[currentSlide].uuid }).then(
+                        (res) => {
+                          loadData();
+                        }
+                      );
+                    }
                     setCurrentSlide((prev) =>
                       prev < modules.length - 1 ? prev + 1 : prev
-                    )
-                  }
+                    );
+                  }}
                   disabled={currentSlide === modules.length - 1}
                   className={`py-2 px-3 rounded ${
                     currentSlide === modules.length - 1
@@ -169,6 +224,23 @@ const Page = ({ params }) => {
                 >
                   Next
                 </button>
+                {modules.length == currentSlide + 1 &&
+                  progressPercentage <
+                    100(
+                      <button
+                        onClick={() => {
+                          markRead({
+                            slide_uuid: modules[currentSlide].uuid,
+                          }).then((res) => {
+                            toast.success("Completed successfully");
+                            loadData();
+                          });
+                        }}
+                        className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
+                      >
+                        Complete Module
+                      </button>
+                    )}
               </div>
             </div>
           ) : (
