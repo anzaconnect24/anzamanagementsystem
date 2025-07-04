@@ -13,6 +13,7 @@ import Image from "next/image";
 import Loader from "@/components/common/Loader";
 import { editComment } from "@/app/controllers/comment_controllers";
 import { useRouter } from "next/navigation";
+import Pagination from "../../../../component/pagination";
 
 const Page = ({ params }) => {
   const { course } = params;
@@ -20,15 +21,21 @@ const Page = ({ params }) => {
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+  const [count, setCount] = useState(0);
   useEffect(() => {
     loadData();
   }, []);
   const loadData = () => {
-    getModules({ course: decodeURIComponent(course) }).then((res) => {
-      console.log(res);
-      setModules(res.data);
-      setLoading(false);
-    });
+    getModules({ course: decodeURIComponent(course), page, limit }).then(
+      (res) => {
+        console.log(res);
+        setModules(res.data);
+        setCount(res.count);
+        setLoading(false);
+      }
+    );
   };
   return loading ? (
     <Loader />
@@ -88,7 +95,7 @@ const Page = ({ params }) => {
                       href={`/slides/${item.uuid}`}
                       className="bg-primary px-4 py-2 rounded-lg text-white "
                     >
-                      Resume
+                      {percentage == 100 ? "Completed" : "Resume"}
                     </Link>
                   ) : (
                     <Link
@@ -133,6 +140,7 @@ const Page = ({ params }) => {
           </Link>
         )}
       </div>
+      <Pagination limit={limit} count={count} setPage={setPage} page={page} />
     </div>
   );
 };

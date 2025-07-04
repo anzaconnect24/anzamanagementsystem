@@ -92,28 +92,7 @@ const Page = ({ params }) => {
       <div className="bg-primary/10 p-6 rounded-lg mb-4 mt-4">
         <p>{module.description}</p>
       </div>
-      <div className="flex border-b border-black/10 mb-0 px-2">
-        <button
-          className={`px-4 py-2 ${
-            activeTab === "content"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-600"
-          }`}
-          onClick={() => setActiveTab("content")}
-        >
-          Content
-        </button>
-        <button
-          className={`px-4 py-2 ${
-            activeTab === "comments"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-600"
-          }`}
-          onClick={() => setActiveTab("comments")}
-        >
-          Comments ({comments.length})
-        </button>
-      </div>
+
       <div className="bg-white flex mt-2 rounded-lg border h-[70vh] w-full border-gray/10">
         <div className="w-3/12 border-r-2 border-black/10 p-5 h-[70vh] overflow-y-auto">
           <div className="space-y-4">
@@ -177,116 +156,120 @@ const Page = ({ params }) => {
             )}
           </div>
         </div>
-        <div className="w-9/12 ml-auto py-5 h-full flex flex-col text-lg">
-          {activeTab === "content" ? (
-            <div className="flex flex-col h-full justify-between">
-              <div className="px-6">
-                <h1 className="font-bold text-xl mb-2">
-                  {modules[currentSlide]?.title}
-                </h1>
-                {modules[currentSlide]?.content}
-              </div>
+        <div className="w-6/12  border-r-2 border-black/10 ml-auto py-5 h-full flex flex-col text-lg">
+          <div className="flex flex-col h-full justify-between">
+            <div className="px-6">
+              <h1 className="font-bold text-xl mb-2">
+                {modules[currentSlide]?.title}
+              </h1>
+              {modules[currentSlide]?.content}
+            </div>
 
-              <div className="flex justify-end space-x-5 mt-auto p-5">
-                <button
-                  onClick={() =>
-                    setCurrentSlide((prev) => (prev > 0 ? prev - 1 : prev))
-                  }
-                  disabled={currentSlide === 0}
-                  className={`py-2 px-3 rounded ${
-                    currentSlide === 0
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-primary/10 text-black cursor-pointer"
-                  }`}
-                >
-                  Previous
-                </button>
-                <button
-                  onClick={() => {
-                    if (modules[currentSlide].SlideReaders.length == 0) {
-                      console.log("marking read");
-                      markRead({ slide_uuid: modules[currentSlide].uuid }).then(
-                        (res) => {
-                          loadData();
-                        }
-                      );
-                    }
-                    setCurrentSlide((prev) =>
-                      prev < modules.length - 1 ? prev + 1 : prev
+            <div className="flex justify-end space-x-5 mt-auto p-5">
+              <button
+                onClick={() =>
+                  setCurrentSlide((prev) => (prev > 0 ? prev - 1 : prev))
+                }
+                disabled={currentSlide === 0}
+                className={`py-2 px-3 rounded ${
+                  currentSlide === 0
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-primary/10 text-black cursor-pointer"
+                }`}
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => {
+                  if (modules[currentSlide].SlideReaders.length == 0) {
+                    console.log("marking read");
+                    markRead({ slide_uuid: modules[currentSlide].uuid }).then(
+                      (res) => {
+                        loadData();
+                      }
                     );
-                  }}
-                  disabled={currentSlide === modules.length - 1}
-                  className={`py-2 px-3 rounded ${
-                    currentSlide === modules.length - 1
-                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                      : "bg-primary text-white cursor-pointer"
-                  }`}
-                >
-                  Next
-                </button>
-                {modules.length == currentSlide + 1 &&
-                  progressPercentage < 100 && (
-                    <button
-                      onClick={() => {
-                        markRead({
-                          slide_uuid: modules[currentSlide].uuid,
-                        }).then((res) => {
-                          toast.success("Completed successfully");
-                          loadData();
-                        });
-                      }}
-                      className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
-                    >
-                      Complete Module
-                    </button>
-                  )}
-              </div>
-            </div>
-          ) : (
-            <div className="px-6 flex flex-col h-full">
-              <div className="flex-1 overflow-y-auto">
-                {comments.map((comment) => (
-                  <div
-                    key={comment.id}
-                    className="border-b border-black/10 py-2"
+                  }
+                  setCurrentSlide((prev) =>
+                    prev < modules.length - 1 ? prev + 1 : prev
+                  );
+                }}
+                disabled={currentSlide === modules.length - 1}
+                className={`py-2 px-3 rounded ${
+                  currentSlide === modules.length - 1
+                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    : "bg-primary text-white cursor-pointer"
+                }`}
+              >
+                Next
+              </button>
+              {modules.length == currentSlide + 1 &&
+                progressPercentage < 100 && (
+                  <button
+                    onClick={() => {
+                      markRead({
+                        slide_uuid: modules[currentSlide].uuid,
+                      }).then((res) => {
+                        toast.success("Completed successfully");
+                        loadData();
+                      });
+                    }}
+                    className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
                   >
-                    <div className="flex items-center space-x-2">
-                      <div>
-                        <Image
-                          height={1000}
-                          width={1000}
-                          className=" h-8 w-8 object-cover rounded-full"
-                          src={comment.User.image}
-                        />
-                      </div>
-                      <div>
-                        <p className="font-semibold ">{comment.User.name}</p>
-                        <p className="text-xs text-gray-600 ">
-                          {moment(comment.createdAt).format("MMM DD, yyy")}
-                        </p>
-                      </div>
-                    </div>
-                    <p className="mt-1">{comment.message}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4">
-                <textarea
-                  value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
-                  placeholder="Add a comment..."
-                  className="w-full rounded border-stroke "
-                  rows="3"
-                />
-                <button
-                  onClick={handleCommentSubmit}
-                  className="mt-2 bg-primary text-white py-2 px-4 rounded hover:bg-primary/80"
-                >
-                  Post Comment
-                </button>
-              </div>
+                    Complete Module
+                  </button>
+                )}
             </div>
-          )}
+          </div>
+        </div>
+        <div className="w-3/12 h-[70vh] flex flex-col justify-between space-y-3 px-4 pt-5">
+          <div className="px-0  ">
+            <h1 className="font-bold ">Comments</h1>
+            <div className="flex-1 overflow-y-auto text-sm text-black/50 ">
+              {comments.length == 0 && (
+                <div className="pt-4">
+                  No Comments, Be the first to share your thoughts.
+                </div>
+              )}
+              {comments.map((comment) => (
+                <div key={comment.id} className="border-b border-black/10 py-2">
+                  <div className="flex items-center space-x-2">
+                    <div>
+                      <Image
+                        height={1000}
+                        width={1000}
+                        className=" h-7 w-7 object-cover rounded-full"
+                        src={comment.User.image}
+                      />
+                    </div>
+                    <div>
+                      <p className="font-semibold text-sm ">
+                        {comment.User.name}
+                      </p>
+                      <p className="text-xs text-gray-600 ">
+                        {moment(comment.createdAt).format("MMM DD, yyy")}
+                      </p>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-sm">{comment.message}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 pb-4">
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Add a comment..."
+              className="w-full rounded border-stroke "
+              rows="2"
+            />
+            <button
+              onClick={handleCommentSubmit}
+              className=" bg-primary text-white py-2 px-4 rounded hover:bg-primary/80"
+            >
+              Post Comment
+            </button>
+          </div>
         </div>
       </div>
     </div>
