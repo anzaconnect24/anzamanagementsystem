@@ -2,21 +2,24 @@
 import { useContext, useEffect, useState } from "react";
 import {
   deleteModule,
+  editModule,
   getModules,
 } from "../../../../controllers/modules_controller";
 import Link from "next/link";
 import { UserContext } from "../../../layout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { BsPlus, BsTrash } from "react-icons/bs";
+import { BsPencil, BsPlus, BsTrash } from "react-icons/bs";
 import Image from "next/image";
 import Loader from "@/components/common/Loader";
+import { editComment } from "@/app/controllers/comment_controllers";
+import { useRouter } from "next/navigation";
 
 const Page = ({ params }) => {
   const { course } = params;
   const [modules, setModules] = useState([]);
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
-
+  const router = useRouter();
   useEffect(() => {
     loadData();
   }, []);
@@ -96,12 +99,22 @@ const Page = ({ params }) => {
                     </Link>
                   )}
                   {["Admin"].includes(userDetails.role) && (
-                    <BsTrash
-                      className="hover:text-red-400"
+                    <button
+                      className="bg-red-100 text-red-500 py-2 px-4 rounded-lg"
                       onClick={() => {
                         deleteModule(item.uuid).then((res) => {
                           loadData();
                         });
+                      }}
+                    >
+                      Delete
+                    </button>
+                  )}
+                  {["Admin"].includes(userDetails.role) && (
+                    <BsPencil
+                      className="hover:text-blue-400"
+                      onClick={() => {
+                        router.push(`/modules/edit/?uuid=${item.uuid}`);
                       }}
                     />
                   )}

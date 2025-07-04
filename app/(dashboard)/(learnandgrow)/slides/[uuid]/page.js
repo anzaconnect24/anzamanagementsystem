@@ -225,22 +225,21 @@ const Page = ({ params }) => {
                   Next
                 </button>
                 {modules.length == currentSlide + 1 &&
-                  progressPercentage <
-                    100(
-                      <button
-                        onClick={() => {
-                          markRead({
-                            slide_uuid: modules[currentSlide].uuid,
-                          }).then((res) => {
-                            toast.success("Completed successfully");
-                            loadData();
-                          });
-                        }}
-                        className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
-                      >
-                        Complete Module
-                      </button>
-                    )}
+                  progressPercentage < 100 && (
+                    <button
+                      onClick={() => {
+                        markRead({
+                          slide_uuid: modules[currentSlide].uuid,
+                        }).then((res) => {
+                          toast.success("Completed successfully");
+                          loadData();
+                        });
+                      }}
+                      className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
+                    >
+                      Complete Module
+                    </button>
+                  )}
               </div>
             </div>
           ) : (

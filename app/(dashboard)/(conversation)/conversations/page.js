@@ -23,7 +23,8 @@ const Page = () => {
   const router = useRouter();
   const [loading, setloading] = useState(true);
   useEffect(() => {
-    getConversations(1, 5).then((body) => {
+    getConversations(1, 10).then((body) => {
+      console.log(body);
       setConversations(body);
       setloading(false);
     });
