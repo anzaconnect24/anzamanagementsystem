@@ -55,13 +55,18 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
     }
   }, [initialScoreData]);
 
-  // Calculate bar colors based on scores
+  // Calculate bar colors based on new score ranges
   const getBarColors = () => {
+    const getColor = (score) => {
+      if (score >= 71) return '#10B981'; // Green - Excellent
+      if (score >= 60) return '#F59E42'; // Yellow - Good
+      return '#EF4444'; // Red - Needs Improvement
+    };
     return [
-      scoreData.commercial?.percentage >= 70 ? '#10B981' : '#EF4444',
-      scoreData.financial?.percentage >= 70 ? '#10B981' : '#EF4444',
-      scoreData.operations?.percentage >= 70 ? '#10B981' : '#EF4444',
-      scoreData.legal?.percentage >= 70 ? '#10B981' : '#EF4444'
+      getColor(scoreData.commercial?.percentage || 0),
+      getColor(scoreData.financial?.percentage || 0),
+      getColor(scoreData.operations?.percentage || 0),
+      getColor(scoreData.legal?.percentage || 0)
     ];
   };
 

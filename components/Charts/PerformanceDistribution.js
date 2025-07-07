@@ -88,9 +88,14 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
   const overallScore = calculateOverallScore();
   const remainingScore = 100 - overallScore;
 
-  // Determine chart color based on score threshold
-  const chartColor = overallScore >= 70 ? '#10B981' : '#EF4444';
-  const scoreStatus = overallScore >= 70 ? 'Good' : 'Needs Improvement';
+  // Determine chart color and status based on new thresholds
+  const getChartColorAndStatus = (score) => {
+    if (score >= 71) return { color: '#10B981', status: 'Excellent' };
+    if (score >= 60) return { color: '#F59E42', status: 'Good' };
+    return { color: '#EF4444', status: 'Needs Improvement' };
+  };
+
+  const { color: chartColor, status: scoreStatus } = getChartColorAndStatus(overallScore);
 
   // Donut chart options and series
   const donutChartOptions = {
@@ -156,7 +161,7 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
           <h3 className="text-xl font-bold text-black dark:text-white mb-2 sm:mb-0">
             Overall Readiness
           </h3>
-          <div className={`px-2 py-1 rounded-md text-white text-sm font-medium self-start sm:self-auto ${overallScore >= 70 ? 'bg-success' : 'bg-danger'}`}>
+          <div className={`px-2 py-1 rounded-md text-white text-sm font-medium self-start sm:self-auto`} style={{backgroundColor: chartColor}}>
             {scoreStatus}
           </div>
         </div>
@@ -182,7 +187,7 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
           <div className="text-center">
             <span className="text-gray-400">Initializing chart...</span>
           </div>
-        </div>
+            </div>
       ) : (
         <div className="flex items-center justify-center">
           <div className="w-full max-w-md">
@@ -191,9 +196,9 @@ const PerformanceDistribution = ({ userDetails, initialScoreData }) => {
               series={donutChartSeries}
               type="donut"
               height={chartHeight}
-            />
+              />
+            </div>
           </div>
-        </div>
       )}
     </div>
   );
