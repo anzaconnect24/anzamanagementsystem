@@ -103,12 +103,12 @@ const Page = () => {
       try {
         setLoading(true);
         
-        // If filtering, get all data at once
-        const pageSize = isFiltering ? 1000 : limit;
-        const pageNumber = isFiltering ? 1 : currentPage;
+    // If filtering, get all data at once
+    const pageSize = isFiltering ? 1000 : limit;
+    const pageNumber = isFiltering ? 1 : currentPage;
 
         const body = await getMentors(pageSize, pageNumber);
-        let filteredData = [...body.data];
+      let filteredData = [...body.data];
 
         // Apply search filter first
         if (keyword.trim()) {
@@ -143,47 +143,47 @@ const Page = () => {
               return createdYear === filters.year;
             }
           );
-        }
+      }
 
-        // Apply sorting
-        filteredData.sort((a, b) => {
-          const direction = sortConfig.direction === "asc" ? 1 : -1;
+      // Apply sorting
+      filteredData.sort((a, b) => {
+        const direction = sortConfig.direction === "asc" ? 1 : -1;
 
-          switch (sortConfig.key) {
-            case "name":
-              return (
-                direction *
-                (getMentorName(a).localeCompare(getMentorName(b)) || 0)
-              );
-            case "sector":
-              return (
-                direction *
+        switch (sortConfig.key) {
+          case "name":
+            return (
+              direction *
+              (getMentorName(a).localeCompare(getMentorName(b)) || 0)
+            );
+          case "sector":
+            return (
+              direction *
                 (getMentorSector(a).localeCompare(getMentorSector(b)) || 0)
-              );
-            case "expertise":
-              return (
-                direction *
+            );
+          case "expertise":
+            return (
+              direction *
                 ((a?.MentorProfile?.expertise || "").localeCompare(
                   b?.MentorProfile?.expertise || ""
-                ) || 0)
-              );
+              ) || 0)
+            );
             case "date":
               return (
                 direction * (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
-              );
-            default:
-              return 0;
-          }
-        });
+            );
+          default:
+            return 0;
+        }
+      });
 
         console.log('Filtered data:', filteredData);
-        setUsers(filteredData);
-        setTotalPages(isFiltering ? 1 : body.totalPages);
+      setUsers(filteredData);
+      setTotalPages(isFiltering ? 1 : body.totalPages);
       } catch (error) {
         console.error('Error fetching mentors:', error);
         setUsers([]);
       } finally {
-        setLoading(false);
+      setLoading(false);
       }
     };
 

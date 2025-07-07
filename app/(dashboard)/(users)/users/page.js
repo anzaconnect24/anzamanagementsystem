@@ -16,7 +16,7 @@ const Page = () => {
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
   const [total, settotal] = useState(0);
-  const [limit, setlimit] = useState(10);
+  const [limit, setlimit] = useState(20);
   const [currentPage, setcurrentPage] = useState(1);
   const [selectedItem, setselectedItem] = useState(null);
   const [totalPages, settotalPages] = useState(1);

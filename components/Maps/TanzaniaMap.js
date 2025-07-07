@@ -1,12 +1,137 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { MapContainer, TileLayer, Popup, CircleMarker } from 'react-leaflet';
-import 'leaflet/dist/leaflet.css';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getEnterprenuers } from "@/app/controllers/user_controller";
 
-// Tanzania regions with their coordinates
+// Safe Image Component with better error handling
+const SafeImage = ({ 
+  src, 
+  alt, 
+  className = "",
+  fill = false,
+  width = 40,
+  height = 40,
+  ...props 
+}) => {
+  const [imgSrc, setImgSrc] = useState(src);
+  const [hasError, setHasError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (src && src !== imgSrc) {
+      setImgSrc(src);
+      setHasError(false);
+      setIsLoading(true);
+    }
+  }, [src, imgSrc]);
+
+  const handleError = useCallback(() => {
+    console.log('Image failed to load:', src);
+    setHasError(true);
+    setIsLoading(false);
+  }, [src]);
+
+  const handleLoad = useCallback(() => {
+    setIsLoading(false);
+  }, []);
+
+  // Show initials if image fails to load or src is invalid
+  if (hasError || !imgSrc || imgSrc === '' || imgSrc === null || imgSrc === undefined) {
+    const initials = alt ? alt.charAt(0).toUpperCase() : '?';
+    return (
+      <div 
+        className={`flex items-center justify-center bg-gradient-to-br from-blue-400 to-purple-500 text-white font-bold text-sm ${className}`}
+        style={fill ? { position: 'absolute', inset: 0 } : { width, height }}
+        {...props}
+      >
+        {initials}
+      </div>
+    );
+  }
+
+  return (
+    <div className={fill ? "relative w-full h-full" : ""} style={!fill ? { width, height } : {}}>
+      {isLoading && (
+        <div 
+          className={`absolute inset-0 flex items-center justify-center bg-gray-200 dark:bg-gray-600 ${className}`}
+          style={!fill ? { width, height } : {}}
+        >
+          <div className="animate-spin h-4 w-4 border-2 border-gray-400 border-t-transparent rounded-full"></div>
+        </div>
+      )}
+      <Image
+        src={imgSrc}
+        alt={alt || "User avatar"}
+        fill={fill}
+        width={!fill ? width : undefined}
+        height={!fill ? height : undefined}
+        className={`${className} ${isLoading ? 'opacity-0' : 'opacity-100'} transition-opacity duration-300`}
+        onError={handleError}
+        onLoad={handleLoad}
+        priority={false}
+        quality={75}
+        unoptimized={true} // Add this for problematic external images
+        {...props}
+      />
+    </div>
+  );
+};
+
+// Dynamically import map components with better error handling and loading states
+const MapContainer = dynamic(
+  () => import('react-leaflet').then((mod) => {
+    console.log('MapContainer loaded');
+    return mod.MapContainer;
+  }),
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-boxdark-2 rounded-sm">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Loading map...</p>
+        </div>
+      </div>
+    )
+  }
+);
+
+const TileLayer = dynamic(
+  () => import('react-leaflet').then((mod) => {
+    console.log('TileLayer loaded');
+    return mod.TileLayer;
+  }),
+  { 
+    ssr: false,
+    loading: () => null
+  }
+);
+
+const Popup = dynamic(
+  () => import('react-leaflet').then((mod) => {
+    console.log('Popup loaded');
+    return mod.Popup;
+  }),
+  { 
+    ssr: false,
+    loading: () => null
+  }
+);
+
+const CircleMarker = dynamic(
+  () => import('react-leaflet').then((mod) => {
+    console.log('CircleMarker loaded');
+    return mod.CircleMarker;
+  }),
+  { 
+    ssr: false,
+    loading: () => null
+  }
+);
+
+// Tanzania regions with their coordinates - memoized to prevent recreating
 const REGION_COORDINATES = {
   'Dar es Salaam': { center: [-6.7924, 39.2083], color: '#3b82f6' },
   'Dodoma': { center: [-6.1722, 35.7395], color: '#10b981' },
@@ -46,21 +171,58 @@ const TanzaniaMap = () => {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [mapData, setMapData] = useState({});
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isClient, setIsClient] = useState(false);
+  const [mapReady, setMapReady] = useState(false);
+  const [leafletLoaded, setLeafletLoaded] = useState(false);
   
-  useEffect(() => {
-    fetchEntrepreneurData();
+  // Memoize the region click handler
+  const handleRegionClick = useCallback((region) => {
+    console.log('Region clicked:', region);
+    setSelectedRegion(region);
   }, []);
+
+  // Load Leaflet CSS and setup
+  const loadLeafletCSS = useCallback(async () => {
+    if (typeof window !== 'undefined' && !leafletLoaded) {
+      try {
+        console.log('Loading Leaflet CSS...');
+        await import('leaflet/dist/leaflet.css');
+        
+        // Fix for default markers
+        const L = await import('leaflet');
+        
+        // Only modify if not already modified
+        if (L.Icon.Default.prototype._getIconUrl) {
+          delete L.Icon.Default.prototype._getIconUrl;
+          L.Icon.Default.mergeOptions({
+            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+          });
+        }
+        
+        setLeafletLoaded(true);
+        setMapReady(true);
+        console.log('Leaflet loaded successfully');
+      } catch (error) {
+        console.error('Error loading Leaflet:', error);
+        setError('Failed to load map components');
+      }
+    }
+  }, [leafletLoaded]);
   
-  const fetchEntrepreneurData = async () => {
+  // Fetch entrepreneur data with better error handling
+  const fetchEntrepreneurData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       
-      // Use a large page size (1000) to get all entrepreneurs at once
-      // This matches the approach in the entrepreneurs page
+      console.log('Fetching entrepreneur data...');
       const response = await getEnterprenuers(1000, 1, "");
       console.log("Entrepreneur data response:", response);
       
-      if (response && response.data) {
+      if (response && response.data && Array.isArray(response.data)) {
         // Group entrepreneurs by region
         const regionData = {};
         
@@ -73,31 +235,43 @@ const TanzaniaMap = () => {
           };
         });
         
-        // Process entrepreneurs
-        response.data.forEach(user => {
-          if (user.Business && user.Business.location) {
-            const region = user.Business.location;
-            
-            // If region exists in our coordinates data
-            if (regionData[region]) {
-              // Increment count
-              regionData[region].count += 1;
+        // Process entrepreneurs with better error handling
+        response.data.forEach((user, index) => {
+          try {
+            if (user?.Business?.location) {
+              const region = user.Business.location;
               
-              // Add entrepreneur to the list
-              regionData[region].entrepreneurs.push({
-                Business: {
-                  name: user.Business.name,
-                  BusinessSector: { name: user.Business.BusinessSector?.name || 'Other' },
-                  program: user.Business.program || 'N/A',
-                  teamSize: user.Business.teamSize || 0,
-                  email: user.email,
-                  location: user.Business.location,
-                  uuid: user.Business.uuid,
-                  createdAt: user.Business.createdAt
-                },
-                image: user.image || "/images/default-avatar.png"
-              });
+              // If region exists in our coordinates data
+              if (regionData[region]) {
+                // Increment count
+                regionData[region].count += 1;
+                
+                // Add entrepreneur to the list with safe data handling
+                regionData[region].entrepreneurs.push({
+                  Business: {
+                    name: user.Business.name || 'Unknown Business',
+                    BusinessSector: { 
+                      name: user.Business.BusinessSector?.name || 'Other' 
+                    },
+                    program: user.Business.program || 'N/A',
+                    teamSize: user.Business.teamSize || 0,
+                    email: user.email || '',
+                    location: user.Business.location,
+                    uuid: user.Business.uuid,
+                    createdAt: user.Business.createdAt
+                  },
+                  // Handle image URL more safely
+                  image: (user.image && 
+                          user.image !== '' && 
+                          user.image !== null && 
+                          user.image !== undefined) ? user.image : null
+                });
+              } else {
+                console.warn(`Unknown region: ${region} for user ${user.email || index}`);
+              }
             }
+          } catch (userError) {
+            console.error('Error processing user data:', userError, user);
           }
         });
         
@@ -105,20 +279,44 @@ const TanzaniaMap = () => {
         setMapData(regionData);
       } else {
         console.error("Invalid response format:", response);
+        setError('Invalid data format received');
       }
       
       setLoading(false);
     } catch (error) {
       console.error('Error fetching entrepreneur data:', error);
+      setError(`Failed to load entrepreneur data: ${error.message}`);
       setLoading(false);
     }
-  };
-  
-  // Calculate total entrepreneurs and max count for visualization
-  const totalEntrepreneurs = Object.values(mapData).reduce((sum, region) => sum + region.count, 0);
-  const maxCount = Math.max(...Object.values(mapData).map(region => region.count), 1);
-  const sortedRegions = Object.entries(mapData).sort(([,a], [,b]) => b.count - a.count);
+  }, []);
 
+  useEffect(() => {
+    console.log('TanzaniaMap component mounted');
+    setIsClient(true);
+    
+    // Load Leaflet and fetch data
+    const initializeComponent = async () => {
+      await loadLeafletCSS();
+      await fetchEntrepreneurData();
+    };
+    
+    initializeComponent();
+  }, [loadLeafletCSS, fetchEntrepreneurData]);
+  
+  // Memoize calculations to prevent unnecessary re-renders
+  const { totalEntrepreneurs, maxCount, sortedRegions } = useMemo(() => {
+    const total = Object.values(mapData).reduce((sum, region) => sum + region.count, 0);
+    const max = Math.max(...Object.values(mapData).map(region => region.count), 1);
+    const sorted = Object.entries(mapData).sort(([,a], [,b]) => b.count - a.count);
+    
+    return {
+      totalEntrepreneurs: total,
+      maxCount: max,
+      sortedRegions: sorted
+    };
+  }, [mapData]);
+
+  // Loading state
   if (loading) {
     return (
       <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
@@ -137,7 +335,28 @@ const TanzaniaMap = () => {
     );
   }
 
-  // Check if we have any entrepreneurs data
+  // Error state
+  if (error) {
+    return (
+      <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+        <div className="flex flex-col items-center justify-center h-[400px] text-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">Error Loading Data</h3>
+          <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md">{error}</p>
+          <button 
+            onClick={fetchEntrepreneurData}
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition-colors"
+          >
+            Try Again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // No data state
   if (totalEntrepreneurs === 0) {
     return (
       <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
@@ -170,6 +389,102 @@ const TanzaniaMap = () => {
     );
   }
 
+  // Map component with error boundary
+  const MapComponent = () => {
+    if (!isClient || !mapReady || !leafletLoaded) {
+      return (
+        <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-boxdark-2 rounded-sm">
+          <div className="text-center">
+            <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Loading map...</p>
+          </div>
+        </div>
+      );
+    }
+
+    try {
+      return (
+        <MapContainer
+          bounds={TANZANIA_BOUNDS}
+          style={{ height: '100%', width: '100%' }}
+          className="rounded-sm"
+          zoomControl={true}
+          key="tanzania-map" // Add key for better re-rendering
+        >
+          <TileLayer
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+          />
+          {Object.entries(mapData).map(([region, data]) => (
+            <CircleMarker
+              key={`marker-${region}`}
+              center={data.center}
+              radius={Math.max(6, (data.count * 15) / maxCount)}
+              fillColor={data.color}
+              fillOpacity={0.8}
+              color={data.color}
+              weight={2}
+              eventHandlers={{
+                click: () => handleRegionClick(region)
+              }}
+            >
+              <Popup>
+                <div className="p-2 bg-white rounded-sm min-w-[200px]">
+                  <h4 className="font-semibold text-lg text-gray-900">{region}</h4>
+                  <p className="text-primary font-medium text-base">{data.count} entrepreneurs</p>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {totalEntrepreneurs > 0 ? ((data.count / totalEntrepreneurs) * 100).toFixed(1) : 0}% of total
+                  </p>
+                  {data.entrepreneurs.length > 0 && (
+                    <>
+                      <div className="text-sm font-medium mt-2 text-gray-900">Top Sectors:</div>
+                      <div className="space-y-1">
+                        {Object.entries(
+                          data.entrepreneurs.reduce((acc, curr) => {
+                            const sector = curr.Business?.BusinessSector?.name || 'Other';
+                            acc[sector] = (acc[sector] || 0) + 1;
+                            return acc;
+                          }, {})
+                        )
+                          .sort(([,a], [,b]) => b - a)
+                          .slice(0, 3)
+                          .map(([sector, count]) => (
+                            <div key={`${region}-${sector}`} className="text-xs text-gray-600 flex justify-between items-center">
+                              <span>{sector}</span>
+                              <span className="font-medium">{count}</span>
+                            </div>
+                          ))
+                        }
+                      </div>
+                    </>
+                  )}
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
+        </MapContainer>
+      );
+    } catch (mapError) {
+      console.error('Error rendering map:', mapError);
+      return (
+        <div className="flex items-center justify-center h-full bg-red-50 dark:bg-red-900/20 rounded-sm">
+          <div className="text-center">
+            <p className="text-red-600 dark:text-red-400">Error loading map</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm"
+            >
+              Reload
+            </button>
+          </div>
+        </div>
+      );
+    }
+  };
+
   return (
     <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
       <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap mb-6">
@@ -193,9 +508,9 @@ const TanzaniaMap = () => {
           <div className="flex flex-col gap-4">
             {sortedRegions.slice(0, 4).map(([region, data], index) => (
               <div 
-                key={region} 
+                key={`region-${region}`}
                 className="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-boxdark p-2 rounded-sm transition-colors"
-                onClick={() => setSelectedRegion(region)}
+                onClick={() => handleRegionClick(region)}
               >
                 <div className="flex items-center gap-2.5">
                   <div className="flex h-6.5 w-6.5 items-center justify-center rounded-full bg-meta-2">
@@ -237,15 +552,15 @@ const TanzaniaMap = () => {
                 {mapData[selectedRegion].entrepreneurs.map((entrepreneur, index) => (
                   <Link
                     href={`/businessDetails/${entrepreneur.Business.uuid}`}
-                    key={index}
+                    key={`${selectedRegion}-entrepreneur-${index}`}
                     className="flex items-center gap-3 p-2 bg-white dark:bg-boxdark rounded-sm hover:bg-gray-50 dark:hover:bg-boxdark-2 transition-colors"
                   >
                     <div className="w-10 h-10 relative rounded-full overflow-hidden">
-                      <Image
+                      <SafeImage
                         src={entrepreneur.image}
                         alt={entrepreneur.Business.name}
                         fill
-                        className="object-cover"
+                        className="object-cover rounded-full"
                       />
                     </div>
                     <div className="flex-grow">
@@ -263,68 +578,11 @@ const TanzaniaMap = () => {
         </div>
 
         <div className="h-[400px] rounded-sm overflow-hidden">
-          <MapContainer
-            bounds={TANZANIA_BOUNDS}
-            style={{ height: '100%', width: '100%' }}
-            className="rounded-sm"
-            zoomControl={true}
-          >
-            <TileLayer
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-            />
-            {Object.entries(mapData).map(([region, data]) => (
-              <CircleMarker
-                key={region}
-                center={data.center}
-                radius={Math.max(6, (data.count * 15) / maxCount)}
-                fillColor={data.color}
-                fillOpacity={0.8}
-                color={data.color}
-                weight={2}
-                eventHandlers={{
-                  click: () => setSelectedRegion(region)
-                }}
-              >
-                <Popup>
-                  <div className="p-2 bg-white rounded-sm">
-                    <h4 className="font-semibold text-lg text-gray-900">{region}</h4>
-                    <p className="text-primary font-medium text-base">{data.count} entrepreneurs</p>
-                    <p className="text-sm text-gray-600 mb-2">
-                      {totalEntrepreneurs > 0 ? ((data.count / totalEntrepreneurs) * 100).toFixed(1) : 0}% of total
-                    </p>
-                    {data.entrepreneurs.length > 0 && (
-                      <>
-                        <div className="text-sm font-medium mt-2 text-gray-900">Top Sectors:</div>
-                        <div className="space-y-1">
-                          {Object.entries(
-                            data.entrepreneurs.reduce((acc, curr) => {
-                              const sector = curr.Business?.BusinessSector?.name || 'Other';
-                              acc[sector] = (acc[sector] || 0) + 1;
-                              return acc;
-                            }, {})
-                          )
-                            .sort(([,a], [,b]) => b - a)
-                            .slice(0, 3)
-                            .map(([sector, count]) => (
-                              <div key={sector} className="text-xs text-gray-600 flex justify-between items-center">
-                                <span>{sector}</span>
-                                <span className="font-medium">{count}</span>
-                              </div>
-                            ))
-                          }
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </Popup>
-              </CircleMarker>
-            ))}
-          </MapContainer>
+          <MapComponent />
         </div>
       </div>
     </div>
   );
 };
 
-export default TanzaniaMap; 
+export default TanzaniaMap;

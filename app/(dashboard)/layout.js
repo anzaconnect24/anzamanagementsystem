@@ -68,37 +68,35 @@ export default function RootLayout({ children }) {
   }, []);
 
   return (
-    <html lang="en">
-      <body suppressHydrationWarning={true}>
-        <div>
-          <Toaster position="top-right" />
-        </div>
-        <UserContext.Provider value={{ userDetails, setUserDetails, data }}>
-          <div className="dark:bg-boxdark-2 dark:text-bodydark">
-            {loading ? (
-              <Loader height={"h-screen"} />
-            ) : (
-              <div className="flex h-screen overflow-hidden">
-                <Sidebar
+    <>
+      <div>
+        <Toaster position="top-right" />
+      </div>
+      <UserContext.Provider value={{ userDetails, setUserDetails, data }}>
+        <div className="dark:bg-boxdark-2 dark:text-bodydark">
+          {loading ? (
+            <Loader height={"h-screen"} />
+          ) : (
+            <div className="flex h-screen overflow-hidden">
+              <Sidebar
+                sidebarOpen={sidebarOpen}
+                setSidebarOpen={setSidebarOpen}
+              />
+              <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+                <Header
                   sidebarOpen={sidebarOpen}
                   setSidebarOpen={setSidebarOpen}
                 />
-                <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
-                  <Header
-                    sidebarOpen={sidebarOpen}
-                    setSidebarOpen={setSidebarOpen}
-                  />
-                  <main>
-                    <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
-                      {children}
-                    </div>
-                  </main>
-                </div>
+                <main>
+                  <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+                    {children}
+                  </div>
+                </main>
               </div>
-            )}
-          </div>
-        </UserContext.Provider>
-      </body>
-    </html>
+            </div>
+          )}
+        </div>
+      </UserContext.Provider>
+    </>
   );
 }

@@ -7,6 +7,7 @@ import { UserContext } from "../../../(dashboard)/layout";
 import Loader from "@/components/common/Loader";
 import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
+import AIAnalysisPanel from "@/components/AI/AIAnalysisPanel";
 
 // Define the table headers
 const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
@@ -36,8 +37,8 @@ const Page = () => {
       
       // Ensure scoreData has the correct structure
       if (responseData1 && Object.keys(responseData1).length > 0) {
-        setScoreData(responseData1);
-        setGeneralStatus(responseData1?.general_status || "Not Ready");
+      setScoreData(responseData1);
+      setGeneralStatus(responseData1?.general_status || "Not Ready");
         console.log('Score data set successfully:', responseData1);
       } else {
         // If no data, create dummy data for testing
@@ -278,22 +279,23 @@ const Page = () => {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Overview</h3>
           
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
-            <div className="col-span-1 md:col-span-3">
-              <BusinessDomainScores
-                initialScoreData={scoreData}
+          <div className="col-span-1 md:col-span-3">
+            <BusinessDomainScores
+              initialScoreData={scoreData}
                 userDetails={userDetails}
-              />
-            </div>
-            <div className="col-span-1 md:col-span-2">
-              <PerformanceDistribution
-                initialScoreData={scoreData}
+            />
+          </div>
+          <div className="col-span-1 md:col-span-2">
+            <PerformanceDistribution
+              initialScoreData={scoreData}
                 userDetails={userDetails}
-              />
+            />
             </div>
           </div>
         </div>
 
       </div>
+
 
       {renderSection("Commercial", data.commercial)}
       {renderSection("Financial", data.financial)}

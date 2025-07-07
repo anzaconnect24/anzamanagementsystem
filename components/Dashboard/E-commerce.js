@@ -7,6 +7,7 @@ import CardDataStats from "../CardDataStats";
 import { SlPeople } from "react-icons/sl";
 import BusinessDomainScores from "../Charts/BusinessDomainScores";
 import PerformanceDistribution from "../Charts/PerformanceDistribution";
+import jsPDF from "jspdf";
 
 // without this the component renders on server and throws an error
 import dynamic from "next/dynamic";
@@ -28,6 +29,8 @@ const ECommerce = () => {
   const [mentorStats, setMentorStats] = useState(null);
   const [scoreData, setScoreData] = useState({});
   const [loadingBar, setLoadingBar] = useState(true);
+  const [aiReport, setAiReport] = useState(null);
+  const [loadingReport, setLoadingReport] = useState(false);
 
   useEffect(() => {
     getMentorOverviewStats().then((res) => {
@@ -44,8 +47,52 @@ const ECommerce = () => {
         setScoreData(res);
         setLoadingBar(false);
       });
+      // Fetch AI report from backend
+      setLoadingReport(true);
+      fetch(`/api/entrepreneurs/${userDetails.uuid}/ai-report`)
+        .then(res => res.ok ? res.json() : null)
+        .then(data => {
+          setAiReport(data);
+          setLoadingReport(false);
+        })
+        .catch(() => setLoadingReport(false));
     }
-  }, [userDetails.role]);
+  }, [userDetails.role, userDetails.uuid]);
+
+  // PDF download handler for entrepreneurs
+  const handleDownloadPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("AI Analysis Report", 10, 15);
+    doc.setFontSize(12);
+    let y = 30;
+    
+    // Check if scoreData has valid AI analysis data
+    const hasValidData = scoreData && 
+      Object.keys(scoreData).length > 0 && 
+      scoreData.commercial && 
+      typeof scoreData.commercial.percentage === 'number';
+    
+    if (hasValidData) {
+      doc.text(`Entrepreneur: ${userDetails.name || 'N/A'}`, 10, y); y += 8;
+      doc.text(`Business: ${data?.businessName || 'N/A'}`, 10, y); y += 8;
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, y); y += 12;
+      
+      Object.entries(scoreData).forEach(([domain, data]) => {
+        if (typeof data === 'object' && data !== null && 'percentage' in data) {
+          doc.text(`${domain.charAt(0).toUpperCase() + domain.slice(1)}: ${data.percentage}%`, 10, y); y += 7;
+          if (data.status) {
+            doc.text(`Status: ${data.status}`, 14, y); y += 6;
+          }
+        }
+      });
+    } else {
+      doc.text("Your AI analysis report is not yet available.", 10, y);
+      y += 8;
+      doc.text("Please contact your administrator or check back later.", 10, y);
+    }
+    doc.save("AI_Analysis_Report.pdf");
+  };
 
   return (
     <>
@@ -158,6 +205,8 @@ const ECommerce = () => {
               </svg>
             </CardDataStats>
           </div>
+
+      
 
           {/* Business Domain Scores Chart */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
