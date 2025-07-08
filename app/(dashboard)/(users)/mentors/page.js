@@ -173,18 +173,6 @@ const Page = () => {
             );
             case "date":
               return (
-<<<<<<< HEAD
-                direction * (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
-            );
-          default:
-            return 0;
-        }
-      });
-
-        console.log('Filtered data:', filteredData);
-      setUsers(filteredData);
-      setTotalPages(isFiltering ? 1 : body.totalPages);
-=======
                 direction *
                 (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
               );
@@ -196,7 +184,6 @@ const Page = () => {
         console.log("Filtered data:", filteredData);
         setUsers(filteredData);
         setTotalPages(isFiltering ? 1 : body.totalPages);
->>>>>>> origin/develop
       } catch (error) {
         console.error("Error fetching mentors:", error);
         setUsers([]);
