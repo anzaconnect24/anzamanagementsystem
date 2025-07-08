@@ -254,8 +254,7 @@ const Page = ({ params }) => {
   };
 
   const sendAIReportEmail = async (business, scoreData) => {
-    if (!business?.email) return;
-    // Generate PDF
+    // Only generate PDF, do not send email
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("AI Analysis Report", 10, 15);
@@ -272,27 +271,11 @@ const Page = ({ params }) => {
         }
       }
     });
-    const pdfBase64 = btoa(doc.output("arraybuffer").reduce((data, byte) => data + String.fromCharCode(byte), ''));
-    // Send email
-    try {
-      const res = await fetch('/api/send-ai-report', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          toEmail: business.email,
-          pdfBase64,
-          entrepreneurName: business.User?.name,
-          businessName: business.name,
-        }),
-      });
-      if (res.ok) {
-        toast.success('AI analysis report emailed to entrepreneur!');
-      } else {
-        toast.error('Failed to email AI analysis report.');
-      }
-    } catch (err) {
-      toast.error('Error sending email.');
-    }
+    // Fix: Convert ArrayBuffer to Uint8Array for base64 encoding
+    const arrayBuffer = doc.output("arraybuffer");
+    const uint8Array = new Uint8Array(arrayBuffer);
+    const pdfBase64 = btoa(String.fromCharCode(...uint8Array));
+    toast.success('AI analysis report generated! (Email sending is disabled)');
   };
 
   useEffect(() => {
