@@ -1,7 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Initialize Gemini AI directly (matching your working pattern)
-const genAI = new GoogleGenerativeAI('AIzaSyDOg_VEiAOqIa_PqFImUcrJ4RAafCpOGRQ');
+// Hardcoded Gemini API Key (WARNING: Not secure for production)
+const GEMINI_API_KEY = "AIzaSyCEX49he1jx_K-Jjecq2VX3pVtYOm_Okbk";
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
 /**
  * Comprehensive CRAT Report Analysis using Gemini AI
@@ -28,63 +29,77 @@ export class CRATAIAnalyzer {
    * @returns {Object} AI-generated analysis and recommendations with predictions
    */
   async analyzeCompleteReport(reportData, scoreData, businessInfo = {}) {
-    try {
-      console.log('🤖 Starting comprehensive CRAT analysis with predictions...');
-      console.log('📊 Score Data:', scoreData);
-      console.log('🏢 Business Info:', businessInfo);
-      
-      // Validate inputs
-      if (!scoreData) {
-        throw new Error('Score data is required for analysis');
+    const MAX_RETRIES = 3;
+    const RETRY_DELAY_MS = 2000;
+    let attempt = 0;
+    while (attempt < MAX_RETRIES) {
+      try {
+        console.log('🤖 Starting comprehensive CRAT analysis with predictions...');
+        console.log('📊 Score Data:', scoreData);
+        console.log('🏢 Business Info:', businessInfo);
+        
+        // Validate inputs
+        if (!scoreData) {
+          throw new Error('Score data is required for analysis');
+        }
+        
+        const prompt = this.buildComprehensivePrompt(reportData, scoreData, businessInfo);
+        console.log('📝 Generated prompt length:', prompt.length);
+        
+        console.log('🔄 Sending request to Gemini AI... (attempt', attempt + 1, ")");
+        const result = await this.model.generateContent(prompt);
+        const response = await result.response;
+        
+        if (!response) {
+          throw new Error('No response received from Gemini AI');
+        }
+        
+        const analysis = response.text();
+        console.log('✅ Received AI response, length:', analysis.length);
+        
+        // Parse the structured response with enhanced predictions
+        const parsedAnalysis = this.parseAIResponse(analysis);
+        
+        // Generate additional predictive data
+        const predictiveData = await this.generatePredictiveAnalysis(reportData, scoreData, businessInfo);
+        
+        // Merge predictive data with main analysis
+        const enhancedAnalysis = {
+          ...parsedAnalysis,
+          predictions: predictiveData,
+          generatedAt: new Date().toISOString(),
+          analysisVersion: '2.0-enhanced'
+        };
+        
+        console.log('🎯 Enhanced analysis with predictions completed');
+        
+        return enhancedAnalysis;
+      } catch (error) {
+        attempt++;
+        // Log full error for developers
+        console.error('❌ Error analyzing CRAT report (attempt', attempt, "):", error);
+        // Retry on 503/model overloaded
+        if (error.message && error.message.includes('503') && attempt < MAX_RETRIES) {
+          console.warn('Gemini AI model overloaded. Retrying in 2 seconds...');
+          await new Promise(res => setTimeout(res, RETRY_DELAY_MS));
+          continue;
+        }
+        // Provide more specific error messages
+        if (error.message.includes('API_KEY_INVALID')) {
+          throw new Error('Invalid Gemini API key. Please check your API key configuration.');
+        } else if (error.message.includes('QUOTA_EXCEEDED')) {
+          throw new Error('Gemini API quota exceeded. Please try again later or check your billing.');
+        } else if (error.message.includes('SAFETY')) {
+          throw new Error('Content was blocked by safety filters. Please try with different data.');
+        } else if (error.message.includes('fetch')) {
+          throw new Error('Network error. Please check your internet connection and try again.');
+        } else if (error.message.includes('503')) {
+          throw new Error('The AI model is temporarily overloaded. Please try again in a few minutes.');
+        }
+        throw new Error(`AI Analysis failed: ${error.message}`);
       }
-      
-      const prompt = this.buildComprehensivePrompt(reportData, scoreData, businessInfo);
-      console.log('📝 Generated prompt length:', prompt.length);
-      
-      console.log('🔄 Sending request to Gemini AI...');
-      const result = await this.model.generateContent(prompt);
-      const response = await result.response;
-      
-      if (!response) {
-        throw new Error('No response received from Gemini AI');
-      }
-      
-      const analysis = response.text();
-      console.log('✅ Received AI response, length:', analysis.length);
-      
-      // Parse the structured response with enhanced predictions
-      const parsedAnalysis = this.parseAIResponse(analysis);
-      
-      // Generate additional predictive data
-      const predictiveData = await this.generatePredictiveAnalysis(reportData, scoreData, businessInfo);
-      
-      // Merge predictive data with main analysis
-      const enhancedAnalysis = {
-        ...parsedAnalysis,
-        predictions: predictiveData,
-        generatedAt: new Date().toISOString(),
-        analysisVersion: '2.0-enhanced'
-      };
-      
-      console.log('🎯 Enhanced analysis with predictions completed');
-      
-      return enhancedAnalysis;
-    } catch (error) {
-      console.error('❌ Error analyzing CRAT report:', error);
-      
-      // Provide more specific error messages
-      if (error.message.includes('API_KEY_INVALID')) {
-        throw new Error('Invalid Gemini API key. Please check your API key configuration.');
-      } else if (error.message.includes('QUOTA_EXCEEDED')) {
-        throw new Error('Gemini API quota exceeded. Please try again later or check your billing.');
-      } else if (error.message.includes('SAFETY')) {
-        throw new Error('Content was blocked by safety filters. Please try with different data.');
-      } else if (error.message.includes('fetch')) {
-        throw new Error('Network error. Please check your internet connection and try again.');
-      }
-      
-      throw new Error(`AI Analysis failed: ${error.message}`);
     }
+    throw new Error('AI Analysis failed after multiple attempts. Please try again later.');
   }
 
   /**
