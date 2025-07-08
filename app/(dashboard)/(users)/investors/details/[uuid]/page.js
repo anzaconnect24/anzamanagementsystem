@@ -307,14 +307,7 @@ const Page = ({ params }) => {
         </div>
         <div className="flex space-x-4 mt-4">
           {/* {userDetails.role} */}
-          {userDetails.role === "Enterprenuer" && (
-            <Link
-              href={`/investmentApplication/${user.uuid}`}
-              className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
-            >
-              Ask for Investment
-            </Link>
-          )}
+
           <button
             onClick={handleStartChat}
             className=" px-6 py-3 bg-green-500 text-white rounded-lg  transition-colors"
@@ -324,6 +317,14 @@ const Page = ({ params }) => {
               Message
             </span>
           </button>
+          {userDetails.role === "Enterprenuer" && (
+            <Link
+              href={`/investmentApplicationByEntreprenuer/${user.uuid}`}
+              className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
+            >
+              Ask for Investment
+            </Link>
+          )}
         </div>
       </div>
     );

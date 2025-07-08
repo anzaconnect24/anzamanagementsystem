@@ -5,7 +5,8 @@ import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import Image from "next/image";
-
+import Pagination from "@/app/component/pagination";
+import { UserContext } from "../../layout";
 const Page = () => {
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
@@ -22,10 +23,13 @@ const Page = () => {
   });
   const [currentPage, setcurrentPage] = useState(1);
   const [totalPages, settotalPages] = useState(1);
-  const [limit, setlimit] = useState(20);
+  const [limit, setLimit] = useState(20);
+  const [page, setPage] = useState(1);
+  const [count, setCount] = useState(0);
   // Add states for dropdown visibility
   const [openDropdown, setOpenDropdown] = useState(null);
   const [allUsers, setAllUsers] = useState([]); // New state for all users
+  const { userDetails } = useContext(UserContext);
 
   // Define filter and sort options
   const filterOptions = {
@@ -74,71 +78,71 @@ const Page = () => {
     const pageSize = isFiltering ? 1000 : limit;
     const pageNumber = isFiltering ? 1 : currentPage;
 
-    getEnterprenuers(pageSize, pageNumber, keyword).then((body) => {
+    getEnterprenuers(limit, page, keyword).then((body) => {
+      console.log(body);
       let filteredData = [...body.data];
-
-      // Apply filters if any are active
-      if (isFiltering) {
-        if (filters.sector !== "All Sectors") {
-          filteredData = filteredData.filter(
-            (item) => item.Business?.BusinessSector?.name === filters.sector
-          );
-        }
-
-        if (filters.year !== "All Years") {
-          filteredData = filteredData.filter(
-            (item) =>
-              new Date(item.Business?.createdAt).getFullYear().toString() ===
-              filters.year
-          );
-        }
-
-        if (filters.program !== "All Programs") {
-          filteredData = filteredData.filter(
-            (item) => item.Business?.program === filters.program
-          );
-        }
-      }
-
-      // Apply sorting
-      filteredData.sort((a, b) => {
-        const direction = sortConfig.direction === "asc" ? 1 : -1;
-
-        switch (sortConfig.key) {
-          case "name":
-            return (
-              direction *
-              (a.Business?.name?.localeCompare(b.Business?.name) || 0)
-            );
-          case "sector":
-            return (
-              direction *
-              (a.Business?.BusinessSector?.name?.localeCompare(
-                b.Business?.BusinessSector?.name
-              ) || 0)
-            );
-          case "date":
-            return (
-              direction *
-              (new Date(a.Business?.createdAt) -
-                new Date(b.Business?.createdAt))
-            );
-          case "program":
-            return (
-              direction *
-              (a.Business?.program?.localeCompare(b.Business?.program) || 0)
-            );
-          default:
-            return 0;
-        }
-      });
-
+      applyFilters(filteredData);
+      setCount(body.count);
       setUsers(filteredData);
       settotalPages(isFiltering ? 1 : body.totalPages);
       setloading(false);
     });
-  }, [refresh, sortConfig, filters, currentPage, limit, keyword]);
+  }, [refresh, sortConfig, filters, page, keyword]);
 
+  const applyFilters = (filteredData) => {
+    if (isFiltering) {
+      if (filters.sector !== "All Sectors") {
+        filteredData = filteredData.filter(
+          (item) => item.Business?.BusinessSector?.name === filters.sector
+        );
+      }
+
+      if (filters.year !== "All Years") {
+        filteredData = filteredData.filter(
+          (item) =>
+            new Date(item.Business?.createdAt).getFullYear().toString() ===
+            filters.year
+        );
+      }
+
+      if (filters.program !== "All Programs") {
+        filteredData = filteredData.filter(
+          (item) => item.Business?.program === filters.program
+        );
+      }
+    }
+
+    // Apply sorting
+    filteredData.sort((a, b) => {
+      const direction = sortConfig.direction === "asc" ? 1 : -1;
+
+      switch (sortConfig.key) {
+        case "name":
+          return (
+            direction * (a.Business?.name?.localeCompare(b.Business?.name) || 0)
+          );
+        case "sector":
+          return (
+            direction *
+            (a.Business?.BusinessSector?.name?.localeCompare(
+              b.Business?.BusinessSector?.name
+            ) || 0)
+          );
+        case "date":
+          return (
+            direction *
+            (new Date(a.Business?.createdAt) - new Date(b.Business?.createdAt))
+          );
+        case "program":
+          return (
+            direction *
+            (a.Business?.program?.localeCompare(b.Business?.program) || 0)
+          );
+        default:
+          return 0;
+      }
+    });
+  };
   // Handle dropdown toggle
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
@@ -172,26 +176,15 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
+      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+
       {/* Search and Filter Bar */}
       <div className="mb-8">
         {/* Member Count and Search */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
-            <svg
-              className="w-5 h-5 text-gray-400"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
             <span className="text-xl text-gray-600 dark:text-gray-300">
-              {users.length} members
+              {count} members
             </span>
           </div>
 
@@ -201,7 +194,7 @@ const Page = () => {
               placeholder="Search entrepreneurs..."
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
-              className="w-64 px-4 py-2 rounded-md border border-gray-200 bg-white dark:bg-boxdark dark:border-gray-700 focus:outline-none focus:border-primary"
+              className="w-64 px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 focus:outline-none focus:border-primary"
             />
           </div>
         </div>
@@ -458,7 +451,7 @@ const Page = () => {
                         />
                       </svg>
                       <span>
-                        Founded{" "}
+                        Joined{" "}
                         {item?.Business?.createdAt
                           ? new Date(item.Business.createdAt).getFullYear()
                           : "N/A"}
@@ -530,48 +523,7 @@ const Page = () => {
         </div>
       )}
 
-      {/* Pagination - Only show if not filtering */}
-      {!isFiltering && (
-        <div className="flex items-center justify-between p-6 border-t border-stroke dark:border-strokedark mt-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
-            Page {currentPage} of {totalPages}
-          </p>
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                if (currentPage > 1) {
-                  setcurrentPage(currentPage - 1);
-                  setRefresh(refresh + 1);
-                }
-              }}
-              disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                currentPage === 1
-                  ? "bg-gray-100 text-gray-400"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-            >
-              Previous
-            </button>
-            <button
-              onClick={() => {
-                if (currentPage < totalPages) {
-                  setcurrentPage(currentPage + 1);
-                  setRefresh(refresh + 1);
-                }
-              }}
-              disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
-            >
-              Next
-            </button>
-          </div>
-        </div>
-      )}
+      <Pagination limit={limit} count={count} setPage={setPage} page={page} />
     </div>
   );
 };

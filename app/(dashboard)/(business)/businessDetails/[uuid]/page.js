@@ -19,6 +19,8 @@ import { updateUser } from "@/app/controllers/user_controller";
 import { getScoreData } from "@/app/controllers/crat_general_controller";
 import AIAnalysisPanel from "@/components/AI/AIAnalysisPanel";
 import jsPDF from "jspdf";
+import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
+import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 
 const Page = ({ params }) => {
   const { uuid } = params;
@@ -307,9 +309,9 @@ const Page = ({ params }) => {
         pageName={`${business?.name}`}
       />
       {/* Stats Section - Full Width */}
-      <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
+      <div className="bg-primary/5 rounded-2xl border border-primary/10 border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">👥</div>
               <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
@@ -346,6 +348,15 @@ const Page = ({ params }) => {
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 Stage
+              </p>
+            </div>
+            <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
+              <div className="text-4xl mb-3">💵</div>
+              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+                {business?.revenue || "N/A"}
+              </h3>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                Revenue
               </p>
             </div>
           </div>
@@ -449,6 +460,23 @@ const Page = ({ params }) => {
               </div>
             </div>
           </div>
+          {["Admin", "Mentor", "Investor"].includes(userDetails.role) && (
+            <div className="grid grid-cols-12 gap-6 items-stretch">
+              <div className=" col-span-7">
+                <BusinessDomainScores
+                  userDetails={business?.User}
+                  initialScoreData={{}}
+                />
+              </div>
+              <div className="col-span-5">
+                <PerformanceDistribution
+                  userDetails={business?.User}
+                  chartHeight={250}
+                  initialScoreData={{}}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Documents Section */}
           {business.companyProfile && (
@@ -571,6 +599,16 @@ const Page = ({ params }) => {
                   value: business?.lookingForInvestment ? "Yes" : "No",
                   icon: "💰",
                 },
+                {
+                  label: "Website",
+                  value: business?.websiteLink,
+                  icon: "🌐",
+                },
+                {
+                  label: "Instagram Link",
+                  value: business?.instagramLink,
+                  icon: "🔗",
+                },
               ].map((item, idx) => (
                 <div
                   key={idx}
@@ -609,7 +647,7 @@ const Page = ({ params }) => {
                       <span className="text-2xl">📘</span>
                     </a>
                   )}
-                  {business.instagram && (
+                  {/* {business.instagram && (
                     <a
                       href={business.instagram}
                       target="_blank"
@@ -618,7 +656,28 @@ const Page = ({ params }) => {
                     >
                       <span className="text-2xl">📷</span>
                     </a>
+                  )} */}
+                  {business.websiteLink && (
+                    <a
+                      href={business.websiteLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary"
+                    >
+                      <span className="text-2xl"> Visit Website</span>
+                    </a>
                   )}
+                  {business.instagramLink && (
+                    <a
+                      href={business.instagramLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-primary"
+                    >
+                      <span className="text-2xl"> Visit Website</span>
+                    </a>
+                  )}
+
                   {business.linkedin && (
                     <a
                       href={business.linkedin}
@@ -742,7 +801,7 @@ const Page = ({ params }) => {
                       });
                     }}
                     disabled={requesting}
-                    className="inline-flex items-center justify-center px-6 py-4 bg-purple-500 text-white rounded-xl hover:bg-purple-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md disabled:opacity-50"
+                    className="inline-flex items-center justify-center px-6 py-4 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md disabled:opacity-50"
                   >
                     <span className="mr-2 text-xl">🤝</span>
                     {requesting ? "Requesting..." : "Request to be a mentor"}

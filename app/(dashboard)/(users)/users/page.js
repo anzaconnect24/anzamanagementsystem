@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import {
   deleteUser,
   getAllUsers,
@@ -11,6 +11,7 @@ import Loader from "@/components/common/Loader";
 import toast from "react-hot-toast";
 import NoData from "@/app/component/noData";
 import Spinner from "@/components/spinner";
+import { UserContext } from "../../layout";
 
 const Page = () => {
   const [users, setUsers] = useState([]);
@@ -27,6 +28,7 @@ const Page = () => {
   const [adminCount, setadminCount] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedRole, setSelectedRole] = useState("all");
+  const { userDetails } = useContext(UserContext);
 
   useEffect(() => {
     getAllUsers(limit, currentPage, searchTerm).then((body) => {
@@ -43,8 +45,11 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="container mx-auto px-4">
+      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+
       <div className="rounded-xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         {/* Header Section */}
+
         <div className="p-6 border-b border-stroke dark:border-strokedark">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h4 className="text-xl font-semibold text-black dark:text-white flex items-center gap-2">
