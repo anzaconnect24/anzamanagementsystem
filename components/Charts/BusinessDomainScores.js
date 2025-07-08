@@ -79,9 +79,9 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
   // Calculate bar colors based on new score ranges
   const getBarColors = () => {
     const getColor = (score) => {
-      if (score >= 71) return '#10B981'; // Green - Excellent
-      if (score >= 60) return '#F59E42'; // Yellow - Good
-      return '#EF4444'; // Red - Needs Improvement
+      if (score >= 71) return '#10B981'; // Green - 71-100%
+      if (score >= 60) return '#F59E42'; // Yellow - 60-70%
+      return '#EF4444'; // Red - 0-59%
     };
     return [
       getColor(scoreData.commercial?.percentage || 0),
