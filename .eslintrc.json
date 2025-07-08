@@ -3,6 +3,7 @@
   "rules": {
     "jsx-a11y/alt-text": "off",  // Disable the alt-text warning
     "react-hooks/exhaustive-deps": "off",  // Disable exhaustive deps warning
-    "next/no-img-element": "off"  // Disable the no-img-element warning
+    "next/no-img-element": "off",  // Disable the no-img-element warning
+    "react/no-unescaped-entities": "off"
   }
 }
