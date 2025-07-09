@@ -156,69 +156,80 @@ const Page = ({ params }) => {
             )}
           </div>
         </div>
-        <div className="w-6/12  border-r-2 border-black/10 ml-auto py-5 h-full flex flex-col text-lg">
-          <div className="flex flex-col h-full justify-between">
-            <div className="px-6">
-              <h1 className="font-bold text-xl mb-2">
-                {modules[currentSlide]?.title}
-              </h1>
-              {modules[currentSlide]?.content}
+        <div className="w-6/12  border-r-2 border-black/10 ml-auto py-5 bg-white h-full flex flex-col text-lg">
+          {modules[currentSlide]?.type == "file" ? (
+            <div className="h-full w-full relative">
+              <iframe
+                src={`https://docs.google.com/gview?url=${encodeURIComponent(
+                  modules[currentSlide]?.file
+                )}&embedded=true`}
+                style={{ width: "100%", height: "100%" }}
+                frameBorder="0"
+                className="pointer-events-auto bg-white h-full w-full"
+              />
             </div>
-
-            <div className="flex justify-end space-x-5 mt-auto p-5">
-              <button
-                onClick={() =>
-                  setCurrentSlide((prev) => (prev > 0 ? prev - 1 : prev))
+          ) : (
+            <div className="flex flex-col h-full justify-between">
+              <div className="px-6">
+                <h1 className="font-bold text-xl mb-2">
+                  {modules[currentSlide]?.title}
+                </h1>
+                {modules[currentSlide]?.content}
+              </div>
+            </div>
+          )}
+          <div className="flex justify-end space-x-5 mt-2 p-3 ">
+            <button
+              onClick={() =>
+                setCurrentSlide((prev) => (prev > 0 ? prev - 1 : prev))
+              }
+              disabled={currentSlide === 0}
+              className={`py-2 px-3 rounded ${
+                currentSlide === 0
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-primary/10 text-black cursor-pointer"
+              }`}
+            >
+              Previous
+            </button>
+            <button
+              onClick={() => {
+                if (modules[currentSlide].SlideReaders.length == 0) {
+                  console.log("marking read");
+                  markRead({ slide_uuid: modules[currentSlide].uuid }).then(
+                    (res) => {
+                      loadData();
+                    }
+                  );
                 }
-                disabled={currentSlide === 0}
-                className={`py-2 px-3 rounded ${
-                  currentSlide === 0
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-primary/10 text-black cursor-pointer"
-                }`}
-              >
-                Previous
-              </button>
+                setCurrentSlide((prev) =>
+                  prev < modules.length - 1 ? prev + 1 : prev
+                );
+              }}
+              disabled={currentSlide === modules.length - 1}
+              className={`py-2 px-3 rounded ${
+                currentSlide === modules.length - 1
+                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                  : "bg-primary text-white cursor-pointer"
+              }`}
+            >
+              Next
+            </button>
+            {modules.length == currentSlide + 1 && progressPercentage < 100 && (
               <button
                 onClick={() => {
-                  if (modules[currentSlide].SlideReaders.length == 0) {
-                    console.log("marking read");
-                    markRead({ slide_uuid: modules[currentSlide].uuid }).then(
-                      (res) => {
-                        loadData();
-                      }
-                    );
-                  }
-                  setCurrentSlide((prev) =>
-                    prev < modules.length - 1 ? prev + 1 : prev
-                  );
+                  markRead({
+                    slide_uuid: modules[currentSlide].uuid,
+                  }).then((res) => {
+                    toast.success("Completed successfully");
+                    loadData();
+                  });
                 }}
-                disabled={currentSlide === modules.length - 1}
-                className={`py-2 px-3 rounded ${
-                  currentSlide === modules.length - 1
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : "bg-primary text-white cursor-pointer"
-                }`}
+                className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
               >
-                Next
+                Complete Module
               </button>
-              {modules.length == currentSlide + 1 &&
-                progressPercentage < 100 && (
-                  <button
-                    onClick={() => {
-                      markRead({
-                        slide_uuid: modules[currentSlide].uuid,
-                      }).then((res) => {
-                        toast.success("Completed successfully");
-                        loadData();
-                      });
-                    }}
-                    className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
-                  >
-                    Complete Module
-                  </button>
-                )}
-            </div>
+            )}
           </div>
         </div>
         <div className="w-3/12 h-[70vh] flex flex-col justify-between space-y-3 px-4 pt-5">

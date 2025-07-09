@@ -62,70 +62,72 @@ const Page = ({ params }) => {
           return (
             <div
               key={item.uuid}
-              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start space-y-4"
+              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start justify-between space-y-4"
             >
-              <Image
-                className="h-48 w-full object-cover"
-                alt="adf"
-                width={1000}
-                height={1000}
-                src={item.image}
-              />
-              <div>
-                {percentage > 0 && (
-                  <div>
-                    <p className="text-sm mb-1">
-                      {progress}/{length} slides completed
-                    </p>
-                    <div className="w-full bg-black/10 rounded-full h-2">
-                      <div
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${percentage}%` }}
-                      ></div>
+              <div className="space-y-4">
+                <Image
+                  className="h-48 w-full object-cover"
+                  alt="adf"
+                  width={1000}
+                  height={1000}
+                  src={item.image}
+                />
+                <div className="">
+                  {percentage > 0 && (
+                    <div>
+                      <p className="text-sm mb-1">
+                        {progress}/{length} slides completed
+                      </p>
+                      <div className="w-full bg-black/10 rounded-full h-2">
+                        <div
+                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${percentage}%` }}
+                        ></div>
+                      </div>
                     </div>
-                  </div>
-                )}
-                <h1 className="font-bold text-lg line-clamp-1 mt-2">
-                  {item.title}
-                </h1>
-                <p className="mb-3 line-clamp-3">{item.description}</p>
-                <div className="flex space-x-2 mt-2 items-center">
-                  {percentage > 0 ? (
-                    <Link
-                      href={`/slides/${item.uuid}`}
-                      className="bg-primary px-4 py-2 rounded-lg text-white "
-                    >
-                      {percentage == 100 ? "Completed" : "Resume"}
-                    </Link>
-                  ) : (
-                    <Link
-                      href={`/slides/${item.uuid}`}
-                      className="bg-primary px-4 py-2 rounded-lg text-white "
-                    >
-                      Start Learning
-                    </Link>
                   )}
-                  {["Admin"].includes(userDetails.role) && (
-                    <button
-                      className="bg-red-100 text-red-500 py-2 px-4 rounded-lg"
-                      onClick={() => {
-                        deleteModule(item.uuid).then((res) => {
-                          loadData();
-                        });
-                      }}
-                    >
-                      Delete
-                    </button>
-                  )}
-                  {["Admin"].includes(userDetails.role) && (
-                    <BsPencil
-                      className="hover:text-blue-400"
-                      onClick={() => {
-                        router.push(`/modules/edit/?uuid=${item.uuid}`);
-                      }}
-                    />
-                  )}
+                  <h1 className="font-bold text-lg line-clamp-1 mt-2">
+                    {item.title}
+                  </h1>
+                  <p className="mb-3 line-clamp-3">{item.description}</p>
                 </div>
+              </div>
+              <div className="flex space-x-2  items-center mt-auto">
+                {percentage > 0 ? (
+                  <Link
+                    href={`/slides/${item.uuid}`}
+                    className="bg-primary px-4 py-2 rounded-lg text-white "
+                  >
+                    {percentage == 100 ? "Completed" : "Resume"}
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/slides/${item.uuid}`}
+                    className="bg-primary px-4 py-2 rounded-lg text-white "
+                  >
+                    Start Learning
+                  </Link>
+                )}
+                {["Admin"].includes(userDetails.role) && (
+                  <button
+                    className="bg-red-100 text-red-500 py-2 px-4 rounded-lg"
+                    onClick={() => {
+                      deleteModule(item.uuid).then((res) => {
+                        loadData();
+                      });
+                    }}
+                  >
+                    Delete
+                  </button>
+                )}
+                {["Admin"].includes(userDetails.role) && (
+                  <BsPencil
+                    className="hover:text-blue-400"
+                    onClick={() => {
+                      router.push(`/modules/edit/?uuid=${item.uuid}`);
+                    }}
+                  />
+                )}
               </div>
             </div>
           );

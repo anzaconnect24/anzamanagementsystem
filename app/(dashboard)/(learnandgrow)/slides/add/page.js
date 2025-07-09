@@ -14,7 +14,8 @@ const Page = () => {
   const [loading, setloading] = useState(false);
   const params = useSearchParams();
   const uuid = params.get("uuid");
- 
+  const [isFile, setIsFile] = useState(false);
+
   return (
     <div>
       <Breadcrumb prevLink={``} prevPage="Back" pageName="New module" />
@@ -28,19 +29,39 @@ const Page = () => {
               e.preventDefault();
               setloading(true);
 
-              const payload = {
+              let payload = {
                 module_uuid: uuid,
-                content: e.target.content.value,
                 title: e.target.title.value,
+                type: isFile ? "file" : "text",
               };
+              if (isFile) {
+                var formData = new FormData();
+                formData.append("file", e.target.file.files[0]);
+                uploadFile(formData)
+                  .then((url) => {
+                    payload.file = url;
+                    createSlide(payload).then((res) => {
+                      router.back();
+                      setloading(false);
+                    });
+                  })
+                  .catch((err) => {
+                    console.error(err);
+                    toast.error("File upload failed");
+                    setloading(false);
+                    return;
+                  });
+              } else {
+                payload.content = e.target.content.value;
+                createSlide(payload).then((res) => {
+                  router.back();
+                  setloading(false);
+                });
+              }
               console.log(payload);
-              createSlide(payload).then((res) => {
-                router.back();
-                setloading(false);
-              });
             }}
           >
-            <div className="grid grid-cols-2 gap-x-3">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-3">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   Title
@@ -48,20 +69,48 @@ const Page = () => {
                 <input
                   name="title"
                   className="w-full rounded border-stroke"
-                  placeholder="Enter module title"
+                  placeholder="Enter slide title"
                 />
               </div>
-
-              <div className=" col-span-2">
+              <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Description
+                  Type
                 </label>
-                <textarea
-                  name="content"
+                <select
+                  onChange={(e) => {
+                    setIsFile(e.target.value === "file");
+                  }}
                   className="w-full rounded border-stroke"
-                  placeholder="Enter sector name"
-                />
+                  placeholder="Enter module title"
+                >
+                  <option value="text">Text</option>
+                  <option value="file">File</option>
+                </select>
               </div>
+              {isFile ? (
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    File (PDF)
+                  </label>
+                  <input
+                    name="file"
+                    type="file"
+                    className="w-full rounded border-stroke"
+                    placeholder="Enter module title"
+                  />
+                </div>
+              ) : (
+                <div className=" col-span-2">
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Description
+                  </label>
+                  <textarea
+                    name="content"
+                    className="w-full rounded border-stroke"
+                    placeholder="Enter sector name"
+                  />
+                </div>
+              )}
             </div>
 
             <button
