@@ -50,8 +50,8 @@ const ECommerce = () => {
       // Fetch AI report from backend
       setLoadingReport(true);
       fetch(`/api/entrepreneurs/${userDetails.uuid}/ai-report`)
-        .then(res => res.ok ? res.json() : null)
-        .then(data => {
+        .then((res) => (res.ok ? res.json() : null))
+        .then((data) => {
           setAiReport(data);
           setLoadingReport(false);
         })
@@ -66,23 +66,35 @@ const ECommerce = () => {
     doc.text("AI Analysis Report", 10, 15);
     doc.setFontSize(12);
     let y = 30;
-    
+
     // Check if scoreData has valid AI analysis data
-    const hasValidData = scoreData && 
-      Object.keys(scoreData).length > 0 && 
-      scoreData.commercial && 
-      typeof scoreData.commercial.percentage === 'number';
-    
+    const hasValidData =
+      scoreData &&
+      Object.keys(scoreData).length > 0 &&
+      scoreData.commercial &&
+      typeof scoreData.commercial.percentage === "number";
+
     if (hasValidData) {
-      doc.text(`Entrepreneur: ${userDetails.name || 'N/A'}`, 10, y); y += 8;
-      doc.text(`Business: ${data?.businessName || 'N/A'}`, 10, y); y += 8;
-      doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, y); y += 12;
-      
+      doc.text(`Entrepreneur: ${userDetails.name || "N/A"}`, 10, y);
+      y += 8;
+      doc.text(`Business: ${data?.businessName || "N/A"}`, 10, y);
+      y += 8;
+      doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, y);
+      y += 12;
+
       Object.entries(scoreData).forEach(([domain, data]) => {
-        if (typeof data === 'object' && data !== null && 'percentage' in data) {
-          doc.text(`${domain.charAt(0).toUpperCase() + domain.slice(1)}: ${data.percentage}%`, 10, y); y += 7;
+        if (typeof data === "object" && data !== null && "percentage" in data) {
+          doc.text(
+            `${domain.charAt(0).toUpperCase() + domain.slice(1)}: ${
+              data.percentage
+            }%`,
+            10,
+            y
+          );
+          y += 7;
           if (data.status) {
-            doc.text(`Status: ${data.status}`, 14, y); y += 6;
+            doc.text(`Status: ${data.status}`, 14, y);
+            y += 6;
           }
         }
       });
@@ -205,8 +217,6 @@ const ECommerce = () => {
               </svg>
             </CardDataStats>
           </div>
-
-      
 
           {/* Business Domain Scores Chart */}
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
@@ -500,7 +510,7 @@ const ECommerce = () => {
       <div className="mt-4 grid grid-cols-12 gap-4 md:mt-6 md:gap-6 2xl:mt-7.5 2xl:gap-7.5">
         {userDetails.role != "Enterprenuer" && <ChartOne />}
         {/* {userDetails.role == "Admin" && <ChartTwo />} */}
-        {(userDetails.role === "Admin" || userDetails.role === "Investor" || userDetails.role === "Mentor") && <TanzaniaMap />}
+        {/* {(userDetails.role === "Admin" || userDetails.role === "Investor" || userDetails.role === "Mentor") && <TanzaniaMap />} */}
         {/* {userDetails.role == "Admin" && <ChartThree />} */}
       </div>
     </>
