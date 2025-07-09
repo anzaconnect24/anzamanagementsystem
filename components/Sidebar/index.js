@@ -253,7 +253,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           { name: "Financial Domain", path: "/financialDomain" },
           { name: "Operation Domain", path: "/operationsDomain" },
           { name: "Legal Domain", path: "/legalDomain" },
-          { name: "Report", path: "/report" },
+          { 
+            name: "Report", 
+            path: "/report",
+            submenu: [
+              { name: "Initial Analysis", path: "/report" },
+              { name: "Final Report", path: "/finalReport" },
+            ]
+          },
         ],
       });
     }
@@ -431,19 +438,87 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                               }`}
                             >
                               <ul className="mt-4 mb-5.5 flex flex-col gap-2.5 pl-6">
-                                {item.submenu.map((subItem) => (
-                                  <li key={subItem.name}>
-                                    <Link
-                                      href={subItem.path}
-                                      className={`flex items-center py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
-                                        pathname === subItem.path &&
-                                        "bg-slate-700/50 text-white"
-                                      }`}
-                                    >
-                                      <span>{subItem.name}</span>
-                                    </Link>
-                                  </li>
-                                ))}
+                                {item.submenu.map((subItem) => {
+                                  if (subItem.submenu) {
+                                    // Nested submenu (like Report with Initial Analysis and Final Report)
+                                    return (
+                                      <SidebarLinkGroup
+                                        key={subItem.name}
+                                        activeCondition={pathname.includes(subItem.path)}
+                                      >
+                                        {(handleSubClick, subOpen) => (
+                                          <React.Fragment>
+                                            <div
+                                              className={`group relative flex cursor-pointer items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-400 duration-300 ease-in-out hover:bg-slate-700/50 hover:text-white ${
+                                                pathname.includes(subItem.path) &&
+                                                "bg-slate-700/50 text-white"
+                                              }`}
+                                              onClick={() => {
+                                                handleSubClick();
+                                              }}
+                                            >
+                                              <span>{subItem.name}</span>
+                                              <svg
+                                                className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current text-slate-400 ${
+                                                  subOpen && "rotate-180"
+                                                }`}
+                                                width="12"
+                                                height="12"
+                                                viewBox="0 0 20 20"
+                                                fill="none"
+                                                xmlns="http://www.w3.org/2000/svg"
+                                              >
+                                                <path
+                                                  fillRule="evenodd"
+                                                  clipRule="evenodd"
+                                                  d="M4.41107 6.9107C4.73651 6.58527 5.26414 6.58527 5.58958 6.9107L10.0003 11.3214L14.4111 6.91071C14.7365 6.58527 15.2641 6.58527 15.5896 6.91071C15.915 7.23614 15.915 7.76378 15.5896 8.08922L10.5896 13.0892C10.2641 13.4147 9.73651 13.4147 9.41107 13.0892L4.41107 8.08922C4.08563 7.76378 4.08563 7.23614 4.41107 6.9107Z"
+                                                  fill=""
+                                                />
+                                              </svg>
+                                            </div>
+
+                                            <div
+                                              className={`mt-1 overflow-hidden rounded-md bg-slate-700/40 duration-300 ${
+                                                !subOpen && "hidden"
+                                              }`}
+                                            >
+                                              <ul className="mt-2 mb-3 flex flex-col gap-1 pl-4">
+                                                {subItem.submenu.map((nestedItem) => (
+                                                  <li key={nestedItem.name}>
+                                                    <Link
+                                                      href={nestedItem.path}
+                                                      className={`flex items-center py-1 px-3 rounded-md text-xs text-slate-400 hover:bg-slate-600/50 hover:text-white ${
+                                                        pathname === nestedItem.path &&
+                                                        "bg-slate-600/50 text-white"
+                                                      }`}
+                                                    >
+                                                      <span>{nestedItem.name}</span>
+                                                    </Link>
+                                                  </li>
+                                                ))}
+                                              </ul>
+                                            </div>
+                                          </React.Fragment>
+                                        )}
+                                      </SidebarLinkGroup>
+                                    );
+                                  } else {
+                                    // Regular submenu item
+                                    return (
+                                      <li key={subItem.name}>
+                                        <Link
+                                          href={subItem.path}
+                                          className={`flex items-center py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
+                                            pathname === subItem.path &&
+                                            "bg-slate-700/50 text-white"
+                                          }`}
+                                        >
+                                          <span>{subItem.name}</span>
+                                        </Link>
+                                      </li>
+                                    );
+                                  }
+                                })}
                               </ul>
                             </div>
                           </React.Fragment>
