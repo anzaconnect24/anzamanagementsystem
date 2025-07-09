@@ -337,22 +337,26 @@ const AIAnalysisPanel = ({ reportData, scoreData, businessInfo, userDetails, isA
                     </div>
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-blue-300">{scoreData?.commercial?.percentage || 0}%</div>
-                      <div className="text-xs text-slate-300">Commercial</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-green-300">{scoreData?.financial?.percentage || 0}%</div>
-                      <div className="text-xs text-slate-300">Financial</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-yellow-300">{scoreData?.operations?.percentage || 0}%</div>
-                      <div className="text-xs text-slate-300">Operations</div>
-                    </div>
-                    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
-                      <div className="text-2xl font-bold text-purple-300">{scoreData?.legal?.percentage || 0}%</div>
-                      <div className="text-xs text-slate-300">Legal</div>
-                    </div>
+                    {[
+                      { domain: 'commercial', label: 'Commercial', score: scoreData?.commercial?.percentage || 0 },
+                      { domain: 'financial', label: 'Financial', score: scoreData?.financial?.percentage || 0 },
+                      { domain: 'operations', label: 'Operations', score: scoreData?.operations?.percentage || 0 },
+                      { domain: 'legal', label: 'Legal', score: scoreData?.legal?.percentage || 0 }
+                    ].map((item, index) => {
+                      // Dynamic color based on score
+                      const getScoreColor = (score) => {
+                        if (score >= 71) return 'text-green-300'; // Green - 71-100%
+                        if (score >= 60) return 'text-yellow-300'; // Yellow - 60-70%
+                        return 'text-red-300'; // Red - 0-59%
+                      };
+                      
+                      return (
+                        <div key={index} className="bg-white/10 backdrop-blur-sm rounded-lg p-3 text-center">
+                          <div className={`text-2xl font-bold ${getScoreColor(item.score)}`}>{item.score}%</div>
+                          <div className="text-xs text-slate-300">{item.label}</div>
+                        </div>
+                      );
+                    })}
                   </div>
                 </div>
 

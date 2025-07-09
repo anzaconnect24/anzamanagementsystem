@@ -838,11 +838,19 @@ const Page = ({ params }) => {
             {/* Quick Score Overview */}
             <div className="mt-6 grid grid-cols-4 gap-4">
               {[
-                { label: 'Commercial', score: cratData.scoreData.commercial.percentage, color: 'bg-blue-500' },
-                { label: 'Financial', score: cratData.scoreData.financial.percentage, color: 'bg-green-500' },
-                { label: 'Operations', score: cratData.scoreData.operations.percentage, color: 'bg-orange-500' },
-                { label: 'Legal', score: cratData.scoreData.legal.percentage, color: 'bg-purple-500' }
-              ].map((item, index) => (
+                { label: 'Commercial', score: cratData.scoreData.commercial.percentage },
+                { label: 'Financial', score: cratData.scoreData.financial.percentage },
+                { label: 'Operations', score: cratData.scoreData.operations.percentage },
+                { label: 'Legal', score: cratData.scoreData.legal.percentage }
+              ].map((item, index) => {
+                // Dynamic color based on score
+                const getScoreColor = (score) => {
+                  if (score >= 71) return 'bg-green-500'; // Green - 71-100%
+                  if (score >= 60) return 'bg-yellow-500'; // Yellow - 60-70%
+                  return 'bg-red-500'; // Red - 0-59%
+                };
+                
+                return (
                 <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{item.label}</span>
@@ -850,12 +858,13 @@ const Page = ({ params }) => {
                   </div>
                   <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div 
-                      className={`${item.color} h-2 rounded-full transition-all duration-500`}
+                      className={`${getScoreColor(item.score)} h-2 rounded-full transition-all duration-500`}
                       style={{ width: `${item.score}%` }}
                     ></div>
                   </div>
                 </div>
-              ))}
+              );
+            })}
             </div>
           </div>
 
