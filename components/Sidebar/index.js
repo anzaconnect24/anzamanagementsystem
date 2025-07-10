@@ -202,8 +202,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         path: "/mentorshipRequests",
         icon: <FaQuestion className="text-lg" />,
       });
-
-
     }
 
     if (["Reviewer"].includes(role)) {
@@ -253,13 +251,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           { name: "Financial Domain", path: "/financialDomain" },
           { name: "Operation Domain", path: "/operationsDomain" },
           { name: "Legal Domain", path: "/legalDomain" },
-          { 
-            name: "Report", 
+          {
+            name: "Report",
             path: "/report",
             submenu: [
               { name: "Initial Analysis", path: "/report" },
               { name: "Final Report", path: "/finalReport" },
-            ]
+            ],
           },
         ],
       });
@@ -352,7 +350,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             height={10}
             src={"/logo.png"}
             alt="Logo"
-            className="h-9 w-auto"
+            className="h-9 w-auto "
           />
         </Link>
 
@@ -444,13 +442,17 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                     return (
                                       <SidebarLinkGroup
                                         key={subItem.name}
-                                        activeCondition={pathname.includes(subItem.path)}
+                                        activeCondition={pathname.includes(
+                                          subItem.path
+                                        )}
                                       >
                                         {(handleSubClick, subOpen) => (
                                           <React.Fragment>
                                             <div
                                               className={`group relative flex cursor-pointer items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-400 duration-300 ease-in-out hover:bg-slate-700/50 hover:text-white ${
-                                                pathname.includes(subItem.path) &&
+                                                pathname.includes(
+                                                  subItem.path
+                                                ) &&
                                                 "bg-slate-700/50 text-white"
                                               }`}
                                               onClick={() => {
@@ -483,19 +485,24 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                               }`}
                                             >
                                               <ul className="mt-2 mb-3 flex flex-col gap-1 pl-4">
-                                                {subItem.submenu.map((nestedItem) => (
-                                                  <li key={nestedItem.name}>
-                                                    <Link
-                                                      href={nestedItem.path}
-                                                      className={`flex items-center py-1 px-3 rounded-md text-xs text-slate-400 hover:bg-slate-600/50 hover:text-white ${
-                                                        pathname === nestedItem.path &&
-                                                        "bg-slate-600/50 text-white"
-                                                      }`}
-                                                    >
-                                                      <span>{nestedItem.name}</span>
-                                                    </Link>
-                                                  </li>
-                                                ))}
+                                                {subItem.submenu.map(
+                                                  (nestedItem) => (
+                                                    <li key={nestedItem.name}>
+                                                      <Link
+                                                        href={nestedItem.path}
+                                                        className={`flex items-center py-1 px-3 rounded-md text-xs text-slate-400 hover:bg-slate-600/50 hover:text-white ${
+                                                          pathname ===
+                                                            nestedItem.path &&
+                                                          "bg-slate-600/50 text-white"
+                                                        }`}
+                                                      >
+                                                        <span>
+                                                          {nestedItem.name}
+                                                        </span>
+                                                      </Link>
+                                                    </li>
+                                                  )
+                                                )}
                                               </ul>
                                             </div>
                                           </React.Fragment>
