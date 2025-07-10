@@ -121,12 +121,14 @@ const Page = ({ params }) => {
                   </button>
                 )}
                 {["Admin"].includes(userDetails.role) && (
-                  <BsPencil
-                    className="hover:text-blue-400"
+                  <button
+                    className="bg-green-100 text-green-500 py-2 px-4 rounded-lg"
                     onClick={() => {
                       router.push(`/modules/edit/?uuid=${item.uuid}`);
                     }}
-                  />
+                  >
+                    Edit
+                  </button>
                 )}
               </div>
             </div>

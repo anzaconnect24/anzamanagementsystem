@@ -2,11 +2,14 @@ import Link from "next/link";
 import DropdownNotification from "./DropdownNotification";
 import DropdownUser from "./DropdownUser";
 import Image from "next/image";
+import { useContext } from "react";
+import { UserContext } from "@/app/(dashboard)/layout";
 
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
+  const { hideSidebar } = useContext(UserContext);
   return (
     <header className="sticky top-0 z-999 flex w-full border-stroke ring-stroke bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">
       <div className="flex flex-grow border-stroke ring-stroke items-center justify-between px-4 py-4 shadow-2 md:px-6 2xl:px-11">
@@ -63,7 +66,19 @@ const Header = (props: {
             />
           </Link>
         </div>
-        <div></div>
+        {hideSidebar ? (
+          <Link href="/" className="flex items-center">
+            <Image
+              width={120}
+              height={100}
+              src={"/anza.png"}
+              alt="Logo"
+              className="h-8 w-auto scale-[250%] translate-x-4"
+            />
+          </Link>
+        ) : (
+          <div></div>
+        )}
         <div className="flex items-center gap-3 2xsm:gap-7">
           <ul className="flex items-center gap-2 2xsm:gap-4">
             {/* <!-- Dark Mode Toggler --> */}

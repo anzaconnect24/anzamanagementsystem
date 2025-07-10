@@ -22,7 +22,7 @@ import Image from "next/image";
 const Page = ({ params }) => {
   const { uuid } = params;
   const [modules, setModules] = useState([]);
-  const { userDetails } = useContext(UserContext);
+  const { userDetails, hideSidebar } = useContext(UserContext);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [module, setModule] = useState(null);
@@ -94,7 +94,10 @@ const Page = ({ params }) => {
       </div>
 
       <div className="bg-white flex mt-2 rounded-lg border h-[70vh] w-full border-gray/10">
-        <div className="w-3/12 border-r-2 border-black/10 p-5 h-[70vh] overflow-y-auto">
+        <div
+          className={`w-2/12
+          }  border-r-2 border-black/10 p-5 h-[70vh] overflow-y-auto`}
+        >
           <div className="space-y-4">
             {modules.map((item, index) => {
               const isRead = item.SlideReaders.length > 0;
@@ -156,7 +159,9 @@ const Page = ({ params }) => {
             )}
           </div>
         </div>
-        <div className="w-6/12  border-r-2 border-black/10 ml-auto py-5 bg-white h-full flex flex-col text-lg">
+        <div
+          className={`w-7/12 border-r-2 border-black/10 ml-auto py-4 bg-white h-full flex flex-col text-lg`}
+        >
           {modules[currentSlide]?.type == "file" ? (
             <div className="h-full w-full relative">
               <iframe
@@ -178,8 +183,8 @@ const Page = ({ params }) => {
               </div>
             </div>
           )}
-          <div className="flex justify-end space-x-5 mt-2 p-3 ">
-            <button
+          <div className="flex justify-end space-x-5 text-sm  px-3 mt-3 ">
+            {/* <button
               onClick={() =>
                 setCurrentSlide((prev) => (prev > 0 ? prev - 1 : prev))
               }
@@ -191,31 +196,9 @@ const Page = ({ params }) => {
               }`}
             >
               Previous
-            </button>
-            <button
-              onClick={() => {
-                if (modules[currentSlide].SlideReaders.length == 0) {
-                  console.log("marking read");
-                  markRead({ slide_uuid: modules[currentSlide].uuid }).then(
-                    (res) => {
-                      loadData();
-                    }
-                  );
-                }
-                setCurrentSlide((prev) =>
-                  prev < modules.length - 1 ? prev + 1 : prev
-                );
-              }}
-              disabled={currentSlide === modules.length - 1}
-              className={`py-2 px-3 rounded ${
-                currentSlide === modules.length - 1
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-primary text-white cursor-pointer"
-              }`}
-            >
-              Next
-            </button>
-            {modules.length == currentSlide + 1 && progressPercentage < 100 && (
+            </button> */}
+
+            {modules.length == currentSlide + 1 && progressPercentage < 100 ? (
               <button
                 onClick={() => {
                   markRead({
@@ -228,6 +211,30 @@ const Page = ({ params }) => {
                 className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
               >
                 Complete Module
+              </button>
+            ) : (
+              <button
+                onClick={() => {
+                  if (modules[currentSlide].SlideReaders.length == 0) {
+                    console.log("marking read");
+                    markRead({ slide_uuid: modules[currentSlide].uuid }).then(
+                      (res) => {
+                        loadData();
+                      }
+                    );
+                  }
+                  setCurrentSlide((prev) =>
+                    prev < modules.length - 1 ? prev + 1 : prev
+                  );
+                }}
+                disabled={currentSlide === modules.length - 1}
+                className={`py-2 px-3 rounded ${
+                  currentSlide === modules.length - 1
+                    ? "bg-gray-300 text-gray-500 text-white cursor-not-allowed"
+                    : "bg-primary text-white cursor-pointer"
+                }`}
+              >
+                Next
               </button>
             )}
           </div>

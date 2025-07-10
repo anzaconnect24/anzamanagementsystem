@@ -62,7 +62,7 @@ const Page = ({ params }) => {
           designed to support every stage of your entrepreneurial journey.
         </p>
       </div>
-      
+
       {["Admin"].includes(userDetails.role) && (
         <div className="mb-4">
           <Link
@@ -80,28 +80,29 @@ const Page = ({ params }) => {
         {categories.map((category) => {
           const categoryDocs = groupedDocuments[category] || [];
           const firstDoc = categoryDocs[0];
-          
+
           return (
             <div
               key={category}
               className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-center"
             >
-              <img 
-                className="h-48" 
-                src={firstDoc?.thumbnailUrl || "/discussion.avif"} 
+              <img
+                className="h-48"
+                src={firstDoc?.thumbnailUrl || "/discussion.avif"}
                 alt={category}
               />
-              <div>
+              <div className="flex flex-col items-start w-full mt-3">
                 <h1 className="font-bold text-lg">{category}</h1>
                 <p className="mb-4">
-                  {categoryDocs.length > 0 
-                    ? `${categoryDocs.length} resource${categoryDocs.length > 1 ? 's' : ''} available in this category`
-                    : "No materials available in this category"
-                  }
+                  {categoryDocs.length > 0
+                    ? `${categoryDocs.length} resource${
+                        categoryDocs.length > 1 ? "s" : ""
+                      } available in this category`
+                    : "No materials available in this category"}
                 </p>
                 <Link
-                  href={`/generalResources/${encodeURIComponent(category)}`}
-                  className="bg-primary px-4 py-2 rounded-lg text-white mt-2"
+                  href={`#`}
+                  className="bg-primary px-4 py-2 rounded-lg text-white mt-0"
                 >
                   View Resources
                 </Link>

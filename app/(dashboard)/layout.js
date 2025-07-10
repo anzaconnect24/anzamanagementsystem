@@ -17,6 +17,7 @@ export default function RootLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const [userDetails, setUserDetails] = useState(null);
+  const [hideSidebar, setHideSidebar] = useState(true);
   const pathname = usePathname();
   const router = useRouter();
   const [data, setData] = useState(null);
@@ -67,21 +68,39 @@ export default function RootLayout({ children }) {
     }
   }, []);
 
+  useEffect(() => {
+    if (pathname.includes("/slides/") && !pathname.includes("add")) {
+      setHideSidebar(true);
+    } else {
+      setHideSidebar(false);
+    }
+  }, [pathname]);
   return (
     <>
       <div>
         <Toaster position="top-right" />
       </div>
-      <UserContext.Provider value={{ userDetails, setUserDetails, data }}>
+      <UserContext.Provider
+        value={{
+          userDetails,
+          setUserDetails,
+          data,
+          hideSidebar,
+          setHideSidebar,
+        }}
+      >
         <div className="dark:bg-boxdark-2 dark:text-bodydark">
           {loading ? (
             <Loader height={"h-screen"} />
           ) : (
             <div className="flex h-screen overflow-hidden">
-              <Sidebar
-                sidebarOpen={sidebarOpen}
-                setSidebarOpen={setSidebarOpen}
-              />
+              {!hideSidebar && (
+                <Sidebar
+                  sidebarOpen={sidebarOpen}
+                  setSidebarOpen={setSidebarOpen}
+                />
+              )}
+
               <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
                 <Header
                   sidebarOpen={sidebarOpen}
