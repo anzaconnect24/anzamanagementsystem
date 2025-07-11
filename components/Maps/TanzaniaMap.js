@@ -28,10 +28,9 @@ const SafeImage = ({
   }, [src, imgSrc]);
 
   const handleError = useCallback(() => {
-    console.log('Image failed to load:', src);
     setHasError(true);
     setIsLoading(false);
-  }, [src]);
+  }, []);
 
   const handleLoad = useCallback(() => {
     setIsLoading(false);
@@ -72,19 +71,16 @@ const SafeImage = ({
         onLoad={handleLoad}
         priority={false}
         quality={75}
-        unoptimized={true} // Add this for problematic external images
+        unoptimized={true}
         {...props}
       />
     </div>
   );
 };
 
-// Dynamically import map components with better error handling and loading states
+// Simplified dynamic imports with better error handling
 const MapContainer = dynamic(
-  () => import('react-leaflet').then((mod) => {
-    console.log('MapContainer loaded');
-    return mod.MapContainer;
-  }),
+  () => import('react-leaflet').then(mod => mod.MapContainer).catch(() => null),
   { 
     ssr: false,
     loading: () => (
@@ -99,39 +95,21 @@ const MapContainer = dynamic(
 );
 
 const TileLayer = dynamic(
-  () => import('react-leaflet').then((mod) => {
-    console.log('TileLayer loaded');
-    return mod.TileLayer;
-  }),
-  { 
-    ssr: false,
-    loading: () => null
-  }
+  () => import('react-leaflet').then(mod => mod.TileLayer).catch(() => null),
+  { ssr: false }
 );
 
 const Popup = dynamic(
-  () => import('react-leaflet').then((mod) => {
-    console.log('Popup loaded');
-    return mod.Popup;
-  }),
-  { 
-    ssr: false,
-    loading: () => null
-  }
+  () => import('react-leaflet').then(mod => mod.Popup).catch(() => null),
+  { ssr: false }
 );
 
 const CircleMarker = dynamic(
-  () => import('react-leaflet').then((mod) => {
-    console.log('CircleMarker loaded');
-    return mod.CircleMarker;
-  }),
-  { 
-    ssr: false,
-    loading: () => null
-  }
+  () => import('react-leaflet').then(mod => mod.CircleMarker).catch(() => null),
+  { ssr: false }
 );
 
-// Tanzania regions with their coordinates - memoized to prevent recreating
+// Tanzania regions with their coordinates
 const REGION_COORDINATES = {
   'Dar es Salaam': { center: [-6.7924, 39.2083], color: '#3b82f6' },
   'Dodoma': { center: [-6.1722, 35.7395], color: '#10b981' },
@@ -174,55 +152,21 @@ const TanzaniaMap = () => {
   const [error, setError] = useState(null);
   const [isClient, setIsClient] = useState(false);
   const [mapReady, setMapReady] = useState(false);
-  const [leafletLoaded, setLeafletLoaded] = useState(false);
   
   // Memoize the region click handler
   const handleRegionClick = useCallback((region) => {
-    console.log('Region clicked:', region);
     setSelectedRegion(region);
   }, []);
 
-  // Load Leaflet CSS and setup
-  const loadLeafletCSS = useCallback(async () => {
-    if (typeof window !== 'undefined' && !leafletLoaded) {
-      try {
-        console.log('Loading Leaflet CSS...');
-        await import('leaflet/dist/leaflet.css');
-        
-        // Fix for default markers
-        const L = await import('leaflet');
-        
-        // Only modify if not already modified
-        if (L.Icon.Default.prototype._getIconUrl) {
-          delete L.Icon.Default.prototype._getIconUrl;
-          L.Icon.Default.mergeOptions({
-            iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-            iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-            shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-          });
-        }
-        
-        setLeafletLoaded(true);
-        setMapReady(true);
-        console.log('Leaflet loaded successfully');
-      } catch (error) {
-        console.error('Error loading Leaflet:', error);
-        setError('Failed to load map components');
-      }
-    }
-  }, [leafletLoaded]);
-  
   // Fetch entrepreneur data with better error handling
   const fetchEntrepreneurData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       
-      console.log('Fetching entrepreneur data...');
       const response = await getEnterprenuers(1000, 1, "");
-      console.log("Entrepreneur data response:", response);
       
-      if (response && response.data && Array.isArray(response.data)) {
+      if (response?.data && Array.isArray(response.data)) {
         // Group entrepreneurs by region
         const regionData = {};
         
@@ -236,75 +180,81 @@ const TanzaniaMap = () => {
         });
         
         // Process entrepreneurs with better error handling
-        response.data.forEach((user, index) => {
+        response.data.forEach((user) => {
           try {
-            if (user?.Business?.location) {
+            if (user?.Business?.location && regionData[user.Business.location]) {
               const region = user.Business.location;
-              
-              // If region exists in our coordinates data
-              if (regionData[region]) {
-                // Increment count
-                regionData[region].count += 1;
-                
-                // Add entrepreneur to the list with safe data handling
-                regionData[region].entrepreneurs.push({
-                  Business: {
-                    name: user.Business.name || 'Unknown Business',
-                    BusinessSector: { 
-                      name: user.Business.BusinessSector?.name || 'Other' 
-                    },
-                    program: user.Business.program || 'N/A',
-                    teamSize: user.Business.teamSize || 0,
-                    email: user.email || '',
-                    location: user.Business.location,
-                    uuid: user.Business.uuid,
-                    createdAt: user.Business.createdAt
+              regionData[region].count += 1;
+              regionData[region].entrepreneurs.push({
+                Business: {
+                  name: user.Business.name || 'Unknown Business',
+                  BusinessSector: { 
+                    name: user.Business.BusinessSector?.name || 'Other' 
                   },
-                  // Handle image URL more safely
-                  image: (user.image && 
-                          user.image !== '' && 
-                          user.image !== null && 
-                          user.image !== undefined) ? user.image : null
-                });
-              } else {
-                console.warn(`Unknown region: ${region} for user ${user.email || index}`);
-              }
+                  location: user.Business.location,
+                  uuid: user.Business.uuid,
+                  createdAt: user.Business.createdAt
+                },
+                image: user.image || null
+              });
             }
           } catch (userError) {
-            console.error('Error processing user data:', userError, user);
+            console.error('Error processing user:', userError);
           }
         });
         
-        console.log("Processed map data:", regionData);
         setMapData(regionData);
       } else {
-        console.error("Invalid response format:", response);
         setError('Invalid data format received');
       }
-      
-      setLoading(false);
     } catch (error) {
       console.error('Error fetching entrepreneur data:', error);
-      setError(`Failed to load entrepreneur data: ${error.message}`);
+      setError('Failed to load entrepreneur data');
+    } finally {
       setLoading(false);
     }
   }, []);
 
+  // Initialize component
   useEffect(() => {
-    console.log('TanzaniaMap component mounted');
     setIsClient(true);
     
-    // Load Leaflet and fetch data
-    const initializeComponent = async () => {
-      await loadLeafletCSS();
+    const initializeMap = async () => {
+      try {
+        // Load Leaflet CSS
+        if (typeof window !== 'undefined') {
+          await import('leaflet/dist/leaflet.css');
+          
+          // Fix for default markers
+          const L = await import('leaflet');
+          if (L.Icon.Default.prototype._getIconUrl) {
+            delete L.Icon.Default.prototype._getIconUrl;
+            L.Icon.Default.mergeOptions({
+              iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+              iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+              shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+            });
+          }
+          setMapReady(true);
+        }
+      } catch (error) {
+        console.error('Error initializing map:', error);
+        setMapReady(true); // Still allow component to render
+      }
+      
+      // Fetch data
       await fetchEntrepreneurData();
     };
     
-    initializeComponent();
-  }, [loadLeafletCSS, fetchEntrepreneurData]);
+    initializeMap();
+  }, [fetchEntrepreneurData]);
   
-  // Memoize calculations to prevent unnecessary re-renders
+  // Memoize calculations
   const { totalEntrepreneurs, maxCount, sortedRegions } = useMemo(() => {
+    if (!mapData || Object.keys(mapData).length === 0) {
+      return { totalEntrepreneurs: 0, maxCount: 1, sortedRegions: [] };
+    }
+    
     const total = Object.values(mapData).reduce((sum, region) => sum + region.count, 0);
     const max = Math.max(...Object.values(mapData).map(region => region.count), 1);
     const sorted = Object.entries(mapData).sort(([,a], [,b]) => b.count - a.count);
@@ -322,12 +272,7 @@ const TanzaniaMap = () => {
       <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
         <div className="flex items-center justify-center h-[400px]">
           <div className="text-center">
-            <div className="mb-4">
-              <svg className="animate-spin h-8 w-8 text-primary mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-            </div>
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
             <p className="text-gray-500 dark:text-gray-400">Loading entrepreneur data...</p>
           </div>
         </div>
@@ -340,11 +285,13 @@ const TanzaniaMap = () => {
     return (
       <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
         <div className="flex flex-col items-center justify-center h-[400px] text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-red-400 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
+          <div className="text-red-500 mb-4">
+            <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">Error Loading Data</h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4 max-w-md">{error}</p>
+          <p className="text-gray-500 dark:text-gray-400 mb-4">{error}</p>
           <button 
             onClick={fetchEntrepreneurData}
             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition-colors"
@@ -372,16 +319,16 @@ const TanzaniaMap = () => {
         </div>
         
         <div className="flex flex-col items-center justify-center h-[400px] text-center">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-          </svg>
+          <div className="text-gray-300 mb-4">
+            <svg className="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
           <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">No Entrepreneur Data Found</h3>
-          <p className="text-gray-500 dark:text-gray-400 max-w-md">
-            There are currently no entrepreneurs registered in the system with location data. 
-            When entrepreneurs register with location information, they will appear on this map.
+          <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">
+            There are currently no entrepreneurs registered in the system with location data.
           </p>
-          
-          <Link href="/enterprenuers" className="mt-6 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition-colors">
+          <Link href="/enterprenuers" className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition-colors">
             View All Entrepreneurs
           </Link>
         </div>
@@ -389,17 +336,30 @@ const TanzaniaMap = () => {
     );
   }
 
-  // Map component with error boundary
+  // Map component with better error handling
   const MapComponent = () => {
-    if (!isClient || !mapReady || !leafletLoaded) {
+    if (!isClient || !mapReady) {
       return (
         <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-boxdark-2 rounded-sm">
           <div className="text-center">
-            <svg className="animate-spin h-8 w-8 text-primary mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
+            <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-2"></div>
             <p className="text-sm text-gray-500 dark:text-gray-400">Loading map...</p>
+          </div>
+        </div>
+      );
+    }
+
+    // Check if map components are available
+    if (!MapContainer || !TileLayer || !CircleMarker || !Popup) {
+      return (
+        <div className="flex items-center justify-center h-full bg-gray-100 dark:bg-boxdark-2 rounded-sm">
+          <div className="text-center">
+            <div className="text-yellow-500 mb-2">
+              <svg className="h-8 w-8 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 15c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Map components unavailable</p>
           </div>
         </div>
       );
@@ -412,7 +372,6 @@ const TanzaniaMap = () => {
           style={{ height: '100%', width: '100%' }}
           className="rounded-sm"
           zoomControl={true}
-          key="tanzania-map" // Add key for better re-rendering
         >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -420,7 +379,7 @@ const TanzaniaMap = () => {
           />
           {Object.entries(mapData).map(([region, data]) => (
             <CircleMarker
-              key={`marker-${region}`}
+              key={region}
               center={data.center}
               radius={Math.max(6, (data.count * 15) / maxCount)}
               fillColor={data.color}
@@ -452,7 +411,7 @@ const TanzaniaMap = () => {
                           .sort(([,a], [,b]) => b - a)
                           .slice(0, 3)
                           .map(([sector, count]) => (
-                            <div key={`${region}-${sector}`} className="text-xs text-gray-600 flex justify-between items-center">
+                            <div key={sector} className="text-xs text-gray-600 flex justify-between items-center">
                               <span>{sector}</span>
                               <span className="font-medium">{count}</span>
                             </div>
@@ -472,12 +431,12 @@ const TanzaniaMap = () => {
       return (
         <div className="flex items-center justify-center h-full bg-red-50 dark:bg-red-900/20 rounded-sm">
           <div className="text-center">
-            <p className="text-red-600 dark:text-red-400">Error loading map</p>
+            <p className="text-red-600 dark:text-red-400 mb-2">Error loading map</p>
             <button 
               onClick={() => window.location.reload()} 
-              className="mt-2 px-3 py-1 bg-red-600 text-white rounded text-sm"
+              className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
             >
-              Reload
+              Reload Page
             </button>
           </div>
         </div>
@@ -508,7 +467,7 @@ const TanzaniaMap = () => {
           <div className="flex flex-col gap-4">
             {sortedRegions.slice(0, 4).map(([region, data], index) => (
               <div 
-                key={`region-${region}`}
+                key={region}
                 className="flex items-center justify-between cursor-pointer hover:bg-gray-100 dark:hover:bg-boxdark p-2 rounded-sm transition-colors"
                 onClick={() => handleRegionClick(region)}
               >
@@ -552,7 +511,7 @@ const TanzaniaMap = () => {
                 {mapData[selectedRegion].entrepreneurs.map((entrepreneur, index) => (
                   <Link
                     href={`/businessDetails/${entrepreneur.Business.uuid}`}
-                    key={`${selectedRegion}-entrepreneur-${index}`}
+                    key={index}
                     className="flex items-center gap-3 p-2 bg-white dark:bg-boxdark rounded-sm hover:bg-gray-50 dark:hover:bg-boxdark-2 transition-colors"
                   >
                     <div className="w-10 h-10 relative rounded-full overflow-hidden">
