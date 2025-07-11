@@ -191,22 +191,18 @@ export class AIReportService {
    * Helper method to determine readiness level based on score
    */
   getReadinessLevel(score) {
-    if (score >= 80) return 'Excellent';
-    if (score >= 70) return 'Good';
-    if (score >= 60) return 'Fair';
-    if (score >= 50) return 'Needs Improvement';
-    return 'Critical';
+    if (score >= 75) return 'Ready';
+    if (score >= 60) return 'Partially Ready';
+    return 'Not Ready';
   }
 
   /**
    * Get readiness level based on percentage score
    */
   getReadinessLevel(percentage) {
-    if (percentage >= 80) return 'Excellent';
-    if (percentage >= 70) return 'Good';
-    if (percentage >= 60) return 'Fair';
-    if (percentage >= 50) return 'Moderate';
-    return 'Needs Improvement';
+    if (percentage >= 75) return 'Ready';
+    if (percentage >= 60) return 'Partially Ready';
+    return 'Not Ready';
   }
 
   /**
