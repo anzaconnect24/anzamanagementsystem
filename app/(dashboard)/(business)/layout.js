@@ -1,17 +1,19 @@
 "use client";
-import { BusinessContext } from "@/app/context/BusinessContext";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { BusinessContext } from "@/app/context/BusinessContext";
 
 const Layout = ({ children }) => {
   const router = useRouter();
   const [user, setUser] = useState(null);
 
   return (
-    <BusinessContext.Provider value={{ user, setUser }}>
-      {children}
-    </BusinessContext.Provider>
+    <div>
+      <BusinessContext.Provider value={{ user, setUser }}>
+        {children}
+      </BusinessContext.Provider>
+    </div>
   );
 };
 
-export default Layout; // ✅ Only export default
+export default Layout;

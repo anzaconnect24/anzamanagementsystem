@@ -294,7 +294,73 @@ const Page = ({ params }) => {
       {/* Stats Section - Full Width */}
       <div className="bg-primary/5 rounded-2xl border border-primary/10 border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          {/* Business Profile Header */}
+          <div className="flex flex-col items-center mb-8 relative">
+            {/* Decorative Background Pattern */}
+            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl opacity-50"></div>
+            
+            {/* Business/Entrepreneur Image */}
+            {(business?.User?.image || business?.image) && (
+              <div className="relative mb-4 z-10">
+                {/* Outer Decorative Ring */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-1 animate-pulse">
+                  <div className="w-full h-full rounded-full bg-white dark:bg-gray-800"></div>
+                </div>
+                
+                {/* Inner Colorful Border */}
+                <div className="relative w-60 h-60 rounded-full p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-2xl">
+                  <div className="w-full h-full rounded-full overflow-hidden border-4 border-primary dark:border-gray-800 bg-gradient-to-br from-primary/10 to-primary/5">
+                    <Image
+                      src={business?.User?.image || business?.image}
+                      alt={`${business?.name || 'Business'} profile image`}
+                      fill
+                      className="object-cover hover:scale-110 transition-transform duration-500 rounded-full"
+                      priority={false}
+                      unoptimized={true}
+                      onError={(e) => {
+                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                          business?.name || 'Business'
+                        )}&background=6366f1&color=fff&size=400&rounded=true`;
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Business Name and Status */}
+            <div className="text-center z-10">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
+                {business?.name}
+              </h1>
+              <div className="flex items-center justify-center gap-3 flex-wrap">
+                <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold border border-primary/20 backdrop-blur-sm">
+                  {business?.BusinessSector?.name || "Business"}
+                </span>
+                <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-sm ${
+                  business?.status === 'accepted' 
+                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border border-green-200 dark:border-green-700' 
+                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700'
+                }`}>
+                  {business?.status === 'accepted' ? '✓ Verified' : '⏳ Pending'}
+                </span>
+              </div>
+              {/* Additional Info */}
+              <div className="mt-3 flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                <span className="flex items-center gap-1">
+                  <span>📍</span>
+                  {business?.location || "Location not specified"}
+                </span>
+                <span className="flex items-center gap-1">
+                  <span>👥</span>
+                  Team of {business?.team || "N/A"}
+                </span>
+              </div>
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">👥</div>
               <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
@@ -355,6 +421,7 @@ const Page = ({ params }) => {
               Business Overview
             </h2>
             <div className="space-y-8">
+              {/* Business/Entrepreneur Image */}
               <div>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
                   {business?.description || "Description not available"}
@@ -602,9 +669,25 @@ const Page = ({ params }) => {
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {item.label}
                     </p>
-                    <p className="font-semibold text-gray-900 dark:text-white">
-                      {item.value || "N/A"}
-                    </p>
+                    {item.label === "Email" && item.value ? (
+                      <a
+                        href={`mailto:${item.value}`}
+                        className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors duration-200"
+                      >
+                        {item.value}
+                      </a>
+                    ) : item.label === "Phone" && item.value ? (
+                      <a
+                        href={`tel:${item.value}`}
+                        className="font-semibold text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:underline transition-colors duration-200"
+                      >
+                        {item.value}
+                      </a>
+                    ) : (
+                      <p className="font-semibold text-gray-900 dark:text-white">
+                        {item.value || "N/A"}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
@@ -843,11 +926,11 @@ const Page = ({ params }) => {
                 { label: 'Operations', score: cratData.scoreData.operations.percentage },
                 { label: 'Legal', score: cratData.scoreData.legal.percentage }
               ].map((item, index) => {
-                // Dynamic color based on score
+                // Dynamic color based on CRAT readiness levels
                 const getScoreColor = (score) => {
-                  if (score >= 71) return 'bg-green-500'; // Green - 71-100%
-                  if (score >= 60) return 'bg-yellow-500'; // Yellow - 60-70%
-                  return 'bg-red-500'; // Red - 0-59%
+                  if (score >= 75) return 'bg-green-600'; // Ready - 75-100% (#219654)
+                  if (score >= 60) return 'bg-yellow-400'; // Partially Ready - 60-74% (#f4dc2c)
+                  return 'bg-red-500'; // Not Ready - 0-59%
                 };
                 
                 return (
