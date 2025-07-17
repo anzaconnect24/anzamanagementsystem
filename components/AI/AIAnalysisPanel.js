@@ -343,11 +343,11 @@ const AIAnalysisPanel = ({ reportData, scoreData, businessInfo, userDetails, isA
                       { domain: 'operations', label: 'Operations', score: scoreData?.operations?.percentage || 0 },
                       { domain: 'legal', label: 'Legal', score: scoreData?.legal?.percentage || 0 }
                     ].map((item, index) => {
-                      // Dynamic color based on score
+                      // Dynamic color based on CRAT readiness levels
                       const getScoreColor = (score) => {
-                        if (score >= 71) return 'text-green-300'; // Green - 71-100%
-                        if (score >= 60) return 'text-yellow-300'; // Yellow - 60-70%
-                        return 'text-red-300'; // Red - 0-59%
+                        if (score >= 75) return 'text-green-400'; // Ready - 75-100% (closer to #219654)
+                        if (score >= 60) return 'text-yellow-300'; // Partially Ready - 60-74% (#f4dc2c)
+                        return 'text-red-300'; // Not Ready - 0-59%
                       };
                       
                       return (

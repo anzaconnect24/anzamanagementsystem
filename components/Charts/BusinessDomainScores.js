@@ -76,12 +76,12 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
     }
   }, [initialScoreData]);
 
-  // Calculate bar colors based on new score ranges
+  // Calculate bar colors based on CRAT readiness levels
   const getBarColors = () => {
     const getColor = (score) => {
-      if (score >= 71) return '#10B981'; // Green - 71-100%
-      if (score >= 60) return '#F59E42'; // Yellow - 60-70%
-      return '#EF4444'; // Red - 0-59%
+      if (score >= 75) return '#219654'; // Ready - 75-100%
+      if (score >= 60) return '#f4dc2c'; // Partially Ready - 60-74%
+      return '#EF4444'; // Not Ready - 0-59%
     };
     return [
       getColor(scoreData.commercial?.percentage || 0),
