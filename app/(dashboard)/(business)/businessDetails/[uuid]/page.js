@@ -295,69 +295,7 @@ const Page = ({ params }) => {
       <div className="bg-primary/5 rounded-2xl border border-primary/10 border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Business Profile Header */}
-          <div className="flex flex-col items-center mb-8 relative">
-            {/* Decorative Background Pattern */}
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/5 via-transparent to-primary/5 rounded-2xl opacity-50"></div>
-            
-            {/* Business/Entrepreneur Image */}
-            {(business?.User?.image || business?.image) && (
-              <div className="relative mb-4 z-10">
-                {/* Outer Decorative Ring */}
-                <div className="absolute inset-0 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 p-1 animate-pulse">
-                  <div className="w-full h-full rounded-full bg-white dark:bg-gray-800"></div>
-                </div>
-                
-                {/* Inner Colorful Border */}
-                <div className="relative w-60 h-60 rounded-full p-1 bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 shadow-2xl">
-                  <div className="w-full h-full rounded-full overflow-hidden border-4 border-primary dark:border-gray-800 bg-gradient-to-br from-primary/10 to-primary/5">
-                    <Image
-                      src={business?.User?.image || business?.image}
-                      alt={`${business?.name || 'Business'} profile image`}
-                      fill
-                      className="object-cover hover:scale-110 transition-transform duration-500 rounded-full"
-                      priority={false}
-                      unoptimized={true}
-                      onError={(e) => {
-                        e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          business?.name || 'Business'
-                        )}&background=6366f1&color=fff&size=400&rounded=true`;
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            )}
-            
-            {/* Business Name and Status */}
-            <div className="text-center z-10">
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-3 tracking-tight">
-                {business?.name}
-              </h1>
-              <div className="flex items-center justify-center gap-3 flex-wrap">
-                <span className="px-4 py-2 bg-primary/10 text-primary rounded-full text-sm font-semibold border border-primary/20 backdrop-blur-sm">
-                  {business?.BusinessSector?.name || "Business"}
-                </span>
-                <span className={`px-4 py-2 rounded-full text-sm font-semibold shadow-sm ${
-                  business?.status === 'accepted' 
-                    ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border border-green-200 dark:border-green-700' 
-                    : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 border border-yellow-200 dark:border-yellow-700'
-                }`}>
-                  {business?.status === 'accepted' ? '✓ Verified' : '⏳ Pending'}
-                </span>
-              </div>
-              {/* Additional Info */}
-              <div className="mt-3 flex items-center justify-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-                <span className="flex items-center gap-1">
-                  <span>📍</span>
-                  {business?.location || "Location not specified"}
-                </span>
-                <span className="flex items-center gap-1">
-                  <span>👥</span>
-                  Team of {business?.team || "N/A"}
-                </span>
-              </div>
-            </div>
-          </div>
+       
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         
