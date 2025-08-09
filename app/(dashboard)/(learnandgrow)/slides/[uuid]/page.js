@@ -76,7 +76,12 @@ const Page = ({ params }) => {
     <Loader />
   ) : (
     <div>
-      <Breadcrumb prevLink={""} pageName={module.title} prevPage={"Back"} />
+      {/* Update breadcrumb to go back to modules page for this course */}
+      <Breadcrumb
+        prevLink={`/modules/${encodeURIComponent(module?.course || "")}`}
+        pageName={module.title}
+        prevPage={"Modules"}
+      />
       {/* Progress Bar */}
       <div className="mt-4">
         <p className="text-sm text-gray-600 mb-1 text-green-700">

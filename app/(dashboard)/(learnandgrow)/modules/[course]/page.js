@@ -8,7 +8,7 @@ import {
 import Link from "next/link";
 import { UserContext } from "../../../layout";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { BsPencil, BsPlus, BsTrash } from "react-icons/bs";
+import { BsPencil, BsPlus, BsTrash, BsLock } from "react-icons/bs";
 import Image from "next/image";
 import Loader from "@/components/common/Loader";
 import { editComment } from "@/app/controllers/comment_controllers";
@@ -52,17 +52,35 @@ const Page = ({ params }) => {
       </div>
 
       <div className="grid grid-cols-3 gap-6 pt-4">
-        {modules.map((item) => {
+        {modules.map((item, idx) => {
           let length = item.Slides.length;
           let progress = item.Slides.reduce(
             (prev, curr) => prev + (curr.SlideReaders.length > 0 ? 1 : 0),
             0
           );
           let percentage = length > 0 ? (progress / length) * 100 : 0;
+
+          // Determine if this module should be locked
+          let isLocked = false;
+          if (idx > 0) {
+            // Previous module must be completed
+            let prev = modules[idx - 1];
+            let prevLength = prev.Slides.length;
+            let prevProgress = prev.Slides.reduce(
+              (prev, curr) => prev + (curr.SlideReaders.length > 0 ? 1 : 0),
+              0
+            );
+            let prevPercentage =
+              prevLength > 0 ? (prevProgress / prevLength) * 100 : 0;
+            isLocked = prevPercentage < 100;
+          }
+
           return (
             <div
               key={item.uuid}
-              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start justify-between space-y-4"
+              className={`border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start justify-between space-y-4 ${
+                isLocked ? "opacity-60" : ""
+              }`}
             >
               <div className="space-y-4">
                 <Image
@@ -86,14 +104,28 @@ const Page = ({ params }) => {
                       </div>
                     </div>
                   )}
-                  <h1 className="font-bold text-lg line-clamp-1 mt-2">
+                  <h1 className="font-bold text-lg line-clamp-1 mt-2 flex items-center gap-2">
                     {item.title}
+                    {isLocked && (
+                      <BsLock
+                        className="text-gray-400"
+                        title="Complete previous module to unlock"
+                      />
+                    )}
                   </h1>
                   <p className="mb-3 line-clamp-3">{item.description}</p>
                 </div>
               </div>
               <div className="flex space-x-2  items-center mt-auto">
-                {percentage > 0 ? (
+                {isLocked ? (
+                  <button
+                    className="bg-gray-200 text-gray-400 px-4 py-2 rounded-lg flex items-center cursor-not-allowed"
+                    disabled
+                    title="Complete previous module to unlock"
+                  >
+                    <BsLock className="mr-2" /> Locked
+                  </button>
+                ) : percentage > 0 ? (
                   <Link
                     href={`/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
