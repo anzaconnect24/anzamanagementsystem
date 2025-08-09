@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
+
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -225,6 +226,33 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         id: "business",
         title: "Business Operations",
         items: businessItems,
+      });
+    }
+
+    // Investment Management
+    const investmentItems = [];
+
+    if (["Admin", "Investor", "Enterprenuer"].includes(role)) {
+      investmentItems.push({
+        name: "Investment Opportunities",
+        path: "/opportunities",
+        icon: <RiMoneyDollarCircleLine className="text-xl" />,
+      });
+    }
+
+    if (["Admin", "Investor"].includes(role)) {
+      investmentItems.push({
+        name: "Existing Investors",
+        path: "/investors",
+        icon: <FaHandshake className="text-xl" />,
+      });
+    }
+
+    if (investmentItems.length > 0) {
+      categories.push({
+        id: "investment",
+        title: "Investment Management",
+        items: investmentItems,
       });
     }
 
