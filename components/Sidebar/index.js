@@ -140,14 +140,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       });
     }
 
-    if (["Enterprenuer", "Reviewer"].includes(role)) {
-      peopleItems.push({
-        name: "Investors",
-        path: "/investors",
-        icon: <RiMoneyDollarCircleLine className="text-xl" />,
-      });
-    }
-
     if (["Investor"].includes(role)) {
       peopleItems.push({
         name: "Interested Entrepreneurs",
@@ -232,7 +224,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     // Investment Management
     const investmentItems = [];
 
-    if (["Admin", "Investor", "Enterprenuer"].includes(role)) {
+    if (["Admin", "Enterprenuer"].includes(role)) {
       investmentItems.push({
         name: "Investment Opportunities",
         path: "/opportunities",
@@ -240,7 +232,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       });
     }
 
-    if (["Admin", "Investor"].includes(role)) {
+    if (["Admin", "Enterprenuer"].includes(role)) {
       investmentItems.push({
         name: "Investors",
         path: "/investors",
