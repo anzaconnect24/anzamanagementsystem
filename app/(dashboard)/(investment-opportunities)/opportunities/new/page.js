@@ -15,8 +15,8 @@ const NewInvestmentOpportunity = () => {
     url: "",
     image: "",
   });
+  const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (e) => {
@@ -34,9 +34,11 @@ const NewInvestmentOpportunity = () => {
     }
   };
 
-  const handleImageUpload = async (e) => {
+  const handleImageSelect = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+
+    console.log("Selected file:", file);
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
@@ -50,35 +52,15 @@ const NewInvestmentOpportunity = () => {
       return;
     }
 
-    try {
-      setUploading(true);
-      const uploadFormData = new FormData();
-      uploadFormData.append("file", file);
+    // Store the file for later upload
+    setSelectedFile(file);
 
-      const response = await fetch(`${server_url}/upload-file`, {
-        method: "POST",
-        headers: {
-          Authorization: headers.Authorization,
-        },
-        body: uploadFormData,
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setFormData((prev) => ({
-          ...prev,
-          image: data.body,
-        }));
-      } else {
-        alert("Failed to upload image");
-      }
-    } catch (error) {
-      console.error("Error uploading image:", error);
-      alert("Error uploading image");
-    } finally {
-      setUploading(false);
-    }
+    // Create a preview URL
+    const previewUrl = URL.createObjectURL(file);
+    setFormData((prev) => ({
+      ...prev,
+      image: previewUrl,
+    }));
   };
 
   const validateForm = () => {
@@ -118,198 +100,245 @@ const NewInvestmentOpportunity = () => {
 
     try {
       setLoading(true);
+      let imageUrl = "";
+
+      // Upload image first if one is selected
+      if (selectedFile) {
+        console.log("Uploading image during form submission...");
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", selectedFile);
+
+        const uploadResponse = await fetch(`${server_url}/upload-file`, {
+          method: "POST",
+          headers: {
+            Authorization: headers.Authorization,
+          },
+          body: uploadFormData,
+        });
+
+        const uploadData = await uploadResponse.json();
+        console.log("Upload response:", uploadData);
+
+        if (uploadData.status) {
+          imageUrl = uploadData.body;
+          console.log("Image uploaded successfully:", imageUrl);
+        } else {
+          console.error("Upload failed:", uploadData);
+          alert(
+            "Failed to upload image: " + (uploadData.message || "Unknown error")
+          );
+          return;
+        }
+      }
+
+      // Prepare the final form data with the uploaded image URL
+      const finalFormData = {
+        ...formData,
+        image: imageUrl,
+      };
+
+      console.log("Submitting form data:", finalFormData);
+
       const response = await fetch(`${server_url}/investment-opportunities`, {
         method: "POST",
         headers: headers,
-        body: JSON.stringify(formData),
+        body: JSON.stringify(finalFormData),
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data.status) {
+        // Clean up the preview URL
+        if (formData.image && formData.image.startsWith("blob:")) {
+          URL.revokeObjectURL(formData.image);
+        }
         router.push("/opportunities");
       } else {
-        alert("Failed to create opportunity");
+        alert(
+          "Failed to create opportunity: " + (data.message || "Unknown error")
+        );
       }
     } catch (error) {
       console.error("Error creating opportunity:", error);
-      alert("Error creating opportunity");
+      alert("Error creating opportunity: " + error.message);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-6">
-      {/* Header */}
-      <div className="mb-8">
-        <Link
-          href="/opportunities"
-          className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
-        >
-          <BsArrowLeft />
-          Back to Opportunities
-        </Link>
-        <h1 className="text-3xl font-bold text-gray-900">
-          Add New Investment Opportunity
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Create a new investment opportunity to share with potential investors.
-        </p>
-      </div>
-
-      {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-6">
-        <div className="bg-white rounded-lg shadow-md p-6">
-          {/* Title */}
-          <div className="mb-6">
-            <label
-              htmlFor="title"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Title <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              id="title"
-              name="title"
-              value={formData.title}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.title ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="Enter opportunity title"
-            />
-            {errors.title && (
-              <p className="mt-1 text-sm text-red-600">{errors.title}</p>
-            )}
-          </div>
-
-          {/* Description */}
-          <div className="mb-6">
-            <label
-              htmlFor="description"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Description <span className="text-red-500">*</span>
-            </label>
-            <textarea
-              id="description"
-              name="description"
-              rows={6}
-              value={formData.description}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.description ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="Describe the investment opportunity"
-            />
-            {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
-            )}
-          </div>
-
-          {/* URL */}
-          <div className="mb-6">
-            <label
-              htmlFor="url"
-              className="block text-sm font-medium text-gray-700 mb-2"
-            >
-              Details URL (Optional)
-            </label>
-            <input
-              type="url"
-              id="url"
-              name="url"
-              value={formData.url}
-              onChange={handleInputChange}
-              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.url ? "border-red-500" : "border-gray-300"
-              }`}
-              placeholder="https://example.com/opportunity-details"
-            />
-            {errors.url && (
-              <p className="mt-1 text-sm text-red-600">{errors.url}</p>
-            )}
-            <p className="mt-1 text-sm text-gray-500">
-              Link to external page with more details about this opportunity
-            </p>
-          </div>
-
-          {/* Image Upload */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Image (Optional)
-            </label>
-
-            {formData.image ? (
-              <div className="mb-4">
-                <img
-                  src={formData.image}
-                  alt="Opportunity"
-                  className="w-full max-w-md h-48 object-cover rounded-lg"
-                />
-                <button
-                  type="button"
-                  onClick={() =>
-                    setFormData((prev) => ({ ...prev, image: "" }))
-                  }
-                  className="mt-2 text-sm text-red-600 hover:text-red-800"
-                >
-                  Remove Image
-                </button>
-              </div>
-            ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                  className="hidden"
-                  id="image-upload"
-                  disabled={uploading}
-                />
-                <label
-                  htmlFor="image-upload"
-                  className={`cursor-pointer ${uploading ? "opacity-50" : ""}`}
-                >
-                  <div className="mx-auto h-12 w-12 text-gray-400 mb-4">
-                    {uploading ? (
-                      <Spinner />
-                    ) : (
-                      <BsUpload className="h-12 w-12" />
-                    )}
-                  </div>
-                  <p className="text-sm text-gray-600">
-                    {uploading ? "Uploading..." : "Click to upload an image"}
-                  </p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    PNG, JPG, GIF up to 5MB
-                  </p>
-                </label>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Form Actions */}
-        <div className="flex justify-end gap-3">
+    <div className="container mx-auto px-4">
+      <div className="rounded-xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+        {/* Header */}
+        <div className="p-6 border-b border-stroke dark:border-strokedark">
           <Link
             href="/opportunities"
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-4"
           >
-            Cancel
+            <BsArrowLeft />
+            Back to Opportunities
           </Link>
-          <button
-            type="submit"
-            disabled={loading || uploading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-          >
-            {loading && <Spinner />}
-            {loading ? "Creating..." : "Create Opportunity"}
-          </button>
+          <h4 className="text-xl font-semibold text-black dark:text-white">
+            Add New Investment Opportunity
+          </h4>
+          <p className="mt-2 text-bodydark2">
+            Create a new investment opportunity to share with potential
+            investors.
+          </p>
         </div>
-      </form>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="p-6">
+          <div className="space-y-6">
+            {/* Title */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                className={`form-style ${errors.title ? "border-red-500" : ""}`}
+                placeholder="Enter opportunity title"
+              />
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+              )}
+            </div>
+
+            {/* Description */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Description <span className="text-red-500">*</span>
+              </label>
+              <textarea
+                name="description"
+                rows={6}
+                value={formData.description}
+                onChange={handleInputChange}
+                className={`form-style ${
+                  errors.description ? "border-red-500" : ""
+                }`}
+                placeholder="Describe the investment opportunity"
+              />
+              {errors.description && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.description}
+                </p>
+              )}
+            </div>
+
+            {/* URL */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Related URL (Optional)
+              </label>
+              <input
+                type="url"
+                name="url"
+                value={formData.url}
+                onChange={handleInputChange}
+                className={`form-style ${errors.url ? "border-red-500" : ""}`}
+                placeholder="https://example.com"
+              />
+              {errors.url && (
+                <p className="mt-1 text-sm text-red-600">{errors.url}</p>
+              )}
+              <p className="mt-1 text-sm text-bodydark2">
+                Link to external page with more details about this opportunity
+              </p>
+            </div>
+
+            {/* Image Upload */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Image (Optional)
+              </label>
+
+              {formData.image ? (
+                <div className="mb-4">
+                  <img
+                    src={formData.image}
+                    alt="Opportunity"
+                    className="w-full max-w-md h-48 object-cover rounded-lg border border-stroke dark:border-strokedark"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Clean up the preview URL if it's a blob URL
+                      if (
+                        formData.image &&
+                        formData.image.startsWith("blob:")
+                      ) {
+                        URL.revokeObjectURL(formData.image);
+                      }
+                      setFormData((prev) => ({ ...prev, image: "" }));
+                      setSelectedFile(null);
+                    }}
+                    className="mt-2 text-sm text-danger hover:text-danger/80"
+                  >
+                    Remove Image
+                  </button>
+                </div>
+              ) : (
+                <div className="mb-4">
+                  <div className="flex items-center justify-center w-full">
+                    <label
+                      htmlFor="image-upload"
+                      className="flex flex-col items-center justify-center w-full h-32 border-2 border-stroke dark:border-strokedark border-dashed rounded-lg cursor-pointer bg-gray-50 dark:bg-meta-4 hover:bg-gray-100 dark:hover:bg-meta-4/50"
+                    >
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <BsUpload className="w-8 h-8 mb-4 text-bodydark2" />
+                        <p className="mb-2 text-sm text-bodydark2">
+                          <span className="font-semibold">Click to upload</span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="text-xs text-bodydark2">
+                          PNG, JPG, JPEG (Max 5MB)
+                        </p>
+                      </div>
+                    </label>
+                    <input
+                      id="image-upload"
+                      type="file"
+                      accept="image/*"
+                      onChange={handleImageSelect}
+                      className="hidden"
+                      disabled={loading}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <div className="flex gap-4">
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-primary text-white py-2 px-4 rounded-lg hover:bg-primary/90 focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Spinner />
+                    Creating...
+                  </div>
+                ) : (
+                  "Create Opportunity"
+                )}
+              </button>
+              <Link
+                href="/opportunities"
+                className="px-6 py-2 border border-stroke dark:border-strokedark text-black dark:text-white rounded-lg hover:bg-gray-50 dark:hover:bg-strokedark focus:ring-2 focus:ring-gray-300 focus:ring-offset-2"
+              >
+                Cancel
+              </Link>
+            </div>
+          </div>
+        </form>
+      </div>
     </div>
   );
 };

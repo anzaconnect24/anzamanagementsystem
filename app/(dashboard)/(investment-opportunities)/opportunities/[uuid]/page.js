@@ -4,7 +4,13 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { server_url } from "@/app/utils/endpoint";
 import { headers } from "@/app/utils/headers";
-import { BsArrowLeft, BsPencil, BsTrash, BsCalendar, BsLink45deg } from "react-icons/bs";
+import {
+  BsArrowLeft,
+  BsPencil,
+  BsTrash,
+  BsCalendar,
+  BsLink45deg,
+} from "react-icons/bs";
 import Spinner from "@/components/spinner";
 
 const ViewInvestmentOpportunity = () => {
@@ -18,11 +24,14 @@ const ViewInvestmentOpportunity = () => {
   useEffect(() => {
     const fetchOpportunity = async () => {
       try {
-        const response = await fetch(`${server_url}/investment-opportunities/${uuid}`, {
-          headers: headers,
-        });
+        const response = await fetch(
+          `${server_url}/investment-opportunities/${uuid}`,
+          {
+            headers: headers,
+          }
+        );
         const data = await response.json();
-        
+
         if (data.success) {
           setOpportunity(data.body);
         } else {
@@ -46,13 +55,16 @@ const ViewInvestmentOpportunity = () => {
   const handleDelete = async () => {
     try {
       setDeleting(true);
-      const response = await fetch(`${server_url}/investment-opportunities/${uuid}`, {
-        method: "DELETE",
-        headers: headers,
-      });
+      const response = await fetch(
+        `${server_url}/investment-opportunities/${uuid}`,
+        {
+          method: "DELETE",
+          headers: headers,
+        }
+      );
 
       const data = await response.json();
-      
+
       if (data.success) {
         router.push("/opportunities");
       } else {
@@ -104,7 +116,7 @@ const ViewInvestmentOpportunity = () => {
           <BsArrowLeft />
           Back to Opportunities
         </Link>
-        
+
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
@@ -118,12 +130,13 @@ const ViewInvestmentOpportunity = () => {
               {opportunity.updatedAt !== opportunity.createdAt && (
                 <div className="flex items-center gap-1">
                   <BsCalendar />
-                  Updated: {new Date(opportunity.updatedAt).toLocaleDateString()}
+                  Updated:{" "}
+                  {new Date(opportunity.updatedAt).toLocaleDateString()}
                 </div>
               )}
             </div>
           </div>
-          
+
           <div className="flex gap-3">
             <Link
               href={`/opportunities/${uuid}/edit`}
@@ -206,12 +219,12 @@ const ViewInvestmentOpportunity = () => {
                   Created Date
                 </label>
                 <p className="text-gray-900 dark:text-white">
-                  {new Date(opportunity.createdAt).toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
+                  {new Date(opportunity.createdAt).toLocaleDateString("en-US", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
                   })}
                 </p>
               </div>
@@ -221,13 +234,16 @@ const ViewInvestmentOpportunity = () => {
                     Last Updated
                   </label>
                   <p className="text-gray-900 dark:text-white">
-                    {new Date(opportunity.updatedAt).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    {new Date(opportunity.updatedAt).toLocaleDateString(
+                      "en-US",
+                      {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      }
+                    )}
                   </p>
                 </div>
               )}
@@ -244,7 +260,8 @@ const ViewInvestmentOpportunity = () => {
               Confirm Delete
             </h3>
             <p className="text-gray-600 dark:text-gray-400 mb-6">
-              Are you sure you want to delete "{opportunity.title}"? This action cannot be undone.
+              Are you sure you want to delete "{opportunity.title}"? This action
+              cannot be undone.
             </p>
             <div className="flex gap-4">
               <button

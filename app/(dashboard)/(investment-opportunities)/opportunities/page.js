@@ -1,57 +1,97 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import Link from "next/link";
+import axios from "axios";
 import { server_url } from "@/app/utils/endpoint";
 import { headers } from "@/app/utils/headers";
 import { BsPlus, BsSearch, BsTrash, BsPencil } from "react-icons/bs";
 import Spinner from "@/components/spinner";
+import { UserContext } from "../../layout";
 
 const InvestmentOpportunities = () => {
   const [opportunities, setOpportunities] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [searchLoading, setSearchLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [deleting, setDeleting] = useState(null);
+  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+  const { userDetails } = useContext(UserContext);
 
-  const fetchOpportunities = async (page = 1, keyword = "") => {
+  const fetchOpportunities = async (
+    page = 1,
+    keyword = "",
+    isSearch = false
+  ) => {
     try {
-      setLoading(true);
-      const response = await fetch(
-        `${server_url}/investment-opportunities?page=${page}&limit=8&keyword=${keyword}`,
+      if (isSearch) {
+        setSearchLoading(true);
+      } else {
+        setLoading(true);
+      }
+
+      const response = await axios.get(
+        `${server_url}/investment-opportunities`,
         {
-          method: "GET",
+          params: {
+            page: page,
+            limit: 8,
+            keyword: keyword,
+          },
           headers: headers,
         }
       );
-      const data = await response.json();
 
-      if (data.success) {
-        setOpportunities(data.body.data);
-        setTotalCount(data.body.count);
-        setTotalPages(Math.ceil(data.body.count / 8));
-        setCurrentPage(data.body.page);
+      if (response.data.status) {
+        console.log("Investment Opportunities:", response.data);
+        setOpportunities(response.data.body.data);
+        setTotalCount(response.data.body.count);
+        setTotalPages(Math.ceil(response.data.body.count / 8));
+        setCurrentPage(response.data.body.page);
       }
     } catch (error) {
       console.error("Error fetching opportunities:", error);
     } finally {
-      setLoading(false);
+      if (isSearch) {
+        setSearchLoading(false);
+      } else {
+        setLoading(false);
+      }
     }
   };
 
   useEffect(() => {
-    fetchOpportunities(1, searchTerm);
+    fetchOpportunities(1, searchTerm, false);
   }, []);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    setCurrentPage(1);
-    fetchOpportunities(1, searchTerm);
-  };
+  // Debounced search effect
+  useEffect(() => {
+    // Skip the initial load
+    if (searchTerm === "" && currentPage === 1) return;
+
+    const timeoutId = setTimeout(() => {
+      setCurrentPage(1);
+      fetchOpportunities(1, searchTerm, true);
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(timeoutId);
+  }, [searchTerm]);
 
   const handlePageChange = (page) => {
-    fetchOpportunities(page, searchTerm);
+    fetchOpportunities(page, searchTerm, false);
+  };
+
+  const openModal = (opportunity) => {
+    setSelectedOpportunity(opportunity);
+    setShowModal(true);
+  };
+
+  const closeModal = () => {
+    setSelectedOpportunity(null);
+    setShowModal(false);
   };
 
   const handleDelete = async (uuid) => {
@@ -63,17 +103,16 @@ const InvestmentOpportunities = () => {
 
     try {
       setDeleting(uuid);
-      const response = await fetch(
+      const response = await axios.delete(
         `${server_url}/investment-opportunities/${uuid}`,
         {
-          method: "DELETE",
           headers: headers,
         }
       );
 
-      if (response.ok) {
+      if (response.status === 200 || response.status === 204) {
         // Refresh the list
-        fetchOpportunities(currentPage, searchTerm);
+        fetchOpportunities(currentPage, searchTerm, false);
       } else {
         alert("Failed to delete opportunity");
       }
@@ -106,43 +145,44 @@ const InvestmentOpportunities = () => {
               Manage and explore investment opportunities
             </p>
           </div>
-          <Link
-            href="/opportunities/new"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            <BsPlus className="text-lg" />
-            Add Opportunity
-          </Link>
+          {userDetails?.role === "Admin" && (
+            <Link
+              href="/opportunities/new"
+              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+            >
+              <BsPlus className="text-lg" />
+              Add Opportunity
+            </Link>
+          )}
         </div>
       </div>
 
       {/* Search */}
-      <div className="mb-6">
-        <form onSubmit={handleSearch} className="flex gap-3">
-          <div className="flex-1 relative">
-            <BsSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+
+      {/* Results Count */}
+      <div className="flex justify-between items-center">
+        <div className="mb-4  text-gray-600">
+          Showing {opportunities.length} of {totalCount} opportunities
+        </div>
+        <div className="mb-6">
+          <div className="flex-1 relative max-w-md">
+            {searchLoading ? (
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              </div>
+            ) : (
+              <BsSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            )}
             <input
               type="text"
               placeholder="Search opportunities..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full pl-10 pr-4 py-2 border border-boxdark/30 rounded-lg focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
-          <button
-            type="submit"
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-          >
-            Search
-          </button>
-        </form>
+        </div>
       </div>
-
-      {/* Results Count */}
-      <div className="mb-4 text-sm text-gray-600">
-        Showing {opportunities.length} of {totalCount} opportunities
-      </div>
-
       {/* Opportunities Grid */}
       {opportunities.length === 0 ? (
         <div className="text-center py-12">
@@ -162,22 +202,25 @@ const InvestmentOpportunities = () => {
           <p className="mt-1 text-sm text-gray-500">
             Get started by creating a new investment opportunity.
           </p>
-          <div className="mt-6">
-            <Link
-              href="/opportunities/new"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-            >
-              <BsPlus className="text-lg" />
-              Add Opportunity
-            </Link>
-          </div>
+          {userDetails?.role === "Admin" && (
+            <div className="mt-6">
+              <Link
+                href="/opportunities/new"
+                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+              >
+                <BsPlus className="text-lg" />
+                Add Opportunity
+              </Link>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {opportunities.map((opportunity) => (
             <div
               key={opportunity.uuid}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => openModal(opportunity)}
             >
               {/* Image */}
               {opportunity.image && (
@@ -199,46 +242,38 @@ const InvestmentOpportunities = () => {
                   {opportunity.description}
                 </p>
 
-                {/* URL */}
-                {opportunity.url && (
-                  <div className="mb-4">
-                    <a
-                      href={opportunity.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-600 hover:text-blue-800 text-sm truncate block"
-                    >
-                      View Details →
-                    </a>
-                  </div>
-                )}
-
                 {/* Actions */}
                 <div className="flex justify-between items-center">
                   <span className="text-xs text-gray-500">
                     {new Date(opportunity.createdAt).toLocaleDateString()}
                   </span>
-                  <div className="flex gap-2">
-                    <Link
-                      href={`/opportunities/${opportunity.uuid}/edit`}
-                      className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                    >
-                      <BsPencil className="text-sm" />
-                    </Link>
-                    <button
-                      onClick={() => handleDelete(opportunity.uuid)}
-                      disabled={deleting === opportunity.uuid}
-                      className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                    >
-                      {deleting === opportunity.uuid ? (
-                        <div className="w-4 h-4">
-                          <Spinner />
-                        </div>
-                      ) : (
-                        <BsTrash className="text-sm" />
-                      )}
-                    </button>
-                  </div>
+                  {userDetails?.role === "Admin" && (
+                    <div className="flex gap-2">
+                      <Link
+                        href={`/opportunities/${opportunity.uuid}/edit`}
+                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <BsPencil className="text-sm" />
+                      </Link>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete(opportunity.uuid);
+                        }}
+                        disabled={deleting === opportunity.uuid}
+                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                      >
+                        {deleting === opportunity.uuid ? (
+                          <div className="w-4 h-4">
+                            <Spinner />
+                          </div>
+                        ) : (
+                          <BsTrash className="text-sm" />
+                        )}
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -280,6 +315,110 @@ const InvestmentOpportunities = () => {
               Next
             </button>
           </nav>
+        </div>
+      )}
+
+      {/* Modal */}
+      {showModal && selectedOpportunity && (
+        <div className="fixed inset-0 z-99 bg-black bg-opacity-50 flex items-center justify-center p-4 ">
+          <div className="bg-white z-99 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="sticky top-0 bg-white border-b border-boxdark/10 px-6 py-4 flex justify-between items-center">
+              <h2 className="text-xl font-semibold text-gray-900">
+                Investment Opportunity Details
+              </h2>
+              <button
+                onClick={closeModal}
+                className="text-gray-400 hover:text-gray-600 text-2xl"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Image */}
+              {selectedOpportunity.image && (
+                <div className="mb-6">
+                  <img
+                    src={selectedOpportunity.image}
+                    alt={selectedOpportunity.title}
+                    className="w-full h-64 object-cover rounded-lg"
+                  />
+                </div>
+              )}
+
+              {/* Title */}
+              <h1 className="text-2xl font-bold text-gray-900 mb-4">
+                {selectedOpportunity.title}
+              </h1>
+
+              {/* Description */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Description
+                </h3>
+                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                  {selectedOpportunity.description}
+                </p>
+              </div>
+
+              {/* Created Date */}
+              <div className="mb-6">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Created
+                </h3>
+                <p className="text-gray-600">
+                  {new Date(selectedOpportunity.createdAt).toLocaleString()}
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                {selectedOpportunity.url && (
+                  <a
+                    href={selectedOpportunity.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+                  >
+                    View Details →
+                  </a>
+                )}
+
+                {userDetails?.role === "Admin" && (
+                  <>
+                    <Link
+                      href={`/opportunities/${selectedOpportunity.uuid}/edit`}
+                      className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                    >
+                      <BsPencil className="mr-2" />
+                      Edit Opportunity
+                    </Link>
+
+                    <button
+                      onClick={() => {
+                        closeModal();
+                        handleDelete(selectedOpportunity.uuid);
+                      }}
+                      disabled={deleting === selectedOpportunity.uuid}
+                      className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {deleting === selectedOpportunity.uuid ? (
+                        <>
+                          <Spinner />
+                          <span className="ml-2">Deleting...</span>
+                        </>
+                      ) : (
+                        <>
+                          <BsTrash className="mr-2" />
+                          Delete Opportunity
+                        </>
+                      )}
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>

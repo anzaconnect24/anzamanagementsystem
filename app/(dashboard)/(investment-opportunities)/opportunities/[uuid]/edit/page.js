@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
 import { server_url } from "@/app/utils/endpoint";
 import { headers } from "@/app/utils/headers";
 import { BsArrowLeft, BsUpload } from "react-icons/bs";
@@ -25,17 +26,19 @@ const EditInvestmentOpportunity = () => {
   useEffect(() => {
     const fetchOpportunity = async () => {
       try {
-        const response = await fetch(`${server_url}/investment-opportunities/${uuid}`, {
-          headers: headers,
-        });
-        const data = await response.json();
-        
-        if (data.success) {
+        const response = await axios.get(
+          `${server_url}/investment-opportunities/${uuid}`,
+          {
+            headers: headers,
+          }
+        );
+
+        if (response.data.status) {
           setFormData({
-            title: data.body.title || "",
-            description: data.body.description || "",
-            url: data.body.url || "",
-            image: data.body.image || "",
+            title: response.data.body.title || "",
+            description: response.data.body.description || "",
+            url: response.data.body.url || "",
+            image: response.data.body.image || "",
           });
         } else {
           alert("Failed to fetch opportunity details");
@@ -91,20 +94,20 @@ const EditInvestmentOpportunity = () => {
       const uploadFormData = new FormData();
       uploadFormData.append("file", file);
 
-      const response = await fetch(`${server_url}/upload-file`, {
-        method: "POST",
-        headers: {
-          Authorization: headers.Authorization,
-        },
-        body: uploadFormData,
-      });
+      const response = await axios.post(
+        `${server_url}/upload-file`,
+        uploadFormData,
+        {
+          headers: {
+            Authorization: headers.Authorization,
+          },
+        }
+      );
 
-      const data = await response.json();
-      
-      if (data.success) {
+      if (response.data.status) {
         setFormData((prev) => ({
           ...prev,
-          image: data.body,
+          image: response.data.body,
         }));
       } else {
         alert("Failed to upload image");
@@ -147,22 +150,22 @@ const EditInvestmentOpportunity = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
 
     try {
       setLoading(true);
-      const response = await fetch(`${server_url}/investment-opportunities/${uuid}`, {
-        method: "PATCH",
-        headers: headers,
-        body: JSON.stringify(formData),
-      });
+      const response = await axios.patch(
+        `${server_url}/investment-opportunities/${uuid}`,
+        formData,
+        {
+          headers: headers,
+        }
+      );
 
-      const data = await response.json();
-      
-      if (data.success) {
+      if (response.data.status) {
         router.push("/opportunities");
       } else {
         alert("Failed to update opportunity");
@@ -194,7 +197,9 @@ const EditInvestmentOpportunity = () => {
           <BsArrowLeft />
           Back to Opportunities
         </Link>
-        <h1 className="text-3xl font-bold text-gray-900">Edit Investment Opportunity</h1>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Edit Investment Opportunity
+        </h1>
         <p className="mt-2 text-gray-600">
           Update the investment opportunity details.
         </p>
@@ -205,7 +210,10 @@ const EditInvestmentOpportunity = () => {
         <div className="bg-white rounded-lg shadow-md p-6">
           {/* Title */}
           <div className="mb-6">
-            <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="title"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Title <span className="text-red-500">*</span>
             </label>
             <input
@@ -219,12 +227,17 @@ const EditInvestmentOpportunity = () => {
               }`}
               placeholder="Enter opportunity title"
             />
-            {errors.title && <p className="mt-1 text-sm text-red-600">{errors.title}</p>}
+            {errors.title && (
+              <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+            )}
           </div>
 
           {/* Description */}
           <div className="mb-6">
-            <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="description"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Description <span className="text-red-500">*</span>
             </label>
             <textarea
@@ -238,12 +251,17 @@ const EditInvestmentOpportunity = () => {
               }`}
               placeholder="Describe the investment opportunity"
             />
-            {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description}</p>}
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+            )}
           </div>
 
           {/* URL */}
           <div className="mb-6">
-            <label htmlFor="url" className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              htmlFor="url"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
               Details URL (Optional)
             </label>
             <input
@@ -257,7 +275,9 @@ const EditInvestmentOpportunity = () => {
               }`}
               placeholder="https://example.com/opportunity-details"
             />
-            {errors.url && <p className="mt-1 text-sm text-red-600">{errors.url}</p>}
+            {errors.url && (
+              <p className="mt-1 text-sm text-red-600">{errors.url}</p>
+            )}
             <p className="mt-1 text-sm text-gray-500">
               Link to external page with more details about this opportunity
             </p>
@@ -268,7 +288,7 @@ const EditInvestmentOpportunity = () => {
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Image (Optional)
             </label>
-            
+
             {formData.image ? (
               <div className="mb-4">
                 <img
@@ -278,7 +298,9 @@ const EditInvestmentOpportunity = () => {
                 />
                 <button
                   type="button"
-                  onClick={() => setFormData((prev) => ({ ...prev, image: "" }))}
+                  onClick={() =>
+                    setFormData((prev) => ({ ...prev, image: "" }))
+                  }
                   className="mt-2 text-sm text-red-600 hover:text-red-800"
                 >
                   Remove Image

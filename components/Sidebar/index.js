@@ -242,7 +242,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
     if (["Admin", "Investor"].includes(role)) {
       investmentItems.push({
-        name: "Existing Investors",
+        name: "Investors",
         path: "/investors",
         icon: <FaHandshake className="text-xl" />,
       });
@@ -540,17 +540,17 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                   } else {
                                     // Regular submenu item
                                     return (
-                                  <li key={subItem.name}>
-                                    <Link
-                                      href={subItem.path}
-                                      className={`flex items-center py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
-                                        pathname === subItem.path &&
-                                        "bg-slate-700/50 text-white"
-                                      }`}
-                                    >
-                                      <span>{subItem.name}</span>
-                                    </Link>
-                                  </li>
+                                      <li key={subItem.name}>
+                                        <Link
+                                          href={subItem.path}
+                                          className={`flex items-center py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
+                                            pathname === subItem.path &&
+                                            "bg-slate-700/50 text-white"
+                                          }`}
+                                        >
+                                          <span>{subItem.name}</span>
+                                        </Link>
+                                      </li>
                                     );
                                   }
                                 })}
