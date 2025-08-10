@@ -21,6 +21,12 @@ const CreateStory = () => {
   });
   const [errors, setErrors] = useState({});
 
+  // Check if user is admin
+  if (userDetails.role !== "Admin") {
+    router.push("/successStories");
+    return null;
+  }
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -52,19 +58,23 @@ const CreateStory = () => {
   };
 
   const isValidYouTubeUrl = (url) => {
-    const youtubeRegex = /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w\-]+(&[\w=]*)?$/;
+    const youtubeRegex =
+      /^(https?:\/\/)?(www\.)?(youtube\.com\/(watch\?v=|embed\/)|youtu\.be\/)[\w\-]+(&[\w=]*)?$/;
     return youtubeRegex.test(url);
   };
 
   const extractYouTubeVideoId = (url) => {
-    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const regExp =
+      /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
     const match = url?.match(regExp);
-    return (match && match[7].length === 11) ? match[7] : null;
+    return match && match[7].length === 11 ? match[7] : null;
   };
 
   const getYouTubeThumbnail = (url) => {
     const videoId = extractYouTubeVideoId(url);
-    return videoId ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg` : null;
+    return videoId
+      ? `https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`
+      : null;
   };
 
   const handleSubmit = async (e) => {
@@ -165,7 +175,7 @@ const CreateStory = () => {
               {errors.videoLink && (
                 <p className="mt-1 text-sm text-red-500">{errors.videoLink}</p>
               )}
-              
+
               {/* Video Preview */}
               {formData.videoLink && isValidYouTubeUrl(formData.videoLink) && (
                 <div className="mt-4">
@@ -176,13 +186,17 @@ const CreateStory = () => {
                       alt="Video thumbnail"
                       className="w-full h-auto rounded-lg border border-stroke"
                       onError={(e) => {
-                        e.target.style.display = 'none';
+                        e.target.style.display = "none";
                       }}
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
-                        <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 20 20">
-                          <path d="M8 5v10l8-5z"/>
+                        <svg
+                          className="w-6 h-6 text-white ml-1"
+                          fill="currentColor"
+                          viewBox="0 0 20 20"
+                        >
+                          <path d="M8 5v10l8-5z" />
                         </svg>
                       </div>
                     </div>
@@ -209,7 +223,9 @@ const CreateStory = () => {
                 }`}
               />
               {errors.description && (
-                <p className="mt-1 text-sm text-red-500">{errors.description}</p>
+                <p className="mt-1 text-sm text-red-500">
+                  {errors.description}
+                </p>
               )}
               <p className="mt-1 text-sm text-bodydark2">
                 You can use HTML tags for formatting
@@ -230,14 +246,24 @@ const CreateStory = () => {
                   </>
                 ) : (
                   <>
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M12 4v16m8-8H4"
+                      />
                     </svg>
                     Create Success Story
                   </>
                 )}
               </button>
-              
+
               <Link
                 href="/successStories"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-stroke bg-gray px-6 py-3 text-center font-medium text-dark hover:border-primary hover:bg-primary hover:text-white dark:border-strokedark dark:bg-meta-4 dark:text-white dark:hover:border-primary dark:hover:bg-primary lg:px-8 xl:px-10"

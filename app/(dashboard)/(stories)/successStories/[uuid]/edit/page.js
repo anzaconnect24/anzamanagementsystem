@@ -24,6 +24,12 @@ const EditStory = () => {
   });
   const [errors, setErrors] = useState({});
 
+  // Check if user is admin
+  if (userDetails.role !== "Admin") {
+    router.push("/successStories");
+    return null;
+  }
+
   useEffect(() => {
     const fetchStory = async () => {
       try {
