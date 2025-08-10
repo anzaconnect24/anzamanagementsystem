@@ -1,9 +1,16 @@
 {
-  "extends": ["next", "next/core-web-vitals"],
+  "extends": ["next/core-web-vitals"],
+  "parser": "@babel/eslint-parser",
+  "parserOptions": {
+    "requireConfigFile": false,
+    "babelOptions": {
+      "presets": ["next/babel"]
+    }
+  },
   "rules": {
-    "jsx-a11y/alt-text": "off",  // Disable the alt-text warning
-    "react-hooks/exhaustive-deps": "off",  // Disable exhaustive deps warning
-    "next/no-img-element": "off",  // Disable the no-img-element warning
+    "jsx-a11y/alt-text": "off",
+    "react-hooks/exhaustive-deps": "off",
+    "@next/next/no-img-element": "off",
     "react/no-unescaped-entities": "off"
   }
 }
