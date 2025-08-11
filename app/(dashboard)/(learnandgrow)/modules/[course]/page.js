@@ -60,9 +60,9 @@ const Page = ({ params }) => {
           );
           let percentage = length > 0 ? (progress / length) * 100 : 0;
 
-          // Determine if this module should be locked
+          // Determine if this module should be locked (only for non-Admin users)
           let isLocked = false;
-          if (idx > 0) {
+          if (idx > 0 && !["Admin"].includes(userDetails.role)) {
             // Previous module must be completed
             let prev = modules[idx - 1];
             let prevLength = prev.Slides.length;
