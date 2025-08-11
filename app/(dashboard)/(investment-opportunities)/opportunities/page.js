@@ -238,9 +238,34 @@ const InvestmentOpportunities = () => {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
                   {opportunity.title}
                 </h3>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-3">
+                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
                   {opportunity.description}
                 </p>
+
+                {/* Opportunity Details */}
+                <div className="space-y-2 mb-4">
+                  {opportunity.sector && (
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {opportunity.sector}
+                      </span>
+                    </div>
+                  )}
+
+                  {opportunity.amount && (
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Amount:</span> $
+                      {parseFloat(opportunity.amount).toLocaleString()}
+                    </div>
+                  )}
+
+                  {opportunity.investmentType && (
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Type:</span>{" "}
+                      {opportunity.investmentType}
+                    </div>
+                  )}
+                </div>
 
                 {/* Actions */}
                 <div className="flex justify-between items-center">
@@ -359,6 +384,45 @@ const InvestmentOpportunities = () => {
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {selectedOpportunity.description}
                 </p>
+              </div>
+
+              {/* Opportunity Details Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                {/* Sector */}
+                {selectedOpportunity.sector && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Sector
+                    </h3>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                      {selectedOpportunity.sector}
+                    </span>
+                  </div>
+                )}
+
+                {/* Investment Amount */}
+                {selectedOpportunity.amount && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Investment Amount
+                    </h3>
+                    <p className="text-2xl font-bold text-green-600">
+                      ${parseFloat(selectedOpportunity.amount).toLocaleString()}
+                    </p>
+                  </div>
+                )}
+
+                {/* Investment Type */}
+                {selectedOpportunity.investmentType && (
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Investment Type
+                    </h3>
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+                      {selectedOpportunity.investmentType}
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Created Date */}

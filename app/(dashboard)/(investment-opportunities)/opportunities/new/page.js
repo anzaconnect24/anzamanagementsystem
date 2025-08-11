@@ -14,6 +14,9 @@ const NewInvestmentOpportunity = () => {
     description: "",
     url: "",
     image: "",
+    sector: "",
+    amount: "",
+    investmentType: "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -72,6 +75,20 @@ const NewInvestmentOpportunity = () => {
 
     if (!formData.description.trim()) {
       newErrors.description = "Description is required";
+    }
+
+    if (!formData.sector.trim()) {
+      newErrors.sector = "Sector is required";
+    }
+
+    if (!formData.amount.trim()) {
+      newErrors.amount = "Investment amount is required";
+    } else if (isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
+      newErrors.amount = "Please enter a valid amount";
+    }
+
+    if (!formData.investmentType.trim()) {
+      newErrors.investmentType = "Investment type is required";
     }
 
     if (formData.url && !isValidUrl(formData.url)) {
@@ -226,6 +243,88 @@ const NewInvestmentOpportunity = () => {
               {errors.description && (
                 <p className="mt-1 text-sm text-red-600">
                   {errors.description}
+                </p>
+              )}
+            </div>
+
+            {/* Sector */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Sector <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="sector"
+                value={formData.sector}
+                onChange={handleInputChange}
+                className={`form-style ${
+                  errors.sector ? "border-red-500" : ""
+                }`}
+              >
+                <option value="">Select a sector</option>
+                <option value="Technology">Technology</option>
+                <option value="Healthcare">Healthcare</option>
+                <option value="Finance">Finance</option>
+                <option value="Education">Education</option>
+                <option value="Agriculture">Agriculture</option>
+                <option value="Manufacturing">Manufacturing</option>
+                <option value="Retail">Retail</option>
+                <option value="Energy">Energy</option>
+                <option value="Real Estate">Real Estate</option>
+                <option value="Transportation">Transportation</option>
+                <option value="Entertainment">Entertainment</option>
+                <option value="Other">Other</option>
+              </select>
+              {errors.sector && (
+                <p className="mt-1 text-sm text-red-600">{errors.sector}</p>
+              )}
+            </div>
+
+            {/* Investment Amount */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Investment Amount (USD) <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="number"
+                name="amount"
+                value={formData.amount}
+                onChange={handleInputChange}
+                className={`form-style ${
+                  errors.amount ? "border-red-500" : ""
+                }`}
+                placeholder="Enter investment amount"
+                min="0"
+                step="0.01"
+              />
+              {errors.amount && (
+                <p className="mt-1 text-sm text-red-600">{errors.amount}</p>
+              )}
+            </div>
+
+            {/* Investment Type */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Investment Type <span className="text-red-500">*</span>
+              </label>
+              <select
+                name="investmentType"
+                value={formData.investmentType}
+                onChange={handleInputChange}
+                className={`form-style ${
+                  errors.investmentType ? "border-red-500" : ""
+                }`}
+              >
+                <option value="">Select investment type</option>
+                <option value="Equity">Equity</option>
+                <option value="Debt">Debt</option>
+                <option value="Convertible">Convertible</option>
+                <option value="Grant">Grant</option>
+                <option value="Revenue Share">Revenue Share</option>
+                <option value="Hybrid">Hybrid</option>
+              </select>
+              {errors.investmentType && (
+                <p className="mt-1 text-sm text-red-600">
+                  {errors.investmentType}
                 </p>
               )}
             </div>
