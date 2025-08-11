@@ -221,29 +221,25 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       });
     }
 
-    // Investment Management
+    // Funding Opportunities
     const investmentItems = [];
 
     if (["Admin", "Enterprenuer"].includes(role)) {
       investmentItems.push({
-        name: "Investment Opportunities",
+        name: "Funding Opportunities",
         path: "/opportunities",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
-      });
-    }
-
-    if (["Admin", "Enterprenuer"].includes(role)) {
-      investmentItems.push({
-        name: "Investors",
-        path: "/investors",
-        icon: <FaHandshake className="text-xl" />,
+        submenu: [
+          { name: "Investor Connection", path: "/investors" },
+          { name: "Open calls for funding", path: "/opportunities" },
+        ],
       });
     }
 
     if (investmentItems.length > 0) {
       categories.push({
         id: "investment",
-        title: "Investment Management",
+        title: "Funding Opportunities",
         items: investmentItems,
       });
     }
