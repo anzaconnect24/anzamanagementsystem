@@ -42,7 +42,7 @@ const BusinessInformation = () => {
   ) : (
     <div>
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
           const businessData = {
             name: e.target.businessName.value,
@@ -65,21 +65,31 @@ const BusinessInformation = () => {
               ? e.target.completedProgram.value
               : null,
             description: e.target.businessBio.value,
-            otherIndustry: e.target.otherIndustry.value,
+            otherIndustry: e.target.otherIndustry
+              ? e.target.otherIndustry.value
+              : "",
             numberOfCustomers: e.target.customerCount.value,
             market: e.target.targetMarket.value,
             location: e.target.businessLocation.value,
             impact: e.target.businessImpact.value,
             growthPlan: e.target.growthPlans.value,
             fundraisingNeeds: e.target.fundraisingNeeds.value,
-            industry: e.target.industry.value,
+            industry: e.target.industry ? e.target.industry.value : "",
           };
-          setloading(true);
-          updateBusiness(businessData, business.uuid).then((data) => {
-            setRefresh(refresh + 1);
-            setloading(false);
+
+          try {
+            setloading(true);
+            const data = await updateBusiness(businessData, business.uuid);
+            setRefresh((r) => r + 1);
             toast.success("User details are updated successfully!");
-          });
+          } catch (error) {
+            console.error("Error updating business details:", error);
+            toast.error(
+              "Failed to update details: " + (error?.message || "Unknown error")
+            );
+          } finally {
+            setloading(false);
+          }
         }}
       >
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -391,7 +401,7 @@ const BusinessInformation = () => {
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  What is your  traction? 
+                  What is your traction?
                 </label>
                 <textarea
                   defaultValue={business.traction}

@@ -117,7 +117,14 @@ const Page = ({ params }) => {
                 </div>
               </div>
               <div className="flex space-x-2  items-center mt-auto">
-                {isLocked ? (
+                {["Admin"].includes(userDetails.role) ? (
+                  <Link
+                    href={`/slides/${item.uuid}`}
+                    className="bg-primary px-4 py-2 rounded-lg text-white "
+                  >
+                    Modules
+                  </Link>
+                ) : isLocked ? (
                   <button
                     className="bg-gray-200 text-gray-400 px-4 py-2 rounded-lg flex items-center cursor-not-allowed"
                     disabled
