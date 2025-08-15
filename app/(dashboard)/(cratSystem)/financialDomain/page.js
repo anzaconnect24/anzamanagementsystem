@@ -8,6 +8,7 @@ import Modal from "@/components/Model";
 import Modal2 from "@/components/Model2";
 import { getFinancialData, createFinancialData, updateFinancialData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_financials_controller"; // Import updated API functions
 import { UserContext } from "../../../(dashboard)/layout";
+import Spinner from "@/components/spinner";
 
 const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
 
@@ -22,6 +23,7 @@ const Page = () => {
   const [deletemodalMessage, deleteModalMessage] = useState("");
   const [deleteCache, setDeleteCache] = useState([]);
   const { userDetails, setUserDetails } = useContext(UserContext)
+  const [uploading, setUploading] = useState({});
 
 
   useEffect(() => {
@@ -133,27 +135,33 @@ const Page = () => {
     };
   
     try {
+      // mark this domain uploading
+      setUploading((s) => ({ ...s, [domain]: true }));
       await attachDocument(fileData);
       
       // Fetch updated data
-      const responseData = await getFinancialData();
+      const responseData = await getFinancialData(userDetails.id);
       const updatedData = { ...initialDataTemplate };
   
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
           return fetchedItem
-            ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment,  comment: fetchedItem.comment }
+            ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment,  comments: fetchedItem.comments }
             : item;
         });
       });
 
       toast.success('Attachment Uploaded');
       setData(updatedData);
+      // clear uploading flag for this domain
+      setUploading((s) => ({ ...s, [domain]: false }));
       // setChangesMade(true);
     } catch (error) {
       toast.error("Error attaching file");
       console.error("Error attaching file:", error);
+      // clear uploading flag on error
+      setUploading((s) => ({ ...s, [domain]: false }));
     }
   };
   
@@ -259,7 +267,18 @@ const handleDeleteFile = async () => {
           <p className="text-sm text-black dark:text-white">{item.score}</p>
         </div>
         <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.description}</p>
+          {uploading[item.subDomain] ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              <span className="text-sm text-gray-500">Uploading...</span>
+            </div>
+          ) : item.attachment ? (
+            <a href={item.attachment} target="_blank" rel="noopener noreferrer" className="text-sm text-blue-600 hover:underline break-all">
+              {item.attachment.split('/').pop()}
+            </a>
+          ) : (
+            <p className="text-sm text-gray-500">No file</p>
+          )}
         </div>
         
         <div className="flex items-center px-2 space-x-2">

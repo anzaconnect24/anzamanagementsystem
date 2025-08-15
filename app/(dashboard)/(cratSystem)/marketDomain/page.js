@@ -4,13 +4,27 @@ import DropdownTwo from "@/components/Dropdowns/DropdownTwo";
 import ReactIcons from "@/components/icons/reactIcons";
 import Modal from "@/components/Model";
 import Modal2 from "@/components/Model2";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
-import { getMarketData, createMarketData, updateMarketData, attachDocument, deleteAttachment, initialDataTemplate } from "@/app/controllers/crat_market_controller"; 
+import Spinner from "@/components/spinner";
+import {
+  getMarketData,
+  createMarketData,
+  updateMarketData,
+  attachDocument,
+  deleteAttachment,
+  initialDataTemplate,
+} from "@/app/controllers/crat_market_controller";
 import { UserContext } from "../../../(dashboard)/layout";
 
-
-const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
+const tableHeaders = [
+  "Sub Domain",
+  "Question",
+  "Rating",
+  "Score",
+  "Attachment",
+  "Actions",
+];
 
 const Page = () => {
   const [loading, setLoading] = useState(true);
@@ -22,16 +36,16 @@ const Page = () => {
   const [deletemodalOpen, deleteModalOpen] = useState(false);
   const [deletemodalMessage, deleteModalMessage] = useState("");
   const [deleteCache, setDeleteCache] = useState([]);
-  const { userDetails, setUserDetails } = useContext(UserContext)
-
-
+  const { userDetails, setUserDetails } = useContext(UserContext);
+  const [uploading, setUploading] = useState({});
 
   useEffect(() => {
-    console.log('then');
+    console.log("then");
 
     const fetchData = async () => {
       try {
         const responseData = await getMarketData();
+        console.log(responseData);
         if (responseData == null || responseData.length == 0) {
           await createMarketData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
@@ -40,9 +54,18 @@ const Page = () => {
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               //console.log('my items', updatedData);
-              const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
+              const fetchedItem = responseData.find(
+                (dataItem) => dataItem.subDomain === item.subDomain
+              );
               return fetchedItem
-                ? { ...item, rating: fetchedItem.rating, score: fetchedItem.score, userId: fetchedItem.userId, attachment: fetchedItem.attachment, comments: fetchedItem.comments }
+                ? {
+                    ...item,
+                    rating: fetchedItem.rating,
+                    score: fetchedItem.score,
+                    userId: fetchedItem.userId,
+                    attachment: fetchedItem.attachment,
+                    comments: fetchedItem.comments,
+                  }
                 : item;
             });
           });
@@ -50,7 +73,7 @@ const Page = () => {
           setOriginalData(updatedData); // Set original data
         }
       } catch (error) {
-        console.log('Error fetching data:', error);
+        console.log("Error fetching data:", error);
       }
     };
 
@@ -70,14 +93,13 @@ const Page = () => {
       setData(newData);
       setChangesMade(true);
     }
-
   };
 
   // const submitChanges = async () => {
   //   try {
   //     console.log(data);
   //     await updateMarketData(data);
-  //     setOriginalData(data); 
+  //     setOriginalData(data);
   //     setChangesMade(false);
 
   //     toast.success("Changes successfully submitted");
@@ -90,126 +112,145 @@ const Page = () => {
 
   const submitChanges = async () => {
     try {
-        await updateMarketData(data);
+      await updateMarketData(data);
 
-        // Update initialDataTemplate here
-        Object.keys(data).forEach(section => {
-            initialDataTemplate[section] = data[section].map(item => ({
-                subDomain: item.subDomain,
-                rating: item.rating,
-                score: item.score,
-                userId: item.userId,
-                attachment: item.attachment,
-                comments: item.comments,
-                question: item.question, 
-                description: item.description 
-            }));
-        });
+      // Update initialDataTemplate here
+      Object.keys(data).forEach((section) => {
+        initialDataTemplate[section] = data[section].map((item) => ({
+          subDomain: item.subDomain,
+          rating: item.rating,
+          score: item.score,
+          userId: item.userId,
+          attachment: item.attachment,
+          comments: item.comments,
+          question: item.question,
+          description: item.description,
+        }));
+      });
 
-        setOriginalData(data); // Update original data after successful submission
-        setChangesMade(false);
+      setOriginalData(data); // Update original data after successful submission
+      setChangesMade(false);
 
-        toast.success("Changes successfully submitted");
-        console.log("Changes successfully submitted");
+      toast.success("Changes successfully submitted");
+      console.log("Changes successfully submitted");
     } catch (error) {
-        toast.error("Error submitting changes");
-        console.error("Error submitting changes:", error);
+      toast.error("Error submitting changes");
+      console.error("Error submitting changes:", error);
     }
-};
+  };
 
   const handleAddFile = async (domain, file, userId) => {
     if (!file) return;
 
     // Extract the file extension
-    const fileExtension = file.name.split('.').pop();
-  
+    const fileExtension = file.name.split(".").pop();
+
     // Append timestamp to the filename
     const timestamp = Date.now();
     const uniqueFileName = `${domain}_${timestamp}.${fileExtension}`;
-  
+
     // Create a new file with the updated name
     const updatedFile = new File([file], uniqueFileName, { type: file.type });
-  
+
     const fileData = {
       file: updatedFile, // Use the updated file
       subDomain: domain,
-      userId: userId
+      userId: userId,
     };
 
     try {
+      // set uploading state for this domain
+      setUploading((s) => ({ ...s, [domain]: true }));
       await attachDocument(fileData);
 
       // Fetch updated data
       const responseData = await getMarketData();
       const updatedData = { ...initialDataTemplate };
-      console.log('this is my res', responseData);
+      console.log("this is my res", responseData);
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
-          const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
+          const fetchedItem = responseData.find(
+            (dataItem) => dataItem.subDomain === item.subDomain
+          );
           return fetchedItem
-            ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment, comment: fetchedItem.comment }
+            ? {
+                ...item,
+                rating: fetchedItem.rating,
+                userId: fetchedItem.userId,
+                score: fetchedItem.score,
+                attachment: fetchedItem.attachment,
+                comments: fetchedItem.comments,
+              }
             : item;
         });
       });
 
-      toast.success('Attachment Uploaded');
+      toast.success("Attachment Uploaded");
       setData(updatedData);
+      setUploading((s) => ({ ...s, [domain]: false }));
       // setChangesMade(true);
     } catch (error) {
       toast.error("Error attaching file");
       console.error("Error attaching file:", error);
+      // clear uploading flag on error
+      setUploading((s) => ({ ...s, [domain]: false }));
     }
   };
 
-  
-    const openDeleteDialog = (domain, id, attachment, section, index) => {
-      console.log(domain, id, attachment, section, index);
-      deleteModalOpen(true);
-      deleteModalMessage('Are you sure you want to delete?');
-      setDeleteCache([domain, id, attachment, section, index]);
+  const openDeleteDialog = (domain, id, attachment, section, index) => {
+    console.log(domain, id, attachment, section, index);
+    deleteModalOpen(true);
+    deleteModalMessage("Are you sure you want to delete?");
+    setDeleteCache([domain, id, attachment, section, index]);
   };
-  
+
   const handleDeleteFile = async () => {
-      const [domain, id, attachment, section, index] = deleteCache;
-      try {
-          // Proceed with deletion directly
-          await deleteAttachment(domain, id, attachment, section, index);
-          handleRatingChange(section, index, "No");
-          submitChanges();
-          // Fetch updated data
-          const responseData = await getMarketData();
-          const updatedData = { ...initialDataTemplate };
-  
-          Object.keys(updatedData).forEach((section) => {
-              updatedData[section] = updatedData[section].map((item) => {
-                  const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
-                  return fetchedItem
-                      ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment, comments: fetchedItem.comments }
-                      : item;
-              });
-          });
-  
-          toast.success('Deleted Successfully');
-          setData(updatedData);
-          setChangesMade(true);
-          deleteModalOpen(false); // Close modal
-      } catch (error) {
-          toast.error("Error deleting file");
-          console.error("Error deleting file:", error);
-      }
+    const [domain, id, attachment, section, index] = deleteCache;
+    try {
+      // Proceed with deletion directly
+      await deleteAttachment(domain, id, attachment, section, index);
+      handleRatingChange(section, index, "No");
+      submitChanges();
+      // Fetch updated data
+      const responseData = await getMarketData();
+      const updatedData = { ...initialDataTemplate };
+
+      Object.keys(updatedData).forEach((section) => {
+        updatedData[section] = updatedData[section].map((item) => {
+          const fetchedItem = responseData.find(
+            (dataItem) => dataItem.subDomain === item.subDomain
+          );
+          return fetchedItem
+            ? {
+                ...item,
+                rating: fetchedItem.rating,
+                userId: fetchedItem.userId,
+                score: fetchedItem.score,
+                attachment: fetchedItem.attachment,
+                comments: fetchedItem.comments,
+              }
+            : item;
+        });
+      });
+
+      toast.success("Deleted Successfully");
+      setData(updatedData);
+      setChangesMade(true);
+      deleteModalOpen(false); // Close modal
+    } catch (error) {
+      toast.error("Error deleting file");
+      console.error("Error deleting file:", error);
+    }
   };
-  
+
   const handleDeleteCancel = () => {
-      // Close the delete modal without performing any action
-      deleteModalOpen(false); 
+    // Close the delete modal without performing any action
+    deleteModalOpen(false);
   };
-  
-
-
 
   const handleViewFile = (attachment) => {
-    window.open(`${attachment}`, '_blank');
+    window.open(`${attachment}`, "_blank");
 
     // const fileName = data[domain][index].attachment;
     // if (fileName) {
@@ -218,12 +259,12 @@ const Page = () => {
     // }
   };
 
-  const handleEdit = (domain, index, comment) => {    
+  const handleEdit = (domain, index, comment) => {
     const newData = [...data[domain]];
     newData[index].comments = comment;
-    setData({...data, [domain]: newData });
+    setData({ ...data, [domain]: newData });
     submitChanges();
-    toast.success('Comment updated successfully');
+    toast.success("Comment updated successfully");
   };
 
   const calculateTotalScore = (domain) => {
@@ -231,7 +272,9 @@ const Page = () => {
   };
 
   const calculateOverallTotalScore = () => {
-    return Object.values(data).flat().reduce((acc, item) => acc + (item.score || 0), 0);
+    return Object.values(data)
+      .flat()
+      .reduce((acc, item) => acc + (item.score || 0), 0);
   };
 
   const calculateOverallMaxScore = () => {
@@ -240,7 +283,10 @@ const Page = () => {
 
   const renderTableRows = (domain) => {
     return data[domain].map((item, index) => (
-      <div className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark" key={index}>
+      <div
+        className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark"
+        key={index}
+      >
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
         </div>
@@ -257,12 +303,36 @@ const Page = () => {
           <p className="text-sm text-black dark:text-white">{item.score}</p>
         </div>
         <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.description}</p>
+          {uploading[item.subDomain] ? (
+            <div className="flex items-center gap-2">
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+              <span className="text-sm text-gray-500">Uploading...</span>
+            </div>
+          ) : item.attachment ? (
+            <a
+              href={item.attachment}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline break-all"
+            >
+              {item.attachment.split("/").pop()}
+            </a>
+          ) : (
+            <p className="text-sm text-gray-500">No file</p>
+          )}
         </div>
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
             onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
-            onDelete={() => openDeleteDialog(item.subDomain, item.userId, item.attachment, domain, index)}
+            onDelete={() =>
+              openDeleteDialog(
+                item.subDomain,
+                item.userId,
+                item.attachment,
+                domain,
+                index
+              )
+            }
             onView={() => handleViewFile(item.attachment)}
             onEdit={(comment) => handleEdit(domain, index, comment)}
             attachment={item.attachment}
@@ -273,11 +343,12 @@ const Page = () => {
     ));
   };
 
-
   const renderSection = (domain, title) => (
     <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
       <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-        <h4 className="text-xl font-semibold text-black dark:text-white">{title}</h4>
+        <h4 className="text-xl font-semibold text-black dark:text-white">
+          {title}
+        </h4>
       </div>
       <div className="grid grid-cols-6 border-b border-stroke py-4 px-4 dark:border-strokedark">
         {tableHeaders.map((header, index) => (
@@ -288,16 +359,20 @@ const Page = () => {
       </div>
       {renderTableRows(domain)}
       <div className="flex justify-between items-center py-4 px-4 border-t border-stroke dark:border-strokedark">
-        <p className="text-sm font-medium text-black dark:text-white">Total: {calculateTotalScore(domain)}</p>
+        <p className="text-sm font-medium text-black dark:text-white">
+          Total: {calculateTotalScore(domain)}
+        </p>
       </div>
     </div>
   );
 
-  return  !loading ?  (
+  return !loading ? (
     <div>
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-          <h4 className="text-xl font-semibold text-black dark:text-white">Market Domain Assessment</h4>
+          <h4 className="text-xl font-semibold text-black dark:text-white">
+            Market Domain Assessment
+          </h4>
           {changesMade && (
             <div className="flex justify-end mt-4">
               <button
@@ -355,8 +430,9 @@ const Page = () => {
         deleteButtonColor="blue-500"
       />
     </div>
-  ):(<Loader />);
-  
+  ) : (
+    <Loader />
+  );
 };
 
 export default Page;

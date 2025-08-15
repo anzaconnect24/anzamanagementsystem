@@ -21,6 +21,7 @@ import AIAnalysisPanel from "@/components/AI/AIAnalysisPanel";
 import jsPDF from "jspdf";
 import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
 import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
+import { FaFilePdf } from "react-icons/fa";
 
 const Page = ({ params }) => {
   const { uuid } = params;
@@ -33,6 +34,9 @@ const Page = ({ params }) => {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [loadingCRAT, setLoadingCRAT] = useState(false);
   const [cratData, setCratData] = useState(null);
+  // CRAT documents state
+  const [cratDocs, setCratDocs] = useState([]);
+  const [showCratModal, setShowCratModal] = useState(false);
   const getData = async () => {
     try {
       const data = await getBusiness(uuid);
@@ -47,52 +51,53 @@ const Page = ({ params }) => {
 
   const loadCRATForAI = async () => {
     if (!business) {
-      toast.error('Business data not loaded yet');
+      toast.error("Business data not loaded yet");
       return;
     }
 
     try {
       setLoadingCRAT(true);
-      console.log('🔍 Preparing comprehensive AI analysis for:', business.name);
-      
+      console.log("🔍 Preparing comprehensive AI analysis for:", business.name);
+
       // Show immediate feedback
-      toast.loading('Preparing AI analysis...', { id: 'ai-loading' });
-      
+      toast.loading("Preparing AI analysis...", { id: "ai-loading" });
+
       // Calculate intelligent scores based on business completeness
       const calculateIntelligentScore = (category) => {
         let score = 50; // Base score
-        
+
         switch (category) {
-          case 'commercial':
+          case "commercial":
             if (business.market) score += 15;
-            if (business.numberOfCustomers && business.numberOfCustomers > 0) score += 15;
+            if (business.numberOfCustomers && business.numberOfCustomers > 0)
+              score += 15;
             if (business.impact) score += 10;
             if (business.traction) score += 10;
             break;
-            
-          case 'financial':
+
+          case "financial":
             if (business.fundraisingNeeds) score += 15;
             if (business.lookingForInvestment) score += 15;
-            if (business.stage && business.stage !== 'Idea') score += 10;
+            if (business.stage && business.stage !== "Idea") score += 10;
             if (business.companyProfile) score += 10;
             break;
-            
-          case 'operations':
+
+          case "operations":
             if (business.team && parseInt(business.team) > 1) score += 15;
             if (business.growthPlan) score += 15;
             if (business.location) score += 5;
             if (business.description) score += 10;
             if (business.solution) score += 5;
             break;
-            
-          case 'legal':
+
+          case "legal":
             if (business.registration) score += 20;
             if (business.BusinessSector?.name) score += 15;
-            if (business.status === 'accepted') score += 10;
+            if (business.status === "accepted") score += 10;
             if (business.sdg) score += 5;
             break;
         }
-        
+
         return Math.min(score, 95); // Cap at 95%
       };
 
@@ -100,32 +105,58 @@ const Page = ({ params }) => {
       let actualCRATData = null;
       try {
         actualCRATData = await getScoreData();
-        console.log('📊 Found CRAT assessment data:', actualCRATData);
-        toast.success('CRAT assessment data loaded', { id: 'ai-loading' });
+        console.log("📊 Found CRAT assessment data:", actualCRATData);
+        toast.success("CRAT assessment data loaded", { id: "ai-loading" });
       } catch (cratError) {
-        console.log('ℹ️ No CRAT assessment found, using business profile analysis');
-        toast.success('Business profile analysis prepared', { id: 'ai-loading' });
+        console.log(
+          "ℹ️ No CRAT assessment found, using business profile analysis"
+        );
+        toast.success("Business profile analysis prepared", {
+          id: "ai-loading",
+        });
       }
 
       // Create comprehensive score data
       const scoreData = actualCRATData || {
-        commercial: { 
-          percentage: calculateIntelligentScore('commercial'),
-          status: calculateIntelligentScore('commercial') >= 70 ? 'Good' : calculateIntelligentScore('commercial') >= 50 ? 'Fair' : 'Needs Improvement'
+        commercial: {
+          percentage: calculateIntelligentScore("commercial"),
+          status:
+            calculateIntelligentScore("commercial") >= 70
+              ? "Good"
+              : calculateIntelligentScore("commercial") >= 50
+              ? "Fair"
+              : "Needs Improvement",
         },
-        financial: { 
-          percentage: calculateIntelligentScore('financial'),
-          status: calculateIntelligentScore('financial') >= 70 ? 'Good' : calculateIntelligentScore('financial') >= 50 ? 'Fair' : 'Needs Improvement'
+        financial: {
+          percentage: calculateIntelligentScore("financial"),
+          status:
+            calculateIntelligentScore("financial") >= 70
+              ? "Good"
+              : calculateIntelligentScore("financial") >= 50
+              ? "Fair"
+              : "Needs Improvement",
         },
-        operations: { 
-          percentage: calculateIntelligentScore('operations'),
-          status: calculateIntelligentScore('operations') >= 70 ? 'Good' : calculateIntelligentScore('operations') >= 50 ? 'Fair' : 'Needs Improvement'
+        operations: {
+          percentage: calculateIntelligentScore("operations"),
+          status:
+            calculateIntelligentScore("operations") >= 70
+              ? "Good"
+              : calculateIntelligentScore("operations") >= 50
+              ? "Fair"
+              : "Needs Improvement",
         },
-        legal: { 
-          percentage: calculateIntelligentScore('legal'),
-          status: calculateIntelligentScore('legal') >= 70 ? 'Good' : calculateIntelligentScore('legal') >= 50 ? 'Fair' : 'Needs Improvement'
+        legal: {
+          percentage: calculateIntelligentScore("legal"),
+          status:
+            calculateIntelligentScore("legal") >= 70
+              ? "Good"
+              : calculateIntelligentScore("legal") >= 50
+              ? "Fair"
+              : "Needs Improvement",
         },
-        general_status: actualCRATData ? 'CRAT Assessment' : 'Business Profile Analysis'
+        general_status: actualCRATData
+          ? "CRAT Assessment"
+          : "Business Profile Analysis",
       };
 
       // Send PDF report to entrepreneur
@@ -133,60 +164,127 @@ const Page = ({ params }) => {
 
       // Create detailed report data with rich context
       const reportData = {
-        commercial: { 
+        commercial: {
           responses: [
-            `Business Description: ${business.description || 'Comprehensive business overview needed'}`,
-            `Target Market: ${business.market || 'Market analysis required'}`,
-            `Customer Base: ${business.numberOfCustomers ? `${business.numberOfCustomers} customers` : 'Customer metrics needed'}`,
-            `Market Impact: ${business.impact || 'Impact assessment required'}`,
-            `Current Traction: ${business.traction || 'Traction metrics needed'}`,
-            `Problem Statement: ${business.problem || 'Problem definition required'}`,
-            `Solution Offered: ${business.solution || 'Solution description required'}`
-          ], 
-          score: scoreData.commercial.percentage
+            `Business Description: ${
+              business.description || "Comprehensive business overview needed"
+            }`,
+            `Target Market: ${business.market || "Market analysis required"}`,
+            `Customer Base: ${
+              business.numberOfCustomers
+                ? `${business.numberOfCustomers} customers`
+                : "Customer metrics needed"
+            }`,
+            `Market Impact: ${business.impact || "Impact assessment required"}`,
+            `Current Traction: ${
+              business.traction || "Traction metrics needed"
+            }`,
+            `Problem Statement: ${
+              business.problem || "Problem definition required"
+            }`,
+            `Solution Offered: ${
+              business.solution || "Solution description required"
+            }`,
+          ],
+          score: scoreData.commercial.percentage,
         },
-        financial: { 
+        financial: {
           responses: [
-            `Business Stage: ${business.stage || 'Stage classification needed'}`,
-            `Fundraising Needs: ${business.fundraisingNeeds || 'Funding requirements not specified'}`,
-            `Investment Seeking: ${business.lookingForInvestment ? 'Actively seeking investment' : 'Not currently seeking investment'}`,
-            `Revenue Model: ${business.businessPlan ? 'Business plan available' : 'Revenue model documentation needed'}`,
-            `Financial Documentation: ${business.companyProfile ? 'Company profile available' : 'Financial documents needed'}`,
-            `Growth Plans: ${business.growthPlan || 'Growth strategy required'}`
-          ], 
-          score: scoreData.financial.percentage
+            `Business Stage: ${
+              business.stage || "Stage classification needed"
+            }`,
+            `Fundraising Needs: ${
+              business.fundraisingNeeds || "Funding requirements not specified"
+            }`,
+            `Investment Seeking: ${
+              business.lookingForInvestment
+                ? "Actively seeking investment"
+                : "Not currently seeking investment"
+            }`,
+            `Revenue Model: ${
+              business.businessPlan
+                ? "Business plan available"
+                : "Revenue model documentation needed"
+            }`,
+            `Financial Documentation: ${
+              business.companyProfile
+                ? "Company profile available"
+                : "Financial documents needed"
+            }`,
+            `Growth Plans: ${
+              business.growthPlan || "Growth strategy required"
+            }`,
+          ],
+          score: scoreData.financial.percentage,
         },
-        operations: { 
+        operations: {
           responses: [
-            `Team Structure: ${business.team ? `Team of ${business.team} members` : 'Team size not specified'}`,
-            `Business Location: ${business.location || 'Location not specified'}`,
-            `Growth Strategy: ${business.growthPlan || 'Strategic planning required'}`,
-            `Operational Status: ${business.status === 'accepted' ? 'Approved operations' : 'Pending approval'}`,
-            `Industry Sector: ${business.BusinessSector?.name || 'Sector classification needed'}`,
-            `Program Completion: ${business.completedProgram || 'No program completion recorded'}`,
-            `Alumni Status: ${business.isAlumni ? 'Anza Alumni' : 'Non-alumni'}`
-          ], 
-          score: scoreData.operations.percentage
+            `Team Structure: ${
+              business.team
+                ? `Team of ${business.team} members`
+                : "Team size not specified"
+            }`,
+            `Business Location: ${
+              business.location || "Location not specified"
+            }`,
+            `Growth Strategy: ${
+              business.growthPlan || "Strategic planning required"
+            }`,
+            `Operational Status: ${
+              business.status === "accepted"
+                ? "Approved operations"
+                : "Pending approval"
+            }`,
+            `Industry Sector: ${
+              business.BusinessSector?.name || "Sector classification needed"
+            }`,
+            `Program Completion: ${
+              business.completedProgram || "No program completion recorded"
+            }`,
+            `Alumni Status: ${
+              business.isAlumni ? "Anza Alumni" : "Non-alumni"
+            }`,
+          ],
+          score: scoreData.operations.percentage,
         },
-        legal: { 
+        legal: {
           responses: [
-            `Business Registration: ${business.registration || 'Registration documentation needed'}`,
-            `Legal Structure: ${business.BusinessSector?.name || 'Legal structure classification required'}`,
-            `Compliance Status: ${business.status === 'accepted' ? 'Compliant and approved' : 'Pending compliance review'}`,
-            `SDG Alignment: ${business.sdg || 'SDG alignment assessment needed'}`,
-            `Documentation: ${business.companyProfile ? 'Legal documents available' : 'Legal documentation required'}`,
-            `Industry Compliance: ${business.BusinessSector?.name ? 'Industry-specific compliance addressed' : 'Industry compliance assessment needed'}`
-          ], 
-          score: scoreData.legal.percentage
-        }
+            `Business Registration: ${
+              business.registration || "Registration documentation needed"
+            }`,
+            `Legal Structure: ${
+              business.BusinessSector?.name ||
+              "Legal structure classification required"
+            }`,
+            `Compliance Status: ${
+              business.status === "accepted"
+                ? "Compliant and approved"
+                : "Pending compliance review"
+            }`,
+            `SDG Alignment: ${
+              business.sdg || "SDG alignment assessment needed"
+            }`,
+            `Documentation: ${
+              business.companyProfile
+                ? "Legal documents available"
+                : "Legal documentation required"
+            }`,
+            `Industry Compliance: ${
+              business.BusinessSector?.name
+                ? "Industry-specific compliance addressed"
+                : "Industry compliance assessment needed"
+            }`,
+          ],
+          score: scoreData.legal.percentage,
+        },
       };
 
       // Create comprehensive business info for AI
       const businessInfo = {
-        name: business.name || 'Business Name',
-        sector: business.BusinessSector?.name || 'Technology',
-        location: business.location || 'Tanzania',
-        stage: business.stage || 'Growth Stage',
+        name: business.name || "Business Name",
+        sector: business.BusinessSector?.name || "Technology",
+        location: business.location || "Tanzania",
+        stage: business.stage || "Growth Stage",
         description: business.description,
         problem: business.problem,
         solution: business.solution,
@@ -204,50 +302,60 @@ const Page = ({ params }) => {
         lookingForInvestment: business.lookingForInvestment,
         isAlumni: business.isAlumni,
         completedProgram: business.completedProgram,
-        numberOfCustomers: business.numberOfCustomers
+        numberOfCustomers: business.numberOfCustomers,
       };
 
       setCratData({
         scoreData,
         reportData,
-        businessInfo
+        businessInfo,
       });
-      
+
       setShowAIAnalysis(true);
-      
+
       // Success message with context
-      const avgScore = Math.round((scoreData.commercial.percentage + scoreData.financial.percentage + scoreData.operations.percentage + scoreData.legal.percentage) / 4);
-      
+      const avgScore = Math.round(
+        (scoreData.commercial.percentage +
+          scoreData.financial.percentage +
+          scoreData.operations.percentage +
+          scoreData.legal.percentage) /
+          4
+      );
+
       // Determine score category for better messaging
-      let scoreCategory = 'Excellent';
-      let scoreEmoji = '🎯';
+      let scoreCategory = "Excellent";
+      let scoreEmoji = "🎯";
       if (avgScore < 50) {
-        scoreCategory = 'Needs Improvement';
-        scoreEmoji = '📈';
+        scoreCategory = "Needs Improvement";
+        scoreEmoji = "📈";
       } else if (avgScore < 70) {
-        scoreCategory = 'Good Potential';
-        scoreEmoji = '⭐';
+        scoreCategory = "Good Potential";
+        scoreEmoji = "⭐";
       } else if (avgScore < 85) {
-        scoreCategory = 'Strong Performance';
-        scoreEmoji = '🚀';
+        scoreCategory = "Strong Performance";
+        scoreEmoji = "🚀";
       }
-      
-      toast.success(`${scoreEmoji} AI analysis complete! ${scoreCategory} - ${avgScore}%`, { 
-        id: 'ai-loading',
-        duration: 4000
-      });
-      
+
+      toast.success(
+        `${scoreEmoji} AI analysis complete! ${scoreCategory} - ${avgScore}%`,
+        {
+          id: "ai-loading",
+          duration: 4000,
+        }
+      );
+
       // Smooth scroll to AI section with slight delay for better UX
       setTimeout(() => {
-        document.getElementById('ai-analysis-section')?.scrollIntoView({ 
-          behavior: 'smooth', 
-          block: 'start' 
+        document.getElementById("ai-analysis-section")?.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
         });
       }, 800);
-      
     } catch (error) {
-      console.error('❌ Error preparing AI analysis:', error);
-      toast.error('Failed to prepare AI analysis. Please try again.', { id: 'ai-loading' });
+      console.error("❌ Error preparing AI analysis:", error);
+      toast.error("Failed to prepare AI analysis. Please try again.", {
+        id: "ai-loading",
+      });
     } finally {
       setLoadingCRAT(false);
     }
@@ -260,14 +368,25 @@ const Page = ({ params }) => {
     doc.text("AI Analysis Report", 10, 15);
     doc.setFontSize(12);
     let y = 30;
-    doc.text(`Entrepreneur: ${business.User?.name || 'N/A'}`, 10, y); y += 8;
-    doc.text(`Business: ${business.name || 'N/A'}`, 10, y); y += 8;
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, y); y += 12;
+    doc.text(`Entrepreneur: ${business.User?.name || "N/A"}`, 10, y);
+    y += 8;
+    doc.text(`Business: ${business.name || "N/A"}`, 10, y);
+    y += 8;
+    doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, y);
+    y += 12;
     Object.entries(scoreData).forEach(([domain, data]) => {
-      if (typeof data === 'object' && data !== null && 'percentage' in data) {
-        doc.text(`${domain.charAt(0).toUpperCase() + domain.slice(1)}: ${data.percentage}%`, 10, y); y += 7;
+      if (typeof data === "object" && data !== null && "percentage" in data) {
+        doc.text(
+          `${domain.charAt(0).toUpperCase() + domain.slice(1)}: ${
+            data.percentage
+          }%`,
+          10,
+          y
+        );
+        y += 7;
         if (data.status) {
-          doc.text(`Status: ${data.status}`, 14, y); y += 6;
+          doc.text(`Status: ${data.status}`, 14, y);
+          y += 6;
         }
       }
     });
@@ -275,12 +394,39 @@ const Page = ({ params }) => {
     const arrayBuffer = doc.output("arraybuffer");
     const uint8Array = new Uint8Array(arrayBuffer);
     const pdfBase64 = btoa(String.fromCharCode(...uint8Array));
-    toast.success('AI analysis report generated! (Email sending is disabled)');
+    toast.success("AI analysis report generated! (Email sending is disabled)");
   };
 
   useEffect(() => {
     getData();
   }, [uuid]);
+
+  // Collect CRAT documents once business is loaded
+  useEffect(() => {
+    if (!business?.User) return;
+    const docs = [];
+    const collect = (arr, type) => {
+      if (!Array.isArray(arr)) return;
+      arr.forEach((item) => {
+        if (item && item.attachment) {
+          docs.push({
+            url: item.attachment,
+            name: item.attachment.split("/").pop(),
+            type,
+            subDomain: item.subDomain,
+            updatedAt: item.updatedAt,
+          });
+        }
+      });
+    };
+
+    collect(business.User.CratMarkets, "Market");
+    collect(business.User.CratFinancials, "Financial");
+    collect(business.User.CratOperations, "Operations");
+    collect(business.User.CratLegals, "Legal");
+
+    setCratDocs(docs);
+  }, [business]);
 
   return loading ? (
     <Loader />
@@ -295,10 +441,8 @@ const Page = ({ params }) => {
       <div className="bg-primary/5 rounded-2xl border border-primary/10 border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           {/* Business Profile Header */}
-       
 
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">👥</div>
               <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
@@ -478,7 +622,8 @@ const Page = ({ params }) => {
                   {
                     title: "Company Profile",
                     url: business.companyProfile,
-                    icon: "📋",
+                    // use PDF icon for documents
+                    icon: <FaFilePdf className="text-red-600" />,
                   },
                   // Only include businessPlan and marketResearch if they exist
                   ...(business.businessPlan
@@ -486,7 +631,7 @@ const Page = ({ params }) => {
                         {
                           title: "Business Plan",
                           url: business.businessPlan,
-                          icon: "📈",
+                          icon: <FaFilePdf className="text-red-600" />,
                         },
                       ]
                     : []),
@@ -495,7 +640,7 @@ const Page = ({ params }) => {
                         {
                           title: "Market Research",
                           url: business.marketResearch,
-                          icon: "🔍",
+                          icon: <FaFilePdf className="text-red-600" />,
                         },
                       ]
                     : []),
@@ -507,7 +652,7 @@ const Page = ({ params }) => {
                     rel="noopener noreferrer"
                     className="group flex flex-col items-center p-6 bg-gray-50 dark:bg-boxdark-2 rounded-xl hover:shadow-lg transition-all duration-300"
                   >
-                    <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <span className="text-4xl mb-4 group-hover:scale-110 transition-transform duration-300 text-red-600">
                       {doc.icon}
                     </span>
                     <span className="text-base font-semibold text-gray-900 dark:text-white">
@@ -706,6 +851,38 @@ const Page = ({ params }) => {
               </div>
             )}
 
+            {/* CRAT Documents Folder - visible to Admin and Staff only */}
+            {["Admin", "Staff"].includes(userDetails.role) && (
+              <div className="mt-6">
+                <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">
+                  CRAT Documents
+                </h3>
+                <div>
+                  <button
+                    onClick={() => setShowCratModal(true)}
+                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-boxdark-2 border border-black/10 rounded-xl hover:shadow-md transition-all duration-200"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-md flex items-center justify-center text-2xl">
+                        <FaFilePdf className="text-red-600" />
+                      </div>
+                      <div className="text-left">
+                        <p className="font-semibold text-gray-900 dark:text-white">
+                          CRAT Documents
+                        </p>
+                        <p className="text-sm text-gray-500">
+                          All uploaded CRAT attachments
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      {cratDocs.length} files
+                    </div>
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 flex flex-col gap-4">
               {/* AI Evaluation Button - Admin Only */}
               {userDetails.role === "Admin" && (
@@ -717,23 +894,41 @@ const Page = ({ params }) => {
                   >
                     {loadingCRAT ? (
                       <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
                         </svg>
                         Preparing AI Analysis...
                       </>
                     ) : (
                       <>
                         <span className="mr-2 text-xl">🤖</span>
-                        {showAIAnalysis ? 'Refresh AI Analysis' : 'Generate AI Analysis'}
+                        {showAIAnalysis
+                          ? "Refresh AI Analysis"
+                          : "Generate AI Analysis"}
                         <span className="ml-2 text-sm opacity-80">
-                          {showAIAnalysis ? '↻' : '✨'}
+                          {showAIAnalysis ? "↻" : "✨"}
                         </span>
                       </>
                     )}
                   </button>
-                  
+
                   {/* Professional Loading Overlay */}
                   {loadingCRAT && (
                     <div className="absolute inset-0 bg-gradient-to-r from-purple-600/90 to-indigo-600/90 rounded-xl flex items-center justify-center">
@@ -742,14 +937,18 @@ const Page = ({ params }) => {
                           <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
                           <div className="absolute inset-0 w-8 h-8 border-4 border-transparent border-r-white/50 rounded-full animate-spin animate-reverse"></div>
                         </div>
-                        <span className="mt-2 text-sm font-medium">Analyzing...</span>
+                        <span className="mt-2 text-sm font-medium">
+                          Analyzing...
+                        </span>
                       </div>
                     </div>
                   )}
-                  
+
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                    {showAIAnalysis ? 'Update analysis with latest data' : 'Generate comprehensive AI investment analysis'}
+                    {showAIAnalysis
+                      ? "Update analysis with latest data"
+                      : "Generate comprehensive AI investment analysis"}
                   </div>
                 </div>
               )}
@@ -831,11 +1030,13 @@ const Page = ({ params }) => {
                     AI-Powered Investment Analysis
                   </h2>
                   <p className="text-purple-600 dark:text-purple-400 mt-2 text-lg">
-                    Comprehensive evaluation of <span className="font-semibold">{business?.name}</span> using advanced AI analysis
+                    Comprehensive evaluation of{" "}
+                    <span className="font-semibold">{business?.name}</span>{" "}
+                    using advanced AI analysis
                   </p>
                 </div>
               </div>
-              
+
               {/* Analysis Metrics */}
               <div className="flex flex-col items-end gap-2">
                 <div className="flex items-center gap-3">
@@ -846,7 +1047,15 @@ const Page = ({ params }) => {
                   </div>
                   <div className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-md">
                     <span className="text-sm font-bold">
-                      Overall Score: {Math.round((cratData.scoreData.commercial.percentage + cratData.scoreData.financial.percentage + cratData.scoreData.operations.percentage + cratData.scoreData.legal.percentage) / 4)}%
+                      Overall Score:{" "}
+                      {Math.round(
+                        (cratData.scoreData.commercial.percentage +
+                          cratData.scoreData.financial.percentage +
+                          cratData.scoreData.operations.percentage +
+                          cratData.scoreData.legal.percentage) /
+                          4
+                      )}
+                      %
                     </span>
                   </div>
                 </div>
@@ -855,37 +1064,55 @@ const Page = ({ params }) => {
                 </div>
               </div>
             </div>
-            
+
             {/* Quick Score Overview */}
             <div className="mt-6 grid grid-cols-4 gap-4">
               {[
-                { label: 'Commercial', score: cratData.scoreData.commercial.percentage },
-                { label: 'Financial', score: cratData.scoreData.financial.percentage },
-                { label: 'Operations', score: cratData.scoreData.operations.percentage },
-                { label: 'Legal', score: cratData.scoreData.legal.percentage }
+                {
+                  label: "Commercial",
+                  score: cratData.scoreData.commercial.percentage,
+                },
+                {
+                  label: "Financial",
+                  score: cratData.scoreData.financial.percentage,
+                },
+                {
+                  label: "Operations",
+                  score: cratData.scoreData.operations.percentage,
+                },
+                { label: "Legal", score: cratData.scoreData.legal.percentage },
               ].map((item, index) => {
                 // Dynamic color based on CRAT readiness levels
                 const getScoreColor = (score) => {
-                  if (score >= 75) return 'bg-green-600'; // Ready - 75-100% (#219654)
-                  if (score >= 60) return 'bg-yellow-400'; // Partially Ready - 60-74% (#f4dc2c)
-                  return 'bg-red-500'; // Not Ready - 0-59%
+                  if (score >= 75) return "bg-green-600"; // Ready - 75-100% (#219654)
+                  if (score >= 60) return "bg-yellow-400"; // Partially Ready - 60-74% (#f4dc2c)
+                  return "bg-red-500"; // Not Ready - 0-59%
                 };
-                
+
                 return (
-                <div key={index} className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600 dark:text-gray-400">{item.label}</span>
-                    <span className="text-lg font-bold text-gray-900 dark:text-white">{item.score}%</span>
+                  <div
+                    key={index}
+                    className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                        {item.label}
+                      </span>
+                      <span className="text-lg font-bold text-gray-900 dark:text-white">
+                        {item.score}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                      <div
+                        className={`${getScoreColor(
+                          item.score
+                        )} h-2 rounded-full transition-all duration-500`}
+                        style={{ width: `${item.score}%` }}
+                      ></div>
+                    </div>
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                    <div 
-                      className={`${getScoreColor(item.score)} h-2 rounded-full transition-all duration-500`}
-                      style={{ width: `${item.score}%` }}
-                    ></div>
-                  </div>
-                </div>
-              );
-            })}
+                );
+              })}
             </div>
           </div>
 
@@ -900,9 +1127,61 @@ const Page = ({ params }) => {
               targetEntrepreneur={{
                 name: business?.User?.name,
                 business: business?.name,
-                uuid: business?.User?.uuid
+                uuid: business?.User?.uuid,
               }}
             />
+          </div>
+        </div>
+      )}
+
+      {/* CRAT Documents Modal (Admin & Staff only) */}
+      {showCratModal && ["Admin", "Staff"].includes(userDetails.role) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowCratModal(false)}
+          ></div>
+          <div className="relative max-w-2xl w-full bg-white dark:bg-boxdark rounded-lg shadow-xl p-6 z-10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">CRAT Documents</h3>
+              <button
+                onClick={() => setShowCratModal(false)}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
+            </div>
+
+            {cratDocs.length === 0 ? (
+              <p className="text-sm text-gray-500">
+                No CRAT documents uploaded.
+              </p>
+            ) : (
+              <div className="space-y-3 max-h-72 overflow-y-auto">
+                {cratDocs.map((doc, i) => (
+                  <a
+                    key={i}
+                    href={doc.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-boxdark-3 transition-colors"
+                  >
+                    <div className="flex items-center gap-3">
+                      <FaFilePdf className="text-red-600" />
+                      <div>
+                        <p className="font-medium text-gray-900 dark:text-white">
+                          {doc.name}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {doc.type} — {doc.subDomain}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400">Open</div>
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}
