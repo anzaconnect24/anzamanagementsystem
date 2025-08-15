@@ -122,7 +122,7 @@ const Page = ({ params }) => {
                     href={`/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
                   >
-                    Modules
+                    Manage Slides
                   </Link>
                 ) : isLocked ? (
                   <button
