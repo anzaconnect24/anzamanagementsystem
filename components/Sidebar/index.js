@@ -7,7 +7,11 @@ import { UserContext } from "@/app/(dashboard)/layout";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 
 // Icons
-import { MdOutlineDashboard, MdBusinessCenter } from "react-icons/md";
+import {
+  MdOutlineDashboard,
+  MdBusinessCenter,
+  MdAssignment,
+} from "react-icons/md";
 import { TbLogout } from "react-icons/tb";
 import { SlPeople } from "react-icons/sl";
 import {
@@ -275,6 +279,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
               { name: "Final Report", path: "/finalReport" },
             ],
           },
+          { name: "CRAT Review", path: "/cratReview" },
         ],
       });
     }
@@ -285,6 +290,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         path: "/applicationList",
         icon: <MdBusinessCenter className="text-xl" />,
       });
+
+      programsItems.push({
+        name: "CRAT Reviews",
+        path: "/cratReviews",
+        icon: <MdAssignment className="text-xl" />,
+      });
     }
 
     if (["Mentor", "Admin"].includes(role)) {
@@ -292,6 +303,14 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         name: "Mentor Reports",
         path: "/mentorReports",
         icon: <FaWpforms className="text-xl" />,
+      });
+    }
+
+    if (["Admin"].includes(role)) {
+      programsItems.push({
+        name: "CRAT Review Applications",
+        path: "/cratReviewApplications",
+        icon: <MdAssignment className="text-xl" />,
       });
     }
 
