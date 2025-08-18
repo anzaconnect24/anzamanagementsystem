@@ -55,10 +55,13 @@ const CratReviewPage = () => {
     } finally {
       setLoading(false);
     }
-  };  const handleSubmitReview = async () => {
+  };
+  const handleSubmitReview = async () => {
     // Check if there's already a review
     if (hasReview) {
-      toast.error("You already have a CRAT review. Only one review per entrepreneur is allowed.");
+      toast.error(
+        "You already have a CRAT review. Only one review per entrepreneur is allowed."
+      );
       return;
     }
 
@@ -205,7 +208,8 @@ const CratReviewPage = () => {
               <div className="flex items-center gap-2">
                 <MdPending className="text-yellow-600 text-xl" />
                 <p className="text-yellow-800 dark:text-yellow-200 font-medium">
-                  You already have a CRAT review. Only one review per entrepreneur is allowed.
+                  You already have a CRAT review. Only one review per
+                  entrepreneur is allowed.
                 </p>
               </div>
             </div>
@@ -240,7 +244,9 @@ const CratReviewPage = () => {
                         </h6>
                         <p className="text-sm text-bodydark2">
                           Submitted on{" "}
-                          {new Date(cratReview.submitted_at).toLocaleDateString()}
+                          {new Date(
+                            cratReview.submitted_at
+                          ).toLocaleDateString()}
                         </p>
                       </div>
                     </div>
@@ -260,24 +266,25 @@ const CratReviewPage = () => {
                         Assigned Reviewer:
                       </h6>
                       <p className="text-bodydark2 text-sm">
-                        {cratReview.reviewer.firstName} {cratReview.reviewer.lastName}
+                        {cratReview.reviewer.firstName}{" "}
+                        {cratReview.reviewer.lastName}
                       </p>
                     </div>
-                    )}
+                  )}
 
-                    {/* Reviewer Comments */}
-                    {cratReview.reviewer_comments && (
-                      <div className="mb-4">
-                        <h6 className="font-medium text-black dark:text-white mb-2">
-                          Reviewer Feedback:
-                        </h6>
-                        <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                          <p className="text-bodydark2 text-sm">
-                            {cratReview.reviewer_comments}
-                          </p>
-                        </div>
+                  {/* Reviewer Comments */}
+                  {cratReview.reviewer_comments && (
+                    <div className="mb-4">
+                      <h6 className="font-medium text-black dark:text-white mb-2">
+                        Reviewer Feedback:
+                      </h6>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                        <p className="text-bodydark2 text-sm">
+                          {cratReview.reviewer_comments}
+                        </p>
                       </div>
-                    )}
+                    </div>
+                  )}
 
                   {/* Admin Comments */}
                   {cratReview.admin_comments && (
