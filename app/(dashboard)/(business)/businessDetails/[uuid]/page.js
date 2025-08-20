@@ -860,16 +860,9 @@ const Page = ({ params }) => {
                         `/businessDetails/${business.uuid}/crat-documents`
                       )
                     }
-                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-black/10 rounded-xl hover:shadow-md transition-all duration-200"
+                    className="w-full flex justify-center text-center font-bold p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-black/10 rounded-xl hover:shadow-md transition-all duration-200"
                   >
-                    <div className="flex items-center gap-4">
-                      <div className="text-left">
-                        <p className="font-semibold text-white">
-                          View CRAT Documents
-                        </p>
-                        {/* <p className="text-sm text-white/80">Open all CRAT attachments categorized by domain</p> */}
-                      </div>
-                    </div>
+                    <div>📂 Crat Attachments</div>
                   </button>
                 </div>
               </div>
