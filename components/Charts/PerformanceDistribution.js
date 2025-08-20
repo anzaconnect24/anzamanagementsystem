@@ -102,12 +102,13 @@ const PerformanceDistribution = ({
 
   // Determine chart color and status based on CRAT readiness levels
   const getChartColorAndStatus = (score) => {
-    if (score >= 75) return { color: '#219654', status: 'Ready' };
-    if (score >= 60) return { color: '#f4dc2c', status: 'Partially Ready' };
-    return { color: '#EF4444', status: 'Not Ready' };
+    if (score >= 75) return { color: "#219654", status: "Ready" };
+    if (score >= 60) return { color: "#f4dc2c", status: "Partially Ready" };
+    return { color: "#EF4444", status: "Not Ready" };
   };
 
-  const { color: chartColor, status: scoreStatus } = getChartColorAndStatus(overallScore);
+  const { color: chartColor, status: scoreStatus } =
+    getChartColorAndStatus(overallScore);
 
   // Donut chart options and series
   const donutChartOptions = {
@@ -173,7 +174,10 @@ const PerformanceDistribution = ({
           <h3 className="text-xl font-bold text-black dark:text-white mb-2 sm:mb-0">
             Overall Readiness
           </h3>
-          <div className={`px-2 py-1 rounded-md text-black text-sm font-medium self-start sm:self-auto`} style={{backgroundColor: chartColor}}>
+          <div
+            className={`px-2 py-1 rounded-md text-white text-sm font-medium self-start sm:self-auto`}
+            style={{ backgroundColor: chartColor }}
+          >
             {scoreStatus}
           </div>
         </div>

@@ -28,10 +28,9 @@ const CratReviewsPage = () => {
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [reviewComments, setReviewComments] = useState("");
-  const [reviewStatus, setReviewStatus] = useState("");
 
   useEffect(() => {
-    if (!["Reviewer"].includes(userDetails?.role)) {
+    if (!["Staff"].includes(userDetails?.role)) {
       router.push("/");
       return;
     }
@@ -54,6 +53,7 @@ const CratReviewsPage = () => {
       );
 
       if (response.data.status) {
+        console.log(response.data.body.data);
         setReviews(response.data.body.data || []);
         setTotal(response.data.body.count || 0);
       }
@@ -95,7 +95,6 @@ const CratReviewsPage = () => {
         `${server_url}/crat_reviews/${selectedReview.uuid}/review`,
         {
           reviewer_comments: reviewComments.trim(),
-          review_status: reviewStatus,
         },
         { headers }
       );
@@ -105,7 +104,6 @@ const CratReviewsPage = () => {
         setShowReviewModal(false);
         setSelectedReview(null);
         setReviewComments("");
-        setReviewStatus("");
         fetchReviews();
       } else {
         toast.error(response.data.message || "Failed to submit review");
@@ -192,58 +190,78 @@ const CratReviewsPage = () => {
               </p>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {reviews.map((review) => (
                 <div
                   key={review.uuid}
-                  className="p-6 border border-stroke dark:border-strokedark rounded-lg"
+                  className="bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
                 >
-                  <div className="flex items-start justify-between mb-4">
+                  {/* Card Header */}
+                  {/* <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-3">
                       {getStatusIcon(review.status)}
-                      <div>
-                        <h6 className="font-semibold text-black dark:text-white">
-                          CRAT Review from {review.entrepreneur.firstName}{" "}
-                          {review.entrepreneur.lastName}
-                        </h6>
-                        <p className="text-sm text-bodydark2">
-                          {review.entrepreneur.email}
-                        </p>
-                        <p className="text-xs text-bodydark2">
-                          Assigned on{" "}
-                          {new Date(review.assigned_at).toLocaleDateString()}
-                        </p>
-                      </div>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          review.status
+                        )}`}
+                      >
+                        {review.status.replace("_", " ").toUpperCase()}
+                      </span>
                     </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                        review.status
-                      )}`}
-                    >
-                      {review.status.replace("_", " ").toUpperCase()}
-                    </span>
+                  </div> */}
+
+                  {/* Entrepreneur Profile Image */}
+                  <div className="mb-4">
+                    <div className="w-full h-48 overflow-hidden bg-gray-200 rounded-lg">
+                      <img
+                        src={review.entrepreneur.image || "/user.png"}
+                        alt={review.entrepreneur.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.src = "/user.png";
+                        }}
+                      />
+                    </div>
                   </div>
 
-                  {/* Entrepreneur Comments */}
-                  <div className="mb-4">
-                    <h6 className="font-medium text-black dark:text-white mb-2">
-                      Entrepreneur's Comments:
+                  {/* Entrepreneur Details */}
+                  <div className="mb-1">
+                    <h6 className="font-semibold text-black dark:text-white truncate mb-1">
+                      {review.entrepreneur.Business?.name || "N/A"}
                     </h6>
-                    <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                      <p className="text-bodydark2 text-sm">
+                    <p className="text-sm text-bodydark2 truncate">
+                      {review.entrepreneur.email}
+                    </p>
+                  </div>
+
+                  {/* Assignment Date */}
+                  <div className="mb-4">
+                    <p className="text-xs text-bodydark2">
+                      Assigned on{" "}
+                      {new Date(review.assigned_at).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  {/* Entrepreneur Comments Preview */}
+                  {/* <div className="mb-4">
+                    <h6 className="font-medium text-black dark:text-white mb-2 text-sm">
+                      Comments:
+                    </h6>
+                    <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                      <p className="text-bodydark2 text-sm line-clamp-3">
                         {review.comments}
                       </p>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Review Comments (if already reviewed) */}
                   {review.reviewer_comments && (
                     <div className="mb-4">
-                      <h6 className="font-medium text-black dark:text-white mb-2">
+                      <h6 className="font-medium text-black dark:text-white mb-2 text-sm">
                         Your Review:
                       </h6>
-                      <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
-                        <p className="text-bodydark2 text-sm">
+                      <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+                        <p className="text-bodydark2 text-sm line-clamp-2">
                           {review.reviewer_comments}
                         </p>
                       </div>
@@ -251,48 +269,63 @@ const CratReviewsPage = () => {
                   )}
 
                   {/* Actions */}
-                  <div className="flex gap-3">
-                    {review.status === "assigned" && (
-                      <>
-                        <button
-                          onClick={() => handleStartReview(review)}
-                          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700"
-                        >
-                          <MdRateReview />
-                          Start Review
-                        </button>
+                  <div className="space-y-2">
+                    {/* View Business Details Button - Always visible */}
+                    <button
+                      onClick={() =>
+                        router.push(
+                          `/businessDetails/${review.entrepreneur.Business?.uuid}`
+                        )
+                      }
+                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      <MdAssignment />
+                      View Business Details
+                    </button>
+
+                    <div className="flex gap-2">
+                      {review.status === "assigned" && (
+                        <>
+                          <button
+                            onClick={() => handleStartReview(review)}
+                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm"
+                          >
+                            <MdRateReview />
+                            Start
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSelectedReview(review);
+                              setShowReviewModal(true);
+                            }}
+                            className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm"
+                          >
+                            <MdCheckCircle />
+                            Submit
+                          </button>
+                        </>
+                      )}
+
+                      {review.status === "in_review" && (
                         <button
                           onClick={() => {
                             setSelectedReview(review);
                             setShowReviewModal(true);
                           }}
-                          className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90"
+                          className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 transition-colors text-sm"
                         >
                           <MdCheckCircle />
                           Submit Review
                         </button>
-                      </>
-                    )}
+                      )}
 
-                    {review.status === "in_review" && (
-                      <button
-                        onClick={() => {
-                          setSelectedReview(review);
-                          setShowReviewModal(true);
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90"
-                      >
-                        <MdCheckCircle />
-                        Submit Review
-                      </button>
-                    )}
-
-                    {review.status === "reviewed" && (
-                      <span className="flex items-center gap-2 px-4 py-2 bg-green-100 text-green-800 rounded-lg">
-                        <MdCheckCircle />
-                        Review Completed
-                      </span>
-                    )}
+                      {review.status === "reviewed" && (
+                        <div className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-green-100 text-green-800 rounded-lg text-sm">
+                          <MdCheckCircle />
+                          Completed
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -352,13 +385,30 @@ const CratReviewsPage = () => {
 
             {/* Entrepreneur Info */}
             <div className="mb-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-              <h6 className="font-medium text-black dark:text-white mb-2">
-                Entrepreneur: {selectedReview.entrepreneur.firstName}{" "}
-                {selectedReview.entrepreneur.lastName}
-              </h6>
-              <p className="text-sm text-bodydark2 mb-2">
-                Email: {selectedReview.entrepreneur.email}
-              </p>
+              <div className="flex items-center gap-4 mb-3">
+                <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
+                  <img
+                    src={selectedReview.entrepreneur.image || "/user.png"}
+                    alt={
+                      selectedReview.entrepreneur.Business?.name ||
+                      selectedReview.entrepreneur.name
+                    }
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      e.target.src = "/user.png";
+                    }}
+                  />
+                </div>
+                <div>
+                  <h6 className="font-medium text-black dark:text-white">
+                    {selectedReview.entrepreneur.Business?.name ||
+                      selectedReview.entrepreneur.name}
+                  </h6>
+                  <p className="text-sm text-bodydark2">
+                    Email: {selectedReview.entrepreneur.email}
+                  </p>
+                </div>
+              </div>
               <div>
                 <p className="text-sm font-medium text-black dark:text-white">
                   Their Comments:
@@ -370,7 +420,7 @@ const CratReviewsPage = () => {
             </div>
 
             {/* Review Comments */}
-            <div className="mb-4">
+            <div className="mb-6">
               <label className="block font-medium text-black dark:text-white mb-2">
                 Review Comments <span className="text-red-500">*</span>
               </label>
@@ -381,23 +431,6 @@ const CratReviewsPage = () => {
                 placeholder="Provide detailed feedback on the CRAT assessment. Include strengths, weaknesses, and recommendations..."
                 className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               />
-            </div>
-
-            {/* Review Status */}
-            <div className="mb-6">
-              <label className="block font-medium text-black dark:text-white mb-2">
-                Overall Assessment
-              </label>
-              <select
-                value={reviewStatus}
-                onChange={(e) => setReviewStatus(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
-              >
-                <option value="">Select assessment...</option>
-                <option value="good">Good - Recommend for acceptance</option>
-                <option value="needs_improvement">Needs Improvement</option>
-                <option value="poor">Poor - Recommend rejection</option>
-              </select>
             </div>
 
             <div className="flex gap-3">
@@ -423,7 +456,6 @@ const CratReviewsPage = () => {
                   setShowReviewModal(false);
                   setSelectedReview(null);
                   setReviewComments("");
-                  setReviewStatus("");
                 }}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
               >

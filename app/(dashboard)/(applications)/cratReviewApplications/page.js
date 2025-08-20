@@ -60,6 +60,7 @@ const CratReviewApplicationsPage = () => {
       });
 
       if (response.data.status) {
+        console.log("CRAT reviews:", response.data.body.data);
         setReviews(response.data.body.data || []);
         setTotal(response.data.body.count || 0);
       }
@@ -73,12 +74,12 @@ const CratReviewApplicationsPage = () => {
 
   const fetchStaffMembers = async () => {
     try {
-      const response = await axios.get(`${server_url}/user`, {
+      const response = await axios.get(`${server_url}/user/reviewers`, {
         headers,
-        params: { role: "Reviewer" },
       });
 
       if (response.data.status) {
+        console.log("Staff members:", response.data.body.data);
         setStaffMembers(response.data.body.data || []);
       }
     } catch (error) {
@@ -217,7 +218,7 @@ const CratReviewApplicationsPage = () => {
               <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by entrepreneur name or email..."
+                placeholder="Search by business name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
@@ -226,7 +227,7 @@ const CratReviewApplicationsPage = () => {
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+              className="px-4 py-2 w-48 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
@@ -239,7 +240,7 @@ const CratReviewApplicationsPage = () => {
           </div>
         </div>
 
-        {/* Reviews Table */}
+        {/* Reviews Grid */}
         <div className="p-6">
           {reviews.length === 0 ? (
             <div className="text-center py-12">
@@ -253,113 +254,115 @@ const CratReviewApplicationsPage = () => {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-stroke dark:border-strokedark">
-                    <th className="text-left py-3 px-4 font-medium text-black dark:text-white">
-                      Entrepreneur
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-black dark:text-white">
-                      Status
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-black dark:text-white">
-                      Reviewer
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-black dark:text-white">
-                      Submitted
-                    </th>
-                    <th className="text-left py-3 px-4 font-medium text-black dark:text-white">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {reviews.map((review) => (
-                    <tr
-                      key={review.uuid}
-                      className="border-b border-stroke dark:border-strokedark"
-                    >
-                      <td className="py-4 px-4">
-                        <div>
-                          <p className="font-medium text-black dark:text-white">
-                            {review.entrepreneur.firstName}{" "}
-                            {review.entrepreneur.lastName}
-                          </p>
-                          <p className="text-sm text-bodydark2">
-                            {review.entrepreneur.email}
-                          </p>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-2">
-                          {getStatusIcon(review.status)}
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                              review.status
-                            )}`}
-                          >
-                            {review.status.replace("_", " ").toUpperCase()}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="py-4 px-4">
-                        {review.reviewer ? (
-                          <p className="text-sm text-black dark:text-white">
-                            {review.reviewer.firstName}{" "}
-                            {review.reviewer.lastName}
-                          </p>
-                        ) : (
-                          <span className="text-sm text-gray-500">
-                            Not assigned
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-4 px-4">
-                        <p className="text-sm text-bodydark2">
-                          {new Date(review.submitted_at).toLocaleDateString()}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {reviews.map((review) => (
+                <div
+                  key={review.uuid}
+                  className="bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
+                >
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      {getStatusIcon(review.status)}
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                          review.status
+                        )}`}
+                      >
+                        {review.status.replace("_", " ").toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Business Image */}
+                  <div className="mb-4">
+                    <div className="w-full h-48 overflow-hidden bg-gray-200 rounded-lg">
+                      <img
+                        src={review.entrepreneur.image || "/user.png"}
+                        alt={
+                          review.entrepreneur.Business?.name ||
+                          review.entrepreneur.name
+                        }
+                        className="w-full h-full object-cover"
+                        onError={(e) => (e.target.src = "/user.png")}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Business Details */}
+                  <div className="mb-1">
+                    <h6 className="font-semibold text-black dark:text-white truncate mb-1">
+                      {review.entrepreneur.Business?.name || "N/A"}
+                    </h6>
+                    <p className="text-sm text-bodydark2 truncate">
+                      {review.entrepreneur.Business?.email ||
+                        review.entrepreneur.email}
+                    </p>
+                  </div>
+
+                  {/* Submitted Date */}
+                  <div className="mb-4">
+                    <p className="text-xs text-bodydark2">
+                      Submitted on{" "}
+                      {new Date(review.submitted_at).toLocaleDateString()}
+                    </p>
+                  </div>
+
+                  {/* Reviewer Comments (visible when reviewed) */}
+                  {/* {review.status === "reviewed" && review.reviewer_comments && (
+                    <div className="mb-4">
+                      <h6 className="font-medium text-black dark:text-white mb-2 text-sm">
+                        Reviewer Comments:
+                      </h6>
+                      <div className="bg-gray-50 dark:bg-gray-800 p-3 rounded-lg">
+                        <p className="text-bodydark2 text-sm line-clamp-3">
+                          {review.reviewer_comments}
                         </p>
-                      </td>
-                      <td className="py-4 px-4">
-                        <div className="flex gap-2">
-                          {review.status === "pending" && (
-                            <button
-                              onClick={() => {
-                                setSelectedReview(review);
-                                setShowAssignModal(true);
-                              }}
-                              className="flex items-center gap-1 px-3 py-1 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                            >
-                              <MdPersonAdd className="text-sm" />
-                              Assign
-                            </button>
-                          )}
-                          {review.status === "reviewed" && (
-                            <button
-                              onClick={() => {
-                                setSelectedReview(review);
-                                setShowFinalizeModal(true);
-                              }}
-                              className="flex items-center gap-1 px-3 py-1 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm"
-                            >
-                              <MdCheckCircle className="text-sm" />
-                              Finalize
-                            </button>
-                          )}
-                          <button
-                            onClick={() => {
-                              // View details functionality can be added here
-                            }}
-                            className="px-3 py-1 bg-gray-600 text-white rounded-lg hover:bg-gray-700 text-sm"
-                          >
-                            View
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                    </div>
+                  )} */}
+
+                  {/* Actions */}
+                  <div className="space-y-2 w-full">
+                    <div className="flex gap-2 w-full">
+                      {review.status === "pending" && (
+                        <button
+                          onClick={() => {
+                            setSelectedReview(review);
+                            setShowAssignModal(true);
+                          }}
+                          className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                        >
+                          <MdPersonAdd />
+                          Assign
+                        </button>
+                      )}
+
+                      {review.status === "reviewed" && (
+                        <button
+                          onClick={() => {
+                            setSelectedReview(review);
+                            setShowFinalizeModal(true);
+                          }}
+                          className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                        >
+                          <MdCheckCircle />
+                          Finalize
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => {
+                          // View details functionality can be added here
+                        }}
+                        className="flex-1 px-3 py-2 bg-gray-600 w-full text-white rounded-lg hover:bg-gray-700 text-sm"
+                      >
+                        View
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           )}
 
@@ -414,10 +417,10 @@ const CratReviewApplicationsPage = () => {
               Assign Reviewer
             </h5>
             <p className="text-bodydark2 mb-4">
-              Select a staff member to review this CRAT application from{" "}
+              Select a staff member to review this CRAT application for{" "}
               <strong>
-                {selectedReview?.entrepreneur.firstName}{" "}
-                {selectedReview?.entrepreneur.lastName}
+                {selectedReview?.entrepreneur.Business?.name ||
+                  selectedReview?.entrepreneur.name}
               </strong>
             </p>
 
@@ -433,7 +436,7 @@ const CratReviewApplicationsPage = () => {
                 <option value="">Choose a reviewer...</option>
                 {staffMembers.map((staff) => (
                   <option key={staff.id} value={staff.id}>
-                    {staff.firstName} {staff.lastName} - {staff.email}
+                    {staff.name}
                   </option>
                 ))}
               </select>
@@ -482,8 +485,8 @@ const CratReviewApplicationsPage = () => {
             <p className="text-bodydark2 mb-4">
               Make the final decision on the CRAT review for{" "}
               <strong>
-                {selectedReview?.entrepreneur.firstName}{" "}
-                {selectedReview?.entrepreneur.lastName}
+                {selectedReview?.entrepreneur.Business?.name ||
+                  selectedReview?.entrepreneur.name}
               </strong>
             </p>
 

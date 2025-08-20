@@ -15,7 +15,6 @@ import { createLog } from "../controllers/log_controller";
 export const UserContext = createContext();
 export default function RootLayout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const [userDetails, setUserDetails] = useState(null);
   const [hideSidebar, setHideSidebar] = useState(true);
   const pathname = usePathname();
@@ -35,13 +34,8 @@ export default function RootLayout({ children }) {
             setData(ddata);
             if (data.activated == 1) {
               if (data.role != "Enterprenuer") {
-                if (data.role == "Staff") {
-                  router.push("/authorizationPage");
-                  setTimeout(() => setLoading(false), 4000);
-                } else {
-                  router.push(pathname);
-                  setTimeout(() => setLoading(false), 4000);
-                }
+                router.push(pathname);
+                setTimeout(() => setLoading(false), 4000);
               } else {
                 if (data.Business.status == "accepted") {
                   router.push(pathname);
