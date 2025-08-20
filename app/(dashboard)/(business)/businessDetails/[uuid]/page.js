@@ -36,7 +36,6 @@ const Page = ({ params }) => {
   const [cratData, setCratData] = useState(null);
   // CRAT documents state
   const [cratDocs, setCratDocs] = useState([]);
-  const [showCratModal, setShowCratModal] = useState(false);
   const getData = async () => {
     try {
       const data = await getBusiness(uuid);
@@ -853,37 +852,30 @@ const Page = ({ params }) => {
 
             {/* CRAT Documents Folder - visible to Admin and Staff only */}
             {["Admin", "Staff"].includes(userDetails.role) && (
-              <div className="mt-6">
-                <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  CRAT Documents
-                </h3>
+              <div className="mt-2">
                 <div>
                   <button
-                    onClick={() => setShowCratModal(true)}
-                    className="w-full flex items-center justify-between p-4 bg-gray-50 dark:bg-boxdark-2 border border-black/10 rounded-xl hover:shadow-md transition-all duration-200"
+                    onClick={() =>
+                      router.push(
+                        `/businessDetails/${business.uuid}/crat-documents`
+                      )
+                    }
+                    className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-black/10 rounded-xl hover:shadow-md transition-all duration-200"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-md flex items-center justify-center text-2xl">
-                        <FaFilePdf className="text-red-600" />
-                      </div>
                       <div className="text-left">
-                        <p className="font-semibold text-gray-900 dark:text-white">
-                          CRAT Documents
+                        <p className="font-semibold text-white">
+                          View CRAT Documents
                         </p>
-                        <p className="text-sm text-gray-500">
-                          All uploaded CRAT attachments
-                        </p>
+                        {/* <p className="text-sm text-white/80">Open all CRAT attachments categorized by domain</p> */}
                       </div>
-                    </div>
-                    <div className="text-sm text-gray-600">
-                      {cratDocs.length} files
                     </div>
                   </button>
                 </div>
               </div>
             )}
 
-            <div className="mt-8 flex flex-col gap-4">
+            <div className="mt-4 flex flex-col gap-4">
               {/* AI Evaluation Button - Admin Only */}
               {userDetails.role === "Admin" && (
                 <div className="relative group">
@@ -1134,57 +1126,7 @@ const Page = ({ params }) => {
         </div>
       )}
 
-      {/* CRAT Documents Modal (Admin & Staff only) */}
-      {showCratModal && ["Admin", "Staff"].includes(userDetails.role) && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0 bg-black/50"
-            onClick={() => setShowCratModal(false)}
-          ></div>
-          <div className="relative max-w-2xl w-full bg-white dark:bg-boxdark rounded-lg shadow-xl p-6 z-10">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold">CRAT Documents</h3>
-              <button
-                onClick={() => setShowCratModal(false)}
-                className="text-gray-500 hover:text-gray-700"
-              >
-                ✕
-              </button>
-            </div>
-
-            {cratDocs.length === 0 ? (
-              <p className="text-sm text-gray-500">
-                No CRAT documents uploaded.
-              </p>
-            ) : (
-              <div className="space-y-3 max-h-72 overflow-y-auto">
-                {cratDocs.map((doc, i) => (
-                  <a
-                    key={i}
-                    href={doc.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-boxdark-3 transition-colors"
-                  >
-                    <div className="flex items-center gap-3">
-                      <FaFilePdf className="text-red-600" />
-                      <div>
-                        <p className="font-medium text-gray-900 dark:text-white">
-                          {doc.name}
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          {doc.type} — {doc.subDomain}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-400">Open</div>
-                  </a>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* CRAT documents are now viewed on a dedicated page: /businessDetails/:uuid/crat-documents */}
     </div>
   );
 };
