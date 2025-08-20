@@ -89,7 +89,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             "Enterprenuer",
             "Investor",
             "Mentor",
-            "Reviewer",
+            "Staff",
             "Staff",
           ],
         },
@@ -135,7 +135,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
     }
 
     if (
-      ["Investor", "Enterprenuer", "Staff", "Reviewer", "Mentor"].includes(role)
+      ["Investor", "Enterprenuer", "Staff", "Staff", "Mentor"].includes(role)
     ) {
       peopleItems.push({
         name: "Entrepreneurs",
@@ -201,7 +201,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       });
     }
 
-    if (["Reviewer"].includes(role)) {
+    if (["Staff"].includes(role)) {
       businessItems.push({
         name: "Assignments",
         path: "/reviewerAssignedInvestmentRequests",
@@ -284,13 +284,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       });
     }
 
-    if (["Reviewer"].includes(role)) {
-      programsItems.push({
-        name: "Reviewer",
-        path: "/applicationList",
-        icon: <MdBusinessCenter className="text-xl" />,
-      });
-
+    if (["Staff"].includes(role)) {
       programsItems.push({
         name: "CRAT Reviews",
         path: "/cratReviews",
@@ -314,7 +308,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
       });
     }
 
-    if (["Admin", "Enterprenuer", "Reviewer", "Mentor"].includes(role)) {
+    if (["Admin", "Enterprenuer", "Staff", "Mentor"].includes(role)) {
       programsItems.push({
         name: "Learn & Grow",
         icon: <IoDocumentTextOutline className="text-xl" />,
@@ -343,14 +337,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
     // Communication - For all roles
     if (
-      [
-        "Enterprenuer",
-        "Investor",
-        "Staff",
-        "Reviewer",
-        "Mentor",
-        "Admin",
-      ].includes(role)
+      ["Enterprenuer", "Investor", "Staff", "Mentor", "Admin"].includes(role)
     ) {
       categories.push({
         id: "communication",
