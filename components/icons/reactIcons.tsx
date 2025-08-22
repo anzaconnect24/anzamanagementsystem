@@ -10,10 +10,17 @@ interface ReactIconsProps {
   comment: string | null; // Accepting comment as a prop
 }
 
-const ReactIcons: React.FC<ReactIconsProps> = ({ onAdd, onDelete, onView, onEdit, attachment, comment }) => {
+const ReactIcons: React.FC<ReactIconsProps> = ({
+  onAdd,
+  onDelete,
+  onView,
+  onEdit,
+  attachment,
+  comment,
+}) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [textField, setTextField] = useState<string>(comment || ''); // Initialize with item.comment if available
+  const [textField, setTextField] = useState<string>(comment || ""); // Initialize with item.comment if available
 
   const handleAddClick = () => {
     if (fileInputRef.current) {
@@ -47,7 +54,7 @@ const ReactIcons: React.FC<ReactIconsProps> = ({ onAdd, onDelete, onView, onEdit
 
   //  onEdit = () => {
   //   console.log('printing here');
-  //   setIsModalOpen(false); 
+  //   setIsModalOpen(false);
   // };
 
   // Determine if delete/view buttons should be disabled based on attachment presence
@@ -61,13 +68,21 @@ const ReactIcons: React.FC<ReactIconsProps> = ({ onAdd, onDelete, onView, onEdit
         onClick={handleAddClick}
       />
       <FaTrash
-        className={`text-red-500 ${isDisabled ? "cursor-not-allowed opacity-50" : "hover:text-opacity-70 cursor-pointer"}`}
+        className={`text-red-500 ${
+          isDisabled
+            ? "cursor-not-allowed opacity-50"
+            : "hover:text-opacity-70 cursor-pointer"
+        }`}
         title="Delete"
         onClick={isDisabled ? undefined : onDelete}
         aria-disabled={isDisabled}
       />
       <FaEye
-        className={`text-blue-500 ${isDisabled ? "cursor-not-allowed opacity-50" : "hover:text-opacity-70 cursor-pointer"}`}
+        className={`text-blue-500 ${
+          isDisabled
+            ? "cursor-not-allowed opacity-50"
+            : "hover:text-opacity-70 cursor-pointer"
+        }`}
         title="View"
         onClick={isDisabled ? undefined : onView}
         aria-disabled={isDisabled}
@@ -81,14 +96,17 @@ const ReactIcons: React.FC<ReactIconsProps> = ({ onAdd, onDelete, onView, onEdit
         type="file"
         ref={fileInputRef}
         accept=".pdf"
-        style={{ display: 'none' }} // Hide the input element
+        style={{ display: "none" }} // Hide the input element
         onChange={handleFileChange}
       />
 
       {/* Modal for editing */}
       {isModalOpen && (
         <div className="fixed inset-0 flex items-center justify-center z-50">
-          <div className="absolute inset-0 bg-black opacity-50" onClick={handleCloseModal}></div>
+          <div
+            className="absolute inset-0 bg-black opacity-50"
+            onClick={handleCloseModal}
+          ></div>
           <div className="bg-white rounded-lg shadow-lg z-10 p-6 w-96">
             {comment ? (
               <>
@@ -102,7 +120,7 @@ const ReactIcons: React.FC<ReactIconsProps> = ({ onAdd, onDelete, onView, onEdit
 
             <div className="mb-3">
               <textarea
-                className="w-full border border-gray-300 rounded p-2"
+                className="w-full border border-black/20 rounded p-2"
                 value={textField}
                 onChange={(e) => handleInputChange(e.target.value)}
                 rows={4}
