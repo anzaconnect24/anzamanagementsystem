@@ -13,6 +13,9 @@ import Loader from "@/components/common/Loader";
 import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
 import AIAnalysisPanel from "@/components/AI/AIAnalysisPanel";
+import { useParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
+import Breadcrumb from "@/app/component/Breadcrumb";
 
 // Define the table headers
 const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
@@ -25,6 +28,8 @@ const Page = () => {
   const [generalStatus, setGeneralStatus] = useState("Not Ready"); // Add this
   const { userDetails, setUserDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const user_uuid = searchParams.get("user_uuid");
 
   useEffect(() => {
     fetchData();
@@ -35,8 +40,12 @@ const Page = () => {
       setLoading(true);
 
       // Fetch both report and score data
-      const responseData = await getReportData();
-      const responseData1 = await getScoreData({ uuid: userDetails.uuid });
+      const responseData = await getReportData({
+        user_uuid: user_uuid || userDetails?.uuid,
+      });
+      const responseData1 = await getScoreData({
+        uuid: user_uuid || userDetails?.uuid,
+      });
 
       console.log("Raw score data:", responseData1);
 
@@ -236,13 +245,13 @@ const Page = () => {
       sectionStatus === "Ready" ? "text-green-500" : "text-red-500";
 
     return (
-      <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
+      <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default  mb-4">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
           <h4 className="text-xl font-semibold text-sky-700 dark:text-white">
             {title}
           </h4>
         </div>
-        <div className="grid grid-cols-2 border-t-2 border-b-2 border-stroke py-4 px-4 dark:border-strokedark">
+        <div className="grid grid-cols-2 border-t-2 border-b-2 border-black/10 border-stroke py-4 px-4 ">
           <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white font-semibold">
               Overall {cleanTitle(title)} Readiness
@@ -273,20 +282,25 @@ const Page = () => {
 
   return !loading ? (
     <div className="space-y-6">
+      <Breadcrumb
+        pageName={"Capital Readiness Assessment Report"}
+        prevPage={"Back"}
+        prevLink={""}
+      />
       <div className="bg-white rounded-lg shadow-sm">
-        <div className="p-6 border-b border-gray-200">
+        <div className=" border-b border-black/0">
           <div className="flex justify-between items-center">
             <div>
-              <h2 className="text-2xl font-bold text-gray-800">
+              {/* <h2 className="text-2xl font-bold text-gray-800">
                 Capital Readiness Assessment Report
-              </h2>
+              </h2> */}
             </div>
             <div className="flex space-x-3">
               {userDetails.publishStatus === "Draft" ? (
                 <>
                   {userDetails.reportPdf && (
                     <button
-                      className="px-4 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      className="px-4 py-6 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors"
                       onClick={() =>
                         window.open(`http://${userDetails.reportPdf}`, "_blank")
                       }
@@ -319,28 +333,27 @@ const Page = () => {
         </div>
 
         {/* Charts Section */}
-        <div className="p-6">
+        <div className="p-6 py-1">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
             Performance Overview
           </h3>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
-          <div className="col-span-1 md:col-span-3">
-            <BusinessDomainScores
-              initialScoreData={scoreData}
+            <div className="col-span-1 md:col-span-3">
+              <BusinessDomainScores
+                initialScoreData={scoreData}
                 userDetails={userDetails}
-            />
-          </div>
-          <div className="col-span-1 md:col-span-2">
-            <PerformanceDistribution
-              initialScoreData={scoreData}
+              />
+            </div>
+            <div className="col-span-1 md:col-span-2">
+              <PerformanceDistribution
+                initialScoreData={scoreData}
                 userDetails={userDetails}
-            />
+              />
             </div>
           </div>
         </div>
       </div>
- 
 
       {renderSection("Commercial", data.commercial)}
       {renderSection("Financial", data.financial)}

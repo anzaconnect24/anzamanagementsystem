@@ -112,11 +112,11 @@ const ECommerce = () => {
         <div>
           {checkIfProfileIsComplete(userDetails) == false && (
             <div className="bg-white shadow mb-8 rounded-lg">
-              <div className="flex justify-between bg-danger bg-opacity-[6%] border border-danger border-opacity-40 shadow-lg px-4 py-4 text-black items-center rounded-lg">
+              <div className="flex justify-between bg-primary bg-opacity-[6%] border border-primary border-opacity-40 shadow-lg px-4 py-4 text-black items-center rounded-lg">
                 <h1 className="text-lg">Please complete your profile </h1>
                 <Link
                   href="/accountInformation"
-                  className="py-2 px-2 font-bold bg-danger hover:scale-105 transition-all duration-200   rounded text-sm text-white"
+                  className="py-2 px-2 font-bold bg-primary hover:scale-105 transition-all duration-200   rounded text-sm text-white"
                 >
                   Complete profile
                 </Link>

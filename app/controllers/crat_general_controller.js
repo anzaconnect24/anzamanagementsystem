@@ -37,12 +37,13 @@ export const publishReport = async (id, version, status) => {
   }
 };
 
-export const getReportData = async () => {
+export const getReportData = async ({ user_uuid }) => {
   console.log("getting report");
 
   try {
     const response = await axios.get(`${server_url}/crat_general/report`, {
       headers,
+      params: { user_uuid },
     });
     return response.data.body;
   } catch (error) {

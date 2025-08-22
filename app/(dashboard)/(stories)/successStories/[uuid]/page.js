@@ -128,7 +128,7 @@ const StoryDetails = () => {
             <div className="flex gap-3">
               <Link
                 href={`/successStories/${story.uuid}/edit`}
-                className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                className="inline-flex items-center gap-2 px-4 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
               >
                 <BsPencil />
                 Edit
@@ -251,7 +251,7 @@ const StoryDetails = () => {
 
         <Link
           href="/successStories"
-          className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+          className="inline-flex items-center justify-center px-6 py-3 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
         >
           Back to Success Stories
         </Link>

@@ -221,13 +221,13 @@ const CratReviewApplicationsPage = () => {
                 placeholder="Search by business name or email..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+                className="w-full pl-10 pr-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               />
             </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-2 w-48 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+              className="px-4 py-2 w-48 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
             >
               <option value="">All Statuses</option>
               <option value="pending">Pending</option>
@@ -324,40 +324,52 @@ const CratReviewApplicationsPage = () => {
 
                   {/* Actions */}
                   <div className="space-y-2 w-full">
-                    <div className="flex gap-2 w-full">
-                      {review.status === "pending" && (
+                    <div className="flex flex-col gap-2 w-full">
+                      <div className="flex gap-2 w-full">
+                        {review.status === "pending" && (
+                          <button
+                            onClick={() => {
+                              setSelectedReview(review);
+                              setShowAssignModal(true);
+                            }}
+                            className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          >
+                            <MdPersonAdd />
+                            Assign
+                          </button>
+                        )}
+
+                        {review.status === "reviewed" && (
+                          <button
+                            onClick={() => {
+                              setSelectedReview(review);
+                              setShowFinalizeModal(true);
+                            }}
+                            className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                          >
+                            <MdCheckCircle />
+                            Finalize
+                          </button>
+                        )}
+
                         <button
                           onClick={() => {
-                            setSelectedReview(review);
-                            setShowAssignModal(true);
+                            // View details functionality can be added here
                           }}
-                          className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          className="flex-1 px-3 py-2 bg-gray-600 w-full text-white rounded-lg hover:bg-gray-700 text-sm"
                         >
-                          <MdPersonAdd />
-                          Assign
+                          View
                         </button>
-                      )}
-
-                      {review.status === "reviewed" && (
-                        <button
-                          onClick={() => {
-                            setSelectedReview(review);
-                            setShowFinalizeModal(true);
-                          }}
-                          className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                        >
-                          <MdCheckCircle />
-                          Finalize
-                        </button>
-                      )}
-
+                      </div>
                       <button
                         onClick={() => {
-                          // View details functionality can be added here
+                          router.push(
+                            `/report?user_uuid=${review.entrepreneur.uuid}`
+                          );
                         }}
-                        className="flex-1 px-3 py-2 bg-gray-600 w-full text-white rounded-lg hover:bg-gray-700 text-sm"
+                        className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"
                       >
-                        View
+                        View CRAT Report
                       </button>
                     </div>
                   </div>
@@ -373,7 +385,7 @@ const CratReviewApplicationsPage = () => {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage <= 1}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -386,7 +398,7 @@ const CratReviewApplicationsPage = () => {
                       className={`px-3 py-2 text-sm font-medium rounded-md ${
                         currentPage === page
                           ? "bg-primary text-white"
-                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                          : "text-gray-500 bg-white border border-black/20 hover:bg-gray-50"
                       }`}
                     >
                       {page}
@@ -399,7 +411,7 @@ const CratReviewApplicationsPage = () => {
                     setCurrentPage(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage >= totalPages}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -431,7 +443,7 @@ const CratReviewApplicationsPage = () => {
               <select
                 value={selectedReviewer}
                 onChange={(e) => setSelectedReviewer(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+                className="w-full px-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               >
                 <option value="">Choose a reviewer...</option>
                 {staffMembers.map((staff) => (
@@ -466,7 +478,7 @@ const CratReviewApplicationsPage = () => {
                   setSelectedReview(null);
                   setSelectedReviewer("");
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>
@@ -509,7 +521,7 @@ const CratReviewApplicationsPage = () => {
               <select
                 value={finalStatus}
                 onChange={(e) => setFinalStatus(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+                className="w-full px-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               >
                 <option value="">Choose decision...</option>
                 <option value="accepted">Accept</option>
@@ -526,7 +538,7 @@ const CratReviewApplicationsPage = () => {
                 value={adminComments}
                 onChange={(e) => setAdminComments(e.target.value)}
                 placeholder="Provide feedback and final decision reasoning..."
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+                className="w-full px-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               />
             </div>
 
@@ -555,7 +567,7 @@ const CratReviewApplicationsPage = () => {
                   setFinalStatus("");
                   setAdminComments("");
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>

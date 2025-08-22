@@ -215,7 +215,7 @@ const EditProgram = () => {
               value={formData.title}
               onChange={handleInputChange}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.title ? "border-red-500" : "border-gray-300"
+                errors.title ? "border-red-500" : "border-black/20"
               }`}
               placeholder="Enter program title"
             />
@@ -239,7 +239,7 @@ const EditProgram = () => {
               value={formData.description}
               onChange={handleInputChange}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.description ? "border-red-500" : "border-gray-300"
+                errors.description ? "border-red-500" : "border-black/20"
               }`}
               placeholder="Describe the program"
             />
@@ -263,7 +263,7 @@ const EditProgram = () => {
               value={formData.url}
               onChange={handleInputChange}
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                errors.url ? "border-red-500" : "border-gray-300"
+                errors.url ? "border-red-500" : "border-black/20"
               }`}
               placeholder="https://example.com/program-details"
             />
@@ -299,7 +299,7 @@ const EditProgram = () => {
                 </button>
               </div>
             ) : (
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <div className="border-2 border-dashed border-black/20 rounded-lg p-6 text-center">
                 <input
                   type="file"
                   accept="image/*"
@@ -331,7 +331,7 @@ const EditProgram = () => {
         <div className="flex justify-end gap-3">
           <Link
             href="/programsApplications"
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            className="px-6 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
             Cancel
           </Link>

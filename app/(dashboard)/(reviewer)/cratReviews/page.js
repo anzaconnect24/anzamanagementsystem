@@ -171,7 +171,7 @@ const CratReviewsPage = () => {
               placeholder="Search by entrepreneur name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+              className="w-full pl-10 pr-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
             />
           </div>
         </div>
@@ -272,15 +272,14 @@ const CratReviewsPage = () => {
                   <div className="space-y-2">
                     {/* View Business Details Button - Always visible */}
                     <button
-                      onClick={() =>
+                      onClick={() => {
                         router.push(
-                          `/businessDetails/${review.entrepreneur.Business?.uuid}`
-                        )
-                      }
-                      className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                          `/report?user_uuid=${review.entrepreneur.uuid}`
+                        );
+                      }}
+                      className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"
                     >
-                      <MdAssignment />
-                      View Business Details
+                      View CRAT Report
                     </button>
 
                     <div className="flex gap-2">
@@ -339,7 +338,7 @@ const CratReviewsPage = () => {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage <= 1}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
@@ -352,7 +351,7 @@ const CratReviewsPage = () => {
                       className={`px-3 py-2 text-sm font-medium rounded-md ${
                         currentPage === page
                           ? "bg-primary text-white"
-                          : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                          : "text-gray-500 bg-white border border-black/20 hover:bg-gray-50"
                       }`}
                     >
                       {page}
@@ -365,7 +364,7 @@ const CratReviewsPage = () => {
                     setCurrentPage(Math.min(totalPages, currentPage + 1))
                   }
                   disabled={currentPage >= totalPages}
-                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
@@ -429,7 +428,7 @@ const CratReviewsPage = () => {
                 value={reviewComments}
                 onChange={(e) => setReviewComments(e.target.value)}
                 placeholder="Provide detailed feedback on the CRAT assessment. Include strengths, weaknesses, and recommendations..."
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
+                className="w-full px-4 py-3 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               />
             </div>
 
@@ -457,7 +456,7 @@ const CratReviewsPage = () => {
                   setSelectedReview(null);
                   setReviewComments("");
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50"
+                className="px-4 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50"
               >
                 Cancel
               </button>

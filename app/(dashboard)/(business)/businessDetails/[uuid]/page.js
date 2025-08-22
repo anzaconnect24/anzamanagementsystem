@@ -663,7 +663,7 @@ const Page = ({ params }) => {
             </div>
           )}
 
-          {business.status == "waiting" && (
+          {userDetails.role === "Admin" && business.status == "waiting" && (
             <button
               onClick={() => {
                 setApproving(true);

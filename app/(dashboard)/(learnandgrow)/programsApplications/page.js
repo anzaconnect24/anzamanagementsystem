@@ -28,18 +28,15 @@ const ProgramsApplications = () => {
       } else {
         setLoading(true);
       }
-      
-      const response = await axios.get(
-        `${server_url}/programs`,
-        {
-          params: {
-            page: page,
-            limit: 8,
-            keyword: keyword,
-          },
-          headers: headers,
-        }
-      );
+
+      const response = await axios.get(`${server_url}/programs`, {
+        params: {
+          page: page,
+          limit: 8,
+          keyword: keyword,
+        },
+        headers: headers,
+      });
 
       if (response.data.status) {
         console.log("Programs:", response.data);
@@ -67,7 +64,7 @@ const ProgramsApplications = () => {
   useEffect(() => {
     // Skip the initial load
     if (searchTerm === "" && currentPage === 1) return;
-    
+
     const timeoutId = setTimeout(() => {
       setCurrentPage(1);
       fetchPrograms(1, searchTerm, true);
@@ -91,20 +88,15 @@ const ProgramsApplications = () => {
   };
 
   const handleDelete = async (uuid) => {
-    if (
-      !confirm("Are you sure you want to delete this program?")
-    ) {
+    if (!confirm("Are you sure you want to delete this program?")) {
       return;
     }
 
     try {
       setDeleting(uuid);
-      const response = await axios.delete(
-        `${server_url}/programs/${uuid}`,
-        {
-          headers: headers,
-        }
-      );
+      const response = await axios.delete(`${server_url}/programs/${uuid}`, {
+        headers: headers,
+      });
 
       if (response.status === 200 || response.status === 204) {
         // Refresh the list
@@ -283,7 +275,7 @@ const ProgramsApplications = () => {
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -295,7 +287,7 @@ const ProgramsApplications = () => {
                 className={`px-3 py-2 text-sm font-medium rounded-md ${
                   page === currentPage
                     ? "bg-blue-600 text-white"
-                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                    : "text-gray-500 bg-white border border-black/20 hover:bg-gray-50"
                 }`}
               >
                 {page}
@@ -305,7 +297,7 @@ const ProgramsApplications = () => {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -383,7 +375,7 @@ const ProgramsApplications = () => {
                   <>
                     <Link
                       href={`/programsApplications/${selectedProgram.uuid}/edit`}
-                      className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                      className="inline-flex items-center justify-center px-6 py-3 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
                     >
                       <BsPencil className="mr-2" />
                       Edit Program

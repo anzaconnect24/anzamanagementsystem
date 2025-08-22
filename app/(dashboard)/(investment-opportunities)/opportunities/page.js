@@ -313,7 +313,7 @@ const InvestmentOpportunities = () => {
             <button
               onClick={() => handlePageChange(currentPage - 1)}
               disabled={currentPage <= 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
             </button>
@@ -325,7 +325,7 @@ const InvestmentOpportunities = () => {
                 className={`px-3 py-2 text-sm font-medium rounded-md ${
                   page === currentPage
                     ? "bg-blue-600 text-white"
-                    : "text-gray-500 bg-white border border-gray-300 hover:bg-gray-50"
+                    : "text-gray-500 bg-white border border-black/20 hover:bg-gray-50"
                 }`}
               >
                 {page}
@@ -335,7 +335,7 @@ const InvestmentOpportunities = () => {
             <button
               onClick={() => handlePageChange(currentPage + 1)}
               disabled={currentPage >= totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
             </button>
@@ -452,7 +452,7 @@ const InvestmentOpportunities = () => {
                   <>
                     <Link
                       href={`/opportunities/${selectedOpportunity.uuid}/edit`}
-                      className="inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                      className="inline-flex items-center justify-center px-6 py-3 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
                     >
                       <BsPencil className="mr-2" />
                       Edit Opportunity

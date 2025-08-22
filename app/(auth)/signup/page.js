@@ -99,6 +99,13 @@ const SignUp = () => {
               revenue: e.target.revenue.value,
               instagramLink: e.target.instagramLink.value,
               websiteLink: e.target.websiteLink.value,
+              description: e.target.businessBio.value,
+              numberOfCustomers: e.target.customerCount.value,
+              market: e.target.targetMarket.value,
+              location: e.target.businessLocation.value,
+              impact: e.target.businessImpact.value,
+              growthPlan: e.target.growthPlans.value,
+              fundraisingNeeds: e.target.fundraisingNeeds.value,
             };
           }
           let investorData;
@@ -943,7 +950,7 @@ dark:text-white"
                               name="team"
                               className="form-style"
                               placeholder="Enter number of team members"
-                              type="text"
+                              type="number"
                             />
                           </div>
                           <div>
@@ -1786,7 +1793,7 @@ entrepreneurs"
                                       ) &&
                                       formValues.mentorshipFocus?.length >= 3
                                     }
-                                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-black/20 rounded"
                                   />
                                   <span className="text-gray-700 dark:text-gray-300">
                                     {area}

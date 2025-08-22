@@ -18,6 +18,8 @@ export default function RootLayout({ children }) {
   const [userDetails, setUserDetails] = useState(null);
   const [hideSidebar, setHideSidebar] = useState(true);
   const pathname = usePathname();
+  // Get search params from window.location if available (client-side only)
+  const search = typeof window !== "undefined" ? window.location.search : "";
   const router = useRouter();
   const [data, setData] = useState(null);
 
@@ -34,11 +36,11 @@ export default function RootLayout({ children }) {
             setData(ddata);
             if (data.activated == 1) {
               if (data.role != "Enterprenuer") {
-                router.push(pathname);
+                router.push(pathname + search);
                 setTimeout(() => setLoading(false), 4000);
               } else {
                 if (data.Business.status == "accepted") {
-                  router.push(pathname);
+                  router.push(pathname + search);
                   setTimeout(() => setLoading(false), 4000);
                 } else {
                   router.push("/authorizationPage");
@@ -69,6 +71,8 @@ export default function RootLayout({ children }) {
       setHideSidebar(false);
     }
   }, [pathname]);
+  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+
   return (
     <>
       <div>
@@ -81,6 +85,8 @@ export default function RootLayout({ children }) {
           data,
           hideSidebar,
           setHideSidebar,
+          sidebarExpanded,
+          setSidebarExpanded,
         }}
       >
         <div className="dark:bg-boxdark-2 dark:text-bodydark">
@@ -92,13 +98,19 @@ export default function RootLayout({ children }) {
                 <Sidebar
                   sidebarOpen={sidebarOpen}
                   setSidebarOpen={setSidebarOpen}
+                  sidebarExpanded={sidebarExpanded}
+                  setSidebarExpanded={setSidebarExpanded}
                 />
               )}
 
-              <div className="relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden">
+              <div
+                className={`relative flex flex-1 flex-col overflow-y-auto overflow-x-hidden transition-all duration-300 `}
+              >
                 <Header
                   sidebarOpen={sidebarOpen}
                   setSidebarOpen={setSidebarOpen}
+                  sidebarExpanded={sidebarExpanded}
+                  setSidebarExpanded={setSidebarExpanded}
                 />
                 <main>
                   <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">

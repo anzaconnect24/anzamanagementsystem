@@ -15,6 +15,8 @@ import {
   MdRateReview,
 } from "react-icons/md";
 
+// Resubmit handler for rejected reviews
+
 const CratReviewPage = () => {
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
@@ -30,6 +32,39 @@ const CratReviewPage = () => {
     }
     fetchCratReviews();
   }, [userDetails, router]);
+
+  const handleResubmitReview = async () => {
+    try {
+      setSubmitting(true);
+      if (!cratReview?.uuid) {
+        toast.error("No CRAT review found to resubmit.");
+        setSubmitting(false);
+        return;
+      }
+      const response = await axios.put(
+        `${server_url}/crat_reviews/${cratReview.uuid}`,
+        { status: "pending" },
+        { headers }
+      );
+      if (response.data.status) {
+        toast.success(
+          "CRAT review resubmitted successfully! You will be notified once it's assigned for review."
+        );
+        fetchCratReviews();
+      } else {
+        toast.error(response.data.message || "Failed to resubmit CRAT review");
+      }
+    } catch (error) {
+      console.error("Error resubmitting CRAT review:", error);
+      if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error("Error resubmitting CRAT review");
+      }
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const fetchCratReviews = async () => {
     try {
@@ -266,8 +301,7 @@ const CratReviewPage = () => {
                         Assigned Reviewer:
                       </h6>
                       <p className="text-bodydark2 text-sm">
-                        {cratReview.reviewer.firstName}{" "}
-                        {cratReview.reviewer.lastName}
+                        {cratReview.reviewer.name}{" "}
                       </p>
                     </div>
                   )}
@@ -303,6 +337,33 @@ const CratReviewPage = () => {
                           {cratReview.admin_comments}
                         </p>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Resubmit Button for Rejected Review */}
+                  {cratReview.status === "rejected" && (
+                    <div className="mb-4">
+                      <button
+                        onClick={handleResubmitReview}
+                        disabled={submitting}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {submitting ? (
+                          <>
+                            <Spinner />
+                            Resubmitting...
+                          </>
+                        ) : (
+                          <>
+                            <MdRateReview />
+                            Resubmit for Review
+                          </>
+                        )}
+                      </button>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Please ensure you have addressed the feedback before
+                        resubmitting.
+                      </p>
                     </div>
                   )}
 
