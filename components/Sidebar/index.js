@@ -32,9 +32,21 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("sidebar-expanded");
+      return saved ? JSON.parse(saved) : true;
+    }
+    return true;
+  });
   const [activeCategory, setActiveCategory] = useState(null);
+  const [isHovered, setIsHovered] = useState(false);
 
+  useEffect(() => {
+    if (!isHovered) {
+      setSidebarExpanded(true);
+    }
+  }, [isHovered]);
   // Close on click outside
   useEffect(() => {
     const clickHandler = ({ target }) => {
@@ -357,12 +369,27 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const menuCategories = getMenuCategories();
 
+  // Check if sidebar should be visually expanded (expanded permanently OR hovered when minimized)
+  const isVisuallyExpanded = sidebarExpanded || (!sidebarExpanded && isHovered);
+
   return (
     <aside
       ref={sidebar}
       className={`absolute z-9 left-0 top-0 flex h-screen flex-col overflow-y-hidden bg-gradient-to-b from-slate-800 to-slate-900 duration-300 ease-in-out lg:static lg:translate-x-0 transition-all ${
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
-      } ${sidebarExpanded ? "w-72" : "w-20"}`}
+      } ${isVisuallyExpanded ? "w-72" : "w-20"}`}
+      onMouseEnter={() => {
+        if (!sidebarExpanded) {
+          setIsHovered(true);
+          setSidebarOpen(true);
+        }
+      }}
+      onMouseLeave={() => {
+        if (!sidebarExpanded) {
+          setIsHovered(false);
+          setSidebarOpen(true);
+        }
+      }}
     >
       {/* SIDEBAR HEADER */}
       <div className="flex items-center justify-between gap-2 px-6 py-5 border-b border-slate-700/50">
@@ -373,7 +400,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             src={"/logo.png"}
             alt="Logo"
             className={`h-9 w-auto transition-all duration-300 ${
-              sidebarExpanded ? "" : "scale-75"
+              isVisuallyExpanded ? "" : "scale-75"
             }`}
           />
         </Link>
@@ -424,7 +451,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           {menuCategories.map((category) => (
             <div key={category.id} className="mb-6">
               <h3 className="mb-3 ml-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
-                {sidebarExpanded && category.title}
+                {isVisuallyExpanded && category.title}
               </h3>
 
               <ul className="mb-6 flex flex-col gap-1">
@@ -443,11 +470,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                             }`}
                             onClick={() => {
                               handleClick();
-                              sidebarExpanded ? null : setSidebarExpanded(true);
+                              // Don't auto-expand when clicking submenu items
                             }}
                           >
                             {item.icon}
-                            {sidebarExpanded && (
+                            {isVisuallyExpanded && (
                               <>
                                 {item.name}
                                 <svg
@@ -478,7 +505,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                           >
                             <ul
                               className={`mt-4 mb-5.5 flex flex-col gap-2.5 ${
-                                sidebarExpanded ? "pl-6" : "pl-0"
+                                isVisuallyExpanded ? "pl-6" : "pl-0"
                               }`}
                             >
                               {item.submenu.map((subItem) =>
@@ -500,7 +527,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                             handleSubClick();
                                           }}
                                         >
-                                          {sidebarExpanded && (
+                                          {isVisuallyExpanded && (
                                             <>
                                               <span>{subItem.name}</span>
                                               <svg
@@ -529,7 +556,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                             !subOpen && "hidden"
                                           }`}
                                         >
-                                          {sidebarExpanded && (
+                                          {isVisuallyExpanded && (
                                             <ul className="mt-2 mb-3 flex flex-col gap-1 pl-4">
                                               {subItem.submenu.map(
                                                 (nestedItem) => (
@@ -564,7 +591,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                                         "bg-slate-700/50 text-white"
                                       }`}
                                     >
-                                      {sidebarExpanded && (
+                                      {isVisuallyExpanded && (
                                         <span>{subItem.name}</span>
                                       )}
                                     </Link>
@@ -585,7 +612,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
                         }`}
                       >
                         {item.icon}
-                        {sidebarExpanded && <span>{item.name}</span>}
+                        {isVisuallyExpanded && <span>{item.name}</span>}
                       </Link>
                     </li>
                   )
@@ -606,7 +633,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
           }}
         >
           <TbLogout className="text-xl" />
-          {sidebarExpanded && <span>Log Out</span>}
+          {isVisuallyExpanded && <span>Log Out</span>}
         </button>
       </div>
     </aside>
