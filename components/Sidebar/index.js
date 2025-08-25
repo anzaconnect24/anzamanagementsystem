@@ -42,11 +42,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   const [activeCategory, setActiveCategory] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
 
-  useEffect(() => {
-    if (!isHovered) {
-      setSidebarExpanded(true);
-    }
-  }, [isHovered]);
   // Close on click outside
   useEffect(() => {
     const clickHandler = ({ target }) => {
