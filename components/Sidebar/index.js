@@ -26,19 +26,33 @@ import { BsCalendar3, BsCardChecklist } from "react-icons/bs";
 import { BiMessageDetail } from "react-icons/bi";
 import { IoDocumentTextOutline, IoChevronDownOutline } from "react-icons/io5";
 
-const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
+const Sidebar = ({
+  sidebarOpen,
+  setSidebarOpen,
+  sidebarExpanded,
+  setSidebarExpanded,
+}) => {
   const pathname = usePathname();
   const { userDetails } = useContext(UserContext);
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
-  const [sidebarExpanded, setSidebarExpanded] = useState(() => {
+  // Use the sidebarExpanded state from props if provided, otherwise use local state
+  const [localSidebarExpanded, setLocalSidebarExpanded] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sidebar-expanded");
-      return saved ? JSON.parse(saved) : true;
+      return saved ? JSON.parse(saved) : false;
     }
     return false;
   });
+
+  // Use props if provided, otherwise use local state
+  const isExpanded =
+    sidebarExpanded !== undefined ? sidebarExpanded : localSidebarExpanded;
+  const setExpanded =
+    setSidebarExpanded !== undefined
+      ? setSidebarExpanded
+      : setLocalSidebarExpanded;
   const [activeCategory, setActiveCategory] = useState(null);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -69,13 +83,13 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem("sidebar-expanded", sidebarExpanded.toString());
-    if (sidebarExpanded) {
+    localStorage.setItem("sidebar-expanded", isExpanded.toString());
+    if (isExpanded) {
       document.querySelector("body")?.classList.add("sidebar-expanded");
     } else {
       document.querySelector("body")?.classList.remove("sidebar-expanded");
     }
-  }, [sidebarExpanded]);
+  }, [isExpanded]);
 
   // Menu categories based on user role
   const getMenuCategories = () => {
@@ -364,8 +378,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
 
   const menuCategories = getMenuCategories();
 
-  // Check if sidebar should be visually expanded (expanded permanently OR hovered when minimized)
-  const isVisuallyExpanded = sidebarExpanded || (!sidebarExpanded && isHovered);
+  // Check if sidebar should be visually expanded (hovered or permanently expanded)
+  const isVisuallyExpanded = isHovered || isExpanded;
 
   return (
     <aside
@@ -374,16 +388,11 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
       } ${isVisuallyExpanded ? "w-72" : "w-20"}`}
       onMouseEnter={() => {
-        if (!sidebarExpanded) {
-          setIsHovered(true);
-          setSidebarOpen(true);
-        }
+        setIsHovered(true);
+        setSidebarOpen(true);
       }}
       onMouseLeave={() => {
-        if (!sidebarExpanded) {
-          setIsHovered(false);
-          setSidebarOpen(true);
-        }
+        setIsHovered(false);
       }}
     >
       {/* SIDEBAR HEADER */}
@@ -401,6 +410,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         ) : (
           <div className="h-9"></div>
         )}
+
+        {/* Minimize/Expand Button */}
       </div>
 
       {/* SIDEBAR CONTENT */}

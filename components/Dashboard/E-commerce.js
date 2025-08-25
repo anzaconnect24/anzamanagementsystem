@@ -339,7 +339,7 @@ const ECommerce = () => {
             <CardDataStats
               link="pendingRequests"
               title="Pending program applications"
-              total={data.pendingProgramApplication}
+              total={data.pendingProgramApplication || 0}
               rate="2.59%"
               levelUp
             >

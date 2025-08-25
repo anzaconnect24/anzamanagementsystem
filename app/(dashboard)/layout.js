@@ -71,7 +71,7 @@ export default function RootLayout({ children }) {
       setHideSidebar(false);
     }
   }, [pathname]);
-  const [sidebarExpanded, setSidebarExpanded] = useState(true);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   return (
     <>
