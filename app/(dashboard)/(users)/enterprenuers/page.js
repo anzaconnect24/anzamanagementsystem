@@ -91,12 +91,12 @@ const Page = () => {
     const params = {};
     
     switch (revenueFilter) {
-      case "0 - 10,000":
+      case "0 - 20,000":
         params.minRevenue = 0;
-        params.maxRevenue = 10000;
+        params.maxRevenue = 20000;
         break;
-      case "10,001 - 50,000":
-        params.minRevenue = 10001;
+      case "20,001 - 50,000":
+        params.minRevenue = 20001;
         params.maxRevenue = 50000;
         break;
       case "50,001 - 100,000":
