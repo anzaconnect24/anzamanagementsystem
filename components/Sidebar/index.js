@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useRef, useState } from "react";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { UserContext } from "@/app/(dashboard)/layout";
 import SidebarLinkGroup from "./SidebarLinkGroup";
@@ -25,6 +25,7 @@ import { RiTeamLine, RiMoneyDollarCircleLine } from "react-icons/ri";
 import { BsCalendar3, BsCardChecklist } from "react-icons/bs";
 import { BiMessageDetail } from "react-icons/bi";
 import { IoDocumentTextOutline, IoChevronDownOutline } from "react-icons/io5";
+import { logout } from "@/app/utils/local_storage";
 
 const Sidebar = ({
   sidebarOpen,
@@ -45,6 +46,7 @@ const Sidebar = ({
     }
     return false;
   });
+  const router = useRouter();
 
   // Use props if provided, otherwise use local state
   const isExpanded =
@@ -397,19 +399,18 @@ const Sidebar = ({
     >
       {/* SIDEBAR HEADER */}
       <div className="flex items-center justify-between gap-2 px-6 py-5 border-b border-slate-700/50">
-        {isVisuallyExpanded ? (
-          <Link href="/" className="flex items-center">
-            <Image
-              width={120}
-              height={10}
-              src={"/logo.png"}
-              alt="Logo"
-              className={`h-9 w-24 transition-all  duration-300 `}
-            />
-          </Link>
-        ) : (
-          <div className="h-9"></div>
-        )}
+        <Link href="/" className="flex items-center">
+          <Image
+            width={500}
+            height={10}
+            src={"/logo.png"}
+            alt="Logo"
+            style={{ width: "100px" }}
+            className={`transition-all duration-300 ${
+              isVisuallyExpanded ? "h-9 w-auto" : "h-8 w-48"
+            }`}
+          />
+        </Link>
 
         {/* Minimize/Expand Button */}
       </div>
@@ -597,8 +598,8 @@ const Sidebar = ({
         <button
           className="flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white"
           onClick={() => {
-            localStorage.removeItem("token");
-            window.location.href = "/auth/signin";
+            logout();
+            router.push("/signin");
           }}
         >
           <TbLogout className="text-xl" />
