@@ -96,6 +96,7 @@ const SignUp = () => {
               stage: e.target.stage.value,
               business_sector_uuid: e.target.business_sector_uuid.value,
               team: e.target.team.value,
+              traction: e.target.traction.value,
               revenue: e.target.revenue.value,
               instagramLink: e.target.instagramLink.value,
               websiteLink: e.target.websiteLink.value,
@@ -826,6 +827,18 @@ dark:text-white"
                               name="targetMarket"
                               className="form-style"
                               placeholder="Describe your target market and audience"
+                              rows="3"
+                            />
+                          </div>
+                          <div>
+                            <label className="mb-2.5 block font-medium text-black dark:text-white">
+                              Business Traction
+                            </label>
+                            <textarea
+                              required
+                              name="traction"
+                              className="form-style"
+                              placeholder="Describe your traction"
                               rows="3"
                             />
                           </div>

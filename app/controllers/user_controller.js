@@ -49,29 +49,19 @@ export const updateMyInfo = async (data) => {
 
 export const updateUserInformation = async (data) => {
   try {
-    const formData = new FormData();
-    console.log(data.file);
-    formData.append("file", data.file);
-    delete data.file;
-    Object.keys(data).forEach((key) => {
-      formData.append(key, data[key]);
-    });
-
     const user = getUser();
-    const response = await axios.patch(`${server_url}/user/image`, formData, {
+    const response = await axios.patch(`${server_url}/user/me`, data, {
       headers: {
-        "Content-Type": "multipart/form-data",
+        "Content-Type": "application/json",
         Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
       },
     });
-
     return response.data;
   } catch (error) {
-    console.log(error.response);
+    console.log(error);
     throw error;
   }
 };
-
 export const deleteUser = async (uuid) => {
   try {
     const response = await axios.delete(`${server_url}/user/${uuid}`, {
@@ -222,13 +212,28 @@ export const getInvestors = async (limit, page, keyword) => {
   }
 };
 
-export const getEnterprenuers = async (limit, page, keyword) => {
+export const getEnterprenuers = async (
+  limit,
+  page,
+  keyword,
+  revenueParams = {}
+) => {
   try {
     const user = getUser();
+
+    // Build query parameters
+    let queryParams = `page=${page}&limit=${limit}&keyword=${keyword ?? " "}`;
+
+    // Add revenue parameters if provided
+    if (revenueParams.minRevenue !== undefined) {
+      queryParams += `&minRevenue=${revenueParams.minRevenue}`;
+    }
+    if (revenueParams.maxRevenue !== undefined) {
+      queryParams += `&maxRevenue=${revenueParams.maxRevenue}`;
+    }
+
     const response = await axios.get(
-      `${server_url}/user/enterprenuers/?page=${page}&limit=${limit}&keyword=${
-        keyword ?? " "
-      }`,
+      `${server_url}/user/enterprenuers/?${queryParams}`,
       {
         headers: {
           "Content-Type": "application/json",

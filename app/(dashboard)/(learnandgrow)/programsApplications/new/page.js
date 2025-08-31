@@ -15,6 +15,7 @@ const NewProgram = () => {
     description: "",
     url: "",
     image: "",
+    expireDate: "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -251,6 +252,29 @@ const NewProgram = () => {
               )}
               <p className="mt-1 text-sm text-bodydark2">
                 Link to external page with more details about this program
+              </p>
+            </div>
+
+            {/* Expire Date */}
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Expire Date
+              </label>
+              <input
+                type="date"
+                name="expireDate"
+                value={formData.expireDate}
+                onChange={handleInputChange}
+                className={`form-style ${
+                  errors.expireDate ? "border-red-500" : ""
+                }`}
+              />
+              {errors.expireDate && (
+                <p className="mt-1 text-sm text-red-600">{errors.expireDate}</p>
+              )}
+              <p className="mt-1 text-sm text-bodydark2">
+                When this program expires and is no longer available for
+                applications
               </p>
             </div>
 

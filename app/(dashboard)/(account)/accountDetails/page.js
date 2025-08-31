@@ -5,11 +5,13 @@ import {
   getMyInfo,
   updateMyInfo,
   updateUser,
+  updatePassword,
 } from "@/app/controllers/user_controller";
 import toast from "react-hot-toast";
 import Image from "next/image";
 import Spinner from "@/components/spinner";
 import { updateUserInformation } from "../../../controllers/user_controller";
+import { uploadFile } from "../../../controllers/file_upload_controller";
 import Loader from "@/components/common/Loader";
 import UpdateInvestorProfile from "@/app/component/updateInvestorProfile";
 import UpdateMentorProfile from "@/app/component/updateMentorProfile";
@@ -17,6 +19,8 @@ const AccountDetails = () => {
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [updatingPassword, setUpdatingPassword] = useState(false);
   const [fileImage, setfileImage] = useState(null);
 
   useEffect(() => {
@@ -34,21 +38,34 @@ const AccountDetails = () => {
   ) : (
     <div className="space-y-4">
       <form
-        onSubmit={(e) => {
+        onSubmit={async (e) => {
           e.preventDefault();
-          let data = {
-            name: e.target.name.value,
-            email: e.target.email.value,
-            phone: e.target.phone.value,
-            file: fileImage ? e.target.file.files[0] : null,
-          };
+          setUpdating(true);
 
-          setloading(true);
-          updateUserInformation(data).then((data) => {
+          try {
+            let data = {
+              name: e.target.name.value,
+              phone: e.target.phone.value,
+            };
+
+            // Upload image first if a new file was selected
+            if (e.target.file.files[0]) {
+              const formData = new FormData();
+              formData.append("file", e.target.file.files[0]);
+
+              const imageUrl = await uploadFile(formData);
+              data.image = imageUrl;
+            }
+
+            // Update user information with JSON data
+            const response = await updateUserInformation(data);
             setRefresh(refresh + 1);
-            setloading(false);
+            setUpdating(false);
             toast.success("User details are updated successfully!");
-          });
+          } catch (error) {
+            setUpdating(false);
+            toast.error(error.message || "Failed to update user details!");
+          }
         }}
       >
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -147,12 +164,107 @@ const AccountDetails = () => {
                 type="submit"
                 className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
               >
-                <div>{loading ? <Spinner /> : "Update details"}</div>
+                <div>{updating ? <Spinner /> : "Update details"}</div>
               </button>
             </div>
           </div>
         </div>
       </form>
+
+      {/* Password Update Section */}
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          const currentPassword = e.target.currentPassword.value;
+          const newPassword = e.target.newPassword.value;
+          const confirmPassword = e.target.confirmPassword.value;
+
+          if (newPassword !== confirmPassword) {
+            toast.error("New passwords do not match!");
+            return;
+          }
+
+          if (newPassword.length < 6) {
+            toast.error("New password must be at least 6 characters long!");
+            return;
+          }
+
+          let data = {
+            currentPassword,
+            newPassword,
+          };
+
+          setUpdating(true);
+          updateUserInformation(data)
+            .then((response) => {
+              setUpdating(false);
+              console.log(response);
+              toast.success("Password updated successfully!");
+              e.target.reset();
+            })
+            .catch((error) => {
+              setUpdating(false);
+              toast.error(error.message || "Failed to update password!");
+            });
+        }}
+      >
+        <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
+          <div className="py-6 px-4 md:px-6 xl:px-7.5">
+            <h4 className="text-xl font-semibold text-black dark:text-white">
+              Change Password
+            </h4>
+            <div className="grid grid-cols-1 gap-y-3 gap-x-3 pt-4">
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  Current Password
+                </label>
+                <input
+                  name="currentPassword"
+                  required
+                  className="form-style"
+                  placeholder="Enter current password"
+                  type="password"
+                />
+              </div>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  New Password
+                </label>
+                <input
+                  name="newPassword"
+                  required
+                  className="form-style"
+                  placeholder="Enter new password"
+                  type="password"
+                  minLength={6}
+                />
+              </div>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  Confirm New Password
+                </label>
+                <input
+                  name="confirmPassword"
+                  required
+                  className="form-style"
+                  placeholder="Confirm new password"
+                  type="password"
+                  minLength={6}
+                />
+              </div>
+            </div>
+            <div className="flex pt-8">
+              <button
+                type="submit"
+                className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
+              >
+                <div>{updating ? <Spinner /> : "Update Password"}</div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+
       {user.role == "Investor" && (
         <UpdateInvestorProfile
           refresh={refresh}

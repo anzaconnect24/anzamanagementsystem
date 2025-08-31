@@ -16,6 +16,7 @@ const EditInvestmentOpportunity = () => {
     description: "",
     url: "",
     image: "",
+    expireDate: "",
   });
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -39,6 +40,9 @@ const EditInvestmentOpportunity = () => {
             description: response.data.body.description || "",
             url: response.data.body.url || "",
             image: response.data.body.image || "",
+            expireDate: response.data.body.expireDate
+              ? response.data.body.expireDate.split("T")[0]
+              : "",
           });
         } else {
           alert("Failed to fetch opportunity details");
@@ -280,6 +284,32 @@ const EditInvestmentOpportunity = () => {
             )}
             <p className="mt-1 text-sm text-gray-500">
               Link to external page with more details about this opportunity
+            </p>
+          </div>
+
+          {/* Expire Date */}
+          <div className="mb-6">
+            <label
+              htmlFor="expireDate"
+              className="block text-sm font-medium text-gray-700 mb-2"
+            >
+              Expire Date (Optional)
+            </label>
+            <input
+              type="date"
+              id="expireDate"
+              name="expireDate"
+              value={formData.expireDate}
+              onChange={handleInputChange}
+              className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                errors.expireDate ? "border-red-500" : "border-black/20"
+              }`}
+            />
+            {errors.expireDate && (
+              <p className="mt-1 text-sm text-red-600">{errors.expireDate}</p>
+            )}
+            <p className="mt-1 text-sm text-gray-500">
+              When this opportunity expires and is no longer available
             </p>
           </div>
 

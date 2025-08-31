@@ -16,6 +16,7 @@ const Page = () => {
     sector: "All Sectors",
     year: "All Years",
     program: "All Programs",
+    revenue: "All Revenue",
   });
   const [sortConfig, setSortConfig] = useState({
     key: "name",
@@ -60,6 +61,18 @@ const Page = () => {
         "Accelerator",
       ],
     },
+    revenue: {
+      label: "Revenue",
+      options: [
+        "All Revenue",
+        "0 - 10,000",
+        "10,001 - 50,000",
+        "50,001 - 100,000",
+        "100,001 - 500,000",
+        "500,001 - 1,000,000",
+        "1,000,001+",
+      ],
+    },
   };
 
   const sortOptions = [
@@ -73,12 +86,51 @@ const Page = () => {
   const isFiltering =
     Object.values(filters).some((value) => !value.startsWith("All")) || keyword;
 
+  // Helper function to convert revenue filter to API parameters
+  const getRevenueParams = (revenueFilter) => {
+    const params = {};
+    
+    switch (revenueFilter) {
+      case "0 - 10,000":
+        params.minRevenue = 0;
+        params.maxRevenue = 10000;
+        break;
+      case "10,001 - 50,000":
+        params.minRevenue = 10001;
+        params.maxRevenue = 50000;
+        break;
+      case "50,001 - 100,000":
+        params.minRevenue = 50001;
+        params.maxRevenue = 100000;
+        break;
+      case "100,001 - 500,000":
+        params.minRevenue = 100001;
+        params.maxRevenue = 500000;
+        break;
+      case "500,001 - 1,000,000":
+        params.minRevenue = 500001;
+        params.maxRevenue = 1000000;
+        break;
+      case "1,000,001+":
+        params.minRevenue = 1000001;
+        break;
+      default:
+        // "All Revenue" - no parameters needed
+        break;
+    }
+    
+    return params;
+  };
+
   useEffect(() => {
     // If filtering, get all data at once
     const pageSize = isFiltering ? 1000 : limit;
     const pageNumber = isFiltering ? 1 : currentPage;
 
-    getEnterprenuers(limit, page, keyword).then((body) => {
+    // Build revenue parameters for API call
+    const revenueParams = getRevenueParams(filters.revenue);
+
+    getEnterprenuers(limit, page, keyword, revenueParams).then((body) => {
       console.log(body);
       let filteredData = [...body.data];
       applyFilters(filteredData);
@@ -110,6 +162,8 @@ const Page = () => {
           (item) => item.Business?.program === filters.program
         );
       }
+
+      // Revenue filtering is now handled by the backend, so we don't filter it here
     }
 
     // Apply sorting

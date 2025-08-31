@@ -16,6 +16,7 @@ const NewInvestmentOpportunity = () => {
     image: "",
     sector: "",
     amount: "",
+    expireDate: "",
     investmentType: "",
   });
   const [selectedFile, setSelectedFile] = useState(null);
@@ -224,7 +225,40 @@ const NewInvestmentOpportunity = () => {
                 <p className="mt-1 text-sm text-red-600">{errors.title}</p>
               )}
             </div>
-
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Expire Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                name="expireDate"
+                value={formData.expireDate}
+                onChange={handleInputChange}
+                className={`form-style ${
+                  errors.expireDate ? "border-red-500" : ""
+                }`}
+                placeholder="Enter expire date"
+              />
+              {errors.expireDate && (
+                <p className="mt-1 text-sm text-red-600">{errors.expireDate}</p>
+              )}
+            </div>
+            <div>
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Title <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                className={`form-style ${errors.title ? "border-red-500" : ""}`}
+                placeholder="Enter opportunity title"
+              />
+              {errors.title && (
+                <p className="mt-1 text-sm text-red-600">{errors.title}</p>
+              )}
+            </div>
             {/* Description */}
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">

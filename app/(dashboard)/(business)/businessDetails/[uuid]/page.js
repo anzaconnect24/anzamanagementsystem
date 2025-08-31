@@ -444,7 +444,7 @@ const Page = ({ params }) => {
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">👥</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                 {business?.numberOfCustomers || "N/A"}{" "}
                 {/* Updated to use numberOfCustomers */}
               </h3>
@@ -454,7 +454,7 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">📍</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                 {business?.location || "N/A"} {/* Updated to use location */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -463,7 +463,7 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">🏢</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                 {business?.BusinessSector?.name || "N/A"}{" "}
                 {/* Updated to use BusinessSector.name */}
               </h3>
@@ -473,7 +473,7 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">💡</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                 {business?.stage || "N/A"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -482,7 +482,7 @@ const Page = ({ params }) => {
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">💵</div>
-              <h3 className="text-3xl font-bold text-gray-900 dark:text-white mb-1">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
                 {business?.revenue || "N/A"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">

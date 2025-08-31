@@ -75,6 +75,7 @@ const BusinessInformation = () => {
             growthPlan: e.target.growthPlans.value,
             fundraisingNeeds: e.target.fundraisingNeeds.value,
             industry: e.target.industry ? e.target.industry.value : "",
+            revenue: e.target.revenue.value,
           };
 
           try {
@@ -318,6 +319,18 @@ const BusinessInformation = () => {
                     name="customerCount"
                     className="form-style"
                     placeholder="Enter number of customers"
+                    type="number"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Annual Revenue
+                  </label>
+                  <input
+                    defaultValue={business.revenue}
+                    name="revenue"
+                    className="form-style"
+                    placeholder="Enter annual revenue"
                     type="number"
                   />
                 </div>
