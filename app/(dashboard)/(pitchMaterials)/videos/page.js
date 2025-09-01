@@ -15,7 +15,10 @@ import NoData from "@/app/component/noData";
 import Loader from "@/components/common/Loader";
 import toast from "react-hot-toast";
 import YouTube from "react-youtube";
+import { useTranslation } from "../../../locales";
+
 const Page = () => {
+  const { t } = useTranslation();
   const [videos, setVideos] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const { userDetails } = useContext(UserContext);
@@ -38,14 +41,14 @@ const Page = () => {
         <div className="py-8 px-5 md:px-6 xl:px-7.5 ">
           <div className="flex justify-between">
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              Videos
+              {t("pitchMaterials.videos", "Videos")}
             </h4>
             {["Admin", "Reviewer"].includes(userDetails.role) && (
               <Link
                 href={"/uploadPitchMaterial/video"}
                 className="text-white bg-primary py-2 px-3 cursor-pointer rounded"
               >
-                Add
+                {t("common.add", "Add")}
               </Link>
             )}
           </div>
@@ -83,12 +86,17 @@ const Page = () => {
                             onClick={() => {
                               deletePitchMaterial(item.uuid).then((data) => {
                                 setRefresh(refresh + 1);
-                                toast.success("Deleted successfully");
+                                toast.success(
+                                  t(
+                                    "common.deletedSuccessfully",
+                                    "Deleted successfully"
+                                  )
+                                );
                               });
                             }}
                             className="text-sm  cursor-pointer  font-bold text-danger"
                           >
-                            Delete
+                            {t("common.delete", "Delete")}
                           </h1>
                         </div>
                       )}
@@ -101,7 +109,10 @@ const Page = () => {
         </div>
         <div className="flex items-center justify-between p-6 border-t border-stroke dark:border-strokedark mt-6">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Page {currentPage} of {totalPages}
+            {t("common.pageOf", "Page {{current}} of {{total}}", {
+              current: currentPage,
+              total: totalPages,
+            })}
           </p>
           <div className="flex gap-2">
             <button
@@ -118,7 +129,7 @@ const Page = () => {
                   : "bg-primary text-white hover:bg-primary/90"
               }`}
             >
-              Previous
+              {t("common.previous", "Previous")}
             </button>
             <button
               onClick={() => {
@@ -134,7 +145,7 @@ const Page = () => {
                   : "bg-primary text-white hover:bg-primary/90"
               }`}
             >
-              Next
+              {t("common.next", "Next")}
             </button>
           </div>
         </div>

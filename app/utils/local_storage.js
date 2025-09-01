@@ -15,3 +15,17 @@ export const logout = () => {
   localStorage.clear();
   localStorage.removeItem("user");
 };
+
+// Language storage functions
+export const storeLanguage = (language) => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("preferred-language", language);
+  }
+};
+
+export const getLanguage = () => {
+  if (typeof window !== "undefined") {
+    return localStorage.getItem("preferred-language") || "en";
+  }
+  return "en";
+};

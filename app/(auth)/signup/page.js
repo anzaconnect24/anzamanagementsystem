@@ -18,12 +18,14 @@ import { redirect, useRouter } from "next/navigation";
 import Spinner from "@/components/spinner";
 import { createNotification } from "@/app/controllers/notification_controller";
 import { format } from "path";
+import { useTranslation } from "../../locales";
 // export const metadata: Metadata = {
 // title: "Signup Page | Next.js E-commerce Dashboard Template",
 // description: "This is Signup page for TailAdmin Next.js",
 // // other metadata
 // };
 const SignUp = () => {
+  const { t } = useTranslation();
   const [role, setRole] = useState("Reviewer");
   const [formValues, setFormValues] = useState({
     userName: "",

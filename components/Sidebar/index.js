@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import Image from "next/image";
 import { UserContext } from "@/app/(dashboard)/layout";
+import { useTranslation } from "@/app/locales";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 
 // Icons
@@ -35,6 +36,7 @@ const Sidebar = ({
 }) => {
   const pathname = usePathname();
   const { userDetails } = useContext(UserContext);
+  const { t } = useTranslation();
   const trigger = useRef(null);
   const sidebar = useRef(null);
 
@@ -101,10 +103,10 @@ const Sidebar = ({
     // Dashboard - For all roles
     categories.push({
       id: "dashboard",
-      title: "Dashboard",
+      title: t("navigation.dashboard", "Dashboard"),
       items: [
         {
-          name: "Dashboard",
+          name: t("navigation.dashboard", "Dashboard"),
           path: "/",
           icon: <MdOutlineDashboard className="text-xl" />,
           roles: [
@@ -603,7 +605,7 @@ const Sidebar = ({
           }}
         >
           <TbLogout className="text-xl" />
-          {isVisuallyExpanded && <span>Log Out</span>}
+          {isVisuallyExpanded && <span>{t("common.logout", "Log Out")}</span>}
         </button>
       </div>
     </aside>

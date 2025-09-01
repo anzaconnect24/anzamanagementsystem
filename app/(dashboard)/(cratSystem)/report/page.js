@@ -9,6 +9,7 @@ import {
 import Modal2 from "@/components/Model2";
 import toast from "react-hot-toast";
 import { UserContext } from "../../../(dashboard)/layout";
+import { useTranslation } from "@/app/locales";
 import Loader from "@/components/common/Loader";
 import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
@@ -18,14 +19,20 @@ import { useSearchParams } from "next/navigation";
 import Breadcrumb from "@/app/component/Breadcrumb";
 
 // Define the table headers
-const tableHeaders = ["Sub Domain", "Score", "Report Narrative"];
-
 const Page = () => {
+  const { t } = useTranslation();
+  const tableHeaders = [
+    t("report.subDomain", "Sub Domain"),
+    t("report.score", "Score"),
+    t("report.reportNarrative", "Report Narrative"),
+  ];
   const [data, setData] = useState(initialData);
   const [scoreData, setScoreData] = useState({}); // State to hold the score data
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
-  const [generalStatus, setGeneralStatus] = useState("Not Ready"); // Add this
+  const [generalStatus, setGeneralStatus] = useState(
+    t("report.notReady", "Not Ready")
+  ); // Add this
   const { userDetails, setUserDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const searchParams = useSearchParams();
@@ -52,19 +59,24 @@ const Page = () => {
       // Ensure scoreData has the correct structure
       if (responseData1 && Object.keys(responseData1).length > 0) {
         setScoreData(responseData1);
-        setGeneralStatus(responseData1?.general_status || "Not Ready");
+        setGeneralStatus(
+          responseData1?.general_status || t("report.notReady", "Not Ready")
+        );
         console.log("Score data set successfully:", responseData1);
       } else {
         // If no data, create dummy data for testing
         const dummyData = {
-          commercial: { percentage: 75, status: "Ready" },
-          financial: { percentage: 60, status: "Not Ready" },
-          operations: { percentage: 80, status: "Ready" },
-          legal: { percentage: 55, status: "Not Ready" },
-          general_status: "Not Ready",
+          commercial: { percentage: 75, status: t("report.ready", "Ready") },
+          financial: {
+            percentage: 60,
+            status: t("report.notReady", "Not Ready"),
+          },
+          operations: { percentage: 80, status: t("report.ready", "Ready") },
+          legal: { percentage: 55, status: t("report.notReady", "Not Ready") },
+          general_status: t("report.notReady", "Not Ready"),
         };
         setScoreData(dummyData);
-        setGeneralStatus("Not Ready");
+        setGeneralStatus(t("report.notReady", "Not Ready"));
         console.log("Using dummy data for charts:", dummyData);
       }
 
@@ -74,14 +86,20 @@ const Page = () => {
 
       // Set fallback data if API fails
       const fallbackData = {
-        commercial: { percentage: 65, status: "Not Ready" },
-        financial: { percentage: 70, status: "Ready" },
-        operations: { percentage: 55, status: "Not Ready" },
-        legal: { percentage: 60, status: "Not Ready" },
-        general_status: "Not Ready",
+        commercial: {
+          percentage: 65,
+          status: t("report.notReady", "Not Ready"),
+        },
+        financial: { percentage: 70, status: t("report.ready", "Ready") },
+        operations: {
+          percentage: 55,
+          status: t("report.notReady", "Not Ready"),
+        },
+        legal: { percentage: 60, status: t("report.notReady", "Not Ready") },
+        general_status: t("report.notReady", "Not Ready"),
       };
       setScoreData(fallbackData);
-      setGeneralStatus("Not Ready");
+      setGeneralStatus(t("report.notReady", "Not Ready"));
       console.log("Using fallback data due to error:", fallbackData);
     } finally {
       setLoading(false);
@@ -128,15 +146,17 @@ const Page = () => {
 
       setUserDetails((prevDetails) => ({
         ...prevDetails, // Copy existing properties
-        publishStatus: "On review", // Update the publishStatus property
+        publishStatus: t("report.onReview", "On review"), // Update the publishStatus property
       }));
 
       publishModalOpen(false);
-      toast.success("Published Successfully");
+      toast.success(
+        t("report.publishedSuccessfully", "Published Successfully")
+      );
       console.log("Changes successfully submitted");
     } catch (error) {
       // Handle errors
-      toast.error("Error publishing report");
+      toast.error(t("report.errorPublishingReport", "Error publishing report"));
       console.error("Error publishing report:", error);
     }
   };
@@ -145,7 +165,10 @@ const Page = () => {
     console.log(userDetails);
     publishModalOpen(true);
     publishModalMessage(
-      "Are you sure you want to publish this report for review?"
+      t(
+        "report.confirmPublishReport",
+        "Are you sure you want to publish this report for review?"
+      )
     );
   };
 
@@ -181,11 +204,11 @@ const Page = () => {
         });
       });
 
-      toast.success("Deleted Successfully");
+      toast.success(t("report.deletedSuccessfully", "Deleted Successfully"));
       setData(updatedData);
       publishModalOpen(false); // Close modal
     } catch (error) {
-      toast.error("Error deleting file");
+      toast.error(t("report.errorDeletingFile", "Error deleting file"));
       console.error("Error deleting file:", error);
     }
   };
@@ -206,7 +229,7 @@ const Page = () => {
     return sectionData.map((item, index) => {
       const narrative =
         item.narrative.find((n) => n.score === item.score)?.text ||
-        "Narrative not found";
+        t("report.narrativeNotFound", "Narrative not found");
       return (
         <div
           className="grid grid-cols-3 border-t border-stroke py-4 px-4 dark:border-strokedark"
@@ -229,7 +252,9 @@ const Page = () => {
   };
 
   const cleanTitle = (title) => {
-    return title.replace(/^\d+\.\s*/, "").replace(/Report\s*$/, "");
+    return title
+      .replace(/^\d+\.\s*/, "")
+      .replace(new RegExp(`\\s*${t("report.report", "Report")}\\s*$`), "");
   };
 
   const renderSection = (title, sectionData) => {
@@ -238,11 +263,14 @@ const Page = () => {
 
     // Get the score status and percentage from scoreData
     const sectionScore = scoreData[domainKey]?.percentage || 0;
-    const sectionStatus = scoreData[domainKey]?.status || "Not ready";
+    const sectionStatus =
+      scoreData[domainKey]?.status || t("report.notReady", "Not ready");
 
     // Determine the status color
     const overallStatusColor =
-      sectionStatus === "Ready" ? "text-green-500" : "text-red-500";
+      sectionStatus === t("report.ready", "Ready")
+        ? "text-green-500"
+        : "text-red-500";
 
     return (
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default  mb-4">
@@ -254,7 +282,8 @@ const Page = () => {
         <div className="grid grid-cols-2 border-t-2 border-b-2 border-black/10 border-stroke py-4 px-4 ">
           <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white font-semibold">
-              Overall {cleanTitle(title)} Readiness
+              {t("report.overallReadiness", "Overall")} {cleanTitle(title)}{" "}
+              {t("report.readiness", "Readiness")}
             </p>
           </div>
           <div className="flex items-center justify-end px-2">
@@ -283,8 +312,11 @@ const Page = () => {
   return !loading ? (
     <div className="space-y-6">
       <Breadcrumb
-        pageName={"Capital Readiness Assessment Report"}
-        prevPage={"Back"}
+        pageName={t(
+          "report.capitalReadinessAssessmentReport",
+          "Capital Readiness Assessment Report"
+        )}
+        prevPage={t("common.back", "Back")}
         prevLink={""}
       />
       <div className="bg-white rounded-lg shadow-sm">
@@ -305,19 +337,21 @@ const Page = () => {
                         window.open(`http://${userDetails.reportPdf}`, "_blank")
                       }
                     >
-                      View Report
+                      {t("report.viewReport", "View Report")}
                     </button>
                   )}
                   <button
                     className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                      generalStatus === "Not ready"
+                      generalStatus === t("report.notReady", "Not ready")
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-green-600 hover:bg-green-700"
                     }`}
                     onClick={openPublishDialog}
-                    disabled={generalStatus === "Not ready"}
+                    disabled={
+                      generalStatus === t("report.notReady", "Not ready")
+                    }
                   >
-                    Publish
+                    {t("report.publish", "Publish")}
                   </button>
                 </>
               ) : (
@@ -335,7 +369,7 @@ const Page = () => {
         {/* Charts Section */}
         <div className="p-6 py-1">
           <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            Performance Overview
+            {t("report.performanceOverview", "Performance Overview")}
           </h3>
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
@@ -355,10 +389,10 @@ const Page = () => {
         </div>
       </div>
 
-      {renderSection("Commercial", data.commercial)}
-      {renderSection("Financial", data.financial)}
-      {renderSection("Operations", data.operations)}
-      {renderSection("Legal", data.legal)}
+      {renderSection(t("report.commercial", "Commercial"), data.commercial)}
+      {renderSection(t("report.financial", "Financial"), data.financial)}
+      {renderSection(t("report.operations", "Operations"), data.operations)}
+      {renderSection(t("report.legal", "Legal"), data.legal)}
 
       <Modal2
         isOpen={deletemodalOpen}
@@ -367,8 +401,8 @@ const Page = () => {
         onDelete={() => publishChanges()}
         onCancel={handleDeleteCancel}
         bgColor="yellow-200"
-        closeButtonText="Cancel"
-        deleteButtonText="Publish"
+        closeButtonText={t("common.cancel", "Cancel")}
+        deleteButtonText={t("report.publish", "Publish")}
         closeButtonColor="gray-500"
         deleteButtonColor="blue-500"
       />

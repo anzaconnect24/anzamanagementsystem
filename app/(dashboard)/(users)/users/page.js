@@ -12,8 +12,10 @@ import toast from "react-hot-toast";
 import NoData from "@/app/component/noData";
 import Spinner from "@/components/spinner";
 import { UserContext } from "../../layout";
+import { useTranslation } from "../../../locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
   const [total, settotal] = useState(0);
@@ -45,7 +47,9 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="container mx-auto px-4">
-      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {t("users.welcome", "Welcome")} {userDetails.name}!
+      </h1>
 
       <div className="rounded-xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         {/* Header Section */}
@@ -53,9 +57,9 @@ const Page = () => {
         <div className="p-6 border-b border-stroke dark:border-strokedark">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h4 className="text-xl font-semibold text-black dark:text-white flex items-center gap-2">
-              System Users
+              {t("users.systemUsers", "System Users")}
               <span className="px-3 py-1 text-sm bg-primary/10 text-primary rounded-full">
-                {total} users
+                {total} {t("users.usersCount", "users")}
               </span>
             </h4>
 
@@ -64,7 +68,7 @@ const Page = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder={t("users.searchUsers", "Search users...")}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full md:w-64 rounded-lg border border-stroke bg-transparent py-2 pl-10 pr-4 outline-none focus:border-primary dark:border-strokedark"
@@ -89,13 +93,19 @@ const Page = () => {
                 onChange={(e) => setSelectedRole(e.target.value)}
                 className="rounded-lg border-stroke bg-transparent px-3 py-2 outline-none focus:border-primary dark:border-strokedark"
               >
-                <option value="all">All Roles</option>
-                <option value="Admins">Admins</option>
-                <option value="Staff">Staff</option>
-                <option value="Investor">Investor</option>
-                <option value="Mentor">Mentor</option>
-                <option value="Enterprenuer">Entrepreneur</option>
-                <option value="Reviewer">Reviewer</option>
+                <option value="all">{t("users.allRoles", "All Roles")}</option>
+                <option value="Admins">{t("users.admin", "Admins")}</option>
+                <option value="Staff">{t("users.staff", "Staff")}</option>
+                <option value="Investor">
+                  {t("users.investor", "Investor")}
+                </option>
+                <option value="Mentor">{t("users.mentor", "Mentor")}</option>
+                <option value="Enterprenuer">
+                  {t("users.entrepreneur", "Entrepreneur")}
+                </option>
+                <option value="Reviewer">
+                  {t("users.reviewer", "Reviewer")}
+                </option>
               </select>
 
               <button
@@ -116,7 +126,7 @@ const Page = () => {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Invite User
+                {t("users.inviteUser", "Invite User")}
               </button>
             </div>
           </div>
@@ -128,7 +138,9 @@ const Page = () => {
             <div className="bg-white dark:bg-boxdark rounded-xl shadow-lg w-full max-w-md mx-4">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h3 className="text-xl font-semibold">Invite New User</h3>
+                  <h3 className="text-xl font-semibold">
+                    {t("users.inviteNewUser", "Invite New User")}
+                  </h3>
                   <button
                     onClick={() => setshowInvitationForm(false)}
                     className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
@@ -155,7 +167,12 @@ const Page = () => {
                     setinviting(true);
                     inviteUser({ email: e.target.email.value }).then(() => {
                       setinviting(false);
-                      toast.success("Invitation sent successfully");
+                      toast.success(
+                        t(
+                          "users.invitationSentSuccessfully",
+                          "Invitation sent successfully"
+                        )
+                      );
                       setshowInvitationForm(false);
                     });
                   }}
@@ -163,7 +180,7 @@ const Page = () => {
                 >
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Email Address
+                      {t("users.emailAddress", "Email Address")}
                     </label>
                     <input
                       name="email"
@@ -178,7 +195,11 @@ const Page = () => {
                     className="w-full rounded-lg bg-primary py-2 px-4 font-medium text-white hover:bg-opacity-90 flex items-center justify-center"
                     disabled={inviting}
                   >
-                    {inviting ? <Spinner /> : "Send Invitation"}
+                    {inviting ? (
+                      <Spinner />
+                    ) : (
+                      t("users.sendInvitation", "Send Invitation")
+                    )}
                   </button>
                 </form>
               </div>
@@ -193,12 +214,24 @@ const Page = () => {
             <table className="w-full table-auto">
               <thead>
                 <tr className="border-b border-stroke dark:border-strokedark bg-gray-50 dark:bg-meta-4">
-                  <th className="py-4 px-4 text-left font-medium">User</th>
-                  <th className="py-4 px-4 text-left font-medium">Role</th>
-                  <th className="py-4 px-4 text-left font-medium">Email</th>
-                  <th className="py-4 px-4 text-left font-medium">Status</th>
-                  <th className="py-4 px-4 text-left font-medium">Joined</th>
-                  <th className="py-4 px-4 text-left font-medium">Actions</th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.user", "User")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.role", "Role")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.email", "Email")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.status", "Status")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.joined", "Joined")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.actions", "Actions")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -266,7 +299,10 @@ const Page = () => {
                               )
                             ) {
                               toast.error(
-                                "Sorry! You can't change user to this role"
+                                t(
+                                  "users.cantChangeToThisRole",
+                                  "Sorry! You can't change user to this role"
+                                )
                               );
                               e.target.value = user.role;
                             } else if (
@@ -274,7 +310,10 @@ const Page = () => {
                               adminCount > 2
                             ) {
                               toast.error(
-                                "You have reached maximum number of admins"
+                                t(
+                                  "users.maxAdminsReached",
+                                  "You have reached maximum number of admins"
+                                )
                               );
                               e.target.value = user.role;
                             } else {
@@ -282,7 +321,12 @@ const Page = () => {
                                 { role: e.target.value },
                                 user.uuid
                               ).then(() => {
-                                toast.success("Role updated successfully");
+                                toast.success(
+                                  t(
+                                    "users.roleUpdatedSuccessfully",
+                                    "Role updated successfully"
+                                  )
+                                );
                                 getAllUsers(limit, currentPage).then((body) => {
                                   setUsers(body.data);
                                   setadminCount(body.adminCount);
@@ -293,12 +337,24 @@ const Page = () => {
                           className="w-full rounded-lg border-stroke bg-transparent px-3 py-1 outline-none focus:border-primary dark:border-strokedark"
                           defaultValue={user.role}
                         >
-                          <option value="Admin">Admin</option>
-                          <option value="Staff">Staff</option>
-                          <option value="Investor">Investor</option>
-                          <option value="Mentor">Mentor</option>
-                          <option value="Enterprenuer">Entrepreneur</option>
-                          <option value="Reviewer">Reviewer</option>
+                          <option value="Admin">
+                            {t("users.admin", "Admin")}
+                          </option>
+                          <option value="Staff">
+                            {t("users.staff", "Staff")}
+                          </option>
+                          <option value="Investor">
+                            {t("users.investor", "Investor")}
+                          </option>
+                          <option value="Mentor">
+                            {t("users.mentor", "Mentor")}
+                          </option>
+                          <option value="Enterprenuer">
+                            {t("users.entrepreneur", "Entrepreneur")}
+                          </option>
+                          <option value="Reviewer">
+                            {t("users.reviewer", "Reviewer")}
+                          </option>
                         </select>
                       </div>
                     </td>
@@ -338,8 +394,14 @@ const Page = () => {
                             setactivating(false);
                             toast.success(
                               user.activated
-                                ? "User deactivated successfully"
-                                : "User activated successfully"
+                                ? t(
+                                    "users.userDeactivatedSuccessfully",
+                                    "User deactivated successfully"
+                                  )
+                                : t(
+                                    "users.userActivatedSuccessfully",
+                                    "User activated successfully"
+                                  )
                             );
                           });
                         }}
@@ -358,7 +420,9 @@ const Page = () => {
                                 user.activated ? "bg-success" : "bg-danger"
                               }`}
                             ></span>
-                            {user.activated ? "Active" : "Inactive"}
+                            {user.activated
+                              ? t("users.active", "Active")
+                              : t("users.inactive", "Inactive")}
                           </>
                         )}
                       </button>
@@ -373,7 +437,12 @@ const Page = () => {
                         <button
                           onClick={() => {
                             if (user.role === "Admin") {
-                              toast.error("You can't delete an admin");
+                              toast.error(
+                                t(
+                                  "users.cantDeleteAdmin",
+                                  "You can't delete an admin"
+                                )
+                              );
                               return;
                             }
                             setselectedItem(index);
@@ -384,7 +453,12 @@ const Page = () => {
                                 settotal(body.count);
                               });
                               setdeleting(false);
-                              toast.success("User deleted successfully");
+                              toast.success(
+                                t(
+                                  "users.userDeletedSuccessfully",
+                                  "User deleted successfully"
+                                )
+                              );
                             });
                           }}
                           className="inline-flex items-center gap-2 rounded-lg border border-danger px-3 py-1 text-sm font-medium text-danger hover:bg-danger hover:text-white transition-colors"
@@ -407,7 +481,7 @@ const Page = () => {
                                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                                 />
                               </svg>
-                              Delete
+                              {t("users.delete", "Delete")}
                             </>
                           )}
                         </button>
@@ -425,7 +499,7 @@ const Page = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Show
+                {t("users.show", "Show")}
               </span>
               <select
                 value={limit}
@@ -438,13 +512,14 @@ const Page = () => {
                 <option value={200}>200</option>
               </select>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                entries
+                {t("users.entries", "entries")}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Page {currentPage} of {totalPages}
+                {t("users.page", "Page")} {currentPage} {t("users.of", "of")}{" "}
+                {totalPages}
               </span>
               <div className="flex gap-2">
                 <button
@@ -459,7 +534,7 @@ const Page = () => {
                         : "hover:bg-primary hover:text-white dark:hover:bg-primary"
                     }`}
                 >
-                  Previous
+                  {t("users.previous", "Previous")}
                 </button>
                 <button
                   onClick={() =>
@@ -473,7 +548,7 @@ const Page = () => {
                         : "hover:bg-primary hover:text-white dark:hover:bg-primary"
                     }`}
                 >
-                  Next
+                  {t("users.next", "Next")}
                 </button>
               </div>
             </div>

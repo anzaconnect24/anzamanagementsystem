@@ -7,6 +7,8 @@ import { createContext, useEffect, useState } from "react";
 import Loader from "@/components/common/Loader";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
+import LanguageToggle from "@/components/LanguageToggle";
+import { TranslationProvider } from "../locales";
 import { getUser } from "../utils/local_storage";
 import { getMyInfo } from "../controllers/user_controller";
 import { usePathname, useRouter } from "next/navigation";
@@ -74,7 +76,7 @@ export default function RootLayout({ children }) {
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   return (
-    <>
+    <TranslationProvider>
       <div>
         <Toaster position="top-right" />
       </div>
@@ -120,8 +122,10 @@ export default function RootLayout({ children }) {
               </div>
             </div>
           )}
+          {/* Language Toggle - Always visible */}
+          <LanguageToggle />
         </div>
       </UserContext.Provider>
-    </>
+    </TranslationProvider>
   );
 }

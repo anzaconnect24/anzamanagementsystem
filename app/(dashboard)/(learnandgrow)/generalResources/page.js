@@ -14,8 +14,10 @@ import { BsTrash } from "react-icons/bs";
 import { deleteBusinessDocument } from "@/app/controllers/business_controller";
 import toast from "react-hot-toast";
 import { FaFilePdf } from "react-icons/fa";
+import { useTranslation } from "../../../locales";
 
 const Page = ({ params }) => {
+  const { t } = useTranslation();
   const { uuid } = params;
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
@@ -131,7 +133,13 @@ const Page = ({ params }) => {
                 </p>
                 <button
                   type="button"
-                  onClick={() => router.push(`/generalResources/category/${encodeURIComponent(category)}`)}
+                  onClick={() =>
+                    router.push(
+                      `/generalResources/category/${encodeURIComponent(
+                        category
+                      )}`
+                    )
+                  }
                   disabled={categoryDocs.length === 0}
                   className={`bg-primary px-4 py-2 rounded-lg text-white mt-0 ${
                     categoryDocs.length === 0

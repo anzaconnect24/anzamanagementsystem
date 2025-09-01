@@ -15,8 +15,10 @@ import NoData from "@/app/component/noData";
 import Image from "next/image";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
+import { useTranslation } from "../../../locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [documents, setDocuments] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const { userDetails } = useContext(UserContext);
@@ -38,14 +40,14 @@ const Page = () => {
         <div className="py-6 px-4 md:px-6 xl:px-7.5 ">
           <div className="flex justify-between">
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              Documents
+              {t("pitchMaterials.documents", "Documents")}
             </h4>
             {["Admin", "Reviewer"].includes(userDetails.role) && (
               <Link
                 className="px-4 py-2 rounded bg-primary text-white hover:opacity-95"
                 href={"/uploadPitchMaterial/document"}
               >
-                Add
+                {t("common.add", "Add")}
               </Link>
             )}
           </div>
@@ -81,12 +83,17 @@ const Page = () => {
                           onClick={() => {
                             deletePitchMaterial(item.uuid).then((data) => {
                               setRefresh(refresh + 1);
-                              toast.success("Deleted successfully");
+                              toast.success(
+                                t(
+                                  "common.deletedSuccessfully",
+                                  "Deleted successfully"
+                                )
+                              );
                             });
                           }}
                           className="text-sm  cursor-pointer font-bold text-danger"
                         >
-                          Delete
+                          {t("common.delete", "Delete")}
                         </h1>
                       </div>
                     )}

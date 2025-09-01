@@ -8,8 +8,10 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { UserContext } from "../../layout";
 import Pagination from "@/app/component/pagination";
+import { useTranslation } from "../../../locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { userDetails } = useContext(UserContext);
 

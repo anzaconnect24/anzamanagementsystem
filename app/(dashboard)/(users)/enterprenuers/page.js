@@ -7,7 +7,9 @@ import NoData from "@/app/component/noData";
 import Image from "next/image";
 import Pagination from "@/app/component/pagination";
 import { UserContext } from "../../layout";
+import { useTranslation } from "@/app/locales";
 const Page = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
   const [refresh, setRefresh] = useState(0);
@@ -89,7 +91,7 @@ const Page = () => {
   // Helper function to convert revenue filter to API parameters
   const getRevenueParams = (revenueFilter) => {
     const params = {};
-    
+
     switch (revenueFilter) {
       case "0 - 20,000":
         params.minRevenue = 0;
@@ -118,7 +120,7 @@ const Page = () => {
         // "All Revenue" - no parameters needed
         break;
     }
-    
+
     return params;
   };
 
@@ -230,7 +232,9 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {t("users.welcome", "Welcome")} {userDetails.name}!
+      </h1>
 
       {/* Search and Filter Bar */}
       <div className="mb-8">
@@ -238,14 +242,17 @@ const Page = () => {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <span className="text-xl text-gray-600 dark:text-gray-300">
-              {count} members
+              {count} {t("users.members", "members")}
             </span>
           </div>
 
           <div className="relative">
             <input
               type="text"
-              placeholder="Search entrepreneurs..."
+              placeholder={t(
+                "users.searchEntrepreneurs",
+                "Search entrepreneurs..."
+              )}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
               className="w-64 px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 focus:outline-none focus:border-primary"

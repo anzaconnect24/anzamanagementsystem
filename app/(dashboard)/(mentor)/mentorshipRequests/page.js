@@ -10,8 +10,10 @@ import {
 import Link from "next/link";
 import toast from "react-hot-toast";
 import NoData from "@/app/component/noData";
+import { useTranslation } from "../../../locales";
 
 const MentorEntreprenuer = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approving, setapproving] = useState(false);
@@ -32,13 +34,15 @@ const MentorEntreprenuer = () => {
   ) : (
     <div className="bg-white py-6 shadow mt-6 px-6 ">
       <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">Mentorship requests</h1>
+        <h1 className="text-2xl font-bold">
+          {t("mentorship.mentorshipRequests", "Mentorship requests")}
+        </h1>
         <input
           onChange={(e) => {
             setKeyword(e.target.value);
           }}
           className="py-1 rounded border-bodydark border-opacity-40 "
-          placeholder="Search here"
+          placeholder={t("mentorship.searchHere", "Search here")}
         />
       </div>
       {data.length < 1 ? (

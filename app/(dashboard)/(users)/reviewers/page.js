@@ -7,8 +7,10 @@ import Loader from "@/components/common/Loader";
 import { createConversation } from "@/app/controllers/conversation_controller";
 import NoData from "@/app/component/noData";
 import { UserContext } from "../../layout";
+import { useTranslation } from "../../../locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -48,16 +50,20 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="container mx-auto px-4">
-      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {t("users.welcome", "Welcome {{name}}!", { name: userDetails.name })}
+      </h1>
 
       <div className="rounded-xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         {/* Header Section */}
         <div className="p-6 border-b border-stroke dark:border-strokedark">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <h4 className="text-xl font-semibold text-black dark:text-white flex items-center gap-2">
-              Reviewers
+              {t("users.reviewers", "Reviewers")}
               <span className="px-3 py-1 text-sm bg-primary/10 text-primary rounded-full">
-                {users.length} total
+                {t("users.totalCount", "{{count}} total", {
+                  count: users.length,
+                })}
               </span>
             </h4>
 
@@ -65,7 +71,7 @@ const Page = () => {
             <div className="relative">
               <input
                 type="text"
-                placeholder="Search reviewers..."
+                placeholder={t("users.searchReviewers", "Search reviewers...")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full md:w-64 rounded-lg border border-stroke bg-transparent py-2 pl-10 pr-4 outline-none focus:border-primary dark:border-strokedark"
@@ -94,10 +100,18 @@ const Page = () => {
             <table className="w-full table-auto">
               <thead>
                 <tr className="border-b border-stroke dark:border-strokedark bg-gray-50 dark:bg-meta-4">
-                  <th className="py-4 px-4 text-left font-medium">Reviewer</th>
-                  <th className="py-4 px-4 text-left font-medium">Contact</th>
-                  <th className="py-4 px-4 text-left font-medium">Joined</th>
-                  <th className="py-4 px-4 text-left font-medium">Actions</th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.reviewer", "Reviewer")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.contact", "Contact")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.joined", "Joined")}
+                  </th>
+                  <th className="py-4 px-4 text-left font-medium">
+                    {t("users.actions", "Actions")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -178,7 +192,8 @@ const Page = () => {
                             />
                           </svg>
                           <span className="text-sm text-black dark:text-white">
-                            {user.phone || "Not provided"}
+                            {user.phone ||
+                              t("users.notProvided", "Not provided")}
                           </span>
                         </div>
                       </div>

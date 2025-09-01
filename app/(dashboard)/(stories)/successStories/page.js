@@ -11,8 +11,10 @@ import { UserContext } from "../../layout";
 import { server_url } from "@/app/utils/endpoint";
 import { headers } from "@/app/utils/headers";
 import { BsEye, BsPencil, BsTrash, BsSearch } from "react-icons/bs";
+import { useTranslation } from "../../../locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -82,7 +84,14 @@ const Page = () => {
   };
 
   const handleDelete = async (uuid) => {
-    if (!confirm("Are you sure you want to delete this success story?")) {
+    if (
+      !confirm(
+        t(
+          "stories.confirmDelete",
+          "Are you sure you want to delete this success story?"
+        )
+      )
+    ) {
       return;
     }
 
@@ -96,15 +105,19 @@ const Page = () => {
       );
 
       if (response.status === 200 || response.status === 204) {
-        toast.success("Success story deleted successfully");
+        toast.success(
+          t("stories.deletedSuccessfully", "Success story deleted successfully")
+        );
         fetchStories();
         closeModal();
       } else {
-        toast.error("Failed to delete success story");
+        toast.error(
+          t("stories.failedToDelete", "Failed to delete success story")
+        );
       }
     } catch (error) {
       console.error("Error deleting success story:", error);
-      toast.error("Error deleting success story");
+      toast.error(t("stories.errorDeleting", "Error deleting success story"));
     } finally {
       setDeleteLoading(false);
     }
@@ -137,10 +150,13 @@ const Page = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Success Stories
+              {t("stories.successStories", "Success Stories")}
             </h1>
             <p className="mt-2 text-gray-600">
-              Inspiring stories of entrepreneurial success
+              {t(
+                "stories.subtitle",
+                "Inspiring stories of entrepreneurial success"
+              )}
             </p>
           </div>
           {userDetails.role === "Admin" && (
@@ -170,7 +186,11 @@ const Page = () => {
       {/* Search and Results Count */}
       <div className="flex justify-between items-center mb-6">
         <div className="text-gray-600">
-          Showing {stories.length} of {total} stories
+          {t(
+            "stories.showingResults",
+            "Showing {{showing}} of {{total}} stories",
+            { showing: stories.length, total: total }
+          )}
         </div>
         <div className="flex-1 relative max-w-md">
           {searchLoading ? (
@@ -182,7 +202,10 @@ const Page = () => {
           )}
           <input
             type="text"
-            placeholder="Search success stories..."
+            placeholder={t(
+              "stories.searchPlaceholder",
+              "Search success stories..."
+            )}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-black/20 rounded-lg focus:ring-blue-500 focus:border-blue-500"
