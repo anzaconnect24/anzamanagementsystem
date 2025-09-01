@@ -4,11 +4,13 @@ import DropdownUser from "./DropdownUser";
 import Image from "next/image";
 import { useContext } from "react";
 import { UserContext } from "@/app/(dashboard)/layout";
+import { useTranslation } from "@/app/locales";
 
 const Header = (props: {
   sidebarOpen: string | boolean | undefined;
   setSidebarOpen: (arg0: boolean) => void;
 }) => {
+  const { t } = useTranslation();
   const { hideSidebar } = useContext(UserContext);
   return (
     <header className="sticky top-0 z-50 flex w-full border-stroke ring-stroke bg-white drop-shadow-1 dark:bg-boxdark dark:drop-shadow-none">

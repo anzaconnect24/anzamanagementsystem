@@ -19,12 +19,14 @@ import { getMentorOverviewStats } from "@/app/controllers/statsControllers";
 import MentorEntreprenuer from "@/app/(dashboard)/(mentor)/mentorEntreprenuers/page";
 import { getScoreData } from "@/app/controllers/crat_general_controller";
 import TanzaniaMap from "../Maps/TanzaniaMap";
+import { useTranslation } from "@/app/locales";
 
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
 const ECommerce = () => {
+  const { t } = useTranslation();
   const { data, userDetails } = useContext(UserContext);
   const [mentorStats, setMentorStats] = useState(null);
   const [scoreData, setScoreData] = useState({});
@@ -113,12 +115,17 @@ const ECommerce = () => {
           {checkIfProfileIsComplete(userDetails) == false && (
             <div className="bg-white shadow mb-8 rounded-lg">
               <div className="flex justify-between bg-primary bg-opacity-[6%] border border-primary border-opacity-40 shadow-lg px-4 py-4 text-black items-center rounded-lg">
-                <h1 className="text-lg">Please complete your profile </h1>
+                <h1 className="text-lg">
+                  {t(
+                    "dashboard.completeProfile",
+                    "Please complete your profile"
+                  )}{" "}
+                </h1>
                 <Link
                   href="/accountInformation"
                   className="py-2 px-2 font-bold bg-primary hover:scale-105 transition-all duration-200   rounded text-sm text-white"
                 >
-                  Complete profile
+                  {t("dashboard.completeProfileButton", "Complete profile")}
                 </Link>
               </div>
             </div>
@@ -127,7 +134,7 @@ const ECommerce = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5 mb-8">
             <CardDataStats
               link="/enterprenuers"
-              title="Total Entrepreneurs"
+              title={t("dashboard.totalEntrepreneurs", "Total Entrepreneurs")}
               total={data.enterprenuers || 0}
               rate="0.95%"
               levelUp
@@ -150,7 +157,7 @@ const ECommerce = () => {
 
             <CardDataStats
               link="/investors"
-              title="Total Investors"
+              title={t("dashboard.totalInvestors", "Total Investors")}
               total={data.investors || 0}
               rate="0.43%"
               levelUp
