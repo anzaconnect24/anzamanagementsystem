@@ -258,10 +258,7 @@ const Dashboard = () => {
 
             <CardDataStats
               link="/"
-              title={t(
-                "dashboard.pendingMentorshipRequest",
-                "Pending Mentorship Request"
-              )}
+              title={t("dashboard.pendingMentorshipRequest", "Pending Mentorship Request")}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
               levelUp
@@ -270,10 +267,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="/"
-              title={t(
-                "dashboard.totalEntrepreneursShort",
-                "Total Entrepreneurs"
-              )}
+              title={t("dashboard.totalEntrepreneursShort", "Total Entrepreneurs")}
               total={data.enterprenuers}
               rate="0.43%"
               levelUp
@@ -282,10 +276,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="/"
-              title={t(
-                "dashboard.entrepreneursSupported",
-                "Entrepreneurs Supported"
-              )}
+              title={t("dashboard.entrepreneursSupported", "Entrepreneurs Supported")}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
               levelUp
@@ -310,10 +301,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
             <CardDataStats
               link="/pendingApplications"
-              title={t(
-                "dashboard.pendingBusinessApplications",
-                "Pending business applications"
-              )}
+              title={t("dashboard.pendingBusinessApplications", "Pending business applications")}
               total={data.pendingBusiness}
               rate="0.43%"
               levelUp
@@ -335,10 +323,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="/users"
-              title={t(
-                "dashboard.pendingUserApplications",
-                "Pending users applications"
-              )}
+              title={t("dashboard.pendingUserApplications", "Pending users applications")}
               total={data.pendingUser}
               rate="4.35%"
               levelUp
@@ -360,10 +345,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="pendingRequests"
-              title={t(
-                "dashboard.pendingProgramApplications",
-                "Pending program applications"
-              )}
+              title={t("dashboard.pendingProgramApplications", "Pending program applications")}
               total={data.pendingProgramApplication || 0}
               rate="2.59%"
               levelUp
@@ -385,10 +367,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="/users"
-              title={t(
-                "dashboard.totalUsersRegistered",
-                "Total users registered on system"
-              )}
+              title={t("dashboard.totalUsersRegistered", "Total users registered on system")}
               total={data.totalUsers}
               rate="0.95%"
               levelDown
@@ -489,10 +468,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link=""
-              title={t(
-                "dashboard.interestedEntrepreneurs",
-                "Interested Entrepreneurs"
-              )}
+              title={t("dashboard.interestedEntrepreneurs", "Interested Entrepreneurs")}
               total={data.enterprenuersInterested}
               rate="2.59%"
               levelUp

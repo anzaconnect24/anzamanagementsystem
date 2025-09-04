@@ -6,11 +6,13 @@ import {
   getAllUsers,
 } from "@/app/controllers/user_controller";
 import { getInvestors } from "@/app/controllers/user_controller";
+import { useTranslation } from "@/app/locales";
 const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
-const options = {
+// Build chart options with translation
+const buildOptions = (t) => ({
   legend: {
     show: true,
     position: "top",
@@ -96,7 +98,7 @@ const options = {
   },
   yaxis: {
     title: {
-      text: "Number of Registrations",
+      text: t("dashboard.numberOfRegistrations", "Number of Registrations"),
       style: {
         fontSize: "14px",
         fontWeight: 500,
@@ -110,13 +112,14 @@ const options = {
     intersect: false,
     y: {
       formatter: function (value) {
-        return value + " registrations";
+        return value + " " + t("dashboard.registrationsSuffix", "registrations");
       },
     },
   },
-};
+});
 
 const ChartOne = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [registrationData, setRegistrationData] = useState({
     users: Array(5).fill(0),
@@ -207,15 +210,15 @@ const ChartOne = () => {
   const chartData = {
     series: [
       {
-        name: "Total Users",
+        name: t("dashboard.totalUsers", "Total Users"),
         data: registrationData.users,
       },
       {
-        name: "Investors",
+        name: t("dashboard.totalInvestorsLabel", "Total Investors"),
         data: registrationData.investors,
       },
       {
-        name: "Entrepreneurs", // Changed from "Businesses" to "Entrepreneurs"
+        name: t("dashboard.totalEntrepreneursLabel", "Total Entrepreneurs"), // Changed from "Businesses" to "Entrepreneurs"
         data: registrationData.businesses,
       },
     ],
@@ -230,7 +233,7 @@ const ChartOne = () => {
     <div className="col-span-12 rounded border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 xl:col-span-12">
       <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h3 className="text-xl font-bold text-black dark:text-white">
-          Registration Statistics
+          {t("dashboard.registrationStatistics", "Registration Statistics")}
         </h3>
       </div>
 
@@ -256,7 +259,7 @@ const ChartOne = () => {
             </div>
             <div className="ml-4">
               <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Users
+                {t("dashboard.totalUsers", "Total Users")}
               </h4>
               <p className="mt-1 text-xl font-bold text-black dark:text-white">
                 {registrationData.totals.users}
@@ -285,7 +288,7 @@ const ChartOne = () => {
             </div>
             <div className="ml-4">
               <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Investors
+                {t("dashboard.totalInvestorsLabel", "Total Investors")}
               </h4>
               <p className="mt-1 text-xl font-bold text-black dark:text-white">
                 {registrationData.totals.investors}
@@ -314,7 +317,7 @@ const ChartOne = () => {
             </div>
             <div className="ml-4">
               <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Total Entrepreneurs
+                {t("dashboard.totalEntrepreneursLabel", "Total Entrepreneurs")}
               </h4>
               <p className="mt-1 text-xl font-bold text-black dark:text-white">
                 {registrationData.totals.businesses}
@@ -332,13 +335,13 @@ const ChartOne = () => {
               <div className="flex items-center space-x-3">
                 <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
                 <span className="text-sm font-medium text-gray-600">
-                  Loading data...
+          {t("dashboard.loadingData", "Loading data...")}
                 </span>
               </div>
             </div>
           ) : (
             <ReactApexChart
-              options={options}
+        options={buildOptions(t)}
               series={chartData.series}
               type="bar"
               width="100%"

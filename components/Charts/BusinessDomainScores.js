@@ -3,11 +3,12 @@ import React, { useState, useEffect, useContext } from "react";
 import dynamic from "next/dynamic";
 import { getScoreData } from "@/app/controllers/crat_general_controller";
 import { UserContext } from "@/app/(dashboard)/layout";
+import { useTranslation } from "@/app/locales";
 
-// Import ReactApexChart dynamically with better error handling
-const ReactApexChart = dynamic(() => import("react-apexcharts"), {
-  ssr: false,
-  loading: () => (
+// Localized loading component for dynamic import
+const LoadingChart = () => {
+  const { t } = useTranslation();
+  return (
     <div className="flex items-center justify-center h-64">
       <div className="text-center">
         <div className="mb-4">
@@ -32,13 +33,20 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
             ></path>
           </svg>
         </div>
-        <span className="text-gray-400">Loading chart...</span>
+        <span className="text-gray-400">{t("common.loadingChart", "Loading chart...")}</span>
       </div>
     </div>
-  ),
+  );
+};
+
+// Import ReactApexChart dynamically with better error handling
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+  loading: () => <LoadingChart />,
 });
 
 const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
+  const { t } = useTranslation();
   const [scoreData, setScoreData] = useState(initialScoreData || {});
   const [loading, setLoading] = useState(
     !initialScoreData || Object.keys(initialScoreData).length === 0
@@ -132,7 +140,12 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
       },
     },
     xaxis: {
-      categories: ["Commercial", "Financial", "Operations", "Legal"],
+      categories: [
+        t("report.commercial", "Commercial"),
+        t("report.financial", "Financial"),
+        t("report.operations", "Operations"),
+        t("report.legal", "Legal"),
+      ],
       labels: {
         style: {
           fontSize: "12px",
@@ -175,7 +188,7 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
 
   const barChartSeries = [
     {
-      name: "Score",
+      name: t("report.score", "Score"),
       data: [
         Math.round(scoreData.commercial?.percentage || 0),
         Math.round(scoreData.financial?.percentage || 0),
@@ -189,10 +202,16 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
     <div className="bg-white rounded-2xl border h-full border-stroke p-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5 mb-8">
       <div className="mb-6">
         <h3 className="text-xl font-bold text-black dark:text-white">
-          Capital Readiness Assessment Scores
+          {t(
+            "report.capitalReadinessAssessmentScores",
+            "Capital Readiness Assessment Scores"
+          )}
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Your readiness across key business domains
+          {t(
+            "report.readinessAcrossDomains",
+            "Your readiness across key business domains"
+          )}
         </p>
       </div>
 
@@ -221,13 +240,20 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
                 ></path>
               </svg>
             </div>
-            <span className="text-gray-400">Loading assessment data...</span>
+            <span className="text-gray-400">
+              {t(
+                "common.loadingAssessmentData",
+                "Loading assessment data..."
+              )}
+            </span>
           </div>
         </div>
       ) : !isClient ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <span className="text-gray-400">Initializing chart...</span>
+            <span className="text-gray-400">
+              {t("common.initializingChart", "Initializing chart...")}
+            </span>
           </div>
         </div>
       ) : (
