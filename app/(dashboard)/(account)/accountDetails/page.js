@@ -15,6 +15,7 @@ import { uploadFile } from "../../../controllers/file_upload_controller";
 import Loader from "@/components/common/Loader";
 import UpdateInvestorProfile from "@/app/component/updateInvestorProfile";
 import UpdateMentorProfile from "@/app/component/updateMentorProfile";
+import { useTranslation } from "@/app/locales";
 const AccountDetails = () => {
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
@@ -22,6 +23,7 @@ const AccountDetails = () => {
   const [updating, setUpdating] = useState(false);
   const [updatingPassword, setUpdatingPassword] = useState(false);
   const [fileImage, setfileImage] = useState(null);
+  const { t } = useTranslation();
 
   useEffect(() => {
     getMyInfo().then((data) => {
@@ -61,10 +63,10 @@ const AccountDetails = () => {
             const response = await updateUserInformation(data);
             setRefresh(refresh + 1);
             setUpdating(false);
-            toast.success("User details are updated successfully!");
+            toast.success(t('account.userDetailsUpdatedSuccess','User details updated successfully!'));
           } catch (error) {
             setUpdating(false);
-            toast.error(error.message || "Failed to update user details!");
+            toast.error(error.message || t('account.userDetailsUpdatedFailed','Failed to update user details!'));
           }
         }}
       >
@@ -115,25 +117,25 @@ const AccountDetails = () => {
             {/* {fileImage} */}
 
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              Account infromations
+              {t('account.accountInformation','Account Information')}
             </h4>
             <div className="grid grid-cols-2 gap-y-3 gap-x-3 pt-4">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Name
+                  {t('account.nameLabel','Name')}
                 </label>
                 <input
                   name="name"
                   defaultValue={user.name}
                   required
                   className="form-style"
-                  placeholder="Name"
+                  placeholder={t('account.nameLabel','Name')}
                   type="tel"
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Email address
+                  {t('account.emailAddressLabel','Email address')}
                 </label>
                 <input
                   name="email"
@@ -141,20 +143,20 @@ const AccountDetails = () => {
                   value={user.email}
                   required
                   className="form-style disabled:opacity-75"
-                  placeholder="Enter email address"
+                  placeholder={t('auth.email','Email')}
                   type="tel"
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Phone number
+                  {t('account.phoneNumberLabel','Phone number')}
                 </label>
                 <input
                   name="phone"
                   defaultValue={user.phone}
                   required
                   className="form-style"
-                  placeholder="Enter phone number"
+                  placeholder={t('account.phoneNumberLabel','Phone number')}
                   type="tel"
                 />
               </div>
@@ -164,7 +166,7 @@ const AccountDetails = () => {
                 type="submit"
                 className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
               >
-                <div>{updating ? <Spinner /> : "Update details"}</div>
+                <div>{updating ? <Spinner /> : t('account.updateDetails','Update details')}</div>
               </button>
             </div>
           </div>
@@ -180,12 +182,12 @@ const AccountDetails = () => {
           const confirmPassword = e.target.confirmPassword.value;
 
           if (newPassword !== confirmPassword) {
-            toast.error("New passwords do not match!");
+            toast.error(t('account.passwordsDoNotMatch','New passwords do not match!'));
             return;
           }
 
           if (newPassword.length < 6) {
-            toast.error("New password must be at least 6 characters long!");
+            toast.error(t('account.passwordTooShort','New password must be at least 6 characters long!'));
             return;
           }
 
@@ -199,55 +201,55 @@ const AccountDetails = () => {
             .then((response) => {
               setUpdating(false);
               console.log(response);
-              toast.success("Password updated successfully!");
+              toast.success(t('account.passwordUpdatedSuccess','Password updated successfully!'));
               e.target.reset();
             })
             .catch((error) => {
               setUpdating(false);
-              toast.error(error.message || "Failed to update password!");
+              toast.error(error.message || t('account.passwordUpdatedFailed','Failed to update password!'));
             });
         }}
       >
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5">
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              Change Password
+              {t('account.changePassword','Change Password')}
             </h4>
             <div className="grid grid-cols-1 gap-y-3 gap-x-3 pt-4">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Current Password
+                  {t('account.currentPassword','Current Password')}
                 </label>
                 <input
                   name="currentPassword"
                   required
                   className="form-style"
-                  placeholder="Enter current password"
+                  placeholder={t('account.enterCurrentPassword','Enter current password')}
                   type="password"
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  New Password
+                  {t('account.newPassword','New Password')}
                 </label>
                 <input
                   name="newPassword"
                   required
                   className="form-style"
-                  placeholder="Enter new password"
+                  placeholder={t('account.enterNewPassword','Enter new password')}
                   type="password"
                   minLength={6}
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Confirm New Password
+                  {t('account.confirmNewPassword','Confirm New Password')}
                 </label>
                 <input
                   name="confirmPassword"
                   required
                   className="form-style"
-                  placeholder="Confirm new password"
+                  placeholder={t('account.confirmNewPasswordPlaceholder','Confirm new password')}
                   type="password"
                   minLength={6}
                 />
@@ -258,7 +260,7 @@ const AccountDetails = () => {
                 type="submit"
                 className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
               >
-                <div>{updating ? <Spinner /> : "Update Password"}</div>
+                <div>{updating ? <Spinner /> : t('account.updatePassword','Update Password')}</div>
               </button>
             </div>
           </div>

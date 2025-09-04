@@ -4,6 +4,7 @@ import { logout } from "@/app/utils/local_storage";
 import { useRouter } from "next/navigation";
 import { UserContext } from "@/app/(dashboard)/layout";
 import Link from "next/link";
+import { useTranslation } from "@/app/locales";
 
 const DropdownUser = () => {
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -38,6 +39,8 @@ const DropdownUser = () => {
     return () => document.removeEventListener("keydown", keyHandler);
   });
 
+  const { t } = useTranslation();
+
   return (
     <div className="relative">
       <Link
@@ -50,7 +53,7 @@ const DropdownUser = () => {
           <span className="block text-sm font-medium text-black dark:text-white">
             {userDetails.name}
           </span>
-          <span className="block text-xs">Role: {userDetails.role}</span>
+          <span className="block text-xs">{t('users.role','Role')}: {userDetails.role}</span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
@@ -112,7 +115,7 @@ const DropdownUser = () => {
                   fill=""
                 />
               </svg>
-              My Profile
+              {t('account.myProfile','My Profile')}
             </Link>
           </li>
         </ul>
@@ -141,7 +144,7 @@ const DropdownUser = () => {
               fill=""
             />
           </svg>
-          Log Out
+          {t('auth.logout','Log Out')}
         </button>
       </div>
       {/* <!-- Dropdown End --> */}

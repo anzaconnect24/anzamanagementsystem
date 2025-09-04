@@ -2,11 +2,12 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { getScoreData } from "@/app/controllers/crat_general_controller";
+import { useTranslation } from "@/app/locales";
 
-// Import ReactApexChart dynamically with better error handling
-const ReactApexChart = dynamic(() => import("react-apexcharts"), {
-  ssr: false,
-  loading: () => (
+// Localized loading component for dynamic import
+const LoadingChart = () => {
+  const { t } = useTranslation();
+  return (
     <div className="flex items-center justify-center h-64">
       <div className="text-center">
         <div className="mb-4">
@@ -31,10 +32,18 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
             ></path>
           </svg>
         </div>
-        <span className="text-gray-400">Loading chart...</span>
+        <span className="text-gray-400">
+          {t("common.loadingChart", "Loading chart...")}
+        </span>
       </div>
     </div>
-  ),
+  );
+};
+
+// Import ReactApexChart dynamically with better error handling
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+  loading: () => <LoadingChart />,
 });
 
 const PerformanceDistribution = ({
@@ -42,6 +51,7 @@ const PerformanceDistribution = ({
   initialScoreData,
   chartHeight = 350,
 }) => {
+  const { t } = useTranslation();
   const [scoreData, setScoreData] = useState(initialScoreData || {});
   const [loading, setLoading] = useState(
     !initialScoreData || Object.keys(initialScoreData).length === 0
@@ -102,9 +112,14 @@ const PerformanceDistribution = ({
 
   // Determine chart color and status based on CRAT readiness levels
   const getChartColorAndStatus = (score) => {
-    if (score >= 75) return { color: "#219654", status: "Ready" };
-    if (score >= 60) return { color: "#f4dc2c", status: "Partially Ready" };
-    return { color: "#EF4444", status: "Not Ready" };
+    if (score >= 75)
+      return { color: "#219654", status: t("report.ready", "Ready") };
+    if (score >= 60)
+      return {
+        color: "#f4dc2c",
+        status: t("report.partiallyReady", "Partially Ready"),
+      };
+    return { color: "#EF4444", status: t("report.notReady", "Not Ready") };
   };
 
   const { color: chartColor, status: scoreStatus } =
@@ -140,7 +155,7 @@ const PerformanceDistribution = ({
               show: true,
               fontSize: "16px",
               fontWeight: 500,
-              label: "Total Score",
+              label: t("report.totalScore", "Total Score"),
               color: "#6B7280",
               formatter: function () {
                 return overallScore + "%";
@@ -172,7 +187,7 @@ const PerformanceDistribution = ({
       <div className="mb-6">
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
           <h3 className="text-xl font-bold text-black dark:text-white mb-2 sm:mb-0">
-            Overall Readiness
+            {t("report.overallReadinessTitle", "Overall Readiness")}
           </h3>
           <div
             className={`px-2 py-1 rounded-md text-white text-sm font-medium self-start sm:self-auto`}
@@ -182,7 +197,10 @@ const PerformanceDistribution = ({
           </div>
         </div>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Overall assessment score across domains
+          {t(
+            "report.overallAssessmentAcrossDomains",
+            "Overall assessment score across domains"
+          )}
         </p>
       </div>
 
@@ -211,13 +229,20 @@ const PerformanceDistribution = ({
                 ></path>
               </svg>
             </div>
-            <span className="text-gray-400">Loading performance data...</span>
+            <span className="text-gray-400">
+              {t(
+                "common.loadingPerformanceData",
+                "Loading performance data..."
+              )}
+            </span>
           </div>
         </div>
       ) : !isClient ? (
         <div className="flex items-center justify-center h-64">
           <div className="text-center">
-            <span className="text-gray-400">Initializing chart...</span>
+            <span className="text-gray-400">
+              {t("common.initializingChart", "Initializing chart...")}
+            </span>
           </div>
         </div>
       ) : (

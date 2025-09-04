@@ -109,14 +109,7 @@ const Sidebar = ({
           name: t("navigation.dashboard", "Dashboard"),
           path: "/",
           icon: <MdOutlineDashboard className="text-xl" />,
-          roles: [
-            "Admin",
-            "Enterprenuer",
-            "Investor",
-            "Mentor",
-            "Staff",
-            "Staff",
-          ],
+          roles: ["Admin", "Enterprenuer", "Investor", "Mentor", "Staff"],
         },
       ],
     });
@@ -126,23 +119,23 @@ const Sidebar = ({
 
     if (["Admin"].includes(role)) {
       peopleItems.push({
-        name: "Users",
+        name: t("navigation.allUsers", "Users"),
         path: "/users",
         icon: <SlPeople className="text-xl" />,
         submenu: [
-          { name: "All Users", path: "/users" },
-          { name: "Entrepreneurs", path: "/enterprenuers" },
-          { name: "Investors", path: "/investors" },
-          { name: "Mentors", path: "/mentors" },
-          { name: "Staff", path: "/reviewers" },
-          { name: "Admins", path: "/admins" },
+          { name: t("navigation.allUsers", "All Users"), path: "/users" },
+          { name: t("navigation.entrepreneurs", "Entrepreneurs"), path: "/enterprenuers" },
+          { name: t("navigation.investors", "Investors"), path: "/investors" },
+          { name: t("navigation.mentors", "Mentors"), path: "/mentors" },
+          { name: t("navigation.staff", "Staff"), path: "/reviewers" },
+          { name: t("navigation.admins", "Admins"), path: "/admins" },
         ],
       });
     }
 
     if (["Mentor"].includes(role)) {
       peopleItems.push({
-        name: "Mentees",
+        name: t("navigation.mentees", "Mentees"),
         path: "/mentorEntreprenuers",
         icon: <SlPeople className="text-xl" />,
       });
@@ -150,11 +143,11 @@ const Sidebar = ({
 
     if (["Enterprenuer"].includes(role)) {
       peopleItems.push({
-        name: "Mentors",
+        name: t("navigation.mentors", "Mentors"),
         icon: <FaUserTie className="text-xl" />,
         submenu: [
-          { name: "My Mentor", path: "/myMentors" },
-          { name: "All Mentors", path: "/mentors" },
+          { name: t("navigation.myMentor", "My Mentor"), path: "/myMentors" },
+          { name: t("navigation.allMentors", "All Mentors"), path: "/mentors" },
         ],
       });
     }
@@ -163,7 +156,7 @@ const Sidebar = ({
       ["Investor", "Enterprenuer", "Staff", "Staff", "Mentor"].includes(role)
     ) {
       peopleItems.push({
-        name: "Entrepreneurs",
+        name: t("navigation.entrepreneurs", "Entrepreneurs"),
         path: "/enterprenuers",
         icon: <RiTeamLine className="text-xl" />,
       });
@@ -171,7 +164,7 @@ const Sidebar = ({
 
     if (["Investor"].includes(role)) {
       peopleItems.push({
-        name: "Interested Entrepreneurs",
+        name: t("navigation.interestedEntrepreneurs", "Interested Entrepreneurs"),
         path: "/interestedEnterprenuers",
         icon: <FaHandshake className="text-xl" />,
       });
@@ -180,7 +173,7 @@ const Sidebar = ({
     if (peopleItems.length > 0) {
       categories.push({
         id: "users",
-        title: "Users",
+        title: t("common.users", "Users"),
         items: peopleItems,
       });
     }
@@ -190,7 +183,7 @@ const Sidebar = ({
 
     if (["Investor"].includes(role)) {
       businessItems.push({
-        name: "My Investment Requests",
+        name: t("navigation.myInvestmentRequests", "My Investment Requests"),
         path: "/myInvestmentRequests",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
@@ -198,29 +191,29 @@ const Sidebar = ({
 
     if (["Admin"].includes(role)) {
       businessItems.push({
-        name: "Investment Requests",
+        name: t("navigation.investmentRequests", "Investment Requests"),
         path: "/pendingRequests",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
         submenu: [
-          { name: "Requests in Progress", path: "/pendingRequests" },
-          { name: "Matched Requests", path: "/acceptedRequests" },
-          { name: "Mismatched Requests", path: "/rejectedRequests" },
+          { name: t("navigation.requestsInProgress", "Requests in Progress"), path: "/pendingRequests" },
+          { name: t("navigation.matchedRequests", "Matched Requests"), path: "/acceptedRequests" },
+          { name: t("navigation.mismatchedRequests", "Mismatched Requests"), path: "/rejectedRequests" },
         ],
       });
 
       businessItems.push({
-        name: "Applications",
+        name: t("navigation.applications", "Applications"),
         path: "/pendingApplications",
         icon: <BsCardChecklist className="text-xl" />,
         submenu: [
-          { name: "Pending Applications", path: "/pendingApplications" },
-          { name: "Approved Applications", path: "/approvedApplications" },
-          { name: "Rejected Applications", path: "/rejectedApplications" },
+          { name: t("navigation.pendingApplications", "Pending Applications"), path: "/pendingApplications" },
+          { name: t("navigation.approvedApplications", "Approved Applications"), path: "/approvedApplications" },
+          { name: t("navigation.rejectedApplications", "Rejected Applications"), path: "/rejectedApplications" },
         ],
       });
 
       businessItems.push({
-        name: "Mentorship Requests",
+        name: t("navigation.mentorshipRequests", "Mentorship Requests"),
         path: "/mentorshipRequests",
         icon: <FaQuestion className="text-lg" />,
       });
@@ -228,16 +221,13 @@ const Sidebar = ({
 
     if (["Staff"].includes(role)) {
       businessItems.push({
-        name: "Assignments",
+        name: t("navigation.assignments", "Assignments"),
         path: "/reviewerAssignedInvestmentRequests",
         icon: <BsCalendar3 className="text-xl" />,
         submenu: [
-          {
-            name: "Investment Requests",
-            path: "/reviewerAssignedInvestmentRequests",
-          },
-          { name: "Business Assignments", path: "/businessAssignments" },
-          { name: "Program Assignments", path: "/programAssignments" },
+          { name: t("navigation.investmentRequestsAssignments", "Investment Requests"), path: "/reviewerAssignedInvestmentRequests" },
+          { name: t("navigation.businessAssignments", "Business Assignments"), path: "/businessAssignments" },
+          { name: t("navigation.programAssignments", "Program Assignments"), path: "/programAssignments" },
         ],
       });
     }
@@ -245,7 +235,7 @@ const Sidebar = ({
     if (businessItems.length > 0) {
       categories.push({
         id: "business",
-        title: "Business Operations",
+        title: t("navigation.businessOperations", "Business Operations"),
         items: businessItems,
       });
     }
@@ -255,12 +245,12 @@ const Sidebar = ({
 
     if (["Admin", "Enterprenuer"].includes(role)) {
       investmentItems.push({
-        name: "Funding Opportunities",
+        name: t("navigation.fundingOpportunities", "Funding Opportunities"),
         path: "/opportunities",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
         submenu: [
-          { name: "Investor Connection", path: "/investors" },
-          { name: "Open calls for funding", path: "/opportunities" },
+          { name: t("navigation.investorConnection", "Investor Connection"), path: "/investors" },
+          { name: t("navigation.openCallsForFunding", "Open calls for funding"), path: "/opportunities" },
         ],
       });
     }
@@ -268,7 +258,7 @@ const Sidebar = ({
     if (investmentItems.length > 0) {
       categories.push({
         id: "investment",
-        title: "Funding Opportunities",
+        title: t("navigation.fundingOpportunities", "Funding Opportunities"),
         items: investmentItems,
       });
     }
@@ -278,7 +268,7 @@ const Sidebar = ({
 
     if (["Admin", "Enterprenuer"].includes(role)) {
       programsItems.push({
-        name: "Programs Applications",
+        name: t("navigation.programsApplications", "Programs Applications"),
         icon: <MdBusinessCenter className="text-xl" />,
         path: "/programsApplications",
       });
@@ -286,23 +276,20 @@ const Sidebar = ({
 
     if (["Enterprenuer"].includes(role)) {
       programsItems.push({
-        name: "CRAT System",
+        name: t("navigation.cratSystem", "CRAT System"),
         path: "/financialDomain",
         icon: <MdBusinessCenter className="text-xl" />,
         submenu: [
-          { name: "Introduction", path: "/introduction" },
-          { name: "Readiness", path: "/scoreReadiness" },
-          { name: "Commercial Domain", path: "/marketDomain" },
-          { name: "Financial Domain", path: "/financialDomain" },
-          { name: "Operation Domain", path: "/operationsDomain" },
-          { name: "Legal Domain", path: "/legalDomain" },
-          { name: "CRAT Review", path: "/cratReview" },
-          {
-            name: "Report",
-            path: "/report",
-            submenu: [
-              { name: "Initial Analysis", path: "/report" },
-              { name: "Final Report", path: "/finalReport" },
+          { name: t("navigation.introduction", "Introduction"), path: "/introduction" },
+          { name: t("navigation.readiness", "Readiness"), path: "/scoreReadiness" },
+          { name: t("navigation.commercialDomain", "Commercial Domain"), path: "/marketDomain" },
+          { name: t("navigation.financialDomain", "Financial Domain"), path: "/financialDomain" },
+          { name: t("navigation.operationDomain", "Operation Domain"), path: "/operationsDomain" },
+          { name: t("navigation.legalDomain", "Legal Domain"), path: "/legalDomain" },
+          { name: t("navigation.cratReview", "CRAT Review"), path: "/cratReview" },
+          { name: t("navigation.report", "Report"), path: "/report", submenu: [
+              { name: t("navigation.initialAnalysis", "Initial Analysis"), path: "/report" },
+              { name: t("navigation.finalReport", "Final Report"), path: "/finalReport" },
             ],
           },
         ],
@@ -311,7 +298,7 @@ const Sidebar = ({
 
     if (["Staff"].includes(role)) {
       programsItems.push({
-        name: "CRAT Reviews",
+        name: t("navigation.cratReviews", "CRAT Reviews"),
         path: "/cratReviews",
         icon: <MdAssignment className="text-xl" />,
       });
@@ -319,7 +306,7 @@ const Sidebar = ({
 
     if (["Mentor", "Admin"].includes(role)) {
       programsItems.push({
-        name: "Mentor Reports",
+        name: t("navigation.mentorReports", "Mentor Reports"),
         path: "/mentorReports",
         icon: <FaWpforms className="text-xl" />,
       });
@@ -327,7 +314,7 @@ const Sidebar = ({
 
     if (["Admin"].includes(role)) {
       programsItems.push({
-        name: "CRAT Review Applications",
+        name: t("navigation.cratReviewApplications", "CRAT Review Applications"),
         path: "/cratReviewApplications",
         icon: <MdAssignment className="text-xl" />,
       });
@@ -335,18 +322,18 @@ const Sidebar = ({
 
     if (["Admin", "Enterprenuer", "Staff", "Mentor"].includes(role)) {
       programsItems.push({
-        name: "Learn & Grow",
+        name: t("navigation.learnAndGrow", "Learn & Grow"),
         icon: <IoDocumentTextOutline className="text-xl" />,
         submenu: [
-          { name: "General Resources", path: "/generalResources" },
-          { name: "Class Rooms", path: "/classRooms" },
+          { name: t("navigation.generalResources", "General Resources"), path: "/generalResources" },
+          { name: t("navigation.classRooms", "Class Rooms"), path: "/classRooms" },
         ],
       });
     }
 
     if (["Admin", "Enterprenuer"].includes(role)) {
       programsItems.push({
-        name: "Success Stories",
+        name: t("navigation.successStories", "Success Stories"),
         path: "/successStories",
         icon: <FaRegLightbulb className="text-xl" />,
       });
@@ -355,7 +342,7 @@ const Sidebar = ({
     if (programsItems.length > 0) {
       categories.push({
         id: "programs",
-        title: "Programs & Resources",
+        title: t("navigation.programsAndResources", "Programs & Resources"),
         items: programsItems,
       });
     }
@@ -366,10 +353,10 @@ const Sidebar = ({
     ) {
       categories.push({
         id: "communication",
-        title: "Communication",
+        title: t("navigation.communication", "Communication"),
         items: [
           {
-            name: "Chats",
+            name: t("navigation.chats", "Chats"),
             path: "/conversations",
             icon: <BiMessageDetail className="text-xl" />,
           },
