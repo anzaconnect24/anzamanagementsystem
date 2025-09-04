@@ -53,7 +53,9 @@ const DropdownUser = () => {
           <span className="block text-sm font-medium text-black dark:text-white">
             {userDetails.name}
           </span>
-          <span className="block text-xs">{t('users.role','Role')}: {userDetails.role}</span>
+          <span className="block text-xs">
+            {t("users.role", "Role")}: {userDetails.role}
+          </span>
         </span>
 
         <span className="h-12 w-12 rounded-full">
@@ -115,7 +117,7 @@ const DropdownUser = () => {
                   fill=""
                 />
               </svg>
-              {t('account.myProfile','My Profile')}
+              {t("account.myProfile", "My Profile")}
             </Link>
           </li>
         </ul>
@@ -144,7 +146,7 @@ const DropdownUser = () => {
               fill=""
             />
           </svg>
-          {t('auth.logout','Log Out')}
+          {t("auth.logout", "Log Out")}
         </button>
       </div>
       {/* <!-- Dropdown End --> */}

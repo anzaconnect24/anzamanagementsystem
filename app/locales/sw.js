@@ -682,7 +682,7 @@ export const sw = {
   // Usimamizi wa Akaunti
   account: {
     accountInformation: "Taarifa za Akaunti",
-  myProfile: "Wasifu Wangu",
+    myProfile: "Wasifu Wangu",
     nameLabel: "Jina",
     emailAddressLabel: "Anwani ya Barua pepe",
     phoneNumberLabel: "Namba ya Simu",
@@ -708,7 +708,7 @@ export const sw = {
   auth: {
     signIn: "Ingia",
     signUp: "Jisajili",
-  logout: "Toka",
+    logout: "Toka",
     signInToContinue: "Ingia kuendelea",
     signUpToContinue: "Jisajili kuendelea",
     provideCredentials: "Weka taarifa zako kuingia",
