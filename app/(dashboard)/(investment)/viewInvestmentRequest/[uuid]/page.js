@@ -11,11 +11,13 @@ import Loader from "@/components/common/Loader";
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/app/(dashboard)/layout";
 import { timeAgo } from "@/app/utils/time_ago";
+import { useTranslation } from "@/app/locales";
 const Page = ({ params }) => {
   const uuid = params.uuid;
   const router = useRouter();
   const { userDetails } = useContext(UserContext);
   const [request, setrequest] = useState(null);
+  const { t } = useTranslation();
   const [loading, setloading] = useState(true);
   useEffect(() => {
     investmentRequestDetails(uuid).then((data) => {
@@ -30,36 +32,60 @@ const Page = ({ params }) => {
   ) : (
     <div>
       <Breadcrumb
-        pageName={"Investment request"}
+        pageName={t("investment.viewRequest", "Investment request")}
         prevLink={""}
-        prevPage={"Requests"}
+        prevPage={t("investment.requests", "Requests")}
       />
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <div className="space-y-3">
             {[
-              { title: "Investor name", value: request.User.name },
-              { title: "Investor email", value: request.User.email },
               {
-                title: "Investor ticket size",
+                title: t("users.investorName", "Investor name"),
+                value: request.User.name,
+              },
+              {
+                title: t("users.email", "Investor email"),
+                value: request.User.email,
+              },
+              {
+                title: t(
+                  "investment.investorTicketSize",
+                  "Investor ticket size"
+                ),
                 value: request.User.InvestorProfile.ticketSize,
               },
               {
-                title: "Address",
+                title: t("investment.investorGeography", "Address"),
                 value: request.User.InvestorProfile.geography,
               },
-              { title: "Want to invest to", value: request.Business.name },
               {
-                title: "Amount",
+                title: t("investment.investingIn", "Want to invest to"),
+                value: request.Business.name,
+              },
+              {
+                title: t("investment.amount", "Amount"),
                 value: `${request.investmentAmount} ${request.currency}`,
               },
-              { title: "Investment type", value: request.investmentType },
               {
-                title: "Due diligance start date",
+                title: t("investment.investmentType", "Investment type"),
+                value: request.investmentType,
+              },
+              {
+                title: t(
+                  "investment.dueDiligenceStartDate",
+                  "Due diligance start date"
+                ),
                 value: request.dueDiligenceDate,
               },
-              { title: "Help request to Anza", value: request.helpFromAnza },
-              { title: "Request sent", value: timeAgo(request.createdAt) },
+              {
+                title: t("investment.helpFromAnza", "Help request to Anza"),
+                value: request.helpFromAnza,
+              },
+              {
+                title: t("users.sent", "Request sent"),
+                value: timeAgo(request.createdAt),
+              },
             ].map((item, key) => {
               return (
                 <div className="flex" key={key}>
@@ -83,14 +109,14 @@ const Page = ({ params }) => {
                 }}
                 className="bg-primary py-3 rounded px-4  hover:opacity-95 text-white"
               >
-                Accept
+                {t("common.accept", "Accept")}
               </Link>
               <Link
                 href={`/rejectApplicationRequest/${uuid}`}
                 className="bg-danger py-3 rounded hover:opacity-95
          px-4 text-white"
               >
-                Reject application
+                {t("investment.rejectApplication", "Reject application")}
               </Link>
             </div>
           )}

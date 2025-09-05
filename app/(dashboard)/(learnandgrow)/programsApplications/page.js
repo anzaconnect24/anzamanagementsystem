@@ -7,6 +7,7 @@ import { headers } from "@/app/utils/headers";
 import { BsPlus, BsSearch, BsTrash, BsPencil } from "react-icons/bs";
 import Spinner from "@/components/spinner";
 import { UserContext } from "../../layout";
+import { useTranslation } from "@/app/locales";
 
 const ProgramsApplications = () => {
   const [programs, setPrograms] = useState([]);
@@ -20,6 +21,7 @@ const ProgramsApplications = () => {
   const [selectedProgram, setSelectedProgram] = useState(null);
   const [showModal, setShowModal] = useState(false);
   const { userDetails } = useContext(UserContext);
+  const { t } = useTranslation();
 
   const fetchPrograms = async (page = 1, keyword = "", isSearch = false) => {
     try {
@@ -88,7 +90,14 @@ const ProgramsApplications = () => {
   };
 
   const handleDelete = async (uuid) => {
-    if (!confirm("Are you sure you want to delete this program?")) {
+    if (
+      !confirm(
+        t(
+          "learnAndGrow.deleteProgramConfirm",
+          "Are you sure you want to delete this program?"
+        )
+      )
+    ) {
       return;
     }
 
@@ -102,11 +111,13 @@ const ProgramsApplications = () => {
         // Refresh the list
         fetchPrograms(currentPage, searchTerm, false);
       } else {
-        alert("Failed to delete program");
+        alert(
+          t("learnAndGrow.failedToDeleteProgram", "Failed to delete program")
+        );
       }
     } catch (error) {
       console.error("Error deleting program:", error);
-      alert("Error deleting program");
+      alert(t("learnAndGrow.errorDeletingProgram", "Error deleting program"));
     } finally {
       setDeleting(null);
     }
@@ -127,10 +138,13 @@ const ProgramsApplications = () => {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">
-              Programs Applications
+              {t("learnAndGrow.programsApplications", "Programs Applications")}
             </h1>
             <p className="mt-2 text-gray-600">
-              Manage and explore program applications
+              {t(
+                "learnAndGrow.manageProgramApplications",
+                "Manage and explore program applications"
+              )}
             </p>
           </div>
           {userDetails?.role === "Admin" && (
@@ -139,7 +153,7 @@ const ProgramsApplications = () => {
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <BsPlus className="text-lg" />
-              Add Program
+              {t("learnAndGrow.addProgram", "Add Program")}
             </Link>
           )}
         </div>
@@ -148,7 +162,14 @@ const ProgramsApplications = () => {
       {/* Results Count and Search */}
       <div className="flex justify-between items-center">
         <div className="mb-4 text-gray-600">
-          Showing {programs.length} of {totalCount} programs
+          {t(
+            "learnAndGrow.showingPrograms",
+            "Showing {{current}} of {{total}} programs",
+            {
+              current: programs.length,
+              total: totalCount,
+            }
+          )}
         </div>
         <div className="mb-6">
           <div className="flex-1 relative max-w-md">
@@ -161,7 +182,10 @@ const ProgramsApplications = () => {
             )}
             <input
               type="text"
-              placeholder="Search programs..."
+              placeholder={t(
+                "learnAndGrow.searchPrograms",
+                "Search programs..."
+              )}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-boxdark/30 rounded-lg focus:ring-blue-500 focus:border-blue-500"
@@ -184,10 +208,13 @@ const ProgramsApplications = () => {
             </svg>
           </div>
           <h3 className="mt-2 text-sm font-medium text-gray-900">
-            No programs found
+            {t("learnAndGrow.noProgramsFound", "No programs found")}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            Get started by creating a new program.
+            {t(
+              "learnAndGrow.createProgramPrompt",
+              "Get started by creating a new program."
+            )}
           </p>
           {userDetails?.role === "Admin" && (
             <div className="mt-6">
@@ -196,7 +223,7 @@ const ProgramsApplications = () => {
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 <BsPlus className="text-lg" />
-                Add Program
+                {t("learnAndGrow.addProgram", "Add Program")}
               </Link>
             </div>
           )}
@@ -277,7 +304,7 @@ const ProgramsApplications = () => {
               disabled={currentPage <= 1}
               className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {t("common.previous", "Previous")}
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -299,7 +326,7 @@ const ProgramsApplications = () => {
               disabled={currentPage >= totalPages}
               className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {t("common.next", "Next")}
             </button>
           </nav>
         </div>
@@ -311,7 +338,7 @@ const ProgramsApplications = () => {
           <div className="bg-white z-99 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="sticky top-0 bg-white border-b border-boxdark/10 px-6 py-4 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-gray-900">
-                Program Details
+                {t("learnAndGrow.programDetails", "Program Details")}
               </h2>
               <button
                 onClick={closeModal}
@@ -341,7 +368,7 @@ const ProgramsApplications = () => {
               {/* Description */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Description
+                  {t("common.description", "Description")}
                 </h3>
                 <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
                   {selectedProgram.description}
@@ -351,7 +378,7 @@ const ProgramsApplications = () => {
               {/* Created Date */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Created
+                  {t("common.created", "Created")}
                 </h3>
                 <p className="text-gray-600">
                   {new Date(selectedProgram.createdAt).toLocaleString()}
@@ -367,7 +394,7 @@ const ProgramsApplications = () => {
                     rel="noopener noreferrer"
                     className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
                   >
-                    View Details →
+                    {t("learnAndGrow.viewDetails", "View Details")} →
                   </a>
                 )}
 
@@ -378,7 +405,7 @@ const ProgramsApplications = () => {
                       className="inline-flex items-center justify-center px-6 py-3 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
                     >
                       <BsPencil className="mr-2" />
-                      Edit Program
+                      {t("learnAndGrow.editProgram", "Edit Program")}
                     </Link>
 
                     <button
@@ -392,12 +419,14 @@ const ProgramsApplications = () => {
                       {deleting === selectedProgram.uuid ? (
                         <>
                           <Spinner />
-                          <span className="ml-2">Deleting...</span>
+                          <span className="ml-2">
+                            {t("learnAndGrow.deleting", "Deleting...")}
+                          </span>
                         </>
                       ) : (
                         <>
                           <BsTrash className="mr-2" />
-                          Delete Program
+                          {t("learnAndGrow.deleteProgram", "Delete Program")}
                         </>
                       )}
                     </button>

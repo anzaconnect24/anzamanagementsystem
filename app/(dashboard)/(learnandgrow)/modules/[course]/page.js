@@ -14,6 +14,7 @@ import Loader from "@/components/common/Loader";
 import { editComment } from "@/app/controllers/comment_controllers";
 import { useRouter } from "next/navigation";
 import Pagination from "../../../../component/pagination";
+import { useTranslation } from "@/app/locales";
 
 const Page = ({ params }) => {
   const { course } = params;
@@ -24,6 +25,7 @@ const Page = ({ params }) => {
   const [limit, setLimit] = useState(20);
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
+  const { t } = useTranslation();
   useEffect(() => {
     loadData();
   }, []);
@@ -43,8 +45,11 @@ const Page = ({ params }) => {
     <div>
       <Breadcrumb
         prevLink={""}
-        pageName={`${decodeURIComponent(course)} Modules`}
-        prevPage={"Back"}
+        pageName={`${decodeURIComponent(course)} ${t(
+          "learnAndGrow.modules",
+          "Modules"
+        )}`}
+        prevPage={t("common.back", "Back")}
       />
 
       <div className="flex justify-between">
@@ -94,7 +99,8 @@ const Page = ({ params }) => {
                   {percentage > 0 && (
                     <div>
                       <p className="text-sm mb-1">
-                        {progress}/{length} slides completed
+                        {progress}/{length}{" "}
+                        {t("learnAndGrow.slidesCompleted", "slides completed")}
                       </p>
                       <div className="w-full bg-black/10 rounded-full h-2">
                         <div
@@ -109,7 +115,10 @@ const Page = ({ params }) => {
                     {isLocked && (
                       <BsLock
                         className="text-gray-400"
-                        title="Complete previous module to unlock"
+                        title={t(
+                          "learnAndGrow.completePrevious",
+                          "Complete previous module to unlock"
+                        )}
                       />
                     )}
                   </h1>
@@ -122,29 +131,35 @@ const Page = ({ params }) => {
                     href={`/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
                   >
-                    Manage Slides
+                    {t("learnAndGrow.manageSlides", "Manage Slides")}
                   </Link>
                 ) : isLocked ? (
                   <button
                     className="bg-gray-200 text-gray-400 px-4 py-2 rounded-lg flex items-center cursor-not-allowed"
                     disabled
-                    title="Complete previous module to unlock"
+                    title={t(
+                      "learnAndGrow.completePrevious",
+                      "Complete previous module to unlock"
+                    )}
                   >
-                    <BsLock className="mr-2" /> Locked
+                    <BsLock className="mr-2" />{" "}
+                    {t("learnAndGrow.locked", "Locked")}
                   </button>
                 ) : percentage > 0 ? (
                   <Link
                     href={`/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
                   >
-                    {percentage == 100 ? "Completed" : "Resume"}
+                    {percentage == 100
+                      ? t("learnAndGrow.completed", "Completed")
+                      : t("learnAndGrow.resume", "Resume")}
                   </Link>
                 ) : (
                   <Link
                     href={`/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
                   >
-                    Start Learning
+                    {t("learnAndGrow.startLearning", "Start Learning")}
                   </Link>
                 )}
                 {["Admin"].includes(userDetails.role) && (
@@ -156,7 +171,7 @@ const Page = ({ params }) => {
                       });
                     }}
                   >
-                    Delete
+                    {t("common.delete", "Delete")}
                   </button>
                 )}
                 {["Admin"].includes(userDetails.role) && (
@@ -166,7 +181,7 @@ const Page = ({ params }) => {
                       router.push(`/modules/edit/?uuid=${item.uuid}`);
                     }}
                   >
-                    Edit
+                    {t("common.edit", "Edit")}
                   </button>
                 )}
               </div>
@@ -179,7 +194,7 @@ const Page = ({ params }) => {
             className="bg-white hover:bg-primary/5 transition-all duration-200 rounded-lg p-5 flex flex-col justify-center items-center border border-black/10 "
           >
             <BsPlus className="text-4xl" />
-            <p>Add Module</p>
+            <p>{t("learnAndGrow.addModule", "Add Module")}</p>
           </Link>
         )}
       </div>

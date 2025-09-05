@@ -5,51 +5,64 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "@/app/(dashboard)/layout";
+import { useTranslation } from "@/app/locales";
 
 const Page = ({ params }) => {
   const { uuid } = params;
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   return loading ? (
     <Loader />
   ) : (
     <div>
       {/* Stats Section - Full Width */}
-      <h1 className="text-2xl font-bold">Welcome back {userDetails.name}!</h1>
+      <h1 className="text-2xl font-bold">
+        {t("learnAndGrow.welcomeBack", "Welcome back")} {userDetails.name}!
+      </h1>
       <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
         <p>
-          Track your progress , access curated courses , and grow your business
-          step by step. Whether you're just starting out with an idea or y
-          activel scaling your venture, this platform is designed to guide you
-          through every stage of your entrepreneurial journey . Monitor your
-          learning milestones , enroll in tailored classes that match your
-          business stage, and unlock practical tools , ex pert insights , and
-          mentorship opportunities. With each completed module, you’ll build
-          stronger foundations sharpen your strategy , and move closer to
-          achieving your business goals. Let’s grow—one step at a time.
+          {t(
+            "learnAndGrow.classRoomsWelcome",
+            "Track your progress, access curated courses, and grow your business step by step. Whether you're just starting out with an idea or actively scaling your venture, this platform is designed to guide you through every stage of your entrepreneurial journey. Monitor your learning milestones, enroll in tailored classes that match your business stage, and unlock practical tools, expert insights, and mentorship opportunities. With each completed module, you'll build stronger foundations sharpen your strategy, and move closer to achieving your business goals. Let's grow—one step at a time."
+          )}
         </p>
       </div>
-      <h1 className="text-xl font-bold">Availbale classes</h1>
+      <h1 className="text-xl font-bold">
+        {t("learnAndGrow.availableClasses", "Available classes")}
+      </h1>
 
       <div className="grid grid-cols-3 gap-6 pt-4">
         {[
           {
             icon: "/discussion.avif",
-            label: "Ideation",
-            description: `This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability`,
+            label: t("learnAndGrow.ideation", "Ideation"),
+            description: t(
+              "learnAndGrow.ideationDescription",
+              "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability"
+            ),
             path: `/classRooms`,
           },
           {
             icon: "/discussion.avif",
-            label: "Business Foundation",
-            description: `This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability`,
+            label: t("learnAndGrow.businessFoundation", "Business Foundation"),
+            description: t(
+              "learnAndGrow.businessFoundationDescription",
+              "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability"
+            ),
             path: `/classRooms`,
           },
           {
             icon: "/discussion.avif",
-            label: "Investment readiness",
-            description: `This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability`,
+            label: t(
+              "learnAndGrow.investmentReadiness",
+              "Investment readiness"
+            ),
+            description: t(
+              "learnAndGrow.investmentReadinessDescription",
+              "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability"
+            ),
             path: `/classRooms`,
           },
         ].map((item) => {
@@ -67,7 +80,7 @@ const Page = ({ params }) => {
                   href={`/modules/${encodeURIComponent(item.label)}`}
                   className="bg-primary px-4 py-2 rounded-lg text-white mt-2"
                 >
-                  Access Classes
+                  {t("learnAndGrow.accessClasses", "Access Classes")}
                 </Link>
               </div>
             </Link>

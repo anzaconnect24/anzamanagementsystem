@@ -10,8 +10,10 @@ import {
 } from "@/app/controllers/mentorReportsController";
 import Link from "next/link";
 import NoData from "@/app/component/noData";
+import { useTranslation } from "@/app/locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -38,18 +40,22 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="bg-white min-h-[30vh] py-6 shadow mt-6 px-6 ">
-      <h1 className="text-2xl font-bold">Mentor Reports</h1>
+      <h1 className="text-2xl font-bold">
+        {t("mentorship.mentorReports", "Mentor Reports")}
+      </h1>
       {data.length < 1 ? (
         <NoData />
       ) : (
         <table className="mt-8">
           <thead>
             <tr>
-              <th>Reported</th>
+              <th>{t("mentorship.reported", "Reported")}</th>
               <th>
-                {userDetails.role == "Enterprenuer" ? "Mentor" : "Entreprenuer"}
+                {userDetails.role == "Enterprenuer"
+                  ? t("mentorship.mentor", "Mentor")
+                  : t("mentorship.entrepreneur", "Entreprenuer")}
               </th>
-              <th>Report title</th>
+              <th>{t("mentorship.reportTitle", "Report title")}</th>
               <th></th>
             </tr>
           </thead>
@@ -59,29 +65,20 @@ const Page = () => {
                 <tr key={item.uuid}>
                   <td>{timeAgo(item.createdAt)}</td>
                   <td>
-  {userDetails.role === "Enterprenuer"
-    ? item.Mentor?.name || "N/A"
-    : item.Entreprenuer?.name || "N/A"}
-</td>
+                    {userDetails.role === "Enterprenuer"
+                      ? item.Mentor?.name || t("common.notProvided", "N/A")
+                      : item.Entreprenuer?.name ||
+                        t("common.notProvided", "N/A")}
+                  </td>
                   <td>{item.title}</td>
                   <td>
                     <Link
                       className="text-primary font-bold hover:scale-105 transition-all"
                       href={`/mentorReport/${item.uuid}`}
                     >
-                      View Report
+                      {t("mentorship.viewReport", "View Report")}
                     </Link>
                   </td>
-                  {/* <td>
-                  <Link
-                    href={`/addEntreprenuerReport/${item.Entreprenuer.uuid}`}
-                    className="py-2 px-4 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded"
-                  >
-                    Submit report
-                  </Link>
-                </td> */}
-                  <td></td>
-                  <td></td>
                 </tr>
               );
             })}

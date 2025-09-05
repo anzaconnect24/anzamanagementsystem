@@ -38,12 +38,15 @@ const Page = ({ params }) => {
   };
   // Define categories
   const categories = [
-    "Finance and Fundraising",
-    "Marketing & Sales",
-    "Technology & Innovation",
-    "Leadership & Personal Development",
-    "Impact & Sustainability",
-    "Legal & Compliance",
+    t("learnAndGrow.financeAndFundraising", "Finance and Fundraising"),
+    t("learnAndGrow.marketingAndSales", "Marketing & Sales"),
+    t("learnAndGrow.technologyAndInnovation", "Technology & Innovation"),
+    t(
+      "learnAndGrow.leadershipAndPersonalDevelopment",
+      "Leadership & Personal Development"
+    ),
+    t("learnAndGrow.impactAndSustainability", "Impact & Sustainability"),
+    t("learnAndGrow.legalAndCompliance", "Legal & Compliance"),
   ];
 
   // Group documents by category
@@ -62,17 +65,22 @@ const Page = ({ params }) => {
   // Admin: delete a resource and update lists
   const handleDeleteDoc = async (doc) => {
     const confirmed = confirm(
-      "Delete this resource? This action cannot be undone."
+      t(
+        "learnAndGrow.deleteResourceConfirm",
+        "Delete this resource? This action cannot be undone."
+      )
     );
     if (!confirmed) return;
     try {
       await deletePitchMaterial(doc.uuid);
-      toast.success("Resource deleted");
+      toast.success(t("learnAndGrow.resourceDeleted", "Resource deleted"));
       // Remove from overall data
       setData((prev) => prev.filter((d) => d.uuid !== doc.uuid));
     } catch (e) {
       console.error(e);
-      toast.error("Failed to delete resource");
+      toast.error(
+        t("learnAndGrow.failedToDelete", "Failed to delete resource")
+      );
     }
   };
 
@@ -81,13 +89,15 @@ const Page = ({ params }) => {
   ) : (
     <div>
       {/* Stats Section - Full Width */}
-      <h1 className="text-2xl font-bold">Welcome back {userDetails.name}!</h1>
+      <h1 className="text-2xl font-bold">
+        {t("learnAndGrow.welcomeBack", "Welcome back")} {userDetails.name}!
+      </h1>
       <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
         <p>
-          Welcome to your one-stop hub for actionable tools, templates, guides,
-          and learning materials. Whether you're validating an idea, scaling
-          your business, or preparing for investment, these resources are
-          designed to support every stage of your entrepreneurial journey.
+          {t(
+            "learnAndGrow.welcomeMessage",
+            "Welcome to your one-stop hub for actionable tools, templates, guides, and learning materials. Whether you're validating an idea, scaling your business, or preparing for investment, these resources are designed to support every stage of your entrepreneurial journey."
+          )}
         </p>
       </div>
 
@@ -97,12 +107,14 @@ const Page = ({ params }) => {
             href={"/uploadMaterial/document"}
             className="text-white bg-primary py-2 px-3 cursor-pointer rounded"
           >
-            Add Material
+            {t("learnAndGrow.addMaterial", "Add Material")}
           </Link>
         </div>
       )}
 
-      <h1 className="text-xl font-bold">Available Resources</h1>
+      <h1 className="text-xl font-bold">
+        {t("learnAndGrow.availableResources", "Available Resources")}
+      </h1>
 
       <div className="grid grid-cols-3 gap-6 pt-4">
         {categories.map((category) => {
@@ -126,10 +138,17 @@ const Page = ({ params }) => {
                 <h1 className="font-bold text-lg">{category}</h1>
                 <p className="mb-4">
                   {categoryDocs.length > 0
-                    ? `${categoryDocs.length} resource${
-                        categoryDocs.length > 1 ? "s" : ""
-                      } available in this category`
-                    : "No materials available in this category"}
+                    ? `${categoryDocs.length} ${t(
+                        "learnAndGrow.resource",
+                        "resource"
+                      )}${categoryDocs.length > 1 ? "s" : ""} ${t(
+                        "learnAndGrow.availableInCategory",
+                        "available in this category"
+                      )}`
+                    : t(
+                        "learnAndGrow.noMaterialsAvailable",
+                        "No materials available in this category"
+                      )}
                 </p>
                 <button
                   type="button"
@@ -147,7 +166,7 @@ const Page = ({ params }) => {
                       : "hover:bg-primary/90"
                   }`}
                 >
-                  View Resources
+                  {t("learnAndGrow.viewResources", "View Resources")}
                 </button>
               </div>
             </div>

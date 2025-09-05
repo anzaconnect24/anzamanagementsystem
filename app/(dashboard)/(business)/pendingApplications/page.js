@@ -12,8 +12,10 @@ import {
 } from "react-icons/hi";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { BiFilterAlt } from "react-icons/bi";
+import { useTranslation } from "@/app/locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const [selectedBusiness, setSelectedBusiness] = useState(null);
@@ -55,13 +57,17 @@ const Page = () => {
             <div className="flex items-center gap-3">
               <div>
                 <h4 className="text-xl font-semibold text-black dark:text-white flex items-center gap-3 mb-2">
-                  Pending Applications
+                  {t("business.pendingApplications", "Pending Applications")}
                   <span className="px-3 py-1 text-sm bg-primary/10 text-primary rounded-full font-medium">
-                    {applications.length} pending
+                    {applications.length}{" "}
+                    {t("business.pendingStatus", "Pending").toLowerCase()}
                   </span>
                 </h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Review and process business applications
+                  {t(
+                    "business.reviewAndProcessApplications",
+                    "Review and process business applications"
+                  )}
                 </p>
               </div>
             </div>
@@ -71,7 +77,10 @@ const Page = () => {
               <div className="relative">
                 <input
                   type="text"
-                  placeholder="Search applications..."
+                  placeholder={t(
+                    "business.searchApplicationsPlaceholder",
+                    "Search applications..."
+                  )}
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full md:w-72 rounded-xl border border-stroke bg-white/80 backdrop-blur-sm py-3 pl-12 pr-4 outline-none focus:border-primary dark:border-strokedark dark:bg-boxdark/80"
@@ -85,9 +94,15 @@ const Page = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="rounded-xl border border-stroke bg-white/80 backdrop-blur-sm px-4 py-3 outline-none focus:border-primary dark:border-strokedark dark:bg-boxdark/80"
               >
-                <option value="date">Sort by Date</option>
-                <option value="name">Sort by Name</option>
-                <option value="status">Sort by Status</option>
+                <option value="date">
+                  {t("business.sortByDate", "Sort by Date")}
+                </option>
+                <option value="name">
+                  {t("business.sortByName", "Sort by Name")}
+                </option>
+                <option value="status">
+                  {t("business.sortByStatus", "Sort by Status")}
+                </option>
               </select>
             </div>
           </div>
@@ -101,27 +116,27 @@ const Page = () => {
             <div className="grid grid-cols-6 sm:grid-cols-8 gap-4 mb-4 px-4 py-3 bg-gray-1 dark:bg-meta-4 rounded-lg">
               <div className="col-span-1">
                 <p className="text-sm font-semibold text-black dark:text-white">
-                  Status
+                  {t("business.status", "Status")}
                 </p>
               </div>
               <div className="col-span-2 hidden sm:block">
                 <p className="text-sm font-semibold text-black dark:text-white">
-                  Business Name
+                  {t("business.businessName", "Business Name")}
                 </p>
               </div>
               <div className="col-span-2">
                 <p className="text-sm font-semibold text-black dark:text-white">
-                  Contact
+                  {t("business.contact", "Contact")}
                 </p>
               </div>
               <div className="col-span-2">
                 <p className="text-sm font-semibold text-black dark:text-white">
-                  Timeline
+                  {t("business.timeline", "Timeline")}
                 </p>
               </div>
               <div className="col-span-1">
                 <p className="text-sm font-semibold text-black dark:text-white">
-                  Actions
+                  {t("business.actions", "Actions")}
                 </p>
               </div>
             </div>
@@ -145,10 +160,10 @@ const Page = () => {
                         )}`}
                       >
                         {daysAgo < 2
-                          ? "New"
+                          ? t("business.newStatus", "New")
                           : daysAgo < 5
-                          ? "Pending"
-                          : "Urgent"}
+                          ? t("business.pendingStatus", "Pending")
+                          : t("business.urgentStatus", "Urgent")}
                       </span>
                     </div>
                     <div className="col-span-2 hidden sm:flex items-center">
@@ -170,7 +185,8 @@ const Page = () => {
                           {timeAgo(item.createdAt)}
                         </span>
                         <span className="text-xs text-gray-500 dark:text-gray-400">
-                          Application ID: #{item.uuid.slice(0, 8)}
+                          {t("business.applicationId", "Application ID")}: #
+                          {item.uuid.slice(0, 8)}
                         </span>
                       </div>
                     </div>
@@ -180,14 +196,17 @@ const Page = () => {
                           <Link
                             href={`/businessDetails/${item.uuid}`}
                             className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
-                            title="View Details"
+                            title={t("business.viewDetails", "View Details")}
                           >
                             <HiOutlineEye className="h-5 w-5" />
                           </Link>
                           <Link
                             href={`/assignReviewer/${item.uuid}`}
                             className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
-                            title="Assign Reviewer"
+                            title={t(
+                              "business.assignReviewer",
+                              "Assign Reviewer"
+                            )}
                           >
                             <HiOutlineUserGroup className="h-5 w-5" />
                           </Link>
@@ -202,7 +221,7 @@ const Page = () => {
                               }
                             }}
                             className="p-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-colors"
-                            title="More Options"
+                            title={t("business.moreOptions", "More Options")}
                           >
                             <MdOutlineKeyboardArrowRight className="h-5 w-5" />
                           </button>
@@ -218,15 +237,24 @@ const Page = () => {
                         >
                           {[
                             {
-                              title: "View full details",
+                              title: t(
+                                "business.viewFullDetails",
+                                "View full details"
+                              ),
                               path: `/businessDetails/${item.uuid}`,
                             },
                             {
-                              title: "Assign reviewer",
+                              title: t(
+                                "business.assignReviewer",
+                                "Assign reviewer"
+                              ),
                               path: `/assignReviewer/${item.uuid}`,
                             },
                             {
-                              title: "Download application",
+                              title: t(
+                                "business.downloadApplication",
+                                "Download application"
+                              ),
                               path: `#`,
                             },
                           ].map((option) => (

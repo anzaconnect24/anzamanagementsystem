@@ -51,24 +51,24 @@ const MentorEntreprenuer = () => {
         <table className="mt-8">
           <thead>
             <tr>
-              <th>Assigned</th>
-              <th>Mentor</th>
-              <th>Company</th>
-              <th>Email</th>
-              <th>Phone</th>
+              <th>{t("mentorship.assigned", "Assigned")}</th>
+              <th>{t("mentorship.mentor", "Mentor")}</th>
+              <th>{t("mentorship.company", "Company")}</th>
+              <th>{t("common.email", "Email")}</th>
+              <th>{t("common.phone", "Phone")}</th>
             </tr>
           </thead>
           <tbody>
             {data
               .filter(
                 (e) =>
-                  e.Entreprenuer.name
+                  e.Entreprenuer?.name
                     .toLowerCase()
                     .includes(keyword.toLowerCase()) ||
-                  e.Entreprenuer.Business.name
+                  e.Entreprenuer?.Business?.name
                     .toLowerCase()
                     .includes(keyword.toLowerCase()) ||
-                  e.Entreprenuer.Business.BusinessSector.name
+                  e.Entreprenuer?.Business?.BusinessSector?.name
                     .toLowerCase()
                     .includes(keyword.toLowerCase())
               )
@@ -76,26 +76,28 @@ const MentorEntreprenuer = () => {
                 return (
                   <tr key={item.uuid}>
                     <td className="py-3">{timeAgo(item.createdAt)}</td>
-                    <td className="py-3">{item.Mentor.name}</td>
-                    <td className="py-3">{item.Entreprenuer.Business.name}</td>
+                    <td className="py-3">{item.Mentor?.name}</td>
+                    <td className="py-3">
+                      {item.Entreprenuer?.Business?.name}
+                    </td>
 
-                    <td className="py-3">{item.Entreprenuer.email}</td>
-                    <td className="py-3">{item.Entreprenuer.phone}</td>
+                    <td className="py-3">{item.Entreprenuer?.email}</td>
+                    <td className="py-3">{item.Entreprenuer?.phone}</td>
                     <td className="py-3">
                       <Link
-                        href={`/businessDetails/${item.Entreprenuer.Business.uuid}`}
+                        href={`/businessDetails/${item.Entreprenuer?.Business?.uuid}`}
                         className="py-2 px-4 text-primary font-bold  hover:text-opacity-80 transition-all duration-300 rounded"
                       >
-                        Business details
+                        {t("mentorship.businessDetails", "Business details")}
                       </Link>
                     </td>
                     {item.approved ? (
                       <td className="py-3">
                         <Link
-                          href={`/addEntreprenuerReport/${item.Entreprenuer.uuid}`}
+                          href={`/addEntreprenuerReport/${item.Entreprenuer?.uuid}`}
                           className="py-2 px-4 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded"
                         >
-                          Submit report
+                          {t("mentorship.submitReport", "Submit report")}
                         </Link>
                       </td>
                     ) : (
@@ -114,8 +116,11 @@ const MentorEntreprenuer = () => {
                           className="py-2 px-4 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded"
                         >
                           {approving
-                            ? "approving..."
-                            : "Approve Mentor Request"}
+                            ? t("mentorship.approving", "approving...")
+                            : t(
+                                "mentorship.approveMentorRequest",
+                                "Approve Mentor Request"
+                              )}
                         </button>
                       </td>
                     )}

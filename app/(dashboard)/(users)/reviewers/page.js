@@ -222,7 +222,7 @@ const Page = () => {
                             d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
                           />
                         </svg>
-                        Message
+                        {t("users.message", "Message")}
                       </button>
                     </td>
                   </tr>
@@ -237,7 +237,7 @@ const Page = () => {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Show
+                {t("pagination.show", "Show")}
               </span>
               <select
                 value={limit}
@@ -249,13 +249,16 @@ const Page = () => {
                 <option value={100}>100</option>
               </select>
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                entries
+                {t("pagination.entries", "entries")}
               </span>
             </div>
 
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                Page {currentPage} of {totalPages}
+                {t("pagination.pageOf", "Page {{page}} of {{total}}", {
+                  page: currentPage,
+                  total: totalPages,
+                })}
               </span>
               <div className="flex gap-2">
                 <button
@@ -270,7 +273,7 @@ const Page = () => {
                         : "hover:bg-primary hover:text-white dark:hover:bg-primary"
                     }`}
                 >
-                  Previous
+                  {t("pagination.previous", "Previous")}
                 </button>
                 <button
                   onClick={() =>
@@ -284,7 +287,7 @@ const Page = () => {
                         : "hover:bg-primary hover:text-white dark:hover:bg-primary"
                     }`}
                 >
-                  Next
+                  {t("pagination.next", "Next")}
                 </button>
               </div>
             </div>

@@ -35,8 +35,8 @@ export const TranslationProvider = ({ children }) => {
     }
   };
 
-  // Translation function - supports nested keys like 'common.dashboard'
-  const t = (key, fallback = "") => {
+  // Translation function - supports nested keys like 'common.dashboard' and simple variable interpolation via {{var}}
+  const t = (key, fallback = "", vars = {}) => {
     const keys = key.split(".");
     let value = translations;
 
@@ -45,8 +45,18 @@ export const TranslationProvider = ({ children }) => {
       if (value === undefined) break;
     }
 
-    // Return the translated value, fallback, or the key itself if no translation found
-    return value || fallback || key;
+    let result = value || fallback || key;
+
+    if (typeof result === "string" && vars && Object.keys(vars).length > 0) {
+      result = result.replace(/{{(.*?)}}/g, (match, p1) => {
+        const trimmed = p1.trim();
+        return Object.prototype.hasOwnProperty.call(vars, trimmed)
+          ? vars[trimmed]
+          : match;
+      });
+    }
+
+    return result;
   };
 
   const value = {

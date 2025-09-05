@@ -278,10 +278,10 @@ const CratReviewApplicationsPage = () => {
                   <div className="mb-4">
                     <div className="w-full h-48 overflow-hidden bg-gray-200 rounded-lg">
                       <img
-                        src={review.entrepreneur.image || "/user.png"}
+                        src={review.entrepreneur?.image || "/user.png"}
                         alt={
-                          review.entrepreneur.Business?.name ||
-                          review.entrepreneur.name
+                          review.entrepreneur?.Business?.name ||
+                          review.entrepreneur?.name
                         }
                         className="w-full h-full object-cover"
                         onError={(e) => (e.target.src = "/user.png")}
@@ -292,11 +292,11 @@ const CratReviewApplicationsPage = () => {
                   {/* Business Details */}
                   <div className="mb-1">
                     <h6 className="font-semibold text-black dark:text-white truncate mb-1">
-                      {review.entrepreneur.Business?.name || "N/A"}
+                      {review.entrepreneur?.Business?.name || "N/A"}
                     </h6>
                     <p className="text-sm text-bodydark2 truncate">
-                      {review.entrepreneur.Business?.email ||
-                        review.entrepreneur.email}
+                      {review.entrepreneur?.Business?.email ||
+                        review.entrepreneur?.email}
                     </p>
                   </div>
 
@@ -364,7 +364,7 @@ const CratReviewApplicationsPage = () => {
                       <button
                         onClick={() => {
                           router.push(
-                            `/report?user_uuid=${review.entrepreneur.uuid}`
+                            `/report?user_uuid=${review.entrepreneur?.uuid}`
                           );
                         }}
                         className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"

@@ -1,14 +1,13 @@
 "use client";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { getInvestors } from "../../../controllers/user_controller";
-import Link from "next/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { UserContext } from "../../layout";
 import Pagination from "@/app/component/pagination";
 import { useTranslation } from "../../../locales";
+import { UserContext } from "../../layout";
 
 const Page = () => {
   const { t } = useTranslation();
@@ -25,22 +24,16 @@ const Page = () => {
     ticketSize: "All Ticket Sizes",
     structure: "All Structures",
   });
-  const [sortConfig, setSortConfig] = useState({
-    key: "name",
-    direction: "asc",
-  });
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [total, setTotal] = useState(0);
-  const [limit, setLimit] = useState(20);
+  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(12);
   const [count, setCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
   const [openDropdown, setOpenDropdown] = useState(null);
 
-  // Define filter and sort options
   const filterOptions = {
     sector: {
-      label: "Sector",
+      label: t("users.sector", "Sector"),
       options: [
         "All Sectors",
         "Technology",
@@ -53,7 +46,7 @@ const Page = () => {
       ],
     },
     ticketSize: {
-      label: "Ticket Size",
+      label: t("users.ticketSize", "Ticket Size"),
       options: [
         "All Ticket Sizes",
         "100K - 200K",
@@ -64,7 +57,7 @@ const Page = () => {
       ],
     },
     structure: {
-      label: "Structure",
+      label: t("users.structure", "Structure"),
       options: [
         "All Structures",
         "Equity",
@@ -77,33 +70,60 @@ const Page = () => {
   };
 
   const sortOptions = [
-    { value: "name", label: "Name" },
-    { value: "sector", label: "Sector" },
-    { value: "ticketSize", label: "Ticket Size" },
-    { value: "structure", label: "Structure" },
+    { value: "name", label: t("users.name", "Name") },
+    { value: "sector", label: t("users.sector", "Sector") },
+    { value: "ticketSize", label: t("users.ticketSize", "Ticket Size") },
+    { value: "structure", label: t("users.structure", "Structure") },
   ];
 
-  // Check if any filters are active
-  const isFiltering =
-    Object.values(filters).some((value) => !value.startsWith("All")) ||
-    keyword.trim() !== "";
-
-  // Function to fetch and process data
+  const displayFilterValue = useCallback(
+    (type, value) => {
+      if (type === "sector") {
+        const map = {
+          "All Sectors": t("users.allSectors", "All Sectors"),
+          Technology: t("users.technology", "Technology"),
+          Healthcare: t("users.healthcare", "Healthcare"),
+          Education: t("users.education", "Education"),
+          Agriculture: t("users.agriculture", "Agriculture"),
+          "Clean Energy": t("users.cleanEnergy", "Clean Energy"),
+          "Water Sanitation and Hygiene": t(
+            "users.waterSanitationHygiene",
+            "Water Sanitation and Hygiene"
+          ),
+          Fintech: t("users.fintech", "Fintech"),
+        };
+        return map[value] || value;
+      }
+      if (type === "ticketSize") {
+        if (value === "All Ticket Sizes")
+          return t("users.allTicketSizes", "All Ticket Sizes");
+        return value;
+      }
+      if (type === "structure") {
+        const map = {
+          "All Structures": t("users.allStructures", "All Structures"),
+          Equity: t("users.equity", "Equity"),
+          Debt: t("users.debt", "Debt"),
+          Grant: t("users.grant", "Grant"),
+          "Convertible Note": t("users.convertibleNote", "Convertible Note"),
+          "Revenue Share": t("users.revenueShare", "Revenue Share"),
+        };
+        return map[value] || value;
+      }
+      return value;
+    },
+    [t]
+  );
+  // Fetch investors
   const fetchData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
       setError(null);
-
-      // Determine if we need all data (for client-side filtering) or paginated data
-      const pageSize = isFiltering ? 1000 : limit;
-      const pageNumber = isFiltering ? 1 : currentPage;
-
       const response = await getInvestors(limit, page, keyword);
-
       if (!response || !response.data) {
         throw new Error("Failed to fetch investors data");
       }
-
+      const isFiltering = Object.values(filters).some((v) => !v.startsWith("All")) || keyword;
       let processedData = [...response.data];
 
       // Apply client-side filters
@@ -164,9 +184,9 @@ const Page = () => {
         }
       });
 
-      setUsers(processedData);
-      setCount(response.count || 0);
-      setTotalPages(isFiltering ? 1 : response.totalPages || 1);
+  setUsers(processedData);
+  setCount(response.count || 0);
+  setTotalPages(isFiltering ? 1 : response.totalPages || 1);
     } catch (err) {
       setError(err.message || "An error occurred while fetching data");
       console.error("Error fetching investors:", err);
@@ -267,7 +287,7 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails.name}!</h1>
+  <h1 className="text-2xl font-bold mb-4">{t("users.welcome", "Welcome")} {userDetails.name}!</h1>
 
       {/* Search and Filter Bar */}
       <div className="mb-8">
@@ -275,14 +295,14 @@ const Page = () => {
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <span className="text-xl text-gray-600 dark:text-gray-300">
-              {count} investors
+              {count} {t("users.investors", "Investors")}
             </span>
           </div>
 
           <div className="relative">
             <input
               type="text"
-              placeholder="Search investors..."
+              placeholder={t("users.searchInvestors", "Search investors...")}
               value={keyword}
               onChange={handleSearch}
               className="w-64 px-4 py-2 rounded-md  bg-white dark:bg-boxdark border border-white focus:outline-none focus:border-primary"
@@ -302,7 +322,7 @@ const Page = () => {
                     : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
                 } flex items-center gap-2 y transition-colors`}
               >
-                <span>{filters[key]}</span>
+                <span>{displayFilterValue(key, filters[key])}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${
                     openDropdown === key ? "rotate-180" : ""
@@ -332,7 +352,7 @@ const Page = () => {
                           : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
                       }`}
                     >
-                      {option}
+                      {displayFilterValue(key, option)}
                     </button>
                   ))}
                 </div>
@@ -347,8 +367,7 @@ const Page = () => {
               className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
             >
               <span>
-                Sort:{" "}
-                {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
+                {t("users.sortBy", "Sort By")}: {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
               </span>
               <svg
                 className={`w-4 h-4 transition-transform ${
@@ -403,7 +422,7 @@ const Page = () => {
                     key={key}
                     className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
                   >
-                    {value}
+                    {displayFilterValue(key, value)}
                     <button
                       onClick={() =>
                         handleFilterChange(
@@ -420,7 +439,7 @@ const Page = () => {
             )}
             {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                Search: {keyword}
+                {t("filters.search", "Search")}: {keyword}
                 <button
                   onClick={() => setKeyword("")}
                   className="hover:text-primary-dark"
@@ -464,8 +483,7 @@ const Page = () => {
                     {/* Sector Badge */}
                     <div className="absolute bottom-4 left-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                        {investor?.InvestorProfile?.BusinessSector?.name ||
-                          "No Sector"}
+                        {investor?.InvestorProfile?.BusinessSector?.name || t("business.noSector", "No Sector")}
                       </span>
                     </div>
                   </div>
@@ -474,10 +492,10 @@ const Page = () => {
                   <div className="p-6 flex-grow space-y-4">
                     <div className="space-y-2">
                       <h2 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-                        {investor.name || "Unnamed Investor"}
+                        {investor.name || t("users.unnamedInvestor", "Unnamed Investor")}
                       </h2>
                       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                        {investor.email || "No email provided"}
+                        {investor.email || t("users.noEmailProvided", "No email provided")}
                       </p>
                     </div>
 
@@ -499,8 +517,7 @@ const Page = () => {
                           />
                         </svg>
                         <span className="line-clamp-1">
-                          {investor?.InvestorProfile?.investmentSize ||
-                            "Ticket size not specified"}
+                          {investor?.InvestorProfile?.investmentSize || t("users.ticketSizeNotSpecified", "Ticket size not specified")}
                         </span>
                       </div>
 
@@ -520,9 +537,7 @@ const Page = () => {
                           />
                         </svg>
                         <span className="line-clamp-1">
-                          {Object.values(
-                            investor?.InvestorProfile?.investmentType
-                          ).join(", ") || "Structure not specified"}
+                          {Object.values(investor?.InvestorProfile?.investmentType || {}).join(", ") || t("users.structureNotSpecified", "Structure not specified")}
                         </span>
                       </div>
 
@@ -583,7 +598,7 @@ const Page = () => {
                   {/* Card Footer */}
                   <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
                     <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                      <span>View Profile</span>
+                      <span>{t("users.viewProfile", "View Profile")}</span>
                       <svg
                         className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                         fill="none"

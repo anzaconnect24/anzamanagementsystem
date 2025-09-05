@@ -18,8 +18,10 @@ import Loader from "@/components/common/Loader";
 import toast from "react-hot-toast";
 import moment from "moment";
 import Image from "next/image";
+import { useTranslation } from "@/hooks/useTranslation";
 
 const Page = ({ params }) => {
+  const { t } = useTranslation();
   const { uuid } = params;
   const [modules, setModules] = useState([]);
   const { userDetails, hideSidebar } = useContext(UserContext);
@@ -80,12 +82,19 @@ const Page = ({ params }) => {
       <Breadcrumb
         prevLink={`/modules/${encodeURIComponent(module?.course || "")}`}
         pageName={module.title}
-        prevPage={"Modules"}
+        prevPage={t("learnAndGrow.modules", "Modules")}
       />
       {/* Progress Bar */}
       <div className="mt-4">
         <p className="text-sm text-gray-600 mb-1 text-green-700">
-          Progress: {progress}/{modules.length} slides completed
+          {t(
+            "learnAndGrow.progressSlides",
+            "Progress: {{current}}/{{total}} slides completed",
+            {
+              current: progress,
+              total: modules.length,
+            }
+          )}
         </p>
         <div className="w-full bg-black/10 rounded-full h-4">
           <div
@@ -124,7 +133,12 @@ const Page = ({ params }) => {
                           setCurrentSlide(index);
                         }
                       } else {
-                        toast.error("You need to read in order");
+                        toast.error(
+                          t(
+                            "learnAndGrow.readInOrder",
+                            "You need to read in order"
+                          )
+                        );
                       }
                     }
                   }}
@@ -159,7 +173,7 @@ const Page = ({ params }) => {
                 href={`/slides/add/?uuid=${uuid}`}
                 className="text-white bg-primary py-2 px-3 cursor-pointer rounded"
               >
-                Add Slide
+                {t("learnAndGrow.addSlide", "Add Slide")}
               </Link>
             )}
           </div>
@@ -209,13 +223,18 @@ const Page = ({ params }) => {
                   markRead({
                     slide_uuid: modules[currentSlide].uuid,
                   }).then((res) => {
-                    toast.success("Completed successfully");
+                    toast.success(
+                      t(
+                        "learnAndGrow.completedSuccessfully",
+                        "Completed successfully"
+                      )
+                    );
                     loadData();
                   });
                 }}
                 className="bg-green-500 py-2 px-4 cursor-pointer text-white rounded-lg"
               >
-                Complete Module
+                {t("learnAndGrow.completeModule", "Complete Module")}
               </button>
             ) : (
               <button
@@ -239,18 +258,23 @@ const Page = ({ params }) => {
                     : "bg-primary text-white cursor-pointer"
                 }`}
               >
-                Next
+                {t("common.next", "Next")}
               </button>
             )}
           </div>
         </div>
         <div className="w-3/12 h-[70vh] flex flex-col justify-between space-y-3 px-4 pt-5">
           <div className="px-0  ">
-            <h1 className="font-bold ">Comments</h1>
+            <h1 className="font-bold ">
+              {t("learnAndGrow.comments", "Comments")}
+            </h1>
             <div className="flex-1 overflow-y-auto text-sm text-black/50 ">
               {comments.length == 0 && (
                 <div className="pt-4">
-                  No Comments, Be the first to share your thoughts.
+                  {t(
+                    "learnAndGrow.noComments",
+                    "No Comments, Be the first to share your thoughts."
+                  )}
                 </div>
               )}
               {comments.map((comment) => (
@@ -282,7 +306,7 @@ const Page = ({ params }) => {
             <textarea
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
-              placeholder="Add a comment..."
+              placeholder={t("learnAndGrow.addComment", "Add a comment...")}
               className="w-full rounded border-stroke "
               rows="2"
             />
@@ -290,7 +314,7 @@ const Page = ({ params }) => {
               onClick={handleCommentSubmit}
               className=" bg-primary text-white py-2 px-4 rounded hover:bg-primary/80"
             >
-              Post Comment
+              {t("learnAndGrow.postComment", "Post Comment")}
             </button>
           </div>
         </div>

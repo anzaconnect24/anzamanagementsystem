@@ -6,9 +6,11 @@ import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData";
 import Image from "next/image";
 import { UserContext } from "../../layout";
+import { useTranslation } from "../../../locales";
 import debounce from "lodash/debounce";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [allData, setAllData] = useState([]); // Store all data
   const [displayedUsers, setDisplayedUsers] = useState([]); // Data to display
   const [loading, setLoading] = useState(true);
@@ -32,7 +34,7 @@ const Page = () => {
   // Filter and sort options
   const filterOptions = {
     sector: {
-      label: "Sector",
+      label: t("users.sector", "Sector"),
       options: [
         "All Sectors",
         "Technology",
@@ -45,7 +47,7 @@ const Page = () => {
       ],
     },
     expertise: {
-      label: "Expertise",
+      label: t("users.expertise", "Expertise"),
       options: [
         "All Expertise",
         "Business Strategy",
@@ -57,25 +59,26 @@ const Page = () => {
       ],
     },
     year: {
-      label: "Year",
+      label: t("users.year", "Year"),
       options: ["All Years", "2024", "2023", "2022", "2021", "2020"],
     },
   };
 
   const sortOptions = [
-    { value: "name", label: "Name" },
-    { value: "sector", label: "Sector" },
-    { value: "expertise", label: "Expertise" },
-    { value: "date", label: "Joined Date" },
+    { value: "name", label: t("users.name", "Name") },
+    { value: "sector", label: t("users.sector", "Sector") },
+    { value: "expertise", label: t("users.expertise", "Expertise") },
+    { value: "date", label: t("users.joinedDate", "Joined Date") },
   ];
 
   // Helper functions
-  const getMentorName = (item) => item?.name || "Unnamed Mentor";
+  const getMentorName = (item) =>
+    item?.name || t("users.unnamedMentor", "Unnamed Mentor");
 
   const getMentorSector = (item) =>
     item?.MentorProfile?.BusinessSector?.name ||
     Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") ||
-    "No Sector";
+    t("business.noSector", "No Sector");
 
   const matchesSearchKeyword = (item, searchTerm) => {
     if (!searchTerm.trim()) return true;
@@ -83,74 +86,83 @@ const Page = () => {
     return (
       getMentorName(item).toLowerCase().includes(searchLower) ||
       (item?.email || "").toLowerCase().includes(searchLower) ||
-      (item?.MentorProfile?.expertise || "").toLowerCase().includes(searchLower) ||
+      (item?.MentorProfile?.expertise || "")
+        .toLowerCase()
+        .includes(searchLower) ||
       getMentorSector(item).toLowerCase().includes(searchLower) ||
       (item?.role || "").toLowerCase().includes(searchLower)
     );
   };
 
   // Apply filters and sorting to data
-  const getFilteredAndSortedData = useCallback((data, searchKeyword, currentFilters, currentSortConfig) => {
-    let filtered = [...data];
+  const getFilteredAndSortedData = useCallback(
+    (data, searchKeyword, currentFilters, currentSortConfig) => {
+      let filtered = [...data];
 
-    // Apply keyword filter
-    if (searchKeyword.trim()) {
-      filtered = filtered.filter((item) => matchesSearchKeyword(item, searchKeyword));
-    }
-
-    // Apply sector filter
-    if (currentFilters.sector !== "All Sectors") {
-      filtered = filtered.filter((item) =>
-        getMentorSector(item).includes(currentFilters.sector)
-      );
-    }
-
-    // Apply expertise filter
-    if (currentFilters.expertise !== "All Expertise") {
-      filtered = filtered.filter((item) =>
-        (item?.MentorProfile?.expertise || "")
-          .toLowerCase()
-          .includes(currentFilters.expertise.toLowerCase())
-      );
-    }
-
-    // Apply year filter
-    if (currentFilters.year !== "All Years") {
-      filtered = filtered.filter((item) => {
-        const createdYear = item?.createdAt
-          ? new Date(item.createdAt).getFullYear().toString()
-          : "";
-        return createdYear === currentFilters.year;
-      });
-    }
-
-    // Apply sorting
-    filtered.sort((a, b) => {
-      const direction = currentSortConfig.direction === "asc" ? 1 : -1;
-      switch (currentSortConfig.key) {
-        case "name":
-          return direction * getMentorName(a).localeCompare(getMentorName(b));
-        case "sector":
-          return direction * getMentorSector(a).localeCompare(getMentorSector(b));
-        case "expertise":
-          return (
-            direction *
-            ((a?.MentorProfile?.expertise || "").localeCompare(
-              b?.MentorProfile?.expertise || ""
-            ))
-          );
-        case "date":
-          return (
-            direction *
-            (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
-          );
-        default:
-          return 0;
+      // Apply keyword filter
+      if (searchKeyword.trim()) {
+        filtered = filtered.filter((item) =>
+          matchesSearchKeyword(item, searchKeyword)
+        );
       }
-    });
 
-    return filtered;
-  }, []);
+      // Apply sector filter
+      if (currentFilters.sector !== "All Sectors") {
+        filtered = filtered.filter((item) =>
+          getMentorSector(item).includes(currentFilters.sector)
+        );
+      }
+
+      // Apply expertise filter
+      if (currentFilters.expertise !== "All Expertise") {
+        filtered = filtered.filter((item) =>
+          (item?.MentorProfile?.expertise || "")
+            .toLowerCase()
+            .includes(currentFilters.expertise.toLowerCase())
+        );
+      }
+
+      // Apply year filter
+      if (currentFilters.year !== "All Years") {
+        filtered = filtered.filter((item) => {
+          const createdYear = item?.createdAt
+            ? new Date(item.createdAt).getFullYear().toString()
+            : "";
+          return createdYear === currentFilters.year;
+        });
+      }
+
+      // Apply sorting
+      filtered.sort((a, b) => {
+        const direction = currentSortConfig.direction === "asc" ? 1 : -1;
+        switch (currentSortConfig.key) {
+          case "name":
+            return direction * getMentorName(a).localeCompare(getMentorName(b));
+          case "sector":
+            return (
+              direction * getMentorSector(a).localeCompare(getMentorSector(b))
+            );
+          case "expertise":
+            return (
+              direction *
+              (a?.MentorProfile?.expertise || "").localeCompare(
+                b?.MentorProfile?.expertise || ""
+              )
+            );
+          case "date":
+            return (
+              direction *
+              (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
+            );
+          default:
+            return 0;
+        }
+      });
+
+      return filtered;
+    },
+    []
+  );
 
   // Fetch all data initially
   useEffect(() => {
@@ -180,28 +192,41 @@ const Page = () => {
     }
 
     setLoading(true);
-    
+
     // Get filtered and sorted data
-    const filteredData = getFilteredAndSortedData(allData, keyword, filters, sortConfig);
-    
+    const filteredData = getFilteredAndSortedData(
+      allData,
+      keyword,
+      filters,
+      sortConfig
+    );
+
     // Calculate pagination
     const totalFilteredPages = Math.ceil(filteredData.length / limit);
     setTotalPages(totalFilteredPages);
-    
+
     // Ensure current page is valid
     if (currentPage > totalFilteredPages && totalFilteredPages > 0) {
       setCurrentPage(1);
       return;
     }
-    
+
     // Get current page data
     const startIndex = (currentPage - 1) * limit;
     const endIndex = startIndex + limit;
     const pageData = filteredData.slice(startIndex, endIndex);
-    
+
     setDisplayedUsers(pageData);
     setLoading(false);
-  }, [allData, keyword, filters, sortConfig, currentPage, initialLoading, getFilteredAndSortedData]);
+  }, [
+    allData,
+    keyword,
+    filters,
+    sortConfig,
+    currentPage,
+    initialLoading,
+    getFilteredAndSortedData,
+  ]);
 
   // Handle dropdown toggle
   const toggleDropdown = (name) => {
@@ -258,8 +283,16 @@ const Page = () => {
   // Get total count of filtered results
   const totalFilteredCount = useMemo(() => {
     if (!isFiltering) return allData.length;
-    return getFilteredAndSortedData(allData, keyword, filters, sortConfig).length;
-  }, [allData, keyword, filters, sortConfig, isFiltering, getFilteredAndSortedData]);
+    return getFilteredAndSortedData(allData, keyword, filters, sortConfig)
+      .length;
+  }, [
+    allData,
+    keyword,
+    filters,
+    sortConfig,
+    isFiltering,
+    getFilteredAndSortedData,
+  ]);
 
   if (initialLoading) {
     return <Loader />;
@@ -267,20 +300,27 @@ const Page = () => {
 
   return (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">Welcome {userDetails?.name || "User"}!</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {t("users.welcome", "Welcome")}{" "}
+        {userDetails?.name || t("users.user", "User")}!
+      </h1>
 
       {/* Search and Filter Bar */}
       <div className="mb-8">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <span className="text-xl text-gray-600 dark:text-gray-300">
-              {totalFilteredCount} mentors {isFiltering && "(filtered)"}
+              {totalFilteredCount} {t("users.mentors", "mentors")}{" "}
+              {isFiltering && `(${t("users.filtered", "filtered")})`}
             </span>
           </div>
           <div className="relative">
             <input
               type="text"
-              placeholder="Search mentors by name, email, expertise..."
+              placeholder={t(
+                "users.searchMentors",
+                "Search mentors by name, email, expertise..."
+              )}
               value={keyword}
               onChange={handleSearchChange}
               className="w-64 px-4 py-2 rounded-md border border-white bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
@@ -362,7 +402,8 @@ const Page = () => {
               className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-600 flex items-center gap-2 hover:border-primary transition-colors"
             >
               <span>
-                Sort: {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
+                {t("users.sortBy", "Sort By")}:{" "}
+                {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
               </span>
               <svg
                 className={`w-4 h-4 transition-transform ${
@@ -408,13 +449,14 @@ const Page = () => {
               onClick={clearAllFilters}
               className="px-4 py-2 rounded-md border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
             >
-              Clear All
+              {t("filters.clearAll", "Clear All")}
             </button>
           )}
         </div>
 
         {/* Active Filters */}
-        {(Object.values(filters).some((v) => !v.startsWith("All")) || keyword) && (
+        {(Object.values(filters).some((v) => !v.startsWith("All")) ||
+          keyword) && (
           <div className="mt-4 flex flex-wrap gap-2">
             {Object.entries(filters).map(([key, value]) =>
               !value.startsWith("All") ? (
@@ -424,7 +466,9 @@ const Page = () => {
                 >
                   {value}
                   <button
-                    onClick={() => handleFilterChange(key, filterOptions[key].options[0])}
+                    onClick={() =>
+                      handleFilterChange(key, filterOptions[key].options[0])
+                    }
                     className="hover:text-primary-dark"
                   >
                     ×
@@ -434,8 +478,11 @@ const Page = () => {
             )}
             {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                Search: {keyword}
-                <button onClick={clearSearch} className="hover:text-primary-dark">
+                {t("filters.search", "Search")}: {keyword}
+                <button
+                  onClick={clearSearch}
+                  className="hover:text-primary-dark"
+                >
                   ×
                 </button>
               </span>
@@ -488,10 +535,12 @@ const Page = () => {
                   <div className="absolute bottom-4 left-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
                       {item?.MentorProfile?.expertise ||
-                        Object.values(item?.MentorProfile?.areasOfExperties || {})
+                        Object.values(
+                          item?.MentorProfile?.areasOfExperties || {}
+                        )
                           .slice(0, 2)
                           .join(", ") ||
-                        "General Expertise"}
+                        t("users.generalExpertise", "General Expertise")}
                     </span>
                   </div>
                   <div className="absolute top-3 right-3">
@@ -504,7 +553,8 @@ const Page = () => {
                       {getMentorName(item)}
                     </h2>
                     <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                      {item?.email || "No email provided"}
+                      {item?.email ||
+                        t("users.noEmailProvided", "No email provided")}
                     </p>
                   </div>
                   <div className="space-y-3 pt-2">
@@ -561,10 +611,10 @@ const Page = () => {
                         />
                       </svg>
                       <span>
-                        Joined{" "}
+                        {t("users.joined", "Joined")}{" "}
                         {item?.createdAt
                           ? new Date(item.createdAt).getFullYear()
-                          : "N/A"}
+                          : t("common.na", "N/A")}
                       </span>
                     </div>
                   </div>
@@ -607,7 +657,7 @@ const Page = () => {
                 </div>
                 <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
                   <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                    <span>View Details</span>
+                    <span>{t("users.viewDetails", "View Details")}</span>
                     <svg
                       className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                       fill="none"
@@ -633,7 +683,16 @@ const Page = () => {
       {totalPages > 1 && (
         <div className="flex items-center justify-between p-6 border-t border-stroke dark:border-strokedark mt-6">
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            Showing {((currentPage - 1) * limit) + 1} - {Math.min(currentPage * limit, totalFilteredCount)} of {totalFilteredCount} mentors
+            {t(
+              "users.showingRange",
+              "Showing {{start}} - {{end}} of {{total}} {{type}}",
+              {
+                start: (currentPage - 1) * limit + 1,
+                end: Math.min(currentPage * limit, totalFilteredCount),
+                total: totalFilteredCount,
+                type: t("users.mentors", "mentors"),
+              }
+            )}
           </p>
           <div className="flex gap-2">
             <button
@@ -645,9 +704,9 @@ const Page = () => {
                   : "bg-primary text-white hover:bg-primary/90"
               }`}
             >
-              Previous
+              {t("pagination.previous", "Previous")}
             </button>
-            
+
             {/* Page numbers */}
             <div className="flex gap-1">
               {[...Array(Math.min(5, totalPages))].map((_, idx) => {
@@ -661,7 +720,7 @@ const Page = () => {
                 } else {
                   pageNum = currentPage - 2 + idx;
                 }
-                
+
                 return (
                   <button
                     key={pageNum}
@@ -677,9 +736,11 @@ const Page = () => {
                 );
               })}
             </div>
-            
+
             <button
-              onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+              }
               disabled={currentPage === totalPages}
               className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
                 currentPage === totalPages
@@ -687,7 +748,7 @@ const Page = () => {
                   : "bg-primary text-white hover:bg-primary/90"
               }`}
             >
-              Next
+              {t("pagination.next", "Next")}
             </button>
           </div>
         </div>

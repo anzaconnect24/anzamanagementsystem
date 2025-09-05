@@ -8,9 +8,11 @@ import Loader from "@/components/common/Loader";
 import NoData from "@/app/component/noData"
 import { UserContext } from "../../layout";
 import { getPendingInvestmentRequest } from "@/app/controllers/investment_requests_controller";
+import { useTranslation } from "../../../locales";
 
 const Page = () => {
   const [requests, setRequests] = useState([]);
+  const { t } = useTranslation();
   const [ShowOptions, setShowOptions] = useState(false);
   const {userDetails} = useContext(UserContext)
   const [loading, setloading] = useState(true);
@@ -25,26 +27,26 @@ const Page = () => {
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
       <div className="py-6 px-4 md:px-6 xl:px-7.5">
         <h4 className="text-xl font-semibold text-black dark:text-white">
-          Requests in progress
+          {t("dashboard.requestsInProgress", "Requests in progress")}
         </h4>
       </div>
     {
       requests.length<1? <NoData/>:<div>
 <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
         <div className="col-span-1 flex items-center">
-          <p className="font-medium">Sent </p>
+          <p className="font-medium">{t("users.sent", "Sent")} </p>
         </div>
         <div className="col-span-2 hidden items-center sm:flex">
-          <p className="font-medium">Business name</p>
+          <p className="font-medium">{t("business.businessName", "Business name")}</p>
         </div>
         <div className="col-span-2 flex items-center">
-          <p className="font-medium">Phone</p>
+          <p className="font-medium">{t("users.phone", "Phone")}</p>
         </div>
         <div className="col-span-2 flex items-center">
-          <p className="font-medium">Email</p>
+          <p className="font-medium">{t("users.email", "Email")}</p>
         </div>
         <div className="col-span-1 flex items-center">
-          <p className="font-medium">More</p>
+          <p className="font-medium">{t("common.more", "More")}</p>
         </div>
       </div>
 
@@ -79,11 +81,11 @@ const Page = () => {
                   setSelectedBusiness(null)
                   }
                 }} className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative">
-                   Options
+                   {t("common.options", "Options")}
                    <div className={`absolute z-9 transition-all ${ShowOptions == item.uuid?" scale-100 ":" scale-0 "} -translate-x-4 bg-white shadow-lg   left-0 w-40 space-y-2 rounded-lg py-2 px-4 top-10`}>
                     {[
-                      {title:"View request",path:`/viewInvestmentRequest/${item.uuid}`},
-                      {title:"Assign reviewers",path:`/assignInvestmentRequestReviewers/${item.uuid}`}
+                      {title:t("investment.viewRequest", "View request"),path:`/viewInvestmentRequest/${item.uuid}`},
+                      {title:t("investment.assignReviewers", "Assign reviewers"),path:`/assignInvestmentRequestReviewers/${item.uuid}`}
                     ].map((item)=>{
                       return <div key={item.title}> 
                       <Link  className="text-black text-base hover:text-primary text-center " href={item.path}>{item.title}</Link>
