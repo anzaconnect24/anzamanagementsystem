@@ -24,7 +24,10 @@ const Page = () => {
     ticketSize: "All Ticket Sizes",
     structure: "All Structures",
   });
-  const [sortConfig, setSortConfig] = useState({ key: "name", direction: "asc" });
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "asc",
+  });
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(12);
   const [count, setCount] = useState(0);
@@ -123,7 +126,8 @@ const Page = () => {
       if (!response || !response.data) {
         throw new Error("Failed to fetch investors data");
       }
-      const isFiltering = Object.values(filters).some((v) => !v.startsWith("All")) || keyword;
+      const isFiltering =
+        Object.values(filters).some((v) => !v.startsWith("All")) || keyword;
       let processedData = [...response.data];
 
       // Apply client-side filters
@@ -184,9 +188,9 @@ const Page = () => {
         }
       });
 
-  setUsers(processedData);
-  setCount(response.count || 0);
-  setTotalPages(isFiltering ? 1 : response.totalPages || 1);
+      setUsers(processedData);
+      setCount(response.count || 0);
+      setTotalPages(isFiltering ? 1 : response.totalPages || 1);
     } catch (err) {
       setError(err.message || "An error occurred while fetching data");
       console.error("Error fetching investors:", err);
@@ -229,7 +233,7 @@ const Page = () => {
       [type]: value,
     }));
     // Reset to first page when filter changes
-    setCurrentPage(1);
+    setPage(1);
     setOpenDropdown(null);
   };
 
@@ -246,7 +250,7 @@ const Page = () => {
   // Handle search input
   const handleSearch = (e) => {
     setKeyword(e.target.value);
-    setCurrentPage(1); // Reset to first page on search
+    setPage(1); // Reset to first page on search
   };
 
   // Handle investor card click
@@ -287,7 +291,9 @@ const Page = () => {
     <Loader />
   ) : (
     <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
-  <h1 className="text-2xl font-bold mb-4">{t("users.welcome", "Welcome")} {userDetails.name}!</h1>
+      <h1 className="text-2xl font-bold mb-4">
+        {t("users.welcome", "Welcome")} {userDetails.name}!
+      </h1>
 
       {/* Search and Filter Bar */}
       <div className="mb-8">
@@ -367,7 +373,8 @@ const Page = () => {
               className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
             >
               <span>
-                {t("users.sortBy", "Sort By")}: {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
+                {t("users.sortBy", "Sort By")}:{" "}
+                {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
               </span>
               <svg
                 className={`w-4 h-4 transition-transform ${
@@ -439,7 +446,7 @@ const Page = () => {
             )}
             {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                {t("filters.search", "Search")}: {keyword}
+                {t("common.search", "Search")}: {keyword}
                 <button
                   onClick={() => setKeyword("")}
                   className="hover:text-primary-dark"
@@ -483,7 +490,8 @@ const Page = () => {
                     {/* Sector Badge */}
                     <div className="absolute bottom-4 left-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                        {investor?.InvestorProfile?.BusinessSector?.name || t("business.noSector", "No Sector")}
+                        {investor?.InvestorProfile?.BusinessSector?.name ||
+                          t("users.noSector", "No Sector")}
                       </span>
                     </div>
                   </div>
@@ -492,10 +500,12 @@ const Page = () => {
                   <div className="p-6 flex-grow space-y-4">
                     <div className="space-y-2">
                       <h2 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-                        {investor.name || t("users.unnamedInvestor", "Unnamed Investor")}
+                        {investor.name ||
+                          t("users.unnamedInvestor", "Unnamed Investor")}
                       </h2>
                       <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                        {investor.email || t("users.noEmailProvided", "No email provided")}
+                        {investor.email ||
+                          t("users.noEmailProvided", "No email provided")}
                       </p>
                     </div>
 
@@ -517,7 +527,11 @@ const Page = () => {
                           />
                         </svg>
                         <span className="line-clamp-1">
-                          {investor?.InvestorProfile?.investmentSize || t("users.ticketSizeNotSpecified", "Ticket size not specified")}
+                          {investor?.InvestorProfile?.investmentSize ||
+                            t(
+                              "users.ticketSizeNotSpecified",
+                              "Ticket size not specified"
+                            )}
                         </span>
                       </div>
 
@@ -537,7 +551,13 @@ const Page = () => {
                           />
                         </svg>
                         <span className="line-clamp-1">
-                          {Object.values(investor?.InvestorProfile?.investmentType || {}).join(", ") || t("users.structureNotSpecified", "Structure not specified")}
+                          {Object.values(
+                            investor?.InvestorProfile?.investmentType || {}
+                          ).join(", ") ||
+                            t(
+                              "users.structureNotSpecified",
+                              "Structure not specified"
+                            )}
                         </span>
                       </div>
 

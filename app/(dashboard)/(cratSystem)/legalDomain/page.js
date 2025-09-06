@@ -2,15 +2,31 @@
 import { useState, useEffect, useContext } from "react";
 import DropdownTwo from "@/components/Dropdowns/DropdownTwo";
 import ReactIcons from "@/components/icons/reactIcons";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import Modal from "@/components/Model";
 import Modal2 from "@/components/Model2";
-import { getLegalData, createLegalData, updateLegalData, attachDocument, deleteAttachment,initialDataTemplate } from "@/app/controllers/crat_legal_controller"; // Import updated API functions
-const tableHeaders = ["Sub Domain", "Question", "Rating", "Score", "Attachment", "Actions"];
+import {
+  getLegalData,
+  createLegalData,
+  updateLegalData,
+  attachDocument,
+  deleteAttachment,
+  initialDataTemplate,
+} from "@/app/controllers/crat_legal_controller"; // Import updated API functions
+const tableHeaders = [
+  "Sub Domain",
+  "Question",
+  "Rating",
+  "Score",
+  "Attachment",
+  "Actions",
+];
 import { UserContext } from "../../../(dashboard)/layout";
+import { useTranslation } from "@/app/locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(initialDataTemplate);
   const [originalData, setOriginalData] = useState(initialDataTemplate);
@@ -20,32 +36,39 @@ const Page = () => {
   const [deletemodalOpen, deleteModalOpen] = useState(false);
   const [deletemodalMessage, deleteModalMessage] = useState("");
   const [deleteCache, setDeleteCache] = useState([]);
-  const { userDetails, setUserDetails } = useContext(UserContext)
-
+  const { userDetails, setUserDetails } = useContext(UserContext);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const responseData = await getLegalData();
-        if (responseData == null|| responseData.length == 0) {
+        if (responseData == null || responseData.length == 0) {
           await createLegalData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
         } else {
           const updatedData = { ...initialDataTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
-              const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
+              const fetchedItem = responseData.find(
+                (dataItem) => dataItem.subDomain === item.subDomain
+              );
               return fetchedItem
-                ? { ...item, rating: fetchedItem.rating, score: fetchedItem.score, userId: fetchedItem.userId, attachment: fetchedItem.attachmen, comments: fetchedItem.comments }
+                ? {
+                    ...item,
+                    rating: fetchedItem.rating,
+                    score: fetchedItem.score,
+                    userId: fetchedItem.userId,
+                    attachment: fetchedItem.attachment,
+                    comments: fetchedItem.comments,
+                  }
                 : item;
-                
             });
           });
           setData(updatedData);
           setOriginalData(updatedData); // Set original data
         }
       } catch (error) {
-        console.log('Error fetching data:', error);
+        console.log("Error fetching data:", error);
       }
     };
 
@@ -57,7 +80,12 @@ const Page = () => {
     const newData = { ...data };
     const score = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
     if (newRating === "Yes" && !newData[section][index].attachment) {
-      setModalMessage("Please upload an attachment first.");
+      setModalMessage(
+        t(
+          "crat.pleaseUploadAttachmentFirst",
+          "Please upload an attachment first."
+        )
+      );
       setModalOpen(true);
     } else {
       newData[section][index].rating = newRating;
@@ -65,96 +93,104 @@ const Page = () => {
       setData(newData);
       setChangesMade(true);
     }
-
   };
- 
+
   const submitChanges = async () => {
     try {
-        await updateLegalData(data);
+      await updateLegalData(data);
 
-        // Update initialDataTemplate here
-        Object.keys(data).forEach(section => {
-            initialDataTemplate[section] = data[section].map(item => ({
-                subDomain: item.subDomain,
-                rating: item.rating,
-                score: item.score,
-                userId: item.userId,
-                attachment: item.attachment,
-                comments: item.comments,
-                question: item.question, 
-                description: item.description 
-            }));
-        });
+      // Update initialDataTemplate here
+      Object.keys(data).forEach((section) => {
+        initialDataTemplate[section] = data[section].map((item) => ({
+          subDomain: item.subDomain,
+          rating: item.rating,
+          score: item.score,
+          userId: item.userId,
+          attachment: item.attachment,
+          comments: item.comments,
+          question: item.question,
+          description: item.description,
+        }));
+      });
 
-        setOriginalData(data); // Update original data after successful submission
-        setChangesMade(false);
+      setOriginalData(data); // Update original data after successful submission
+      setChangesMade(false);
 
-        toast.success("Changes successfully submitted");
-        console.log("Changes successfully submitted");
+      toast.success(
+        t("crat.changesSubmittedSuccess", "Changes successfully submitted")
+      );
+      console.log("Changes successfully submitted");
     } catch (error) {
-        toast.error("Error submitting changes");
-        console.error("Error submitting changes:", error);
+      toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
+      console.error("Error submitting changes:", error);
     }
-};
+  };
 
-  
   const handleAddFile = async (domain, file, userId) => {
     if (!file) return;
 
     // Extract the file extension
-    const fileExtension = file.name.split('.').pop();
-  
+    const fileExtension = file.name.split(".").pop();
+
     // Append timestamp to the filename
     const timestamp = Date.now();
     const uniqueFileName = `${domain}_${timestamp}.${fileExtension}`;
-  
+
     // Create a new file with the updated name
     const updatedFile = new File([file], uniqueFileName, { type: file.type });
-  
+
     const fileData = {
       file: updatedFile, // Use the updated file
       subDomain: domain,
-      userId: userId
+      userId: userId,
     };
-  
+
     try {
       await attachDocument(fileData);
-      
+
       // Fetch updated data
       const responseData = await getLegalData();
       const updatedData = { ...initialDataTemplate };
-  
+
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
-          const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
+          const fetchedItem = responseData.find(
+            (dataItem) => dataItem.subDomain === item.subDomain
+          );
           return fetchedItem
-            ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment, comments: fetchedItem.comments }
+            ? {
+                ...item,
+                rating: fetchedItem.rating,
+                userId: fetchedItem.userId,
+                score: fetchedItem.score,
+                attachment: fetchedItem.attachment,
+                comments: fetchedItem.comments,
+              }
             : item;
         });
       });
 
-      toast.success('Attachment Uploaded');
+      toast.success(t("crat.attachmentUploaded", "Attachment uploaded"));
       setData(updatedData);
       // setChangesMade(true);
     } catch (error) {
-      toast.error("Error attaching file");
+      toast.error(t("crat.errorAttachingFile", "Error attaching file"));
       console.error("Error attaching file:", error);
     }
   };
-  
 
-    
   const openDeleteDialog = (domain, id, attachment, section, index) => {
     // Open the delete modal with the confirmation message
     deleteModalOpen(true);
-    deleteModalMessage('Are you sure you want to delete?');
+    deleteModalMessage(
+      t("crat.confirmDelete", "Are you sure you want to delete?")
+    );
     setDeleteCache([domain, id, attachment, section, index]);
-};
+  };
 
-
-const handleDeleteFile = async () => {
-  const [domain, id, attachment, section, index] = deleteCache;
-  try {
+  const handleDeleteFile = async () => {
+    const [domain, id, attachment, section, index] = deleteCache;
+    try {
       // Proceed with deletion directly
       await deleteAttachment(domain, id, attachment);
       handleRatingChange(section, index, "No");
@@ -165,30 +201,38 @@ const handleDeleteFile = async () => {
       const updatedData = { ...initialDataTemplate };
 
       Object.keys(updatedData).forEach((section) => {
-          updatedData[section] = updatedData[section].map((item) => {
-              const fetchedItem = responseData.find((dataItem) => dataItem.subDomain === item.subDomain);
-              return fetchedItem
-                  ? { ...item, rating: fetchedItem.rating, userId: fetchedItem.userId, score: fetchedItem.score, attachment: fetchedItem.attachment }
-                  : item;
-          });
+        updatedData[section] = updatedData[section].map((item) => {
+          const fetchedItem = responseData.find(
+            (dataItem) => dataItem.subDomain === item.subDomain
+          );
+          return fetchedItem
+            ? {
+                ...item,
+                rating: fetchedItem.rating,
+                userId: fetchedItem.userId,
+                score: fetchedItem.score,
+                attachment: fetchedItem.attachment,
+              }
+            : item;
+        });
       });
 
-      toast.success('Deleted Successfully');
+      toast.success(t("crat.deletedSuccessfully", "Deleted successfully"));
       setData(updatedData);
       deleteModalOpen(false); // Close modal
-  } catch (error) {
-      toast.error("Error deleting file");
+    } catch (error) {
+      toast.error(t("crat.errorDeletingFile", "Error deleting file"));
       console.error("Error deleting file:", error);
-  }
-};
+    }
+  };
 
-const handleDeleteCancel = () => {
-  // Close the delete modal without performing any action
-  deleteModalOpen(false); 
-};
+  const handleDeleteCancel = () => {
+    // Close the delete modal without performing any action
+    deleteModalOpen(false);
+  };
 
   const handleViewFile = (attachment) => {
-    window.open(`${attachment}`, '_blank');
+    window.open(`${attachment}`, "_blank");
 
     // const fileName = data[domain][index].attachment;
     // if (fileName) {
@@ -198,13 +242,15 @@ const handleDeleteCancel = () => {
   };
 
   const handleEdit = (domain, index, comment) => {
-    console.log('Editing item:', domain, index, comment);
-    
+    console.log("Editing item:", domain, index, comment);
+
     const newData = [...data[domain]];
     newData[index].comments = comment;
-    setData({...data, [domain]: newData });
+    setData({ ...data, [domain]: newData });
     submitChanges();
-    toast.success('Comment updated successfully');
+    toast.success(
+      t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+    );
   };
 
   const calculateTotalScore = (domain) => {
@@ -212,7 +258,9 @@ const handleDeleteCancel = () => {
   };
 
   const calculateOverallTotalScore = () => {
-    return Object.values(data).flat().reduce((acc, item) => acc + (item.score || 0), 0);
+    return Object.values(data)
+      .flat()
+      .reduce((acc, item) => acc + (item.score || 0), 0);
   };
 
   const calculateOverallMaxScore = () => {
@@ -221,7 +269,10 @@ const handleDeleteCancel = () => {
 
   const renderTableRows = (domain) => {
     return data[domain].map((item, index) => (
-      <div className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark" key={index}>
+      <div
+        className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark"
+        key={index}
+      >
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
         </div>
@@ -238,12 +289,22 @@ const handleDeleteCancel = () => {
           <p className="text-sm text-black dark:text-white">{item.score}</p>
         </div>
         <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.description}</p>
+          <p className="text-sm text-black dark:text-white">
+            {item.description}
+          </p>
         </div>
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
             onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
-            onDelete={() => openDeleteDialog(item.subDomain, item.userId, item.attachment, domain, index)}
+            onDelete={() =>
+              openDeleteDialog(
+                item.subDomain,
+                item.userId,
+                item.attachment,
+                domain,
+                index
+              )
+            }
             onView={() => handleViewFile(item.attachment)}
             attachment={item.attachment}
             onEdit={(comment) => handleEdit(domain, index, comment)}
@@ -253,15 +314,23 @@ const handleDeleteCancel = () => {
       </div>
     ));
   };
-  
 
   const renderSection = (domain, title) => (
     <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
       <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-        <h4 className="text-xl font-semibold text-black dark:text-white">{title}</h4>
+        <h4 className="text-xl font-semibold text-black dark:text-white">
+          {title}
+        </h4>
       </div>
       <div className="grid grid-cols-6 border-b border-stroke py-4 px-4 dark:border-strokedark">
-        {tableHeaders.map((header, index) => (
+        {[
+          t("crat.tableHeaders.subDomain", "Sub Domain"),
+          t("crat.tableHeaders.question", "Question"),
+          t("crat.tableHeaders.rating", "Rating"),
+          t("crat.tableHeaders.score", "Score"),
+          t("crat.tableHeaders.attachment", "Attachment"),
+          t("crat.tableHeaders.actions", "Actions"),
+        ].map((header, index) => (
           <div key={index} className="flex items-center px-2">
             <p className="font-medium text-black dark:text-white">{header}</p>
           </div>
@@ -269,17 +338,19 @@ const handleDeleteCancel = () => {
       </div>
       {renderTableRows(domain)}
       <div className="flex justify-between items-center py-4 px-4 border-t border-stroke dark:border-strokedark">
-        <p className="text-sm font-medium text-black dark:text-white">Total: {calculateTotalScore(domain)}</p>
+        <p className="text-sm font-medium text-black dark:text-white">
+          {t("crat.total", "Total")}: {calculateTotalScore(domain)}
+        </p>
       </div>
     </div>
   );
 
-  return  !loading ? (
+  return !loading ? (
     <div>
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Legal Domain Assessment
+            {t("crat.legal.title", "Legal Domain Assessment")}
           </h4>
           {changesMade && (
             <div className="flex justify-end mt-4">
@@ -287,7 +358,7 @@ const handleDeleteCancel = () => {
                 onClick={submitChanges}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
-                Submit Changes
+                {t("crat.submitChanges", "Submit Changes")}
               </button>
             </div>
           )}
@@ -297,19 +368,51 @@ const handleDeleteCancel = () => {
         {userDetails.publishStatus === "On review" ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
-              On Review
+              {t("report.onReview", "On review")}
             </p>
           </div>
         ) : (
           <>
-            {renderSection("corporateDocumentsCompliance", "1. Corporate Documents & Compliance")}
-            {renderSection("contractsAgreements", "2. Contracts & Agreements")}
-            {renderSection("intellectualProperty", "3. Intellectual Property")}
-            {renderSection("entrepreneurFamily", "4. Entrepreneur & Family")}
-            {renderSection("corporateGovernance", "5. Corporate Governance")}
+            {renderSection(
+              "corporateDocumentsCompliance",
+              t(
+                "crat.legal.sections.corporateDocsCompliance",
+                "1. Corporate Documents & Compliance"
+              )
+            )}
+            {renderSection(
+              "contractsAgreements",
+              t(
+                "crat.legal.sections.contractsAgreements",
+                "2. Contracts & Agreements"
+              )
+            )}
+            {renderSection(
+              "intellectualProperty",
+              t(
+                "crat.legal.sections.intellectualProperty",
+                "3. Intellectual Property"
+              )
+            )}
+            {renderSection(
+              "entrepreneurFamily",
+              t(
+                "crat.legal.sections.entrepreneurFamily",
+                "4. Entrepreneur & Family"
+              )
+            )}
+            {renderSection(
+              "corporateGovernance",
+              t(
+                "crat.legal.sections.corporateGovernance",
+                "5. Corporate Governance"
+              )
+            )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
-                <h4 className="text-xl font-semibold text-black dark:text-white">Total Score</h4>
+                <h4 className="text-xl font-semibold text-black dark:text-white">
+                  {t("crat.totalScore", "Total Score")}
+                </h4>
                 <p className="text-lg font-semibold">
                   {calculateOverallTotalScore()} / {calculateOverallMaxScore()}
                 </p>
@@ -330,15 +433,15 @@ const handleDeleteCancel = () => {
         onDelete={() => handleDeleteFile()}
         onCancel={handleDeleteCancel}
         bgColor="yellow-200"
-        closeButtonText="Cancel"
-        deleteButtonText="Delete"
+        closeButtonText={t("actions.cancel", "Cancel")}
+        deleteButtonText={t("actions.delete", "Delete")}
         closeButtonColor="gray-500"
         deleteButtonColor="blue-500"
       />
     </div>
-  ):(<Loader />);
-  
+  ) : (
+    <Loader />
+  );
 };
 
 export default Page;
-

@@ -81,6 +81,76 @@ export const sw = {
     totalCount: "jumla {{count}}",
     pageOf: "Ukurasa {{current}} kati ya {{total}}",
     notProvided: "Haijatolewa",
+    noDataAvailable: "Hakuna data",
+    noDataImageAlt: "Picha ya hakuna data",
+    message: "Ujumbe",
+    step: "Hatua {{n}}",
+  },
+
+  // Lebo za usajili wa mshauri (Mentor)
+  mentor: {
+    linkedinProfile: "Wasifu wa LinkedIn",
+    linkedinUrlPlaceholder: "Anwani ya URL ya wasifu wako wa LinkedIn",
+    organisationName: "Jina la Shirika/Kampuni",
+    organisationNamePlaceholder: "Jina la shirika lako",
+    currentPositionTitle: "Cheo Nafasi ya Sasa",
+    currentPositionPlaceholder: "Nafasi yako ya sasa",
+    language: "Lugha",
+    languagePlaceholder: "Lugha yako",
+    languageEnglish: "Kiingereza",
+    languageSwahili: "Kiswahili",
+    smeFocus: "Mwelekeo wa SME",
+    locationPlaceholder: "Eneo lako",
+    selectAreasOfExpertise: "Chagua Maeneo Yako ya Utaalamu",
+    expertise: {
+      businessStrategyAndGrowth: "Mkakati wa Biashara & Ukuaji",
+      financeAndFundraising: "Fedha & Uchangishaji",
+      marketingAndBranding: "Masoko & Uwekaji Chapa",
+      operationsAndSupplyChain: "Uendeshaji & Mnyororo wa Ugavi",
+      leadershipAndTeamDevelopment: "Uongozi & Maendeleo ya Timu",
+      legalAndCompliance: "Sheria & Uzingatiaji",
+      impactAndSustainability: "Athari & Uendelevu",
+    },
+    availabilityQuestion: "Ni mara ngapi unaweza kutoa ulezi?",
+    availabilityOptions: {
+      weekly: "Kila wiki",
+      biweekly: "Mara mbili kwa mwezi",
+      monthly: "Kila mwezi",
+      flexible: "Inayobadilika",
+    },
+    hoursPlaceholder: "Masaa",
+    preferredMentoringFormat: "Muundo Unaopendelea wa Ulezi",
+    formats: {
+      oneOnOne: "Vikao vya mtu mmoja mmoja",
+      groupMentorship: "Ulezi wa Kundi",
+      onlineVirtual: "Ulezi Mtandaoni/Virtual",
+      inPerson: "Ulezi Ana kwa Ana",
+    },
+    experienceLabel:
+      "Tuambie Kuhusu Uzoefu Wako na Jinsi Unavyoweza Kusaidia Wajasiriamali",
+    experiencePlaceholder:
+      "Shiriki uzoefu wako na jinsi unavyoweza kusaidia wajasiriamali",
+    selectTop3FocusAreas: "Chagua Maeneo 3 ya Kipaumbele ya Ulezi",
+    focus: {
+      businessStrategyAndPlanning: "Mkakati wa Biashara & Mipango",
+      financialManagement: "Usimamizi wa Fedha",
+      operationsAndSystems: "Uendeshaji & Mifumo",
+      salesAndMarketing: "Mauzo & Masoko",
+      productAndServiceDevelopment: "Maendeleo ya Bidhaa & Huduma",
+      teamAndLeadership: "Timu & Uongozi",
+      legalAndCompliance: "Sheria & Uzingatiaji",
+      impactAndSustainability: "Athari & Uendelevu",
+      technologyAndDigitalTransformation:
+        "Teknolojia & Mabadiliko ya Kidijitali",
+      investorAndPartnershipReadiness: "Uwezo wa Uwekezaji & Ushirikiano",
+      exportReadinessAndMarketAccess:
+        "Uwezo wa Kusafirisha & Upatikanaji wa Masoko",
+      personalDevelopmentAndSoftSkills: "Maendeleo Binafsi & Ujuzi Laini",
+    },
+    focusAreasLimit: "Tafadhali chagua hadi maeneo 3 pekee.",
+    contactConsent: "Ninakubali kuwasiliana kuhusu fursa za ulezi",
+    matchingConsent:
+      "Ninaruhusu taarifa zangu zitumike kwa upangaji/mechano wa ulezi",
   },
 
   // Navigation and Menu
@@ -137,6 +207,7 @@ export const sw = {
     successStories: "Hadithi za Mafanikio",
     chats: "Gumzo",
     conversations: "Mijadala",
+    businesses: "Biashara",
   },
 
   // Authentication
@@ -144,30 +215,170 @@ export const sw = {
     signIn: "Ingia",
     signUp: "Jisajili",
     signOut: "Toka",
+    logout: "Toka",
+    signInToContinue: "Ingia kuendelea",
+    signUpToContinue: "Jisajili kuendelea",
+    provideCredentials: "Weka taarifa zako kuingia",
     forgotPassword: "Umesahau nywila",
     resetPassword: "Weka upya nywila",
     confirmEmail: "Thibitisha barua pepe",
     emailConfirmation: "Uthibitisho wa Barua pepe",
+    email: "Barua pepe",
+    password: "Nywila",
     enterEmail: "Weka barua pepe yako",
     enterPassword: "Weka nywila yako",
+    passwordHint: "Herufi 6+, herufi moja kubwa",
     confirmPassword: "Thibitisha nywila yako",
+    confirmYourPassword: "Thibitisha nywila yako",
+    retypePassword: "Andika tena nywila",
     rememberMe: "Nikumbuke",
     alreadyHaveAccount: "Tayari una akaunti?",
     dontHaveAccount: "Huna akaunti?",
     createAccount: "Unda Akaunti",
     loginToAccount: "Ingia kwenye akaunti",
     passwordMustMatch: "Nywila lazima zifanane",
+    passwordsDoNotMatch: "Nywila hazifanani",
     emailRequired: "Barua pepe inahitajika",
     passwordRequired: "Nywila inahitajika",
+    confirmPasswordRequired: "Thibitisha nywila inahitajika",
     invalidEmail: "Muundo wa barua pepe si sahihi",
     weakPassword: "Nywila ni dhaifu",
     loginSuccessful: "Umeingia kwa mafanikio",
+    loggedInSuccessfully: "Umeingia kwa mafanikio",
     signupSuccessful: "Umejisajili kwa mafanikio",
     logoutSuccessful: "Umetoka kwa mafanikio",
     emailConfirmationLogo: "Nembo ya uthibitisho wa barua pepe",
     emailConfirmationMessage:
       "Tumekutumia kiungo ili kuthibitisha barua pepe yako, fungua kiungo kuthibitisha",
     openEmail: "Fungua Barua pepe",
+    backToSignIn: "Rudi Kuingia",
+    showPassword: "Onyesha Nywila",
+    hidePassword: "Ficha Nywila",
+    // Sign up specific UI texts
+    createAnzaAccount: "Unda Akaunti ya Anza",
+    uploadProfileImage: "Pakia picha ya wasifu",
+    fullName: "Jina kamili",
+    enterFullName: "Weka jina lako kamili",
+    emailAddress: "Barua pepe",
+    phoneNumber: "Namba ya simu",
+    enterPhone: "Weka namba yako ya simu",
+    registeringAs: "Unasajili kama",
+    createPassword: "Unda nywila",
+    reenterPassword: "Rudia nywila",
+    completeRegistration: "Kamilisha Usajili",
+    steps: {
+      profileImage: "Picha ya Wasifu",
+      userInformation: "Taarifa za Mtumiaji",
+      businessInformation: "Taarifa za Biashara",
+    },
+  },
+
+  // Role labels
+  roles: {
+    staff: "Mfanyakazi",
+    entrepreneur: "Mjasiriamali",
+    investor: "Mwekezaji",
+    mentor: "Mshauri",
+  },
+
+  // Ukurasa wa Mentors Hub
+  mentorHub: {
+    unnamedMentor: "Mshauri Asiyejulikana",
+    noSector: "Hakuna Sekta",
+    greeting: "Mpendwa {{name}}!",
+    welcome:
+      "Karibu kwenye Mentors Hub yako. Hapa, unaweza kuona washauri wako wa sasa, kutazama wasifu wao, kupitia mawasiliano ya karibuni, na kupanga vipindi vijavyo.",
+    myMentors: "Washauri Wangu",
+    searchPlaceholder: "Tafuta hapa",
+    generalExpertise: "Utaalamu wa Jumla",
+    noEmailProvided: "Hakuna barua pepe",
+    joined: "Alijiunga",
+    notAvailable: "Haipo",
+  },
+
+  // Ukurasa wa maelezo ya mshauri
+  mentorDetails: {
+    greeting: "Mpendwa {{name}}!",
+    welcome:
+      "Karibu kwenye Mentor Hub yako. Hapa, utapata ripoti kutoka kwa mshauri wako. Unaweza kutazama wasifu wa mshauri wako, kufikia rasilimali alizoshiriki, na kupitia vipindi vyako vya ushauri.",
+    viewProfile: "Tazama Wasifu",
+    resources: "Rasilimali",
+    reports: "Ripoti",
+  },
+
+  // Wasifu wa mshauri (mtazamo wa umma)
+  mentorProfile: {
+    smeFocus: "Umuhimu kwa SME",
+    areasOfExpertise: "Maeneo ya utaalamu",
+    bio: "Wasifu",
+    mentorshipFocus: "Kipaumbele cha Ulezi",
+    languages: "Lugha",
+    availability: "Upatikanaji",
+    noInfo: "Hakuna Taarifa",
+  },
+  messages: {
+    encryptionEnabling:
+      "Inawasha usimbaji fiche wa mwisho kwa mwisho. Tafadhali subiri...",
+    youHaveNewMessage: "Una ujumbe mpya",
+    sendMessage: "Tuma Ujumbe",
+    requestMentorship: "Omba ulezi",
+  },
+
+  // Taarifa za uwekezaji (Investor)
+  investor: {
+    companyName: "Jina la Kampuni",
+    enterCompanyName: "Jina la kampuni yako",
+    enterLocation: "Eneo lako",
+    investmentSize: "Ukubwa wa Uwekezaji",
+    enterInvestmentSize: "Ukubwa wa uwekezaji wako",
+    position: "Nafasi",
+    enterPosition: "Nafasi yako kwenye kampuni",
+    linkedinProfile: "Wasifu wa LinkedIn",
+    linkedinUrlPlaceholder: "Kiungo cha wasifu wa LinkedIn",
+    websiteOptional: "Tovuti (iwapo ipo)",
+    websitePlaceholder: "Tovuti ya kampuni yako",
+    investmentFocus: "Kipaumbele cha Uwekezaji",
+    specifyOtherFocus: "Taja kipaumbele kingine",
+    typicalInvestmentSize: "Ukubwa wa Uwekezaji wa Kawaida",
+    selectInvestmentSize: "Chagua ukubwa wa uwekezaji",
+    investmentTypePreference: "Aina ya Uwekezaji Unaopendelea",
+    specifyOtherType: "Taja aina nyingine",
+    briefBio: "Wasifu Mfupi",
+    briefBioPlaceholder: "Tuambie kuhusu wewe na historia yako ya uwekezaji",
+    notableInvestments: "Uwekezaji Maarufu",
+    notableInvestmentsPlaceholder:
+      "Orodhesha uwekezaji wako maarufu (ikihitajika)",
+    seeking: "Unatafuta Nini",
+    seekingPlaceholder: "Una tafuta nini",
+    mentoringPreference: "Je, unapendelea kutoa ushauri/ulezi?",
+    mentoringYes: "Ndiyo, niko tayari kutoa ushauri kwa startups",
+    mentoringNo: "Hapana, ninavutiwa na uwekezaji tu",
+    uploadPortfolioOptional: "Pakia Portfolio ya Uwekezaji (Hiari)",
+    contactConsent: "Nakubali kuwasiliana kuhusu fursa za uwekezaji",
+    matchingConsent:
+      "Ninakubali taarifa zangu zitumike kwa ulinganifu wa wawekezaji/washauri au jukwaa lolote linaloweza kusaidia",
+    focus: {
+      earlyStage: "Startups za Mwanzo",
+      growthStage: "Biashara za Ukuaji",
+      impactInvesting: "Uwekezaji wa Athari",
+      climateSustainability: "Hali ya Hewa na Uendelevu",
+      fintechDigital: "Fintech na Suluhu za Kidigitali",
+      agricultureAgribusiness: "Kilimo na Biashara ya Kilimo",
+      manufacturingSupplyChain: "Uzalishaji na Minyororo ya Ugavi",
+    },
+    type: {
+      equity: "Hisa",
+      debtFinancing: "Ufadhili kwa Deni",
+      convertibleNotes: "Hati za Kubadilika",
+      grants: "Ruzuku",
+    },
+    size: {
+      lt50k: "Chini ya $50,000",
+      "50to100k": "$50,000 - $100,000",
+      "100to500k": "$100,000 - $500,000",
+      "500kTo1m": "$500,000 - $1M",
+      above1m: "$1M+",
+    },
   },
 
   // Business Information
@@ -232,10 +443,137 @@ export const sw = {
     instagramLink: "Kiungo cha Instagram",
     twitterLink: "Kiungo cha Twitter",
     linkedinLink: "Kiungo cha Linkedin",
+    enterWebsiteLink: "Weka kiungo cha tovuti",
+    pasteInstagramLink: "Bandika kiungo cha Instagram",
     commercialTraction: "Nguvu ya kibiashara yako ni ipi?",
     userDetailsUpdatedSuccessfully: "Taarifa zimesasishwa kwa mafanikio!",
     failedToUpdateDetails: "Imeshindikana kusasisha",
     updatedSuccessfully: "Imesasishwa kwa mafanikio!",
+
+    // Details page strings
+    overview: "Muhtasari wa Biashara",
+    marketPotential: "Uwezo wa Soko",
+    growthAndFunding: "Ukuaji na Ufadhili",
+    documents: "Nyaraka",
+
+    companyProfileDoc: "Wasifu wa Kampuni",
+    businessPlanDoc: "Mpango wa Biashara",
+    marketResearchDoc: "Utafiti wa Soko",
+
+    customers: "Wateja",
+    industry: "Sekta",
+    stage: "Hatua",
+    revenue: "Mapato",
+
+    problem: "Tatizo",
+    solution: "Suluhisho",
+    traction: "Maendeleo (Traction)",
+    targetMarket: "Soko Lengwa",
+    currentImpact: "Athari ya Sasa",
+    growthPlans: "Mipango ya Ukuaji",
+    fundraisingNeeds: "Mahitaji ya Uchangishaji Fedha",
+
+    entrepreneur: "Mjasiriamali",
+    registration: "Usajili",
+    sdg: "SDG",
+    location: "Eneo",
+    teamSize: "Ukubwa wa Timu",
+    program: "Programu",
+    anzaAlumni: "Mhitimu wa Anza",
+    status: "Hali",
+    seekingInvestment: "Anatafuta Uwekezaji",
+    website: "Tovuti",
+    socialMedia: "Mitandao ya Kijamii",
+    visitWebsite: "Tembelea Tovuti",
+    cratAttachments: "Viambatanisho vya Crat",
+
+    seekingInvestmentYes: "Anatafuta uwekezaji kwa sasa",
+    seekingInvestmentNo: "Hatafuti uwekezaji kwa sasa",
+    alumni: "Mhitimu wa Anza",
+    nonAlumni: "Si mhitimu",
+
+    actions: {
+      approveEntrepreneur: "Kubali Mjasiriamali",
+    },
+    success: {
+      approved: "Imekubaliwa kwa mafanikio",
+    },
+    errors: {
+      dataNotLoaded: "Taarifa za biashara hazijapakiwa bado",
+    },
+
+    labels: {
+      businessDescription: "Maelezo ya Biashara",
+      targetMarket: "Soko Lengwa",
+      customerBase: "Wateja",
+      marketImpact: "Athari ya Soko",
+      currentTraction: "Maendeleo ya Sasa",
+      problemStatement: "Taarifa ya Tatizo",
+      solutionOffered: "Suluhisho Lililotolewa",
+      businessStage: "Hatua ya Biashara",
+      fundraisingNeeds: "Mahitaji ya Uchangishaji Fedha",
+      investmentSeeking: "Uhitaji wa Uwekezaji",
+      revenueModel: "Mfumo wa Mapato",
+      financialDocumentation: "Nyaraka za Kifedha",
+      growthPlans: "Mipango ya Ukuaji",
+      teamStructure: "Muundo wa Timu",
+      businessLocation: "Eneo la Biashara",
+      growthStrategy: "Mkakati wa Ukuaji",
+      operationalStatus: "Hali ya Uendeshaji",
+      industrySector: "Sekta ya Viwanda",
+      programCompletion: "Kukamilika kwa Programu",
+      alumniStatus: "Hali ya Uhitimu",
+      businessRegistration: "Usajili wa Biashara",
+      legalStructure: "Muundo wa Kisheria",
+      complianceStatus: "Hali ya Uzingatiaji",
+      sdgAlignment: "Ulinganifu wa SDG",
+      documentation: "Nyaraka",
+      industryCompliance: "Uzingatiaji wa Sekta",
+      sector: "Sekta",
+      stage: "Hatua",
+      location: "Eneo",
+    },
+    placeholders: {
+      overviewMissing: "Muhtasari kamili wa biashara unahitajika",
+      marketMissing: "Uchambuzi wa soko unahitajika",
+      customerMetricsMissing: "Takwimu za wateja zinahitajika",
+      impactMissing: "Tathmini ya athari inahitajika",
+      tractionMissing: "Takwimu za maendeleo zinahitajika",
+      problemMissing: "Ufafanuzi wa tatizo unahitajika",
+      solutionMissing: "Maelezo ya suluhisho yanahitajika",
+      stageMissing: "Uainishaji wa hatua unahitajika",
+      fundraisingMissing: "Mahitaji ya ufadhili hayajaainishwa",
+      businessPlanAvailable: "Mpango wa biashara upo",
+      revenueModelMissing: "Nyaraka za mfumo wa mapato zinahitajika",
+      companyProfileAvailable: "Wasifu wa kampuni upo",
+      financialDocsMissing: "Nyaraka za kifedha zinahitajika",
+      growthStrategyMissing: "Mkakati wa ukuaji unahitajika",
+      teamSizeMissing: "Ukubwa wa timu haujaainishwa",
+      locationMissing: "Eneo halijaainishwa",
+      strategyMissing: "Mipango ya kimkakati inahitajika",
+      approvedOperations: "Uendeshaji umeidhinishwa",
+      pendingApproval: "Inasubiri idhini",
+      sectorMissing: "Uainishaji wa sekta unahitajika",
+      noProgramCompletion: "Hakuna kumbukumbu ya kukamilisha programu",
+      legalStructureMissing: "Uainishaji wa muundo wa kisheria unahitajika",
+      compliantApproved: "Inazingatia na imeidhinishwa",
+      pendingCompliance: "Inasubiri uhakiki wa uzingatiaji",
+      sdgMissing: "Tathmini ya ulinganifu wa SDG inahitajika",
+      legalDocsAvailable: "Nyaraka za kisheria zinapatikana",
+      legalDocsMissing: "Nyaraka za kisheria zinahitajika",
+      industryComplianceAddressed: "Uzingatiaji wa sekta umezingatiwa",
+      industryComplianceMissing: "Tathmini ya uzingatiaji wa sekta inahitajika",
+      descriptionMissing: "Maelezo hayapatikani",
+      problemDescriptionMissing: "Hakuna maelezo ya tatizo",
+      solutionDescriptionMissing: "Hakuna maelezo ya suluhisho",
+      tractionInfoMissing: "Hakuna taarifa za maendeleo",
+      tractionPlaceholder: "Eleza maendeleo yako",
+      targetMarketMissing: "Hakuna maelezo ya soko lengwa",
+      impactDescriptionMissing: "Hakuna maelezo ya athari",
+      growthPlansMissing: "Hakuna mipango ya ukuaji",
+      fundraisingNeedsMissing:
+        "Hakuna mahitaji ya uchangishaji yaliyobainishwa",
+    },
   },
 
   // Investment Opportunities
@@ -646,8 +984,19 @@ export const sw = {
     searchInvestors: "Tafuta wawekezaji...",
     unnamedMentor: "Mshauri Bila Jina",
     unnamedInvestor: "Mwekezaji Bila Jina",
+    noSector: "Hakuna Sekta",
     generalExpertise: "Utaalam wa Jumla",
     noEmailProvided: "Hakuna barua pepe",
+    investorNotFound: "Mwekezaji hajapatikana",
+    investorNotFoundDescription:
+      "Wasifu wa mwekezaji unaoutafuta haupo au umeondolewa.",
+    noCompany: "Hakuna Kampuni",
+    location: "Eneo",
+    bio: "Wasifu",
+    notableInvestments: "Uwekezaji Maarufu",
+    noInformationAvailable: "Hakuna Taarifa",
+    seeking: "Anatafuta",
+    askForInvestment: "Omba Uwekezaji",
     ticketSize: "Kiwango cha Tiketi",
     structure: "Muundo",
     allTicketSizes: "Viwango Vyote vya Tiketi",
@@ -664,6 +1013,8 @@ export const sw = {
     grant: "Ruzuku",
     convertibleNote: "Hati ya Kubadilishwa",
     revenueShare: "Mgao wa Mapato",
+    loan: "Mkopo",
+    notSure: "Sijui",
     systemAdmins: "Wasimamizi wa mfumo",
     sent: "Imetumwa",
     username: "Jina la mtumiaji",
@@ -679,6 +1030,87 @@ export const sw = {
     sendFeedback: "Tuma mrejesho",
     mismatchedRequests: "Maombi Yasiyolingana",
     viewBusiness: "Tazama biashara",
+  },
+
+  // Maombi ya Uwekezaji
+  investmentApplication: {
+    title: "Ombi la Uwekezaji",
+    success: "Ombi limetumwa kwa mafanikio",
+    offerQuestion: "Unatoa nini kwa mwekezaji?",
+    selectItem: "Chagua kipengee",
+    amountLabel: "Kiasi cha Uwekezaji Kinachoombwa (TZS/USD)",
+    amountPlaceholder: "Andika hapa...",
+    purposeLabel: "Madhumuni ya uwekezaji",
+    purposePlaceholder: "Andika hapa...",
+    attachPitchdeck: "Ambatanisha pitch deck yako",
+    sendApplication: "Tuma Ombi",
+  },
+
+  // CRAT (Ukurasa wa Utayari wa Alama)
+  crat: {
+    pageTitle: "Alama & Jaribio la Utayari",
+    domain: "Eneo",
+    actualScore: "Alama Halisi",
+    targetScore: "Alama Lengwa",
+    asContribution: "Mchango wa AS%",
+    tsContribution: "Mchango wa TS%",
+    readinessRatio: "(AS/TS) Utayari",
+    readinessScore: "Alama ya Utayari",
+    assessedScore: "Alama iliyotathminiwa",
+    status: "Hali",
+    overallReadiness: "Utayari wa Jumla",
+    total: "Jumla",
+    totalScore: "Alama Jumla",
+    submitChanges: "Wasilisha Mabadiliko",
+    uploading: "Inapakia...",
+    noFile: "Hakuna faili",
+    confirmDelete: "Je, una uhakika unataka kufuta?",
+    deletedSuccessfully: "Imefutwa kwa mafanikio",
+    attachmentUploaded: "Kiambatisho kimepakiwa",
+    errorAttachingFile: "Hitilafu kupakia faili",
+    errorDeletingFile: "Hitilafu kufuta faili",
+    changesSubmittedSuccess: "Mabadiliko yamewasilishwa kwa mafanikio",
+    changesSubmittedError: "Hitilafu kuwasilisha mabadiliko",
+    commentUpdatedSuccessfully: "Maoni yamesasishwa kwa mafanikio",
+    pleaseUploadAttachmentFirst: "Tafadhali pakia kiambatisho kwanza.",
+    tableHeaders: {
+      subDomain: "Sehemu Ndogo",
+      question: "Swali",
+      rating: "Kiwango",
+      score: "Alama",
+      attachment: "Kiambatisho",
+      actions: "Vitendo",
+    },
+    market: {
+      title: "Tathmini ya Eneo la Soko",
+      sections: {
+        marketDemandShare: "Mahitaji ya Soko & Sehemu",
+        salesTraction: "Mauzo & Maendeleo",
+        productDevelopment: "Maendeleo ya Bidhaa",
+        competition: "Ushindani",
+        marketing: "Masoko",
+      },
+    },
+    legal: {
+      title: "Tathmini ya Eneo la Kisheria",
+      sections: {
+        corporateDocsCompliance: "1. Nyaraka za Kampuni & Uzingatiaji",
+        contractsAgreements: "2. Mikataba & Makubaliano",
+        intellectualProperty: "3. Haki Miliki",
+        entrepreneurFamily: "4. Mjasiriamali & Familia",
+        corporateGovernance: "5. Utawala wa Kampuni",
+      },
+    },
+    operations: {
+      title: "Tathmini ya Eneo la Uendeshaji",
+      sections: {
+        managementCapacity: "1. Uwezo wa Usimamizi",
+        mis: "2. MIS",
+        qualityManagement: "3. Usimamizi wa Ubora",
+        overallOperations: "4. Uendeshaji kwa Ujumla",
+        strategyPlanning: "5. Mkakati & Mipango",
+      },
+    },
   },
 
   // Dashboard
@@ -747,6 +1179,11 @@ export const sw = {
     loadingMap: "Inapakia ramani...",
     errorLoadingMap: "Hitilafu kupakia ramani",
     reloadPage: "Pakia Upya Ukurasa",
+    // Lebo za maeneo (zinatumika kwenye CRAT)
+    commercial: "Kibiashara",
+    financial: "Kifedha",
+    operations: "Uendeshaji",
+    legal: "Kisheria",
   },
 
   // Usimamizi wa Akaunti
@@ -774,8 +1211,8 @@ export const sw = {
     uploadProfileImage: "Pakia picha ya wasifu",
   },
 
-  // Authentication
-  auth: {
+  // Authentication (legacy - kept to avoid key loss; do not override main auth)
+  authLegacy: {
     signIn: "Ingia",
     signUp: "Jisajili",
     logout: "Toka",
@@ -807,8 +1244,8 @@ export const sw = {
     backToSignIn: "Rudi Kuingia",
   },
 
-  // Business Management
-  business: {
+  // Business Management (legacy - do not override main business keys)
+  businessLegacy: {
     approvedApplications: "Maombi Yalikubaliwa",
     pendingApplications: "Maombi Yanayosubiri",
     rejectedApplications: "Maombi Yalikokataliwa",
@@ -821,6 +1258,130 @@ export const sw = {
     email: "Barua pepe",
     viewDetails: "Tazama maelezo",
     assignReviewer: "Mteue mkaguzi",
+
+    // Details page strings
+    overview: "Muhtasari wa Biashara",
+    marketPotential: "Uwezo wa Soko",
+    growthAndFunding: "Ukuaji na Ufadhili",
+    documents: "Nyaraka",
+
+    companyProfileDoc: "Wasifu wa Kampuni",
+    businessPlanDoc: "Mpango wa Biashara",
+    marketResearchDoc: "Utafiti wa Soko",
+
+    customers: "Wateja",
+    industry: "Sekta",
+    stage: "Hatua",
+    revenue: "Mapato",
+
+    problem: "Tatizo",
+    solution: "Suluhisho",
+    traction: "Maendeleo (Traction)",
+    targetMarket: "Soko Lengwa",
+    currentImpact: "Athari ya Sasa",
+    growthPlans: "Mipango ya Ukuaji",
+    fundraisingNeeds: "Mahitaji ya Uchangishaji Fedha",
+
+    entrepreneur: "Mjasiriamali",
+    registration: "Usajili",
+    sdg: "SDG",
+    location: "Eneo",
+    teamSize: "Ukubwa wa Timu",
+    program: "Programu",
+    anzaAlumni: "Mhitimu wa Anza",
+    status: "Hali",
+    seekingInvestment: "Anatafuta Uwekezaji",
+    website: "Tovuti",
+    socialMedia: "Mitandao ya Kijamii",
+    visitWebsite: "Tembelea Tovuti",
+    cratAttachments: "Viambatanisho vya Crat",
+
+    seekingInvestmentYes: "Anatafuta uwekezaji kwa sasa",
+    seekingInvestmentNo: "Hatafuti uwekezaji kwa sasa",
+    alumni: "Mhitimu wa Anza",
+    nonAlumni: "Si mhitimu",
+
+    actions: {
+      approveEntrepreneur: "Kubali Mjasiriamali",
+    },
+    success: {
+      approved: "Imekubaliwa kwa mafanikio",
+    },
+    errors: {
+      dataNotLoaded: "Taarifa za biashara hazijapakiwa bado",
+    },
+
+    labels: {
+      businessDescription: "Maelezo ya Biashara",
+      targetMarket: "Soko Lengwa",
+      customerBase: "Wateja",
+      marketImpact: "Athari ya Soko",
+      currentTraction: "Maendeleo ya Sasa",
+      problemStatement: "Taarifa ya Tatizo",
+      solutionOffered: "Suluhisho Lililotolewa",
+      businessStage: "Hatua ya Biashara",
+      fundraisingNeeds: "Mahitaji ya Uchangishaji Fedha",
+      investmentSeeking: "Uhitaji wa Uwekezaji",
+      revenueModel: "Mfumo wa Mapato",
+      financialDocumentation: "Nyaraka za Kifedha",
+      growthPlans: "Mipango ya Ukuaji",
+      teamStructure: "Muundo wa Timu",
+      businessLocation: "Eneo la Biashara",
+      growthStrategy: "Mkakati wa Ukuaji",
+      operationalStatus: "Hali ya Uendeshaji",
+      industrySector: "Sekta ya Viwanda",
+      programCompletion: "Kukamilika kwa Programu",
+      alumniStatus: "Hali ya Uhitimu",
+      businessRegistration: "Usajili wa Biashara",
+      legalStructure: "Muundo wa Kisheria",
+      complianceStatus: "Hali ya Uzingatiaji",
+      sdgAlignment: "Ulinganifu wa SDG",
+      documentation: "Nyaraka",
+      industryCompliance: "Uzingatiaji wa Sekta",
+      sector: "Sekta",
+      stage: "Hatua",
+      location: "Eneo",
+    },
+    placeholders: {
+      overviewMissing: "Muhtasari kamili wa biashara unahitajika",
+      marketMissing: "Uchambuzi wa soko unahitajika",
+      customerMetricsMissing: "Takwimu za wateja zinahitajika",
+      impactMissing: "Tathmini ya athari inahitajika",
+      tractionMissing: "Takwimu za maendeleo zinahitajika",
+      problemMissing: "Ufafanuzi wa tatizo unahitajika",
+      solutionMissing: "Maelezo ya suluhisho yanahitajika",
+      stageMissing: "Uainishaji wa hatua unahitajika",
+      fundraisingMissing: "Mahitaji ya ufadhili hayajaainishwa",
+      businessPlanAvailable: "Mpango wa biashara upo",
+      revenueModelMissing: "Nyaraka za mfumo wa mapato zinahitajika",
+      companyProfileAvailable: "Wasifu wa kampuni upo",
+      financialDocsMissing: "Nyaraka za kifedha zinahitajika",
+      growthStrategyMissing: "Mkakati wa ukuaji unahitajika",
+      teamSizeMissing: "Ukubwa wa timu haujaainishwa",
+      locationMissing: "Eneo halijaainishwa",
+      strategyMissing: "Mipango ya kimkakati inahitajika",
+      approvedOperations: "Uendeshaji umeidhinishwa",
+      pendingApproval: "Inasubiri idhini",
+      sectorMissing: "Uainishaji wa sekta unahitajika",
+      noProgramCompletion: "Hakuna kumbukumbu ya kukamilisha programu",
+      legalStructureMissing: "Uainishaji wa muundo wa kisheria unahitajika",
+      compliantApproved: "Inazingatia na imeidhinishwa",
+      pendingCompliance: "Inasubiri uhakiki wa uzingatiaji",
+      sdgMissing: "Tathmini ya ulinganifu wa SDG inahitajika",
+      legalDocsAvailable: "Nyaraka za kisheria zinapatikana",
+      legalDocsMissing: "Nyaraka za kisheria zinahitajika",
+      industryComplianceAddressed: "Uzingatiaji wa sekta umezingatiwa",
+      industryComplianceMissing: "Tathmini ya uzingatiaji wa sekta inahitajika",
+      descriptionMissing: "Maelezo hayapatikani",
+      problemDescriptionMissing: "Hakuna maelezo ya tatizo",
+      solutionDescriptionMissing: "Hakuna maelezo ya suluhisho",
+      tractionInfoMissing: "Hakuna taarifa za maendeleo",
+      targetMarketMissing: "Hakuna maelezo ya soko lengwa",
+      impactDescriptionMissing: "Hakuna maelezo ya athari",
+      growthPlansMissing: "Hakuna mipango ya ukuaji",
+      fundraisingNeedsMissing:
+        "Hakuna mahitaji ya uchangishaji yaliyobainishwa",
+    },
   },
 
   // Mentorship
@@ -885,6 +1446,10 @@ export const sw = {
     deleteMessage: "Futa Ujumbe",
     copyMessage: "Nakili Ujumbe",
     replyToMessage: "Jibu Ujumbe",
+    enablingEncryptionWait:
+      "Inawasha usimbaji fiche kutoka mwisho hadi mwisho. Tafadhali subiri...",
+    userProfile: "Wasifu wa mtumiaji",
+    userAvatar: "Picha ya mtumiaji",
   },
 
   // Programs
@@ -981,6 +1546,7 @@ export const sw = {
     videoLink: "Kiungo cha Video",
     publishedOn: "Imechapishwa",
     createdAt: "Imeundwa",
+    step: "Hatua {{n}}",
   },
 
   // Vifaa vya Pitch
@@ -1115,5 +1681,236 @@ export const sw = {
     noComments: "Hakuna Maoni, Kuwa wa kwanza kushiriki mawazo yako.",
     addComment: "Ongeza maoni...",
     postComment: "Chapisha Maoni",
+  },
+
+  // CRAT Reviews
+  cratReviews: {
+    title: "Maombi ya Mapitio ya CRAT",
+    subtitle:
+      "Dhibiti maombi ya mapitio ya CRAT kutoka kwa wajasiriamali. Teua wakaguzi na kamilisha maamuzi.",
+    searchPlaceholder: "Tafuta kwa jina la biashara au barua pepe...",
+    filters: { allStatuses: "Hali Zote" },
+    status: {
+      pending: "Inasubiri",
+      assigned: "Imeteuliwa",
+      in_review: "Inapitiwa",
+      reviewed: "Imepitiwa",
+      accepted: "Imekubaliwa",
+      rejected: "Imekataliwa",
+    },
+    empty: {
+      title: "Hakuna maombi ya mapitio ya CRAT yaliyopatikana",
+      description:
+        "Maombi ya mapitio ya CRAT yataonekana hapa wajasiriamali watakapoyawasilisha.",
+    },
+    submittedOn: "Imewasilishwa tarehe",
+    actions: {
+      assign: "Teua",
+      finalize: "Kamilisha",
+      view: "Tazama",
+      viewCratReport: "Tazama Ripoti ya CRAT",
+      assignReviewer: "Teua Mkaguzi",
+      finalizeDecision: "Kamilisha Uamuzi",
+    },
+    pagination: { previous: "Iliyotangulia", next: "Ifuatayo" },
+    modals: {
+      assignReviewer: {
+        title: "Teua Mkaguzi",
+        description: "Chagua mfanyakazi kupitia ombi hili la CRAT kwa",
+        selectReviewer: "Chagua Mkaguzi",
+        chooseReviewer: "Chagua mkaguzi...",
+      },
+      finalizeReview: {
+        title: "Kamilisha Mapitio",
+        description: "Fanya uamuzi wa mwisho kuhusu mapitio ya CRAT kwa",
+        reviewerComments: "Maoni ya Mkaguzi:",
+        finalDecision: "Uamuzi wa Mwisho",
+        chooseDecision: "Chagua uamuzi...",
+        adminComments: "Maoni ya Admin",
+        adminCommentsPlaceholder: "Toa maoni na sababu ya uamuzi wa mwisho...",
+      },
+    },
+    states: { assigning: "Inateua...", finalizing: "Inakamilisha..." },
+    validation: {
+      selectReviewer: "Tafadhali chagua mkaguzi",
+      finalStatusAndComments: "Tafadhali toa hali ya mwisho na maoni",
+    },
+    success: {
+      assigned: "Mkaguzi ameteuliwa kwa mafanikio!",
+      finalized: "Mapitio yamekamilishwa kwa mafanikio!",
+    },
+    errors: {
+      fetchReviews: "Imeshindwa kupata mapitio ya CRAT",
+      assignReviewer: "Imeshindikana kuteua mkaguzi",
+      assigningReviewer: "Hitilafu katika kuteua mkaguzi",
+      finalizeReviewer: "Imeshindikana kukamilisha mapitio",
+      finalizingReviewer: "Hitilafu katika kukamilisha mapitio",
+    },
+  },
+
+  // AI Analysis
+  ai: {
+    preparing: "Inaandaa uchambuzi wa AI...",
+    cratLoaded: "Data ya tathmini ya CRAT imepakia",
+    profilePrepared: "Uchambuzi wa wasifu wa biashara umeandaliwa",
+    analyzing: "Inachambua...",
+    refreshAnalysis: "Sasisha Uchambuzi wa AI",
+    generateAnalysis: "Tengeneza Uchambuzi wa AI",
+    analysisComplete: "Uchambuzi wa AI umekamilika!",
+    overallScore: "Alama ya Jumla:",
+    generatedOn: "Uchambuzi umetengenezwa",
+    headerTitle: "Uchambuzi wa Uwekezaji unaoendeshwa na AI",
+    headerSubtitle: "Tathmini ya kina ya",
+    headerSubtitleSuffix: "kwa kutumia uchambuzi wa hali ya juu wa AI",
+    tooltip: {
+      update: "Sasisha uchambuzi kwa data ya hivi karibuni",
+      generate: "Tengeneza uchambuzi kamili wa uwekezaji wa AI",
+    },
+    status: {
+      good: "Nzuri",
+      fair: "Wastani",
+      needsImprovement: "Inahitaji kuboreshwa",
+    },
+    generalStatus: {
+      cratAssessment: "Tathmini ya CRAT",
+      profileAnalysis: "Uchambuzi wa Wasifu wa Biashara",
+    },
+    scoreCategories: {
+      excellent: "Bora",
+      goodPotential: "Uwezo Mzuri",
+      strongPerformance: "Utendaji Imara",
+      needsImprovement: "Inahitaji kuboreshwa",
+    },
+    domains: {
+      commercial: "Kibiashara",
+      financial: "Kifedha",
+      operations: "Uendeshaji",
+      legal: "Kisheria",
+    },
+    errors: {
+      prepareFailed:
+        "Imeshindikana kuandaa uchambuzi wa AI. Tafadhali jaribu tena.",
+    },
+    pdf: {
+      title: "Ripoti ya Uchambuzi wa AI",
+      entrepreneur: "Mjasiriamali",
+      business: "Biashara",
+      date: "Tarehe",
+      status: "Hali",
+      generated:
+        "Ripoti ya uchambuzi wa AI imetengenezwa! (Utumaji barua pepe umezimwa)",
+    },
+  },
+
+  // Ukurasa wa Mapitio ya CRAT (kwa Mjasiriamali)
+  cratReviewPage: {
+    title: "Mfumo wa Mapitio ya CRAT",
+    subtitle:
+      "Tuma tathmini yako ya CRAT kwa mapitio ya kitaalamu na upate mrejesho wa kitaalamu.",
+    submitSection: {
+      title: "Tuma CRAT kwa Mapitio",
+      description:
+        "Uko tayari tathmini yako ya CRAT ipitiwe na wataalamu wetu? Tuma kwa mapitio na mrejesho wa kitaalamu.",
+    },
+    buttons: {
+      submitting: "Inatuma...",
+      submitForReview: "Tuma kwa Mapitio",
+      resubmitting: "Inatuma tena...",
+      resubmitForReview: "Tuma Tena kwa Mapitio",
+    },
+    errors: {
+      noReviewToResubmit: "Hakuna mapitio ya CRAT ya kutuma tena.",
+      failedToResubmit: "Imeshindikana kutuma upya mapitio ya CRAT",
+      resubmitError: "Hitilafu kutuma upya mapitio ya CRAT",
+      failedToFetch: "Imeshindikana kupata mapitio ya CRAT",
+      alreadyHasReview:
+        "Tayari una mapitio ya CRAT. Mapitio moja tu yanaruhusiwa kwa kila mjasiriamali.",
+      failedToSubmit: "Imeshindikana kutuma mapitio ya CRAT",
+      submitError: "Hitilafu kutuma mapitio ya CRAT",
+    },
+    toasts: {
+      resubmitted:
+        "Mapitio ya CRAT yametumwa upya kwa mafanikio! Utaarifiwa pindi yatakapopangiwa mkaguzi.",
+      submitted:
+        "Mapitio ya CRAT yametumwa kwa mafanikio! Utaarifiwa pindi yatakapopangiwa mkaguzi.",
+    },
+    yourReviewTitle: "Mapitio Yako ya CRAT",
+    empty: {
+      noReview: "Bado hakuna mapitio",
+      description:
+        "Tuma mapitio yako ya CRAT ili upate mrejesho wa kitaalamu kuhusu utayari wa biashara yako.",
+    },
+    labels: {
+      submittedOn: "Imetumwa tarehe",
+      assignedReviewer: "Mkaguzi Aliyeteuliwa:",
+      reviewerFeedback: "Maoni ya Mkaguzi:",
+      finalDecision: "Uamuzi wa Mwisho:",
+    },
+    hints: {
+      addressFeedbackBeforeResubmit:
+        "Hakikisha umefanyia kazi maoni kabla ya kutuma tena.",
+    },
+    timeline: {
+      submitted: "Imetumwa:",
+      assigned: "Imepangiwa:",
+      reviewed: "Imepitiwa:",
+      finalized: "Imekamilishwa:",
+    },
+    status: {
+      pendingAssignment: "Inasubiri Kupangiwa",
+      assignedToReviewer: "Imepangiwa Mkaguzi",
+      underReview: "Inaendelea Kupitiwa",
+      reviewCompleted: "Mapitio Yamekamilika - Inasubiri Uamuzi wa Mwisho",
+      accepted: "Imekubaliwa",
+      rejected: "Imekataliwa",
+    },
+  },
+
+  // Ripoti ya Mwisho
+  finalReport: {
+    pageTitle: "Pakua Ripoti ya Mwisho",
+    pageSubtitle:
+      "Pata ripoti yako ya kina ya Capital Readiness Assessment Tool (CRAT) kwa muundo wa PDF.",
+    downloadButton: "Pakua Ripoti ya PDF",
+    includes:
+      "Ripoti inajumuisha: Muhtasari, Uchambuzi wa Maeneo, Mapendekezo, na Mwongozo wa Uwekezaji",
+    pdf: {
+      title: "RIPOTI YA CAPITAL READINESS ASSESSMENT TOOL (CRAT)",
+      execSummaryTitle: "Muhtasari:",
+      execSummaryText:
+        "Ripoti hii inatoa uchambuzi wa kina wa utayari wa biashara yako kwa uwekezaji.",
+      domainScoresTitle: "Alama za Maeneo:",
+      domains: {
+        commercial: "Eneo la Kibiashara",
+        financial: "Eneo la Fedha",
+        operations: "Eneo la Uendeshaji",
+        legal: "Eneo la Kisheria",
+      },
+      overallScoreTitle: "Jumla ya Alama",
+      recommendationsTitle: "Mapendekezo:",
+      recommendations: {
+        item1: "Imarisha mipango ya kifedha na usimamizi wa mtiririko wa fedha",
+        item2: "Boresha ufanisi wa uendeshaji na uwezo wa kupanuka",
+        item3: "Endelea kujenga misingi imara ya kisheria",
+        item4: "Lenga kupanua soko na kupata wateja",
+      },
+      investmentReadinessTitle: "Uwezo wa Uwekezaji",
+      investmentReadinessLevel: "WA KATI",
+      nextStepsTitle: "Hatua Zifuatazo",
+      nextStepsText:
+        "Tekeleza maboresho yaliyopendekezwa na tathmini upya ndani ya miezi 3-6.",
+    },
+  },
+
+  // Notifications
+  notifications: {
+    newMessage: "Una ujumbe mpya",
+  },
+
+  // Gumzo (Chat)
+  chat: {
+    chatPage: "Ukurasa wa gumzo",
+    enterMessage: "Andika ujumbe hapa...",
+    send: "Tuma",
   },
 };

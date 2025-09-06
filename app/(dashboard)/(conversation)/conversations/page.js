@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { sendInvestmentInterest } from "@/app/controllers/investment_interest_controller";
 import { getConversations } from "@/app/controllers/conversation_controller";
 import { useRouter } from "next/navigation";
+import { useTranslation } from "@/app/locales";
 
 const Page = () => {
   const [conversations, setConversations] = useState([]);
@@ -22,6 +23,7 @@ const Page = () => {
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
   const [loading, setloading] = useState(true);
+  const { t } = useTranslation();
   useEffect(() => {
     getConversations(1, 10).then((body) => {
       console.log(body);
@@ -36,7 +38,7 @@ const Page = () => {
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Chats
+            {t("chat.allChats", "Chats")}
           </h4>
           <div className="mt-6 space-y-4">
             {conversations.length < 1 ? (
@@ -48,7 +50,10 @@ const Page = () => {
                   <div
                     onClick={() => {
                       toast.success(
-                        "Enabling end-to-end encryption. Please wait..."
+                        t(
+                          "chat.enablingEncryptionWait",
+                          "Enabling end-to-end encryption. Please wait..."
+                        )
                       );
                       router.push(`/messages/${item.uuid}`);
                     }}
@@ -67,7 +72,7 @@ const Page = () => {
                                   viewBox="0 0 24 24"
                                   strokeWidth="1.5"
                                   stroke="currentColor"
-                                  class="w-6 h-6 m-4 text-primary"
+                                  className="w-6 h-6 m-4 text-primary"
                                 >
                                   <path
                                     strokeLinecap="round"
@@ -78,7 +83,7 @@ const Page = () => {
                               </div>
                             ) : (
                               <Image
-                                alt="User profile"
+                                alt={t("chat.userProfile", "User profile")}
                                 height={50}
                                 width={50}
                                 className="rounded-full h-12 w-12 object-cover "
@@ -93,7 +98,7 @@ const Page = () => {
                                 viewBox="0 0 24 24"
                                 strokeWidth="1.5"
                                 stroke="currentColor"
-                                class="w-6 h-6 m-5 text-primary"
+                                className="w-6 h-6 m-5 text-primary"
                               >
                                 <path
                                   strokeLinecap="round"
@@ -104,7 +109,7 @@ const Page = () => {
                             </div>
                           ) : (
                             <Image
-                              alt="User avatar"
+                              alt={t("chat.userAvatar", "User avatar")}
                               height={50}
                               width={50}
                               className="rounded-full h-12 w-12 object-cover"

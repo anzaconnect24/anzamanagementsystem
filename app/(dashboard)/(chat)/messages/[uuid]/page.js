@@ -45,7 +45,7 @@ const MessageComponent = ({ params }) => {
       <Breadcrumb
         pageName={t("chat.chatPage", "Chat page")}
         prevLink={""}
-        prevPage={t("chat.back", "Back")}
+        prevPage={t("common.back", "Back")}
       />
 
       <div className="bg-white rounded-lg  py-3 shadow-2xl px-3 ">
@@ -119,7 +119,7 @@ const MessageComponent = ({ params }) => {
         >
           <input
             type="text"
-            placeholder="Enter text here..."
+            placeholder={t('chat.enterMessage', 'Enter text here...')}
             className="w-full py-4 px-4 rounded-lg  bg-stroke text-black text-lg border-stroke focus:border-stroke focus:ring-stroke"
             name="message"
           />
@@ -127,7 +127,7 @@ const MessageComponent = ({ params }) => {
             className="py-3 px-4 bg-success text-white rounded-lg"
             type="submit"
           >
-            Send
+            {t('chat.send', 'Send')}
           </button>
         </form>
       </div>

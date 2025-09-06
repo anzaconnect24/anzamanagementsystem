@@ -16,6 +16,7 @@ import {
   initialDataTemplate,
 } from "@/app/controllers/crat_market_controller";
 import { UserContext } from "../../../(dashboard)/layout";
+import { useTranslation } from "@/app/locales";
 
 const tableHeaders = [
   "Sub Domain",
@@ -27,6 +28,7 @@ const tableHeaders = [
 ];
 
 const Page = () => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(initialDataTemplate);
   const [originalData, setOriginalData] = useState(initialDataTemplate);
@@ -85,7 +87,7 @@ const Page = () => {
     const newData = { ...data };
     const score = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
     if (newRating === "Yes" && !newData[section][index].attachment) {
-      setModalMessage("Please upload an attachment first.");
+  setModalMessage(t("crat.pleaseUploadAttachmentFirst", "Please upload an attachment first."));
       setModalOpen(true);
     } else {
       newData[section][index].rating = newRating;
@@ -131,10 +133,10 @@ const Page = () => {
       setOriginalData(data); // Update original data after successful submission
       setChangesMade(false);
 
-      toast.success("Changes successfully submitted");
+  toast.success(t("crat.changesSubmittedSuccess", "Changes successfully submitted"));
       console.log("Changes successfully submitted");
     } catch (error) {
-      toast.error("Error submitting changes");
+  toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
       console.error("Error submitting changes:", error);
     }
   };
@@ -186,12 +188,12 @@ const Page = () => {
         });
       });
 
-      toast.success("Attachment Uploaded");
+  toast.success(t("crat.attachmentUploaded", "Attachment uploaded"));
       setData(updatedData);
       setUploading((s) => ({ ...s, [domain]: false }));
       // setChangesMade(true);
     } catch (error) {
-      toast.error("Error attaching file");
+  toast.error(t("crat.errorAttachingFile", "Error attaching file"));
       console.error("Error attaching file:", error);
       // clear uploading flag on error
       setUploading((s) => ({ ...s, [domain]: false }));
@@ -200,8 +202,8 @@ const Page = () => {
 
   const openDeleteDialog = (domain, id, attachment, section, index) => {
     console.log(domain, id, attachment, section, index);
-    deleteModalOpen(true);
-    deleteModalMessage("Are you sure you want to delete?");
+  deleteModalOpen(true);
+  deleteModalMessage(t("crat.confirmDelete", "Are you sure you want to delete?"));
     setDeleteCache([domain, id, attachment, section, index]);
   };
 
@@ -234,12 +236,12 @@ const Page = () => {
         });
       });
 
-      toast.success("Deleted Successfully");
+  toast.success(t("crat.deletedSuccessfully", "Deleted successfully"));
       setData(updatedData);
       setChangesMade(true);
       deleteModalOpen(false); // Close modal
     } catch (error) {
-      toast.error("Error deleting file");
+  toast.error(t("crat.errorDeletingFile", "Error deleting file"));
       console.error("Error deleting file:", error);
     }
   };
@@ -264,7 +266,7 @@ const Page = () => {
     newData[index].comments = comment;
     setData({ ...data, [domain]: newData });
     submitChanges();
-    toast.success("Comment updated successfully");
+  toast.success(t("crat.commentUpdatedSuccessfully", "Comment updated successfully"));
   };
 
   const calculateTotalScore = (domain) => {
@@ -303,10 +305,10 @@ const Page = () => {
           <p className="text-sm text-black dark:text-white">{item.score}</p>
         </div>
         <div className="flex items-center px-2">
-          {uploading[item.subDomain] ? (
+      {uploading[item.subDomain] ? (
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              <span className="text-sm text-gray-500">Uploading...</span>
+        <span className="text-sm text-gray-500">{t("crat.uploading", "Uploading...")}</span>
             </div>
           ) : item.attachment ? (
             <a
@@ -318,7 +320,7 @@ const Page = () => {
               {item.attachment.split("/").pop()}
             </a>
           ) : (
-            <p className="text-sm text-gray-500">No file</p>
+            <p className="text-sm text-gray-500">{t("crat.noFile", "No file")}</p>
           )}
         </div>
         <div className="flex items-center px-2 space-x-2">
@@ -351,7 +353,14 @@ const Page = () => {
         </h4>
       </div>
       <div className="grid grid-cols-6 border-b border-stroke py-4 px-4 dark:border-strokedark">
-        {tableHeaders.map((header, index) => (
+        {[
+          t("crat.tableHeaders.subDomain", "Sub Domain"),
+          t("crat.tableHeaders.question", "Question"),
+          t("crat.tableHeaders.rating", "Rating"),
+          t("crat.tableHeaders.score", "Score"),
+          t("crat.tableHeaders.attachment", "Attachment"),
+          t("crat.tableHeaders.actions", "Actions"),
+        ].map((header, index) => (
           <div key={index} className="flex items-center px-2">
             <p className="font-medium text-black dark:text-white">{header}</p>
           </div>
@@ -360,7 +369,7 @@ const Page = () => {
       {renderTableRows(domain)}
       <div className="flex justify-between items-center py-4 px-4 border-t border-stroke dark:border-strokedark">
         <p className="text-sm font-medium text-black dark:text-white">
-          Total: {calculateTotalScore(domain)}
+          {t("crat.total", "Total")}: {calculateTotalScore(domain)}
         </p>
       </div>
     </div>
@@ -371,7 +380,7 @@ const Page = () => {
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Market Domain Assessment
+            {t("crat.market.title", "Market Domain Assessment")}
           </h4>
           {changesMade && (
             <div className="flex justify-end mt-4">
@@ -379,7 +388,7 @@ const Page = () => {
                 onClick={submitChanges}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
               >
-                Submit Changes
+                {t("crat.submitChanges", "Submit Changes")}
               </button>
             </div>
           )}
@@ -389,20 +398,20 @@ const Page = () => {
         {userDetails.publishStatus === "On review" ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
-              On Review
+              {t("report.onReview", "On review")}
             </p>
           </div>
         ) : (
           <>
-            {renderSection("market", "Market Demand & Share")}
-            {renderSection("salesTraction", "Sales & Traction")}
-            {renderSection("product", "Product Development")}
-            {renderSection("competition", "Competition")}
-            {renderSection("marketing", "Marketing")}
+            {renderSection("market", t("crat.market.sections.marketDemandShare", "Market Demand & Share"))}
+            {renderSection("salesTraction", t("crat.market.sections.salesTraction", "Sales & Traction"))}
+            {renderSection("product", t("crat.market.sections.productDevelopment", "Product Development"))}
+            {renderSection("competition", t("crat.market.sections.competition", "Competition"))}
+            {renderSection("marketing", t("crat.market.sections.marketing", "Marketing"))}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
                 <h4 className="text-xl font-semibold text-black dark:text-white">
-                  Total Score
+                  {t("crat.totalScore", "Total Score")}
                 </h4>
                 <p className="text-lg font-semibold">
                   {calculateOverallTotalScore()} / {calculateOverallMaxScore()}
@@ -424,8 +433,8 @@ const Page = () => {
         onDelete={() => handleDeleteFile()} // Directly call handleDeleteFile
         onCancel={handleDeleteCancel}
         bgColor="yellow-200"
-        closeButtonText="Cancel"
-        deleteButtonText="Delete"
+        closeButtonText={t("actions.cancel", "Cancel")}
+        deleteButtonText={t("actions.delete", "Delete")}
         closeButtonColor="gray-500"
         deleteButtonColor="blue-500"
       />

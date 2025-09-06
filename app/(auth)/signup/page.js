@@ -19,6 +19,9 @@ import Spinner from "@/components/spinner";
 import { createNotification } from "@/app/controllers/notification_controller";
 import { format } from "path";
 import { useTranslation } from "../../locales";
+import EnterprenuerSignupForm from "../../component/entreprenuerSignupForm";
+import InvestorSignupForm from "../../component/investorSignupForm";
+import MentorSignupForm from "../../component/mentorSignupForm";
 // export const metadata: Metadata = {
 // title: "Signup Page | Next.js E-commerce Dashboard Template",
 // description: "This is Signup page for TailAdmin Next.js",
@@ -60,7 +63,11 @@ const SignUp = () => {
   const [showPassword2, setshowPassword2] = useState(false);
   const [file, setfile] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const steps = ["Profile Image", "User Informations", "Business Informations"];
+  const steps = [
+    t("auth.steps.profileImage", "Profile Image"),
+    t("auth.steps.userInformation", "User Information"),
+    t("auth.steps.businessInformation", "Business Information"),
+  ];
   const [isAlumni, setisAlumni] = useState(false);
   useEffect(() => {
     getSectors().then((data) => {
@@ -223,7 +230,9 @@ const SignUp = () => {
               }
             });
           } else {
-            toast.error("Passwords don't match");
+            toast.error(
+              t("auth.passwordsDoNotMatch", "Passwords do not match")
+            );
             setloading(false);
           }
         }}
@@ -239,8 +248,12 @@ ring-stroke "
 flex-col justify-between "
             >
               <div>
-                <p className="font-medium text-primary">Welcome</p>
-                <h1 className="text-4xl font-bold">Create Anza Account</h1>
+                <p className="font-medium text-primary">
+                  {t("common.welcome", "Welcome")}
+                </p>
+                <h1 className="text-4xl font-bold">
+                  {t("auth.createAnzaAccount", "Create Anza Account")}
+                </h1>
                 <div className="space-y-2 mt-12">
                   {steps.map((item, index) => {
                     return (
@@ -257,9 +270,11 @@ flex-col justify-between "
                 </div>
               </div>
               <p className="mt-24">
-                <span className="">Already registered ? </span>
+                <span className="">
+                  {t("auth.alreadyHaveAccount", "Already have an account?")}{" "}
+                </span>
                 <Link href="/signin" className="text-primary font-bold">
-                  Sign in
+                  {t("auth.signIn", "Sign In")}
                 </Link>
               </p>
             </div>
@@ -276,13 +291,13 @@ Anza account</div> */}
                 <div className="flex justify-between w-full mb-8 items-center">
                   <h1 className="text-xl">{steps[selectedIndex]}</h1>
                   <div className="py-2 px-3 rounded-full bg-primary bg-opacity-10">
-                    Step {selectedIndex + 1}
+                    {t("common.step", "Step {{n}}", { n: selectedIndex + 1 })}
                   </div>
                 </div>
                 {selectedIndex == 0 && (
                   <div className="flex justify-center flex-col items-center">
                     <label
-                      for="file"
+                      htmlFor="file"
                       className="flex flex-col items-center justify-center"
                     >
                       {file != null ? (
@@ -319,7 +334,8 @@ p-12 rounded-full flex justify-center items-center "
                       )}
                       {file == null && (
                         <p className="italic text-body mt-2">
-                          Upload profile image*
+                          {t("auth.uploadProfileImage", "Upload profile image")}
+                          *
                         </p>
                       )}
                     </label>
@@ -342,7 +358,7 @@ p-12 rounded-full flex justify-center items-center "
                         className="mb-2.5 block font-medium text-black
 dark:text-white"
                       >
-                        Full name
+                        {t("auth.fullName", "Full name")}
                       </label>
                       <input
                         onChange={(e) => {
@@ -354,7 +370,10 @@ dark:text-white"
                         defaultValue={formValues.userName}
                         required
                         className="form-style"
-                        placeholder="Username"
+                        placeholder={t(
+                          "auth.enterFullName",
+                          "Enter your full name"
+                        )}
                         type="text"
                       />
                     </div>
@@ -363,7 +382,7 @@ dark:text-white"
                         className="mb-2.5 block font-medium text-black
 dark:text-white"
                       >
-                        Email address
+                        {t("auth.emailAddress", "Email address")}
                       </label>
                       <input
                         onChange={(e) => {
@@ -375,7 +394,7 @@ dark:text-white"
                         defaultValue={formValues.userEmail}
                         required
                         className="form-style"
-                        placeholder="Email address"
+                        placeholder={t("auth.enterEmail", "Enter your email")}
                         type="email"
                       />
                     </div>
@@ -384,7 +403,7 @@ dark:text-white"
                         className="mb-2.5 block font-medium text-black
 dark:text-white"
                       >
-                        Phone number
+                        {t("auth.phoneNumber", "Phone number")}
                       </label>
                       <input
                         onChange={(e) => {
@@ -396,7 +415,10 @@ dark:text-white"
                         defaultValue={formValues.userPhone}
                         required
                         className="form-style"
-                        placeholder="Phone number"
+                        placeholder={t(
+                          "auth.enterPhone",
+                          "Enter your phone number"
+                        )}
                         type="tel"
                       />
                     </div>
@@ -405,7 +427,7 @@ dark:text-white"
                         className="mb-2.5 block font-medium text-black
 dark:text-white"
                       >
-                        Registering as
+                        {t("auth.registeringAs", "Registering as")}
                       </label>
                       <div className="flex flex-col space-y-2">
                         <select
@@ -422,7 +444,13 @@ dark:text-white"
                                 key={item}
                                 value={item == "Staff" ? "Reviewer" : item}
                               >
-                                {item == "Enterprenuer" ? "Entrepreneur" : item}
+                                {item === "Staff"
+                                  ? t("roles.staff", "Staff")
+                                  : item === "Enterprenuer"
+                                  ? t("roles.entrepreneur", "Entrepreneur")
+                                  : item === "Investor"
+                                  ? t("roles.investor", "Investor")
+                                  : t("roles.mentor", "Mentor")}
                               </option>
                             )
                           )}
@@ -434,7 +462,7 @@ dark:text-white"
                         className="mb-2.5 block font-medium text-black
 dark:text-white"
                       >
-                        Create password
+                        {t("auth.createPassword", "Create password")}
                       </label>
                       <div className="relative">
                         <input
@@ -446,7 +474,10 @@ dark:text-white"
                           type={`${showPassword ? "text" : "password"}`}
                           name="password"
                           defaultValue={formValues.password}
-                          placeholder="Enter password"
+                          placeholder={t(
+                            "auth.enterPassword",
+                            "Enter your password"
+                          )}
                           className="form-style"
                         />
                         <span
@@ -503,7 +534,7 @@ dark:text-white"
                         className="mb-2.5 block font-medium text-black
 dark:text-white"
                       >
-                        Re-enter password
+                        {t("auth.reenterPassword", "Re-enter password")}
                       </label>
                       <div className="relative">
                         <input
@@ -515,7 +546,10 @@ dark:text-white"
                           defaultValue={formValues.repeatPassword}
                           type={`${showPassword2 ? "text" : "password"}`}
                           name="repeatPassword"
-                          placeholder="Re-enter password"
+                          placeholder={t(
+                            "auth.retypePassword",
+                            "Re-type Password"
+                          )}
                           className="form-style"
                         />
                         <span
@@ -575,1284 +609,25 @@ dark:text-white"
               {selectedIndex == 2 && (
                 <div>
                   {role == "Enterprenuer" && (
-                    <div>
-                      {/* <div className=" text-2xl text-black pt-8 pb-4">Company
-details</div> */}
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Select Sustainable Development Goals
-                            </label>
-                            <select
-                              onChange={(e) => {
-                                // alert(e.target.value)
-                                // setisAlumni(e.target.value == "true"?true:false)
-                              }}
-                              required
-                              name="sdg"
-                              className="form-style"
-                            >
-                              {[
-                                "No Poverty",
-                                "Zero Hunger",
-                                "Good Health and Well-being",
-                                "Quality Education",
-                                "Gender Equality",
-                                "Clean Water and Sanitation",
-                                "Affordable and Clean Energy",
-                                "Decent Work and Economic Growth",
-                                "Industry, Innovation, and Infrastructure",
-                                "Reduced Inequalities",
-                                "Sustainable Cities and Communities",
-                                "Responsible Consumption and Production",
-                                "Climate Action",
-                                "Life Below Water",
-                                "Life on Land",
-                                "Peace, Justice, and Strong Institutions",
-                                "Partnerships for the Goals",
-                              ].map((item, index) => (
-                                <option key={index} value={item}>
-                                  {item}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Are you an Anza alumni ?
-                            </label>
-                            <select
-                              onChange={(e) => {
-                                // alert(e.target.value)
-                                setisAlumni(
-                                  e.target.value == "true" ? true : false
-                                );
-                              }}
-                              required
-                              name="isAlumni"
-                              className="form-style"
-                            >
-                              <option value={false}>No</option>
-                              <option value={true}>Yes</option>
-                            </select>
-                          </div>
-                          {isAlumni && (
-                            <div>
-                              <label
-                                className="mb-2.5 block font-medium text-black
-dark:text-white"
-                              >
-                                What program did you complete ?
-                              </label>
-                              <select
-                                required
-                                name="completedProgram"
-                                className="form-style"
-                              >
-                                <option>Select program</option>
-                                <option value="BFA">BFA</option>
-                                <option value="IR program">IR program</option>
-                              </select>
-                            </div>
-                          )}
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business name
-                            </label>
-                            <input
-                              required
-                              name="businessName"
-                              className="form-style"
-                              placeholder="Company name"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business email adress
-                            </label>
-                            <input
-                              required
-                              name="businessEmail"
-                              className="form-style"
-                              placeholder="Company email address"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business phone number
-                            </label>
-                            <input
-                              required
-                              name="businessPhone"
-                              className="form-style"
-                              placeholder="Company phone number"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Website Link
-                            </label>
-                            <input
-                              name="websiteLink"
-                              className="form-style"
-                              placeholder="Enter website link"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Instagram Link
-                            </label>
-                            <input
-                              name="instagramLink"
-                              className="form-style"
-                              placeholder="Paste instagram Link"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Revenue
-                            </label>
-                            <input
-                              required
-                              name="revenue"
-                              className="form-style"
-                              placeholder="Company revenue"
-                              type="number"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business sector
-                            </label>
-                            <select
-                              required
-                              name="business_sector_uuid"
-                              className="form-style"
-                            >
-                              <option>Select business sector</option>
-                              {sectors.map((item) => {
-                                return (
-                                  <option key={item.id} value={item.uuid}>
-                                    {item.name}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business stage
-                            </label>
-                            <select
-                              required
-                              name="stage"
-                              className="form-style"
-                            >
-                              <option>Select business stage</option>
-                              <option value="Startup">Startup</option>
-                              <option value="Growth stage">Growth stage</option>
-                              <option value="Expansion stage">
-                                Expansion stage
-                              </option>
-                              <option value="Maturity stage">
-                                Maturity stage
-                              </option>
-                            </select>
-                          </div>
-
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Short Business Bio/Profile
-                            </label>
-                            <textarea
-                              required
-                              name="businessBio"
-                              className="form-style"
-                              placeholder="Brief description of your business"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Number of Customers
-                            </label>
-                            <input
-                              required
-                              name="customerCount"
-                              className="form-style"
-                              placeholder="Enter number of customers"
-                              type="number"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Potential Market & Target Audience
-                            </label>
-                            <textarea
-                              required
-                              name="targetMarket"
-                              className="form-style"
-                              placeholder="Describe your target market and audience"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Business Traction
-                            </label>
-                            <textarea
-                              required
-                              name="traction"
-                              className="form-style"
-                              placeholder="Describe your traction"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Business Location
-                            </label>
-                            <select
-                              required
-                              name="businessLocation"
-                              className="form-style"
-                            >
-                              <option value="">Select Region</option>
-                              <option value="Arusha">Arusha</option>
-                              <option value="Dar es Salaam">
-                                Dar es Salaam
-                              </option>
-                              <option value="Dodoma">Dodoma</option>
-                              <option value="Geita">Geita</option>
-                              <option value="Iringa">Iringa</option>
-                              <option value="Kagera">Kagera</option>
-                              <option value="Katavi">Katavi</option>
-                              <option value="Kigoma">Kigoma</option>
-                              <option value="Kilimanjaro">Kilimanjaro</option>
-                              <option value="Lindi">Lindi</option>
-                              <option value="Manyara">Manyara</option>
-                              <option value="Mara">Mara</option>
-                              <option value="Mbeya">Mbeya</option>
-                              <option value="Mjini Magharibi">
-                                Mjini Magharibi
-                              </option>
-                              <option value="Morogoro">Morogoro</option>
-                              <option value="Mtwara">Mtwara</option>
-                              <option value="Mwanza">Mwanza</option>
-                              <option value="Njombe">Njombe</option>
-                              <option value="Pemba North">Pemba North</option>
-                              <option value="Pemba South">Pemba South</option>
-                              <option value="Pwani">Pwani</option>
-                              <option value="Rukwa">Rukwa</option>
-                              <option value="Ruvuma">Ruvuma</option>
-                              <option value="Shinyanga">Shinyanga</option>
-                              <option value="Simiyu">Simiyu</option>
-                              <option value="Singida">Singida</option>
-                              <option value="Songwe">Songwe</option>
-                              <option value="Tabora">Tabora</option>
-                              <option value="Tanga">Tanga</option>
-                              <option value="Unguja North">Unguja North</option>
-                              <option value="Unguja South">Unguja South</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              What problems does your business solve ?
-                            </label>
-                            <textarea
-                              required
-                              name="problem"
-                              className="form-style"
-                              placeholder="What problems does your business solve ?"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              What solution does your business provide ?
-                            </label>
-                            <textarea
-                              required
-                              name="solution"
-                              className="form-style"
-                              placeholder="What solution does your business provide ?"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Current Business Impact
-                            </label>
-                            <textarea
-                              required
-                              name="businessImpact"
-                              className="form-style"
-                              placeholder="Describe your current business impact"
-                              rows="3"
-                            />
-                          </div>
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Future Milestones & Growth Plans
-                            </label>
-                            <textarea
-                              required
-                              name="growthPlans"
-                              className="form-style"
-                              placeholder="Describe your future milestones and growth plans"
-                              rows="3"
-                            />
-                          </div>
-
-                          <div>
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Current Fundraising Needs
-                            </label>
-                            <textarea
-                              required
-                              name="fundraisingNeeds"
-                              className="form-style"
-                              placeholder="Describe your current fundraising needs"
-                              rows="3"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Number of people in your team
-                            </label>
-                            <input
-                              required
-                              name="team"
-                              className="form-style"
-                              placeholder="Enter number of team members"
-                              type="number"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Registration status
-                            </label>
-                            <select
-                              required
-                              name="registration"
-                              className="form-style"
-                            >
-                              <option>Registration status</option>
-                              <option value="Registered with BRELA">
-                                Registered with BRELA
-                              </option>
-                              <option value="Registered with TIN only">
-                                Registered with TIN only
-                              </option>
-                              <option value="Have BRELA and TIN">
-                                Have BRELA and TIN
-                              </option>
-                            </select>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <EnterprenuerSignupForm
+                      sectors={sectors}
+                      isAlumni={isAlumni}
+                      setisAlumni={setisAlumni}
+                    />
                   )}
                   {role == "Investor" && (
-                    <div>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
-                          {/* Personal & Contact Information */}
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Company Name
-                            </label>
-                            <input
-                              name="company"
-                              required
-                              className="form-style"
-                              placeholder="Your company name"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Location
-                            </label>
-                            <input
-                              name="location"
-                              required
-                              className="form-style"
-                              placeholder="Your location"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Investment Size
-                            </label>
-                            <input
-                              name="investmentSize"
-                              required
-                              className="form-style"
-                              placeholder="Your investment size"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Position
-                            </label>
-                            <input
-                              name="position"
-                              required
-                              className="form-style"
-                              placeholder="Your position in the company"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business sector
-                            </label>
-                            <select
-                              required
-                              name="sector"
-                              className="form-style"
-                            >
-                              <option value={""}>Select business sector</option>
-                              {sectors.map((item) => {
-                                return (
-                                  <option key={item.id} value={item.uuid}>
-                                    {item.name}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              LinkedIn Profile
-                            </label>
-                            <input
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.investorLinkedIn = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              name="investorLinkedIn"
-                              required
-                              className="form-style"
-                              placeholder="Your LinkedIn profile URL"
-                              type="url"
-                            />
-                          </div>
-
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Website (if applicable)
-                            </label>
-                            <input
-                              name="investorWebsite"
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.investorWebsite = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              className="form-style"
-                              placeholder="Your company website"
-                              type="text"
-                            />
-                          </div>
-                          {/* Investment Focus */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Investment Focus
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {[
-                                "Early-Stage Startups",
-                                "Growth-Stage Businesses",
-                                "Impact Investing",
-                                "Climate & Sustainability",
-                                "Fintech & Digital Solutions",
-                                "Agriculture & Agribusiness",
-                                "Manufacturing & Supply Chain",
-                              ].map((focus) => (
-                                <label
-                                  key={focus}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    name="investorFocus"
-                                    onChange={(e) => {
-                                      let newFormValues = {
-                                        investorFocus: {},
-                                        ...formValues,
-                                      };
-                                      newFormValues.investorFocus[
-                                        Object.keys(
-                                          newFormValues.investorFocus
-                                        ).length
-                                      ] = e.target.value;
-                                      setFormValues(newFormValues);
-                                    }}
-                                    value={focus}
-                                    className="form-checkbox"
-                                  />
-                                  <span>{focus}</span>
-                                </label>
-                              ))}
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  name="investorFocus"
-                                  value="Other"
-                                  className="form-checkbox"
-                                />
-                                <input
-                                  onChange={(e) => {
-                                    let newFormValues = {
-                                      investorFocus: {},
-                                      ...formValues,
-                                    };
-                                    newFormValues.investorFocus[
-                                      Object.keys(
-                                        newFormValues.investorFocus
-                                      ).length
-                                    ] = e.target.value;
-                                    setFormValues(newFormValues);
-                                  }}
-                                  type="text"
-                                  name="investorOtherFocus"
-                                  placeholder="Specify other focus"
-                                  className="form-style"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          {/* Investment Size */}
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Typical Investment Size
-                            </label>
-                            <select
-                              required
-                              name="investorTicketSize"
-                              onChange={(e) => {
-                                let newFormValues = {
-                                  ...formValues,
-                                };
-                                newFormValues.investorTicketSize =
-                                  e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              className="form-style"
-                            >
-                              <option value="">Select investment size</option>
-                              <option value="<$50,000">&lt;$50,000</option>
-                              <option value="$50,000 - $100,000">
-                                $50,000 - $100,000
-                              </option>
-                              <option value="$100,000 - $500,000">
-                                $100,000 - $500,000
-                              </option>
-                              <option value="$500,000 - $1M">
-                                $500,000 - $1M
-                              </option>
-                              <option value="$1M+">$1M+</option>
-                            </select>
-                          </div>
-                          {/* Investment Type */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Investment Type Preference
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {[
-                                "Equity",
-                                "Debt Financing",
-                                "Convertible Notes",
-                                "Grants",
-                              ].map((type) => (
-                                <label
-                                  key={type}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    onChange={(e) => {
-                                      let newFormValues = {
-                                        ...formValues,
-                                      };
-                                      newFormValues.investorStructure[
-                                        Object.keys(
-                                          newFormValues.investorStructure
-                                        ).length
-                                      ] = e.target.value;
-                                      setFormValues(newFormValues);
-                                    }}
-                                    name="investorStructure"
-                                    value={type.toLowerCase()}
-                                    className="form-checkbox"
-                                  />
-                                  <span>{type}</span>
-                                </label>
-                              ))}
-                              <div className="flex items-center space-x-2">
-                                <input
-                                  type="checkbox"
-                                  name="investorStructure"
-                                  value="other"
-                                  className="form-checkbox"
-                                />
-                                <input
-                                  onChange={(e) => {
-                                    let newFormValues = {
-                                      ...formValues,
-                                    };
-                                    newFormValues.investorStructure[
-                                      Object.keys(
-                                        newFormValues.investorStructure
-                                      ).length
-                                    ] = e.target.value;
-                                    setFormValues(newFormValues);
-                                  }}
-                                  type="text"
-                                  name="investorOtherStructure"
-                                  placeholder="Specify other type"
-                                  className="form-style"
-                                />
-                              </div>
-                            </div>
-                          </div>
-                          {/* Bio & Experience */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Brief Bio
-                            </label>
-                            <textarea
-                              required
-                              name="investorBio"
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.investorBio = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              className="form-style"
-                              placeholder="Tell us about yourself & investment background"
-                              rows="4"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Notable Investments
-                            </label>
-                            <textarea
-                              name="investorNotableInvestments"
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.investorNotableInvestments =
-                                  e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              className="form-style"
-                              placeholder="List your notable investments (if applicable)"
-                              rows="4"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Seeking
-                            </label>
-                            <textarea
-                              name="seeking"
-                              required
-                              className="form-style"
-                              placeholder="What are you seeking"
-                              rows="4"
-                            />
-                          </div>
-                          {/* Mentoring Preference */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Preferred Mentoring or Advisory Role?
-                            </label>
-                            <div className="space-y-2">
-                              <label className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  required
-                                  name="investorMentoringPreference"
-                                  value="true"
-                                  className="form-radio"
-                                />
-                                <span>
-                                  Yes, I am open to mentoring startups
-                                </span>
-                              </label>
-                              <label className="flex items-center space-x-2">
-                                <input
-                                  type="radio"
-                                  required
-                                  name="investorMentoringPreference"
-                                  value="false"
-                                  className="form-radio"
-                                />
-                                <span>
-                                  No, I am only interested in investing
-                                </span>
-                              </label>
-                            </div>
-                          </div>
-                          {/* Supporting Documents */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Upload Investment Portfolio (Optional)
-                            </label>
-                            <input
-                              type="file"
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.investorPortfolio =
-                                  e.target.files[0];
-                                setFormValues(newFormValues);
-                              }}
-                              name="investorPortfolio"
-                              className="form-style"
-                              accept=".pdf,.doc,.docx"
-                            />
-                          </div>
-                          {/* Agreement & Consent */}
-                          <div className="col-span-2 space-y-4">
-                            <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                name="investorContactConsent"
-                                required
-                                className="form-checkbox"
-                              />
-                              <span>
-                                I agree to be contacted regarding investment
-                                opportunities
-                              </span>
-                            </label>
-                            <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                name="investorMatchingConsent"
-                                required
-                                className="form-checkbox"
-                              />
-                              <span>
-                                I consent to my information being used for
-                                investor matching/mentors or any other platform
-                                that can help
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <InvestorSignupForm
+                      sectors={sectors}
+                      formValues={formValues}
+                      setFormValues={setFormValues}
+                    />
                   )}
                   {role == "Mentor" && (
-                    <div>
-                      <div className="space-y-2">
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
-                          {/* Personal Information */}
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              LinkedIn Profile
-                            </label>
-                            <input
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.mentorLinkedIn = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              name="mentorLinkedIn"
-                              required
-                              className="form-style"
-                              placeholder="Your LinkedIn profile URL"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Organization/Company Name
-                            </label>
-                            <input
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.mentorOrganisation =
-                                  e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              name="mentorCompany"
-                              required
-                              className="form-style"
-                              placeholder="Your organization name"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Business sector
-                            </label>
-                            <select
-                              required
-                              name="business_sector_uuid"
-                              className="form-style"
-                            >
-                              <option>Select business sector</option>
-                              {sectors.map((item) => {
-                                return (
-                                  <option key={item.id} value={item.uuid}>
-                                    {item.name}
-                                  </option>
-                                );
-                              })}
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Current Position/Title
-                            </label>
-                            <input
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.mentorPosition = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              name="mentorPosition"
-                              required
-                              className="form-style"
-                              placeholder="Your current position"
-                              type="text"
-                            />
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Language
-                            </label>
-                            <select
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.mentorPosition = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              name="language"
-                              required
-                              className="form-style"
-                              placeholder="Your language"
-                              type="text"
-                            >
-                              <option value={"English"}>English</option>
-                              <option value={"Swahili"}>Swahili</option>
-                            </select>
-                          </div>
-                          <div className="col-span-1">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              SME Focus
-                            </label>
-                            <select
-                              name="smeFocus"
-                              className="form-style"
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.smeFocus = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                            >
-                              {[
-                                "Startups",
-                                "Growth stage",
-                                "Expansion stage",
-                                "Maturity Stage",
-                              ].map((item) => {
-                                return <option key={item}>{item}</option>;
-                              })}
-                            </select>
-                          </div>
-                          <div>
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Location
-                            </label>
-                            <input
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.location = e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              name="location"
-                              required
-                              className="form-style"
-                              placeholder="Your location"
-                              type="text"
-                            />
-                          </div>
-                          {/* Expertise & Areas of Support */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Select Your Areas of Expertise
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {[
-                                "Business Strategy & Growth",
-                                "Finance & Fundraising",
-                                "Marketing & Branding",
-                                "Operations & Supply Chain",
-                                "Leadership & Team Development",
-                                "Legal & Compliance",
-                                "Impact & Sustainability",
-                              ].map((expertise) => (
-                                <label
-                                  key={expertise}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    onChange={(e) => {
-                                      let newFormValues = {
-                                        mentorExpertise: {},
-                                        ...formValues,
-                                      };
-                                      newFormValues.mentorExpertise[
-                                        Object.keys(
-                                          newFormValues.mentorExpertise
-                                        ).length
-                                      ] = e.target.value;
-                                      setFormValues(newFormValues);
-                                    }}
-                                    name="mentorExpertise"
-                                    value={expertise}
-                                    className="form-checkbox"
-                                  />
-                                  <span>{expertise}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Availability & Commitment */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              How often can you mentor?
-                            </label>
-                            <div className="space-y-2">
-                              {[
-                                { value: "weekly", label: "Weekly" },
-                                { value: "biweekly", label: "Biweekly" },
-                                { value: "monthly", label: "Monthly" },
-                                { value: "flexible", label: "Flexible" },
-                              ].map((option) => (
-                                <div
-                                  key={option.value}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="radio"
-                                    onChange={(e) => {
-                                      const newFormValues = formValues;
-                                      newFormValues.mentorAvailability =
-                                        e.target.value;
-                                      setFormValues(newFormValues);
-                                    }}
-                                    name="mentorFrequency"
-                                    value={option.value}
-                                    className="form-radio"
-                                  />
-                                  <span>{option.label}</span>
-                                  <input
-                                    type="number"
-                                    onChange={(e) => {
-                                      const newFormValues = formValues;
-                                      newFormValues.mentorHours =
-                                        e.target.value;
-                                      setFormValues(newFormValues);
-                                    }}
-                                    placeholder="Hours"
-                                    className="form-style w-24"
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Preferred Mentoring Format */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Preferred Mentoring Format
-                            </label>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                              {[
-                                "One-on-One Sessions",
-                                "Group Mentorship",
-                                "Online/Virtual Mentorship",
-                                "In-Person Mentorship",
-                              ].map((format) => (
-                                <label
-                                  key={format}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    onChange={(e) => {
-                                      // let newFormValues = formValues;
-                                      let newFormValues = {
-                                        mentorFormat: {},
-                                        ...formValues,
-                                      };
-                                      newFormValues.mentorFormat[
-                                        Object.keys(
-                                          newFormValues.mentorFormat
-                                        ).length
-                                      ] = e.target.value;
-                                      setFormValues(newFormValues);
-                                    }}
-                                    name="mentorFormat"
-                                    value={format}
-                                    className="form-checkbox"
-                                  />
-                                  <span>{format}</span>
-                                </label>
-                              ))}
-                            </div>
-                          </div>
-                          {/* Experience & Support */}
-                          <div className="col-span-2">
-                            <label
-                              className="mb-2.5 block font-medium text-black
-dark:text-white"
-                            >
-                              Tell Us About Your Experience and How You Can
-                              Support Entrepreneurs
-                            </label>
-                            <textarea
-                              name="mentorExperience"
-                              required
-                              onChange={(e) => {
-                                const newFormValues = formValues;
-                                newFormValues.mentorDescription =
-                                  e.target.value;
-                                setFormValues(newFormValues);
-                              }}
-                              className="form-style"
-                              placeholder="Share your experience and how you can help
-entrepreneurs"
-                              rows="4"
-                            />
-                          </div>
-                          <div className="col-span-2">
-                            <label className="mb-2.5 block font-medium text-black dark:text-white">
-                              Select Your Top 3 Mentorship Focus Areas
-                            </label>
-                            <div className="flex flex-wrap gap-4">
-                              {[
-                                "Business Strategy & Planning",
-                                "Financial Management",
-                                "Operations & Systems",
-                                "Sales & Marketing",
-                                "Product & Service Development",
-                                "Team & Leadership",
-                                "Legal & Compliance",
-                                "Impact & Sustainability",
-                                "Technology & Digital Transformation",
-                                "Investor & Partnership Readiness",
-                                "Export Readiness & Market Access",
-                                "Personal Development & Soft Skills",
-                              ].map((area) => (
-                                <label
-                                  key={area}
-                                  className="flex items-center space-x-2"
-                                >
-                                  <input
-                                    type="checkbox"
-                                    name="mentorshipFocus"
-                                    value={area}
-                                    onChange={(e) => {
-                                      const newFormValues = { ...formValues };
-                                      const selectedAreas =
-                                        newFormValues.mentorshipFocus || [];
-                                      if (
-                                        e.target.checked &&
-                                        selectedAreas.length < 3
-                                      ) {
-                                        newFormValues.mentorshipFocus = [
-                                          ...selectedAreas,
-                                          area,
-                                        ];
-                                      } else if (!e.target.checked) {
-                                        newFormValues.mentorshipFocus =
-                                          selectedAreas.filter(
-                                            (item) => item !== area
-                                          );
-                                      }
-                                      setFormValues(newFormValues);
-                                    }}
-                                    disabled={
-                                      !formValues.mentorshipFocus?.includes(
-                                        area
-                                      ) &&
-                                      formValues.mentorshipFocus?.length >= 3
-                                    }
-                                    className="h-5 w-5 text-blue-600 focus:ring-blue-500 border-black/20 rounded"
-                                  />
-                                  <span className="text-gray-700 dark:text-gray-300">
-                                    {area}
-                                  </span>
-                                </label>
-                              ))}
-                            </div>
-                            {formValues.mentorshipFocus?.length > 3 && (
-                              <p className="text-red-500 text-sm mt-2">
-                                Please select only up to 3 focus areas.
-                              </p>
-                            )}
-                          </div>
-
-                          {/* Agreement & Consent */}
-                          <div className="col-span-2 space-y-4 mt-12">
-                            <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                name="mentorContactConsent"
-                                required
-                                className="form-checkbox"
-                              />
-                              <span>
-                                I agree to be contacted regarding mentorship
-                                opportunities
-                              </span>
-                            </label>
-                            <label className="flex items-center space-x-2">
-                              <input
-                                type="checkbox"
-                                name="mentorMatchingConsent"
-                                required
-                                className="form-checkbox"
-                              />
-                              <span>
-                                I consent to my information being used for
-                                mentorship matching
-                              </span>
-                            </label>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
+                    <MentorSignupForm
+                      sectors={sectors}
+                      formValues={formValues}
+                      setFormValues={setFormValues}
+                    />
                   )}
                 </div>
               )}
@@ -1864,7 +639,7 @@ entrepreneurs"
                     }}
                     className="py-3 px-3 rounded-lg border-slate-400 border cursor-pointer"
                   >
-                    Prev
+                    {t("common.previous", "Previous")}
                   </div>
                 )}
                 {selectedIndex == 0 && file != null && (
@@ -1875,7 +650,7 @@ entrepreneurs"
                     className="py-3 px-3 rounded-lg text-white border-slate-400 border
 bg-primary"
                   >
-                    Next
+                    {t("common.next", "Next")}
                   </button>
                 )}
                 {(selectedIndex == 1 && role == "Reviewer") ||
@@ -1885,7 +660,11 @@ bg-primary"
                     className="w-48 cursor-pointer rounded-lg border flex justify-center
 border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
                   >
-                    {loading ? <Spinner /> : "Complete Registration"}
+                    {loading ? (
+                      <Spinner />
+                    ) : (
+                      t("auth.completeRegistration", "Complete Registration")
+                    )}
                   </button>
                 ) : (
                   selectedIndex != 0 &&
@@ -1900,13 +679,18 @@ border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
                         if (formValues.password === formValues.repeatPassword) {
                           setSelectedIndex(selectedIndex + 1);
                         } else {
-                          toast.error("Passwords don't match");
+                          toast.error(
+                            t(
+                              "auth.passwordsDoNotMatch",
+                              "Passwords do not match"
+                            )
+                          );
                         }
                       }}
                       className="py-3 px-3 rounded-lg text-white border-slate-400 border
 bg-primary"
                     >
-                      Next
+                      {t("common.next", "Next")}
                     </button>
                   )
                 )}
@@ -1916,7 +700,11 @@ bg-primary"
                     className="w-48 cursor-pointer rounded-lg border flex justify-center
 border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
                   >
-                    {loading ? <Spinner /> : "Complete Registration"}
+                    {loading ? (
+                      <Spinner />
+                    ) : (
+                      t("auth.completeRegistration", "Complete Registration")
+                    )}
                   </button>
                 ) : (
                   role != "Reviewer" &&
@@ -1926,7 +714,11 @@ border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
                       className="w-48 cursor-pointer rounded-lg border flex justify-center
 border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
                     >
-                      {loading ? <Spinner /> : "Complete Registration"}
+                      {loading ? (
+                        <Spinner />
+                      ) : (
+                        t("auth.completeRegistration", "Complete Registration")
+                      )}
                     </button>
                   )
                 )}

@@ -108,7 +108,10 @@ const Page = () => {
                         onChange={handleChange}
                         name="password"
                         // aria-invalid={touched.password && !!errors.password}
-                        placeholder="6+ Characters, 1 Capital letter"
+                        placeholder={t(
+                          "auth.passwordHint",
+                          "6+ Characters, 1 Capital letter"
+                        )}
                         className={` form-style`}
                       />
 
@@ -157,7 +160,7 @@ const Page = () => {
                     <p className=" text-danger pt-3">{errors.password}</p>
                     <div className="flex justify-end py-3">
                       <Link href="/forgotPassword" className=" text-slate-500">
-                        Forgot password ?
+                        {t("auth.forgotPassword", "Forgot Password?")}
                       </Link>
                     </div>
                   </div>
@@ -167,15 +170,15 @@ const Page = () => {
                       type="submit"
                       className="w-full cursor-pointer rounded-lg border flex justify-center border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
                     >
-                      {isLoading ? <Spinner /> : "Sign in"}
+                      {isLoading ? <Spinner /> : t("auth.signIn", "Sign In")}
                     </button>
                   </div>
 
                   <div className="mt-6 text-center">
                     <p>
-                      Don’t have any account?{" "}
+                      {t("auth.dontHaveAccount", "Don't have an account?")}{" "}
                       <Link href="/signup" className="text-primary font-bold">
-                        Sign Up
+                        {t("auth.signUp", "Sign Up")}
                       </Link>
                     </p>
                   </div>

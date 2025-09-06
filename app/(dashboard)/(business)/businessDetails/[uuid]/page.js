@@ -22,8 +22,10 @@ import jsPDF from "jspdf";
 import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
 import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 import { FaFilePdf } from "react-icons/fa";
+import { useTranslation } from "@/app/locales";
 
 const Page = ({ params }) => {
+  const { t } = useTranslation();
   const { uuid } = params;
   const [business, setBusiness] = useState(null);
   const { userDetails } = useContext(UserContext);
@@ -50,7 +52,7 @@ const Page = ({ params }) => {
 
   const loadCRATForAI = async () => {
     if (!business) {
-      toast.error("Business data not loaded yet");
+      toast.error(t("business.errors.dataNotLoaded", "Business data not loaded yet"));
       return;
     }
 
@@ -59,7 +61,7 @@ const Page = ({ params }) => {
       console.log("🔍 Preparing comprehensive AI analysis for:", business.name);
 
       // Show immediate feedback
-      toast.loading("Preparing AI analysis...", { id: "ai-loading" });
+      toast.loading(t("ai.preparing", "Preparing AI analysis..."), { id: "ai-loading" });
 
       // Calculate intelligent scores based on business completeness
       const calculateIntelligentScore = (category) => {
@@ -105,12 +107,12 @@ const Page = ({ params }) => {
       try {
         actualCRATData = await getScoreData();
         console.log("📊 Found CRAT assessment data:", actualCRATData);
-        toast.success("CRAT assessment data loaded", { id: "ai-loading" });
+        toast.success(t("ai.cratLoaded", "CRAT assessment data loaded"), { id: "ai-loading" });
       } catch (cratError) {
         console.log(
           "ℹ️ No CRAT assessment found, using business profile analysis"
         );
-        toast.success("Business profile analysis prepared", {
+        toast.success(t("ai.profilePrepared", "Business profile analysis prepared"), {
           id: "ai-loading",
         });
       }
@@ -121,41 +123,41 @@ const Page = ({ params }) => {
           percentage: calculateIntelligentScore("commercial"),
           status:
             calculateIntelligentScore("commercial") >= 70
-              ? "Good"
+              ? t("ai.status.good", "Good")
               : calculateIntelligentScore("commercial") >= 50
-              ? "Fair"
-              : "Needs Improvement",
+              ? t("ai.status.fair", "Fair")
+              : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         financial: {
           percentage: calculateIntelligentScore("financial"),
           status:
             calculateIntelligentScore("financial") >= 70
-              ? "Good"
+              ? t("ai.status.good", "Good")
               : calculateIntelligentScore("financial") >= 50
-              ? "Fair"
-              : "Needs Improvement",
+              ? t("ai.status.fair", "Fair")
+              : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         operations: {
           percentage: calculateIntelligentScore("operations"),
           status:
             calculateIntelligentScore("operations") >= 70
-              ? "Good"
+              ? t("ai.status.good", "Good")
               : calculateIntelligentScore("operations") >= 50
-              ? "Fair"
-              : "Needs Improvement",
+              ? t("ai.status.fair", "Fair")
+              : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         legal: {
           percentage: calculateIntelligentScore("legal"),
           status:
             calculateIntelligentScore("legal") >= 70
-              ? "Good"
+              ? t("ai.status.good", "Good")
               : calculateIntelligentScore("legal") >= 50
-              ? "Fair"
-              : "Needs Improvement",
+              ? t("ai.status.fair", "Fair")
+              : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         general_status: actualCRATData
-          ? "CRAT Assessment"
-          : "Business Profile Analysis",
+          ? t("ai.generalStatus.cratAssessment", "CRAT Assessment")
+          : t("ai.generalStatus.profileAnalysis", "Business Profile Analysis"),
       };
 
       // Send PDF report to entrepreneur
@@ -165,113 +167,112 @@ const Page = ({ params }) => {
       const reportData = {
         commercial: {
           responses: [
-            `Business Description: ${
-              business.description || "Comprehensive business overview needed"
+            `${t("business.labels.businessDescription", "Business Description")}: ${
+              business.description || t("business.placeholders.overviewMissing", "Comprehensive business overview needed")
             }`,
-            `Target Market: ${business.market || "Market analysis required"}`,
-            `Customer Base: ${
+            `${t("business.labels.targetMarket", "Target Market")}: ${business.market || t("business.placeholders.marketMissing", "Market analysis required")}`,
+            `${t("business.labels.customerBase", "Customer Base")}: ${
               business.numberOfCustomers
-                ? `${business.numberOfCustomers} customers`
-                : "Customer metrics needed"
+                ? `${business.numberOfCustomers} ${t("business.customers", "customers")}`
+                : t("business.placeholders.customerMetricsMissing", "Customer metrics needed")
             }`,
-            `Market Impact: ${business.impact || "Impact assessment required"}`,
-            `Current Traction: ${
-              business.traction || "Traction metrics needed"
+            `${t("business.labels.marketImpact", "Market Impact")}: ${business.impact || t("business.placeholders.impactMissing", "Impact assessment required")}`,
+            `${t("business.labels.currentTraction", "Current Traction")}: ${
+              business.traction || t("business.placeholders.tractionMissing", "Traction metrics needed")
             }`,
-            `Problem Statement: ${
-              business.problem || "Problem definition required"
+            `${t("business.labels.problemStatement", "Problem Statement")}: ${
+              business.problem || t("business.placeholders.problemMissing", "Problem definition required")
             }`,
-            `Solution Offered: ${
-              business.solution || "Solution description required"
+            `${t("business.labels.solutionOffered", "Solution Offered")}: ${
+              business.solution || t("business.placeholders.solutionMissing", "Solution description required")
             }`,
           ],
           score: scoreData.commercial.percentage,
         },
         financial: {
           responses: [
-            `Business Stage: ${
-              business.stage || "Stage classification needed"
+            `${t("business.labels.businessStage", "Business Stage")}: ${
+              business.stage || t("business.placeholders.stageMissing", "Stage classification needed")
             }`,
-            `Fundraising Needs: ${
-              business.fundraisingNeeds || "Funding requirements not specified"
+            `${t("business.labels.fundraisingNeeds", "Fundraising Needs")}: ${
+              business.fundraisingNeeds || t("business.placeholders.fundraisingMissing", "Funding requirements not specified")
             }`,
-            `Investment Seeking: ${
+            `${t("business.labels.investmentSeeking", "Investment Seeking")}: ${
               business.lookingForInvestment
-                ? "Actively seeking investment"
-                : "Not currently seeking investment"
+                ? t("business.seekingInvestmentYes", "Actively seeking investment")
+                : t("business.seekingInvestmentNo", "Not currently seeking investment")
             }`,
-            `Revenue Model: ${
+            `${t("business.labels.revenueModel", "Revenue Model")}: ${
               business.businessPlan
-                ? "Business plan available"
-                : "Revenue model documentation needed"
+                ? t("business.placeholders.businessPlanAvailable", "Business plan available")
+                : t("business.placeholders.revenueModelMissing", "Revenue model documentation needed")
             }`,
-            `Financial Documentation: ${
+            `${t("business.labels.financialDocumentation", "Financial Documentation")}: ${
               business.companyProfile
-                ? "Company profile available"
-                : "Financial documents needed"
+                ? t("business.placeholders.companyProfileAvailable", "Company profile available")
+                : t("business.placeholders.financialDocsMissing", "Financial documents needed")
             }`,
-            `Growth Plans: ${
-              business.growthPlan || "Growth strategy required"
+            `${t("business.labels.growthPlans", "Growth Plans")}: ${
+              business.growthPlan || t("business.placeholders.growthStrategyMissing", "Growth strategy required")
             }`,
           ],
           score: scoreData.financial.percentage,
         },
         operations: {
           responses: [
-            `Team Structure: ${
+            `${t("business.labels.teamStructure", "Team Structure")}: ${
               business.team
-                ? `Team of ${business.team} members`
-                : "Team size not specified"
+                ? `${t("business.teamSize", "Team Size")} ${business.team}`
+                : t("business.placeholders.teamSizeMissing", "Team size not specified")
             }`,
-            `Business Location: ${
-              business.location || "Location not specified"
+            `${t("business.labels.businessLocation", "Business Location")}: ${
+              business.location || t("business.placeholders.locationMissing", "Location not specified")
             }`,
-            `Growth Strategy: ${
-              business.growthPlan || "Strategic planning required"
+            `${t("business.labels.growthStrategy", "Growth Strategy")}: ${
+              business.growthPlan || t("business.placeholders.strategyMissing", "Strategic planning required")
             }`,
-            `Operational Status: ${
+            `${t("business.labels.operationalStatus", "Operational Status")}: ${
               business.status === "accepted"
-                ? "Approved operations"
-                : "Pending approval"
+                ? t("business.placeholders.approvedOperations", "Approved operations")
+                : t("business.placeholders.pendingApproval", "Pending approval")
             }`,
-            `Industry Sector: ${
-              business.BusinessSector?.name || "Sector classification needed"
+            `${t("business.labels.industrySector", "Industry Sector")}: ${
+              business.BusinessSector?.name || t("business.placeholders.sectorMissing", "Sector classification needed")
             }`,
-            `Program Completion: ${
-              business.completedProgram || "No program completion recorded"
+            `${t("business.labels.programCompletion", "Program Completion")}: ${
+              business.completedProgram || t("business.placeholders.noProgramCompletion", "No program completion recorded")
             }`,
-            `Alumni Status: ${
-              business.isAlumni ? "Anza Alumni" : "Non-alumni"
+            `${t("business.labels.alumniStatus", "Alumni Status")}: ${
+              business.isAlumni ? t("business.alumni", "Anza Alumni") : t("business.nonAlumni", "Non-alumni")
             }`,
           ],
           score: scoreData.operations.percentage,
         },
         legal: {
           responses: [
-            `Business Registration: ${
-              business.registration || "Registration documentation needed"
+            `${t("business.labels.businessRegistration", "Business Registration")}: ${
+              business.registration || t("business.placeholders.registrationMissing", "Registration documentation needed")
             }`,
-            `Legal Structure: ${
-              business.BusinessSector?.name ||
-              "Legal structure classification required"
+            `${t("business.labels.legalStructure", "Legal Structure")}: ${
+              business.BusinessSector?.name || t("business.placeholders.legalStructureMissing", "Legal structure classification required")
             }`,
-            `Compliance Status: ${
+            `${t("business.labels.complianceStatus", "Compliance Status")}: ${
               business.status === "accepted"
-                ? "Compliant and approved"
-                : "Pending compliance review"
+                ? t("business.placeholders.compliantApproved", "Compliant and approved")
+                : t("business.placeholders.pendingCompliance", "Pending compliance review")
             }`,
-            `SDG Alignment: ${
-              business.sdg || "SDG alignment assessment needed"
+            `${t("business.labels.sdgAlignment", "SDG Alignment")}: ${
+              business.sdg || t("business.placeholders.sdgMissing", "SDG alignment assessment needed")
             }`,
-            `Documentation: ${
+            `${t("business.labels.documentation", "Documentation")}: ${
               business.companyProfile
-                ? "Legal documents available"
-                : "Legal documentation required"
+                ? t("business.placeholders.legalDocsAvailable", "Legal documents available")
+                : t("business.placeholders.legalDocsMissing", "Legal documentation required")
             }`,
-            `Industry Compliance: ${
+            `${t("business.labels.industryCompliance", "Industry Compliance")}: ${
               business.BusinessSector?.name
-                ? "Industry-specific compliance addressed"
-                : "Industry compliance assessment needed"
+                ? t("business.placeholders.industryComplianceAddressed", "Industry-specific compliance addressed")
+                : t("business.placeholders.industryComplianceMissing", "Industry compliance assessment needed")
             }`,
           ],
           score: scoreData.legal.percentage,
@@ -280,10 +281,10 @@ const Page = ({ params }) => {
 
       // Create comprehensive business info for AI
       const businessInfo = {
-        name: business.name || "Business Name",
-        sector: business.BusinessSector?.name || "Technology",
-        location: business.location || "Tanzania",
-        stage: business.stage || "Growth Stage",
+        name: business.name || t("business.labels.businessName", "Business Name"),
+        sector: business.BusinessSector?.name || t("business.labels.sector", "Technology"),
+        location: business.location || t("business.labels.location", "Tanzania"),
+        stage: business.stage || t("business.labels.stage", "Growth Stage"),
         description: business.description,
         problem: business.problem,
         solution: business.solution,
@@ -322,21 +323,21 @@ const Page = ({ params }) => {
       );
 
       // Determine score category for better messaging
-      let scoreCategory = "Excellent";
+      let scoreCategory = t("ai.scoreCategories.excellent", "Excellent");
       let scoreEmoji = "🎯";
       if (avgScore < 50) {
-        scoreCategory = "Needs Improvement";
+        scoreCategory = t("ai.scoreCategories.needsImprovement", "Needs Improvement");
         scoreEmoji = "📈";
       } else if (avgScore < 70) {
-        scoreCategory = "Good Potential";
+        scoreCategory = t("ai.scoreCategories.goodPotential", "Good Potential");
         scoreEmoji = "⭐";
       } else if (avgScore < 85) {
-        scoreCategory = "Strong Performance";
+        scoreCategory = t("ai.scoreCategories.strongPerformance", "Strong Performance");
         scoreEmoji = "🚀";
       }
 
       toast.success(
-        `${scoreEmoji} AI analysis complete! ${scoreCategory} - ${avgScore}%`,
+        `${scoreEmoji} ${t("ai.analysisComplete", "AI analysis complete!")} ${scoreCategory} - ${avgScore}%`,
         {
           id: "ai-loading",
           duration: 4000,
@@ -352,7 +353,7 @@ const Page = ({ params }) => {
       }, 800);
     } catch (error) {
       console.error("❌ Error preparing AI analysis:", error);
-      toast.error("Failed to prepare AI analysis. Please try again.", {
+      toast.error(t("ai.errors.prepareFailed", "Failed to prepare AI analysis. Please try again."), {
         id: "ai-loading",
       });
     } finally {
@@ -364,14 +365,14 @@ const Page = ({ params }) => {
     // Only generate PDF, do not send email
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("AI Analysis Report", 10, 15);
+    doc.text(t("ai.pdf.title", "AI Analysis Report"), 10, 15);
     doc.setFontSize(12);
     let y = 30;
-    doc.text(`Entrepreneur: ${business.User?.name || "N/A"}`, 10, y);
+    doc.text(`${t("ai.pdf.entrepreneur", "Entrepreneur")}: ${business.User?.name || t("common.notProvided", "N/A")}`, 10, y);
     y += 8;
-    doc.text(`Business: ${business.name || "N/A"}`, 10, y);
+    doc.text(`${t("ai.pdf.business", "Business")}: ${business.name || t("common.notProvided", "N/A")}`, 10, y);
     y += 8;
-    doc.text(`Date: ${new Date().toLocaleDateString()}`, 10, y);
+    doc.text(`${t("ai.pdf.date", "Date")}: ${new Date().toLocaleDateString()}`, 10, y);
     y += 12;
     Object.entries(scoreData).forEach(([domain, data]) => {
       if (typeof data === "object" && data !== null && "percentage" in data) {
@@ -384,7 +385,7 @@ const Page = ({ params }) => {
         );
         y += 7;
         if (data.status) {
-          doc.text(`Status: ${data.status}`, 14, y);
+          doc.text(`${t("ai.pdf.status", "Status")}: ${data.status}`, 14, y);
           y += 6;
         }
       }
@@ -393,7 +394,7 @@ const Page = ({ params }) => {
     const arrayBuffer = doc.output("arraybuffer");
     const uint8Array = new Uint8Array(arrayBuffer);
     const pdfBase64 = btoa(String.fromCharCode(...uint8Array));
-    toast.success("AI analysis report generated! (Email sending is disabled)");
+    toast.success(t("ai.pdf.generated", "AI analysis report generated! (Email sending is disabled)"));
   };
 
   useEffect(() => {
@@ -433,7 +434,7 @@ const Page = ({ params }) => {
     <div>
       <Breadcrumb
         prevLink=""
-        prevPage="Businesses"
+        prevPage={t("navigation.businesses", "Businesses")}
         pageName={`${business?.name}`}
       />
       {/* Stats Section - Full Width */}
@@ -445,48 +446,48 @@ const Page = ({ params }) => {
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">👥</div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.numberOfCustomers || "N/A"}{" "}
+                {business?.numberOfCustomers || t("common.notProvided", "N/A")} {" "}
                 {/* Updated to use numberOfCustomers */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Customers
+                {t("business.customers", "Customers")}
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">📍</div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.location || "N/A"} {/* Updated to use location */}
+                {business?.location || t("common.notProvided", "N/A")} {/* Updated to use location */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Location
+                {t("business.location", "Location")}
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">🏢</div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.BusinessSector?.name || "N/A"}{" "}
+                {business?.BusinessSector?.name || t("common.notProvided", "N/A")} {" "}
                 {/* Updated to use BusinessSector.name */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Industry
+                {t("business.industry", "Industry")}
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">💡</div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.stage || "N/A"}
+                {business?.stage || t("common.notProvided", "N/A")}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Stage
+                {t("business.stage", "Stage")}
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
               <div className="text-4xl mb-3">💵</div>
               <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                {business?.revenue || "N/A"}
+                {business?.revenue || t("common.notProvided", "N/A")}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Revenue
+                {t("business.revenue", "Revenue")}
               </p>
             </div>
           </div>
@@ -499,38 +500,38 @@ const Page = ({ params }) => {
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 capitalize flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">ℹ️</span>
-              Business Overview
+              {t("business.overview", "Business Overview")}
             </h2>
             <div className="space-y-8">
               {/* Business/Entrepreneur Image */}
               <div>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.description || "Description not available"}
+                  {business?.description || t("business.placeholders.descriptionMissing", "Description not available")}
                 </p>
               </div>
               {/* Added Problem, Solution, and Traction */}
               <div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Problem
+                  {t("business.problem", "Problem")}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.problem || "No problem description available"}
+                  {business?.problem || t("business.placeholders.problemDescriptionMissing", "No problem description available")}
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Solution
+                  {t("business.solution", "Solution")}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.solution || "No solution description available"}
+                  {business?.solution || t("business.placeholders.solutionDescriptionMissing", "No solution description available")}
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Traction
+                  {t("business.traction", "Traction")}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.traction || "No traction information available"}
+                  {business?.traction || t("business.placeholders.tractionInfoMissing", "No traction information available")}
                 </p>
               </div>
             </div>
@@ -540,24 +541,24 @@ const Page = ({ params }) => {
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">🎯</span>
-              Market Potential
+              {t("business.marketPotential", "Market Potential")}
             </h2>
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Target Market
+                  {t("business.targetMarket", "Target Market")}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.market || "No target market description available"}{" "}
+                  {business?.market || t("business.placeholders.targetMarketMissing", "No target market description available")} {" "}
                   {/* Updated to use market */}
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Current Impact
+                  {t("business.currentImpact", "Current Impact")}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.impact || "No impact description available"}{" "}
+                  {business?.impact || t("business.placeholders.impactDescriptionMissing", "No impact description available")} {" "}
                   {/* Updated to use impact */}
                 </p>
               </div>
@@ -568,30 +569,29 @@ const Page = ({ params }) => {
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
             <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">📈</span>
-              Growth & Funding
+              {t("business.growthAndFunding", "Growth & Funding")}
             </h2>
             <div className="space-y-6">
               <div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Growth Plans
+                  {t("business.growthPlans", "Growth Plans")}
                 </h3>
                 <p className="text-gray-600  text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.growthPlan || "No growth plans available"}{" "}
+                  {business?.growthPlan || t("business.placeholders.growthPlansMissing", "No growth plans available")} {" "}
                   {/* Updated to use growthPlan */}
                 </p>
               </div>
               <div>
                 <h3 className="text-xl font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Fundraising Needs
+                  {t("business.fundraisingNeeds", "Fundraising Needs")}
                 </h3>
                 <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                  {business?.fundraisingNeeds ||
-                    "No fundraising needs specified"}
+                  {business?.fundraisingNeeds || t("business.placeholders.fundraisingNeedsMissing", "No fundraising needs specified")}
                 </p>
               </div>
             </div>
           </div>
-          {["Admin", "Mentor", "Investor"].includes(userDetails.role) && (
+          {[("Admin"), ("Mentor"), ("Investor")].includes(userDetails.role) && (
             <div className="grid grid-cols-12 gap-6 items-stretch">
               <div className=" col-span-7">
                 <BusinessDomainScores
@@ -614,12 +614,12 @@ const Page = ({ params }) => {
             <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300">
               <h2 className="text-2xl font-bold mb-8 flex items-center text-gray-900 dark:text-white">
                 <span className="text-3xl mr-3">📑</span>
-                Documents
+                {t("business.documents", "Documents")}
               </h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                 {[
                   {
-                    title: "Company Profile",
+                    title: t("business.companyProfileDoc", "Company Profile"),
                     url: business.companyProfile,
                     // use PDF icon for documents
                     icon: <FaFilePdf className="text-red-600" />,
@@ -628,7 +628,7 @@ const Page = ({ params }) => {
                   ...(business.businessPlan
                     ? [
                         {
-                          title: "Business Plan",
+                          title: t("business.businessPlanDoc", "Business Plan"),
                           url: business.businessPlan,
                           icon: <FaFilePdf className="text-red-600" />,
                         },
@@ -637,7 +637,7 @@ const Page = ({ params }) => {
                   ...(business.marketResearch
                     ? [
                         {
-                          title: "Market Research",
+                          title: t("business.marketResearchDoc", "Market Research"),
                           url: business.marketResearch,
                           icon: <FaFilePdf className="text-red-600" />,
                         },
@@ -671,7 +671,7 @@ const Page = ({ params }) => {
                   (res) => {
                     updateUser({ activated: true }, business.User.uuid).then(
                       () => {
-                        toast.success("Approved successfully");
+                        toast.success(t("business.success.approved", "Approved successfully"));
                         setApproving(false);
                         router.back();
                       }
@@ -681,7 +681,7 @@ const Page = ({ params }) => {
               }}
               className="inline-flex items-center w-64 justify-center px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
             >
-              {approving ? <Spinner /> : "Approve Entrepreneur"}
+              {approving ? <Spinner /> : t("business.actions.approveEntrepreneur", "Approve Entrepreneur")}
             </button>
           )}
         </div>
@@ -691,53 +691,53 @@ const Page = ({ params }) => {
           <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 sticky top-8">
             <h2 className="text-2xl font-bold mb-6 flex items-center text-gray-900 dark:text-white">
               <span className="text-3xl mr-3">ℹ️</span>
-              Business Information
+              {t("business.businessInformation", "Business Information")}
             </h2>
             <div className="space-y-4">
               {[
                 {
-                  label: "Entrepreneur",
+                  label: t("business.entrepreneur", "Entrepreneur"),
                   value: business?.User?.name,
                   icon: "👤",
                 },
-                { label: "Email", value: business?.email, icon: "📧" },
-                { label: "Phone", value: business?.phone, icon: "📱" },
+                { label: t("common.email", "Email"), value: business?.email, icon: "📧" },
+                { label: t("common.phone", "Phone"), value: business?.phone, icon: "📱" },
                 {
-                  label: "Registration",
+                  label: t("business.registration", "Registration"),
                   value: business?.registration,
                   icon: "📄",
                 },
-                { label: "SDG", value: business?.sdg, icon: "🎯" },
+                { label: t("business.sdg", "SDG"), value: business?.sdg, icon: "🎯" },
                 {
-                  label: "Industry",
+                  label: t("business.industry", "Industry"),
                   value: business?.BusinessSector?.name,
                   icon: "🏢",
                 },
-                { label: "Location", value: business?.location, icon: "📍" },
-                { label: "Team Size", value: business?.team, icon: "👥" },
+                { label: t("business.location", "Location"), value: business?.location, icon: "📍" },
+                { label: t("business.teamSize", "Team Size"), value: business?.team, icon: "👥" },
                 {
-                  label: "Program",
+                  label: t("business.program", "Program"),
                   value: business?.completedProgram,
                   icon: "📚",
                 },
                 {
-                  label: "Anza Alumni",
-                  value: business?.isAlumni ? "Yes" : "No",
+                  label: t("business.anzaAlumni", "Anza Alumni"),
+                  value: business?.isAlumni ? t("common.yes", "Yes") : t("common.no", "No"),
                   icon: "🎓",
                 },
-                { label: "Status", value: business?.status, icon: "📊" },
+                { label: t("business.status", "Status"), value: business?.status, icon: "📊" },
                 {
-                  label: "Seeking Investment",
-                  value: business?.lookingForInvestment ? "Yes" : "No",
+                  label: t("business.seekingInvestment", "Seeking Investment"),
+                  value: business?.lookingForInvestment ? t("common.yes", "Yes") : t("common.no", "No"),
                   icon: "💰",
                 },
                 {
-                  label: "Website",
+                  label: t("business.website", "Website"),
                   value: business?.websiteLink,
                   icon: "🌐",
                 },
                 {
-                  label: "Instagram Link",
+                  label: t("business.instagramLink", "Instagram Link"),
                   value: business?.instagramLink,
                   icon: "🔗",
                 },
@@ -751,14 +751,14 @@ const Page = ({ params }) => {
                     <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
                       {item.label}
                     </p>
-                    {item.label === "Email" && item.value ? (
+                    {item.label === t("common.email", "Email") && item.value ? (
                       <a
                         href={`mailto:${item.value}`}
                         className="font-semibold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline transition-colors duration-200"
                       >
                         {item.value}
                       </a>
-                    ) : item.label === "Phone" && item.value ? (
+                    ) : item.label === t("common.phone", "Phone") && item.value ? (
                       <a
                         href={`tel:${item.value}`}
                         className="font-semibold text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300 hover:underline transition-colors duration-200"
@@ -767,7 +767,7 @@ const Page = ({ params }) => {
                       </a>
                     ) : (
                       <p className="font-semibold text-gray-900 dark:text-white">
-                        {item.value || "N/A"}
+                        {item.value || t("common.notProvided", "N/A")}
                       </p>
                     )}
                   </div>
@@ -782,7 +782,7 @@ const Page = ({ params }) => {
               business.twitter) && (
               <div className="mt-6">
                 <h3 className="text-lg font-semibold mb-3 text-gray-800 dark:text-gray-200">
-                  Social Media
+                  {t("business.socialMedia", "Social Media")}
                 </h3>
                 <div className="flex space-x-4">
                   {business.facebook && (
@@ -812,7 +812,7 @@ const Page = ({ params }) => {
                       rel="noopener noreferrer"
                       className="text-primary"
                     >
-                      <span className="text-2xl"> Visit Website</span>
+                      <span className="text-2xl"> {t("business.visitWebsite", "Visit Website")}</span>
                     </a>
                   )}
                   {business.instagramLink && (
@@ -822,7 +822,7 @@ const Page = ({ params }) => {
                       rel="noopener noreferrer"
                       className="text-primary"
                     >
-                      <span className="text-2xl"> Visit Website</span>
+                      <span className="text-2xl"> {t("business.visitWebsite", "Visit Website")}</span>
                     </a>
                   )}
 
@@ -862,7 +862,7 @@ const Page = ({ params }) => {
                     }
                     className="w-full flex justify-center text-center font-bold p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-black/10 rounded-xl hover:shadow-md transition-all duration-200"
                   >
-                    <div>📂 Crat Attachments</div>
+                    <div>📂 {t("business.cratAttachments", "Crat Attachments")}</div>
                   </button>
                 </div>
               </div>
@@ -899,14 +899,14 @@ const Page = ({ params }) => {
                             d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                           ></path>
                         </svg>
-                        Preparing AI Analysis...
+                        {t("ai.preparing", "Preparing AI Analysis...")}
                       </>
                     ) : (
                       <>
                         <span className="mr-2 text-xl">🤖</span>
                         {showAIAnalysis
-                          ? "Refresh AI Analysis"
-                          : "Generate AI Analysis"}
+                          ? t("ai.refreshAnalysis", "Refresh AI Analysis")
+                          : t("ai.generateAnalysis", "Generate AI Analysis")}
                         <span className="ml-2 text-sm opacity-80">
                           {showAIAnalysis ? "↻" : "✨"}
                         </span>
@@ -923,7 +923,7 @@ const Page = ({ params }) => {
                           <div className="absolute inset-0 w-8 h-8 border-4 border-transparent border-r-white/50 rounded-full animate-spin animate-reverse"></div>
                         </div>
                         <span className="mt-2 text-sm font-medium">
-                          Analyzing...
+                          {t("ai.analyzing", "Analyzing...")}
                         </span>
                       </div>
                     </div>
@@ -932,8 +932,8 @@ const Page = ({ params }) => {
                   {/* Tooltip */}
                   <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
                     {showAIAnalysis
-                      ? "Update analysis with latest data"
-                      : "Generate comprehensive AI investment analysis"}
+                      ? t("ai.tooltip.update", "Update analysis with latest data")
+                      : t("ai.tooltip.generate", "Generate comprehensive AI investment analysis")}
                   </div>
                 </div>
               )}
@@ -946,12 +946,12 @@ const Page = ({ params }) => {
                     lastMessage: "",
                   };
                   toast.success(
-                    "Enabling end-to-end encryption. Please wait..."
+                    t("chat.enablingEncryptionWait", "Enabling end-to-end encryption. Please wait...")
                   );
                   createNotification({
                     user_uuid: business.User.uuid,
                     to: "User",
-                    message: `You have a new message`,
+                    message: `${t("notifications.newMessage", "You have a new message")}`,
                   });
                   createConversation(data).then((data) => {
                     router.push(`/messages/${data.uuid}`);
@@ -960,7 +960,7 @@ const Page = ({ params }) => {
                 className="inline-flex items-center justify-center w-full px-6 py-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
               >
                 <span className="mr-2 text-xl">💬</span>
-                Message
+                {t("common.message", "Message")}
               </button>
 
               {userDetails.role === "Investor" && (
@@ -969,7 +969,7 @@ const Page = ({ params }) => {
                   className="inline-flex items-center justify-center px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
                 >
                   <span className="mr-2 text-xl">💰</span>
-                  Express Interest
+                  {t("investment.expressInterest", "Express Interest")}
                 </Link>
               )}
 
@@ -984,7 +984,7 @@ const Page = ({ params }) => {
                       };
                       assignEntreprenuerToMentor(payload).then((res) => {
                         getData();
-                        toast.success("Request sent successfully");
+                        toast.success(t("mentorship.requestSent", "Request sent successfully"));
                         setRequesting(false);
                       });
                     }}
@@ -992,7 +992,7 @@ const Page = ({ params }) => {
                     className="inline-flex items-center justify-center px-6 py-4 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md disabled:opacity-50"
                   >
                     <span className="mr-2 text-xl">🤝</span>
-                    {requesting ? "Requesting..." : "Request to be a mentor"}
+                    {requesting ? t("mentorship.requesting", "Requesting...") : t("mentorship.requestToBeMentor", "Request to be a mentor")}
                   </button>
                 )}
             </div>
@@ -1012,12 +1012,12 @@ const Page = ({ params }) => {
                 </div>
                 <div>
                   <h2 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-indigo-600">
-                    AI-Powered Investment Analysis
+                    {t("ai.headerTitle", "AI-Powered Investment Analysis")}
                   </h2>
                   <p className="text-purple-600 dark:text-purple-400 mt-2 text-lg">
-                    Comprehensive evaluation of{" "}
+                    {t("ai.headerSubtitle", "Comprehensive evaluation of")}{" "}
                     <span className="font-semibold">{business?.name}</span>{" "}
-                    using advanced AI analysis
+                    {t("ai.headerSubtitleSuffix", "using advanced AI analysis")}
                   </p>
                 </div>
               </div>
@@ -1032,7 +1032,7 @@ const Page = ({ params }) => {
                   </div>
                   <div className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-500 text-white rounded-full shadow-md">
                     <span className="text-sm font-bold">
-                      Overall Score:{" "}
+                      {t("ai.overallScore", "Overall Score:")}{" "}
                       {Math.round(
                         (cratData.scoreData.commercial.percentage +
                           cratData.scoreData.financial.percentage +
@@ -1045,7 +1045,7 @@ const Page = ({ params }) => {
                   </div>
                 </div>
                 <div className="text-xs text-gray-500 dark:text-gray-400">
-                  Analysis generated on {new Date().toLocaleDateString()}
+                  {t("ai.generatedOn", "Analysis generated on")} {new Date().toLocaleDateString()}
                 </div>
               </div>
             </div>
@@ -1054,18 +1054,18 @@ const Page = ({ params }) => {
             <div className="mt-6 grid grid-cols-4 gap-4">
               {[
                 {
-                  label: "Commercial",
+                  label: t("ai.domains.commercial", "Commercial"),
                   score: cratData.scoreData.commercial.percentage,
                 },
                 {
-                  label: "Financial",
+                  label: t("ai.domains.financial", "Financial"),
                   score: cratData.scoreData.financial.percentage,
                 },
                 {
-                  label: "Operations",
+                  label: t("ai.domains.operations", "Operations"),
                   score: cratData.scoreData.operations.percentage,
                 },
-                { label: "Legal", score: cratData.scoreData.legal.percentage },
+                { label: t("ai.domains.legal", "Legal"), score: cratData.scoreData.legal.percentage },
               ].map((item, index) => {
                 // Dynamic color based on CRAT readiness levels
                 const getScoreColor = (score) => {

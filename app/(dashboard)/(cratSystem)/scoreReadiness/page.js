@@ -1,12 +1,35 @@
 "use client";
 
 import { useState, useEffect, useContext } from "react";
+import dynamic from "next/dynamic";
 import { getScoreData } from "@/app/controllers/crat_general_controller"; // Import updated API functions
-import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
-import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
+
+// Lazy load heavy chart components
+const BusinessDomainScores = dynamic(
+  () => import("@/components/Charts/BusinessDomainScores"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
+    ),
+  }
+);
+
+const PerformanceDistribution = dynamic(
+  () => import("@/components/Charts/PerformanceDistribution"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
+    ),
+  }
+);
+
 import { UserContext } from "../../layout";
+import { useTranslation } from "@/app/locales";
 
 const Page = () => {
+  const { t } = useTranslation();
   const [scoreData, setScoreData] = useState({
     commercial: {},
     financial: {},
@@ -37,7 +60,7 @@ const Page = () => {
 
   // Calculate the total row values based on fetched data
   const totalRow = {
-    domain: "Total",
+    domain: t("crat.total", "Total"),
     actualScore: scoreData.total.actualScore || 0,
     contribution: "100%", // Placeholder for now
     targetScore: scoreData.total.targetScore || 0,
@@ -51,10 +74,28 @@ const Page = () => {
     const domains = ["commercial", "financial", "operations", "legal"];
     return domains.map((domain, index) => {
       const data = scoreData[domain] || {};
+      const domainLabel =
+        domain === "commercial"
+          ? t("dashboard.commercial", "Commercial")
+          : domain === "financial"
+          ? t("dashboard.financial", "Financial")
+          : domain === "operations"
+          ? t("dashboard.operations", "Operations")
+          : domain === "legal"
+          ? t("dashboard.legal", "Legal")
+          : domain;
+      const statusLabel =
+        data.status === "Ready"
+          ? t("report.ready", "Ready")
+          : data.status === "Not Ready"
+          ? t("report.notReady", "Not Ready")
+          : data.status === "On review"
+          ? t("report.onReview", "On review")
+          : data.status;
       return (
         <tr key={index}>
           <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
-            {capitalize(domain)}
+            {domainLabel}
           </td>
           <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
             {data.actualScore || 0}
@@ -76,7 +117,7 @@ const Page = () => {
               data.status === "Ready" ? "text-green-600" : "text-red-600"
             }`}
           >
-            {data.status}
+            {statusLabel}
           </td>
         </tr>
       );
@@ -90,11 +131,11 @@ const Page = () => {
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Scores & Readiness Test
+            {t("crat.pageTitle", "Scores & Readiness Test")}
           </h4>
           <h6 className="mt-2">
-            <strong>AS</strong> - Actual Score | <strong>TS</strong> - Target
-            Score
+            <strong>AS</strong> - {t("crat.actualScore", "Actual Score")} |{" "}
+            <strong>TS</strong> - {t("crat.targetScore", "Target Score")}
           </h6>
         </div>
         <hr className="border-stroke dark:border-strokedark" />
@@ -104,13 +145,13 @@ const Page = () => {
       <div className="mt-4 flex flex-col space-y-4">
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-4">
           <h5 className="text-lg font-semibold text-black dark:text-white flex">
-            Readiness Score:
+            {t("crat.readinessScore", "Readiness Score")}:
             <span className="ml-auto text-green-600">AS/TS 70%</span>
           </h5>
         </div>
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-4">
           <h5 className="text-lg font-semibold text-black dark:text-white flex">
-            Assessed score:
+            {t("crat.assessedScore", "Assessed score")}:
             <span className="ml-auto text-red-600">{`${
               scoreData.total.percentage
                 ? scoreData.total.percentage.toFixed(2)
@@ -144,7 +185,9 @@ const Page = () => {
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               ></path>
             </svg>
-            <span className="text-gray-400">Loading charts...</span>
+            <span className="text-gray-400">
+              {t("actions.loadingChart", "Loading charts...")}
+            </span>
           </div>
         </div>
       ) : (
@@ -165,25 +208,25 @@ const Page = () => {
             <thead>
               <tr className="bg-gray-2 text-left dark:bg-meta-4">
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  Domain
+                  {t("crat.domain", "Domain")}
                 </th>
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  Actual Score
+                  {t("crat.actualScore", "Actual Score")}
                 </th>
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  AS% Contribution
+                  {t("crat.asContribution", "AS% Contribution")}
                 </th>
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  Target Score
+                  {t("crat.targetScore", "Target Score")}
                 </th>
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  TS% Contribution
+                  {t("crat.tsContribution", "TS% Contribution")}
                 </th>
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  (AS/TS) Readiness
+                  {t("crat.readinessRatio", "(AS/TS) Readiness")}
                 </th>
                 <th className="min-w-[120px] py-4 px-4 font-medium text-black dark:text-white">
-                  Status
+                  {t("crat.status", "Status")}
                 </th>
               </tr>
             </thead>
@@ -206,7 +249,7 @@ const Page = () => {
       {/* Overall Readiness */}
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark p-4">
         <h5 className="text-lg font-semibold text-black dark:text-white">
-          Overall Readiness:{" "}
+          {t("crat.overallReadiness", "Overall Readiness")}:{" "}
           <span
             className={
               scoreData.general_status === "Ready"
@@ -214,7 +257,13 @@ const Page = () => {
                 : "text-red-600"
             }
           >
-            {scoreData.general_status || "Not Ready"}
+            {scoreData.general_status
+              ? scoreData.general_status === "Ready"
+                ? t("report.ready", "Ready")
+                : scoreData.general_status === "On review"
+                ? t("report.onReview", "On review")
+                : t("report.notReady", "Not Ready")
+              : t("report.notReady", "Not Ready")}
           </span>
         </h5>
       </div>

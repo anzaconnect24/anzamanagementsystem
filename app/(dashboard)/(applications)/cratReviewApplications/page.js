@@ -16,8 +16,10 @@ import {
   MdSearch,
   MdPersonAdd,
 } from "react-icons/md";
+import { useTranslation } from "@/app/locales";
 
 const CratReviewApplicationsPage = () => {
+  const { t } = useTranslation();
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -66,7 +68,9 @@ const CratReviewApplicationsPage = () => {
       }
     } catch (error) {
       console.error("Error fetching CRAT reviews:", error);
-      toast.error("Failed to fetch CRAT reviews");
+      toast.error(
+        t("cratReviews.errors.fetchReviews", "Failed to fetch CRAT reviews")
+      );
     } finally {
       setLoading(false);
     }
@@ -89,7 +93,9 @@ const CratReviewApplicationsPage = () => {
 
   const handleAssignReviewer = async () => {
     if (!selectedReviewer) {
-      toast.error("Please select a reviewer");
+      toast.error(
+        t("cratReviews.validation.selectReviewer", "Please select a reviewer")
+      );
       return;
     }
 
@@ -102,17 +108,24 @@ const CratReviewApplicationsPage = () => {
       );
 
       if (response.data.status) {
-        toast.success("Reviewer assigned successfully!");
+        toast.success(
+          t("cratReviews.success.assigned", "Reviewer assigned successfully!")
+        );
         setShowAssignModal(false);
         setSelectedReview(null);
         setSelectedReviewer("");
         fetchReviews();
       } else {
-        toast.error(response.data.message || "Failed to assign reviewer");
+        toast.error(
+          response.data.message ||
+            t("cratReviews.errors.assignReviewer", "Failed to assign reviewer")
+        );
       }
     } catch (error) {
       console.error("Error assigning reviewer:", error);
-      toast.error("Error assigning reviewer");
+      toast.error(
+        t("cratReviews.errors.assigningReviewer", "Error assigning reviewer")
+      );
     } finally {
       setAssigningReviewer(false);
     }
@@ -120,7 +133,12 @@ const CratReviewApplicationsPage = () => {
 
   const handleFinalizeReview = async () => {
     if (!finalStatus || !adminComments.trim()) {
-      toast.error("Please provide final status and comments");
+      toast.error(
+        t(
+          "cratReviews.validation.finalStatusAndComments",
+          "Please provide final status and comments"
+        )
+      );
       return;
     }
 
@@ -136,18 +154,28 @@ const CratReviewApplicationsPage = () => {
       );
 
       if (response.data.status) {
-        toast.success("Review finalized successfully!");
+        toast.success(
+          t("cratReviews.success.finalized", "Review finalized successfully!")
+        );
         setShowFinalizeModal(false);
         setSelectedReview(null);
         setFinalStatus("");
         setAdminComments("");
         fetchReviews();
       } else {
-        toast.error(response.data.message || "Failed to finalize review");
+        toast.error(
+          response.data.message ||
+            t(
+              "cratReviews.errors.finalizeReviewer",
+              "Failed to finalize review"
+            )
+        );
       }
     } catch (error) {
       console.error("Error finalizing review:", error);
-      toast.error("Error finalizing review");
+      toast.error(
+        t("cratReviews.errors.finalizingReviewer", "Error finalizing review")
+      );
     } finally {
       setFinalizing(false);
     }
@@ -203,11 +231,13 @@ const CratReviewApplicationsPage = () => {
         {/* Header */}
         <div className="p-6 border-b border-stroke dark:border-strokedark">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            CRAT Review Applications
+            {t("cratReviews.title", "CRAT Review Applications")}
           </h4>
           <p className="mt-2 text-bodydark2">
-            Manage CRAT review applications from entrepreneurs. Assign reviewers
-            and finalize decisions.
+            {t(
+              "cratReviews.subtitle",
+              "Manage CRAT review applications from entrepreneurs. Assign reviewers and finalize decisions."
+            )}
           </p>
         </div>
 
@@ -218,7 +248,10 @@ const CratReviewApplicationsPage = () => {
               <MdSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Search by business name or email..."
+                placeholder={t(
+                  "cratReviews.searchPlaceholder",
+                  "Search by business name or email..."
+                )}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full pl-10 pr-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
@@ -229,13 +262,27 @@ const CratReviewApplicationsPage = () => {
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-2 w-48 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
             >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="assigned">Assigned</option>
-              <option value="in_review">In Review</option>
-              <option value="reviewed">Reviewed</option>
-              <option value="accepted">Accepted</option>
-              <option value="rejected">Rejected</option>
+              <option value="">
+                {t("cratReviews.filters.allStatuses", "All Statuses")}
+              </option>
+              <option value="pending">
+                {t("cratReviews.status.pending", "Pending")}
+              </option>
+              <option value="assigned">
+                {t("cratReviews.status.assigned", "Assigned")}
+              </option>
+              <option value="in_review">
+                {t("cratReviews.status.in_review", "In Review")}
+              </option>
+              <option value="reviewed">
+                {t("cratReviews.status.reviewed", "Reviewed")}
+              </option>
+              <option value="accepted">
+                {t("cratReviews.status.accepted", "Accepted")}
+              </option>
+              <option value="rejected">
+                {t("cratReviews.status.rejected", "Rejected")}
+              </option>
             </select>
           </div>
         </div>
@@ -246,11 +293,16 @@ const CratReviewApplicationsPage = () => {
             <div className="text-center py-12">
               <MdRateReview className="mx-auto h-12 w-12 text-gray-400 mb-4" />
               <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                No CRAT review applications found
+                {t(
+                  "cratReviews.empty.title",
+                  "No CRAT review applications found"
+                )}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                CRAT review applications will appear here when entrepreneurs
-                submit them.
+                {t(
+                  "cratReviews.empty.description",
+                  "CRAT review applications will appear here when entrepreneurs submit them."
+                )}
               </p>
             </div>
           ) : (
@@ -269,7 +321,10 @@ const CratReviewApplicationsPage = () => {
                           review.status
                         )}`}
                       >
-                        {review.status.replace("_", " ").toUpperCase()}
+                        {t(
+                          `cratReviews.status.${review.status}`,
+                          review.status.replace("_", " ")
+                        )}
                       </span>
                     </div>
                   </div>
@@ -303,7 +358,7 @@ const CratReviewApplicationsPage = () => {
                   {/* Submitted Date */}
                   <div className="mb-4">
                     <p className="text-xs text-bodydark2">
-                      Submitted on{" "}
+                      {t("cratReviews.submittedOn", "Submitted on")}{" "}
                       {new Date(review.submitted_at).toLocaleDateString()}
                     </p>
                   </div>
@@ -335,7 +390,7 @@ const CratReviewApplicationsPage = () => {
                             className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
                           >
                             <MdPersonAdd />
-                            Assign
+                            {t("cratReviews.actions.assign", "Assign")}
                           </button>
                         )}
 
@@ -348,7 +403,7 @@ const CratReviewApplicationsPage = () => {
                             className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
                           >
                             <MdCheckCircle />
-                            Finalize
+                            {t("cratReviews.actions.finalize", "Finalize")}
                           </button>
                         )}
 
@@ -358,7 +413,7 @@ const CratReviewApplicationsPage = () => {
                           }}
                           className="flex-1 px-3 py-2 bg-gray-600 w-full text-white rounded-lg hover:bg-gray-700 text-sm"
                         >
-                          View
+                          {t("cratReviews.actions.view", "View")}
                         </button>
                       </div>
                       <button
@@ -369,7 +424,10 @@ const CratReviewApplicationsPage = () => {
                         }}
                         className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"
                       >
-                        View CRAT Report
+                        {t(
+                          "cratReviews.actions.viewCratReport",
+                          "View CRAT Report"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -387,7 +445,7 @@ const CratReviewApplicationsPage = () => {
                   disabled={currentPage <= 1}
                   className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Previous
+                  {t("cratReviews.pagination.previous", "Previous")}
                 </button>
 
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map(
@@ -413,7 +471,7 @@ const CratReviewApplicationsPage = () => {
                   disabled={currentPage >= totalPages}
                   className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Next
+                  {t("cratReviews.pagination.next", "Next")}
                 </button>
               </nav>
             </div>
@@ -426,10 +484,13 @@ const CratReviewApplicationsPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-boxdark rounded-xl max-w-md w-full p-6">
             <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-              Assign Reviewer
+              {t("cratReviews.modals.assignReviewer.title", "Assign Reviewer")}
             </h5>
             <p className="text-bodydark2 mb-4">
-              Select a staff member to review this CRAT application for{" "}
+              {t(
+                "cratReviews.modals.assignReviewer.description",
+                "Select a staff member to review this CRAT application for"
+              )}{" "}
               <strong>
                 {selectedReview?.entrepreneur.Business?.name ||
                   selectedReview?.entrepreneur.name}
@@ -438,14 +499,22 @@ const CratReviewApplicationsPage = () => {
 
             <div className="mb-4">
               <label className="block font-medium text-black dark:text-white mb-2">
-                Select Reviewer
+                {t(
+                  "cratReviews.modals.assignReviewer.selectReviewer",
+                  "Select Reviewer"
+                )}
               </label>
               <select
                 value={selectedReviewer}
                 onChange={(e) => setSelectedReviewer(e.target.value)}
                 className="w-full px-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               >
-                <option value="">Choose a reviewer...</option>
+                <option value="">
+                  {t(
+                    "cratReviews.modals.assignReviewer.chooseReviewer",
+                    "Choose a reviewer..."
+                  )}
+                </option>
                 {staffMembers.map((staff) => (
                   <option key={staff.id} value={staff.id}>
                     {staff.name}
@@ -463,12 +532,12 @@ const CratReviewApplicationsPage = () => {
                 {assigningReviewer ? (
                   <>
                     <Spinner />
-                    Assigning...
+                    {t("cratReviews.states.assigning", "Assigning...")}
                   </>
                 ) : (
                   <>
                     <MdPersonAdd />
-                    Assign Reviewer
+                    {t("cratReviews.actions.assignReviewer", "Assign Reviewer")}
                   </>
                 )}
               </button>
@@ -480,7 +549,7 @@ const CratReviewApplicationsPage = () => {
                 }}
                 className="px-4 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50"
               >
-                Cancel
+                {t("common.cancel", "Cancel")}
               </button>
             </div>
           </div>
@@ -492,10 +561,13 @@ const CratReviewApplicationsPage = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-boxdark rounded-xl max-w-md w-full p-6">
             <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-              Finalize Review
+              {t("cratReviews.modals.finalizeReview.title", "Finalize Review")}
             </h5>
             <p className="text-bodydark2 mb-4">
-              Make the final decision on the CRAT review for{" "}
+              {t(
+                "cratReviews.modals.finalizeReview.description",
+                "Make the final decision on the CRAT review for"
+              )}{" "}
               <strong>
                 {selectedReview?.entrepreneur.Business?.name ||
                   selectedReview?.entrepreneur.name}
@@ -506,7 +578,10 @@ const CratReviewApplicationsPage = () => {
             {selectedReview?.reviewer_comments && (
               <div className="mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
                 <h6 className="font-medium text-black dark:text-white mb-2">
-                  Reviewer Comments:
+                  {t(
+                    "cratReviews.modals.finalizeReview.reviewerComments",
+                    "Reviewer Comments:"
+                  )}
                 </h6>
                 <p className="text-sm text-bodydark2">
                   {selectedReview.reviewer_comments}
@@ -516,28 +591,46 @@ const CratReviewApplicationsPage = () => {
 
             <div className="mb-4">
               <label className="block font-medium text-black dark:text-white mb-2">
-                Final Decision
+                {t(
+                  "cratReviews.modals.finalizeReview.finalDecision",
+                  "Final Decision"
+                )}
               </label>
               <select
                 value={finalStatus}
                 onChange={(e) => setFinalStatus(e.target.value)}
                 className="w-full px-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               >
-                <option value="">Choose decision...</option>
-                <option value="accepted">Accept</option>
-                <option value="rejected">Reject</option>
+                <option value="">
+                  {t(
+                    "cratReviews.modals.finalizeReview.chooseDecision",
+                    "Choose decision..."
+                  )}
+                </option>
+                <option value="accepted">
+                  {t("cratReviews.status.accepted", "Accept")}
+                </option>
+                <option value="rejected">
+                  {t("cratReviews.status.rejected", "Reject")}
+                </option>
               </select>
             </div>
 
             <div className="mb-4">
               <label className="block font-medium text-black dark:text-white mb-2">
-                Admin Comments
+                {t(
+                  "cratReviews.modals.finalizeReview.adminComments",
+                  "Admin Comments"
+                )}
               </label>
               <textarea
                 rows={3}
                 value={adminComments}
                 onChange={(e) => setAdminComments(e.target.value)}
-                placeholder="Provide feedback and final decision reasoning..."
+                placeholder={t(
+                  "cratReviews.modals.finalizeReview.adminCommentsPlaceholder",
+                  "Provide feedback and final decision reasoning..."
+                )}
                 className="w-full px-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               />
             </div>
@@ -551,12 +644,15 @@ const CratReviewApplicationsPage = () => {
                 {finalizing ? (
                   <>
                     <Spinner />
-                    Finalizing...
+                    {t("cratReviews.states.finalizing", "Finalizing...")}
                   </>
                 ) : (
                   <>
                     <MdCheckCircle />
-                    Finalize Decision
+                    {t(
+                      "cratReviews.actions.finalizeDecision",
+                      "Finalize Decision"
+                    )}
                   </>
                 )}
               </button>
@@ -569,7 +665,7 @@ const CratReviewApplicationsPage = () => {
                 }}
                 className="px-4 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50"
               >
-                Cancel
+                {t("common.cancel", "Cancel")}
               </button>
             </div>
           </div>

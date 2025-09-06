@@ -8,6 +8,7 @@ import { headers } from "@/app/utils/headers";
 import { UserContext } from "../../layout";
 import Spinner from "@/components/spinner";
 import Loader from "@/components/common/Loader";
+import { useTranslation } from "@/app/locales";
 import {
   MdCheckCircle,
   MdPending,
@@ -18,6 +19,7 @@ import {
 // Resubmit handler for rejected reviews
 
 const CratReviewPage = () => {
+  const { t } = useTranslation();
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
@@ -37,7 +39,12 @@ const CratReviewPage = () => {
     try {
       setSubmitting(true);
       if (!cratReview?.uuid) {
-        toast.error("No CRAT review found to resubmit.");
+        toast.error(
+          t(
+            "cratReviewPage.errors.noReviewToResubmit",
+            "No CRAT review found to resubmit."
+          )
+        );
         setSubmitting(false);
         return;
       }
@@ -48,18 +55,32 @@ const CratReviewPage = () => {
       );
       if (response.data.status) {
         toast.success(
-          "CRAT review resubmitted successfully! You will be notified once it's assigned for review."
+          t(
+            "cratReviewPage.toasts.resubmitted",
+            "CRAT review resubmitted successfully! You will be notified once it's assigned for review."
+          )
         );
         fetchCratReviews();
       } else {
-        toast.error(response.data.message || "Failed to resubmit CRAT review");
+        toast.error(
+          response.data.message ||
+            t(
+              "cratReviewPage.errors.failedToResubmit",
+              "Failed to resubmit CRAT review"
+            )
+        );
       }
     } catch (error) {
       console.error("Error resubmitting CRAT review:", error);
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Error resubmitting CRAT review");
+        toast.error(
+          t(
+            "cratReviewPage.errors.resubmitError",
+            "Error resubmitting CRAT review"
+          )
+        );
       }
     } finally {
       setSubmitting(false);
@@ -86,7 +107,9 @@ const CratReviewPage = () => {
       }
     } catch (error) {
       console.error("Error fetching CRAT reviews:", error);
-      toast.error("Failed to fetch CRAT reviews");
+      toast.error(
+        t("cratReviewPage.errors.failedToFetch", "Failed to fetch CRAT reviews")
+      );
     } finally {
       setLoading(false);
     }
@@ -95,7 +118,10 @@ const CratReviewPage = () => {
     // Check if there's already a review
     if (hasReview) {
       toast.error(
-        "You already have a CRAT review. Only one review per entrepreneur is allowed."
+        t(
+          "cratReviewPage.errors.alreadyHasReview",
+          "You already have a CRAT review. Only one review per entrepreneur is allowed."
+        )
       );
       return;
     }
@@ -112,18 +138,29 @@ const CratReviewPage = () => {
 
       if (response.data.status) {
         toast.success(
-          "CRAT review submitted successfully! You will be notified once it's assigned for review."
+          t(
+            "cratReviewPage.toasts.submitted",
+            "CRAT review submitted successfully! You will be notified once it's assigned for review."
+          )
         );
         fetchCratReviews();
       } else {
-        toast.error(response.data.message || "Failed to submit CRAT review");
+        toast.error(
+          response.data.message ||
+            t(
+              "cratReviewPage.errors.failedToSubmit",
+              "Failed to submit CRAT review"
+            )
+        );
       }
     } catch (error) {
       console.error("Error submitting CRAT review:", error);
       if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else {
-        toast.error("Error submitting CRAT review");
+        toast.error(
+          t("cratReviewPage.errors.submitError", "Error submitting CRAT review")
+        );
       }
     } finally {
       setSubmitting(false);
@@ -152,17 +189,26 @@ const CratReviewPage = () => {
   const getStatusText = (status) => {
     switch (status) {
       case "pending":
-        return "Pending Assignment";
+        return t(
+          "cratReviewPage.status.pendingAssignment",
+          "Pending Assignment"
+        );
       case "assigned":
-        return "Assigned to Reviewer";
+        return t(
+          "cratReviewPage.status.assignedToReviewer",
+          "Assigned to Reviewer"
+        );
       case "in_review":
-        return "Under Review";
+        return t("cratReviewPage.status.underReview", "Under Review");
       case "reviewed":
-        return "Review Completed - Awaiting Final Decision";
+        return t(
+          "cratReviewPage.status.reviewCompleted",
+          "Review Completed - Awaiting Final Decision"
+        );
       case "accepted":
-        return "Accepted";
+        return t("cratReviewPage.status.accepted", "Accepted");
       case "rejected":
-        return "Rejected";
+        return t("cratReviewPage.status.rejected", "Rejected");
       default:
         return status;
     }
@@ -197,11 +243,13 @@ const CratReviewPage = () => {
         {/* Header */}
         <div className="p-6 border-b border-stroke dark:border-strokedark">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            CRAT Review System
+            {t("cratReviewPage.title", "CRAT Review System")}
           </h4>
           <p className="mt-2 text-bodydark2">
-            Submit your CRAT assessment for professional review and get expert
-            feedback.
+            {t(
+              "cratReviewPage.subtitle",
+              "Submit your CRAT assessment for professional review and get expert feedback."
+            )}
           </p>
         </div>
 
@@ -210,11 +258,16 @@ const CratReviewPage = () => {
           {!hasReview && (
             <div className="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-                Submit CRAT for Review
+                {t(
+                  "cratReviewPage.submitSection.title",
+                  "Submit CRAT for Review"
+                )}
               </h5>
               <p className="text-bodydark2 mb-4">
-                Ready to get your CRAT assessment reviewed by our experts?
-                Submit for professional review and feedback.
+                {t(
+                  "cratReviewPage.submitSection.description",
+                  "Ready to get your CRAT assessment reviewed by our experts? Submit for professional review and feedback."
+                )}
               </p>
 
               <button
@@ -225,12 +278,15 @@ const CratReviewPage = () => {
                 {submitting ? (
                   <>
                     <Spinner />
-                    Submitting...
+                    {t("cratReviewPage.buttons.submitting", "Submitting...")}
                   </>
                 ) : (
                   <>
                     <MdRateReview />
-                    Submit for Review
+                    {t(
+                      "cratReviewPage.buttons.submitForReview",
+                      "Submit for Review"
+                    )}
                   </>
                 )}
               </button>
@@ -243,8 +299,10 @@ const CratReviewPage = () => {
               <div className="flex items-center gap-2">
                 <MdPending className="text-yellow-600 text-xl" />
                 <p className="text-yellow-800 dark:text-yellow-200 font-medium">
-                  You already have a CRAT review. Only one review per
-                  entrepreneur is allowed.
+                  {t(
+                    "cratReviewPage.errors.alreadyHasReview",
+                    "You already have a CRAT review. Only one review per entrepreneur is allowed."
+                  )}
                 </p>
               </div>
             </div>
@@ -253,18 +311,20 @@ const CratReviewPage = () => {
           {/* Review History */}
           <div>
             <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-              Your CRAT Review
+              {t("cratReviewPage.yourReviewTitle", "Your CRAT Review")}
             </h5>
 
             {!cratReview ? (
               <div className="text-center py-12">
                 <MdRateReview className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  No review yet
+                  {t("cratReviewPage.empty.noReview", "No review yet")}
                 </h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
-                  Submit your CRAT review to get expert feedback on your
-                  business readiness.
+                  {t(
+                    "cratReviewPage.empty.description",
+                    "Submit your CRAT review to get expert feedback on your business readiness."
+                  )}
                 </p>
               </div>
             ) : (
@@ -275,10 +335,16 @@ const CratReviewPage = () => {
                       {getStatusIcon(cratReview.status)}
                       <div>
                         <h6 className="font-semibold text-black dark:text-white">
-                          Your CRAT Review
+                          {t(
+                            "cratReviewPage.yourReviewTitle",
+                            "Your CRAT Review"
+                          )}
                         </h6>
                         <p className="text-sm text-bodydark2">
-                          Submitted on{" "}
+                          {t(
+                            "cratReviewPage.labels.submittedOn",
+                            "Submitted on"
+                          )}{" "}
                           {new Date(
                             cratReview.submitted_at
                           ).toLocaleDateString()}
@@ -298,7 +364,10 @@ const CratReviewPage = () => {
                   {cratReview.reviewer && (
                     <div className="mb-4">
                       <h6 className="font-medium text-black dark:text-white mb-2">
-                        Assigned Reviewer:
+                        {t(
+                          "cratReviewPage.labels.assignedReviewer",
+                          "Assigned Reviewer:"
+                        )}
                       </h6>
                       <p className="text-bodydark2 text-sm">
                         {cratReview.reviewer.name}{" "}
@@ -310,7 +379,10 @@ const CratReviewPage = () => {
                   {cratReview.reviewer_comments && (
                     <div className="mb-4">
                       <h6 className="font-medium text-black dark:text-white mb-2">
-                        Reviewer Feedback:
+                        {t(
+                          "cratReviewPage.labels.reviewerFeedback",
+                          "Reviewer Feedback:"
+                        )}
                       </h6>
                       <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                         <p className="text-bodydark2 text-sm">
@@ -324,7 +396,10 @@ const CratReviewPage = () => {
                   {cratReview.admin_comments && (
                     <div className="mb-4">
                       <h6 className="font-medium text-black dark:text-white mb-2">
-                        Final Decision:
+                        {t(
+                          "cratReviewPage.labels.finalDecision",
+                          "Final Decision:"
+                        )}
                       </h6>
                       <div
                         className={`p-4 rounded-lg ${
@@ -351,18 +426,26 @@ const CratReviewPage = () => {
                         {submitting ? (
                           <>
                             <Spinner />
-                            Resubmitting...
+                            {t(
+                              "cratReviewPage.buttons.resubmitting",
+                              "Resubmitting..."
+                            )}
                           </>
                         ) : (
                           <>
                             <MdRateReview />
-                            Resubmit for Review
+                            {t(
+                              "cratReviewPage.buttons.resubmitForReview",
+                              "Resubmit for Review"
+                            )}
                           </>
                         )}
                       </button>
                       <p className="text-xs text-gray-500 mt-2">
-                        Please ensure you have addressed the feedback before
-                        resubmitting.
+                        {t(
+                          "cratReviewPage.hints.addressFeedbackBeforeResubmit",
+                          "Please ensure you have addressed the feedback before resubmitting."
+                        )}
                       </p>
                     </div>
                   )}
@@ -370,24 +453,24 @@ const CratReviewPage = () => {
                   {/* Timeline */}
                   <div className="text-xs text-bodydark2 space-y-1">
                     <p>
-                      Submitted:{" "}
+                      {t("cratReviewPage.timeline.submitted", "Submitted:")}{" "}
                       {new Date(cratReview.submitted_at).toLocaleString()}
                     </p>
                     {cratReview.assigned_at && (
                       <p>
-                        Assigned:{" "}
+                        {t("cratReviewPage.timeline.assigned", "Assigned:")}{" "}
                         {new Date(cratReview.assigned_at).toLocaleString()}
                       </p>
                     )}
                     {cratReview.reviewed_at && (
                       <p>
-                        Reviewed:{" "}
+                        {t("cratReviewPage.timeline.reviewed", "Reviewed:")}{" "}
                         {new Date(cratReview.reviewed_at).toLocaleString()}
                       </p>
                     )}
                     {cratReview.finalized_at && (
                       <p>
-                        Finalized:{" "}
+                        {t("cratReviewPage.timeline.finalized", "Finalized:")}{" "}
                         {new Date(cratReview.finalized_at).toLocaleString()}
                       </p>
                     )}

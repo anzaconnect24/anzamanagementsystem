@@ -15,16 +15,25 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 const nextConfig = {
+  swcMinify: true,
+  // Prefer Turbopack in dev if available
+  turbo: {
+    resolveAlias: {},
+  },
   experimental: {
     // Optimize for better performance
     optimizeCss: true,
     optimizeServerReact: true,
+    turbo: {
+      // Speed up dev HMR where supported
+      rules: {},
+    },
   },
   
   // Suppress warnings during build
   onDemandEntries: {
-    maxInactiveAge: 25 * 1000,
-    pagesBufferLength: 2,
+    maxInactiveAge: 10 * 1000, // evict faster in dev
+    pagesBufferLength: 1,
   },
   
   // Webpack configuration

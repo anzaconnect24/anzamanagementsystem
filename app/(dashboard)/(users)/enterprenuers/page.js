@@ -225,7 +225,68 @@ const Page = () => {
 
   // Add this helper function at the top of the component
   const getBusinessName = (item) => {
-    return item?.Business?.name || "Unnamed Business";
+    return (
+      item?.Business?.name || t("users.unnamedBusiness", "Unnamed Business")
+    );
+  };
+
+  // Translate option/value for filters without changing internal values
+  const translateFilterValue = (value) => {
+    switch (value) {
+      // All*
+      case "All Sectors":
+        return t("users.allSectors", "All Sectors");
+      case "All Years":
+        return t("users.allYears", "All Years");
+      case "All Programs":
+        return t("users.allPrograms", "All Programs");
+      case "All Revenue":
+        return t("users.allRevenue", "All Revenue");
+      // Sectors
+      case "Technology":
+        return t("users.technology", "Technology");
+      case "Healthcare":
+        return t("users.healthcare", "Healthcare");
+      case "Education":
+        return t("users.education", "Education");
+      case "Agriculture":
+        return t("users.agriculture", "Agriculture");
+      case "Clean Energy":
+        return t("users.cleanEnergy", "Clean Energy");
+      case "Water Sanitation and Hygiene":
+        return t(
+          "users.waterSanitationHygiene",
+          "Water Sanitation and Hygiene"
+        );
+      case "Fintech":
+        return t("users.fintech", "Fintech");
+      // Programs
+      case "Investment Readiness":
+        return t("users.investmentReadiness", "Investment Readiness");
+      case "Business Foundation":
+        return t("users.businessFoundation", "Business Foundation");
+      case "Mentorship Program":
+        return t("users.mentorshipProgram", "Mentorship Program");
+      case "Accelerator":
+        return t("users.accelerator", "Accelerator");
+      default:
+        return value; // numbers & ranges
+    }
+  };
+
+  const translateSortLabel = (key) => {
+    switch (key) {
+      case "name":
+        return t("common.name", "Name");
+      case "sector":
+        return t("users.sector", "Sector");
+      case "date":
+        return t("common.date", "Date");
+      case "program":
+        return t("users.program", "Program");
+      default:
+        return key;
+    }
   };
 
   return loading ? (
@@ -273,7 +334,7 @@ const Page = () => {
                     : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
                 } flex items-center gap-2 hover:border-primary transition-colors`}
               >
-                <span>{filters[key]}</span>
+                <span>{translateFilterValue(filters[key])}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${
                     openDropdown === key ? "rotate-180" : ""
@@ -303,7 +364,7 @@ const Page = () => {
                           : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
                       }`}
                     >
-                      {option}
+                      {translateFilterValue(option)}
                     </button>
                   ))}
                 </div>
@@ -318,8 +379,8 @@ const Page = () => {
               className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
             >
               <span>
-                Sort:{" "}
-                {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
+                {t("users.sortBy", "Sort:")}{" "}
+                {translateSortLabel(sortConfig.key)}
               </span>
               <svg
                 className={`w-4 h-4 transition-transform ${
@@ -350,7 +411,7 @@ const Page = () => {
                         : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
                     }`}
                   >
-                    {option.label}{" "}
+                    {translateSortLabel(option.value)}{" "}
                     {sortConfig.key === option.value && (
                       <span className="float-right">
                         {sortConfig.direction === "asc" ? "↑" : "↓"}
@@ -374,7 +435,7 @@ const Page = () => {
                     key={key}
                     className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
                   >
-                    {value}
+                    {translateFilterValue(value)}
                     <button
                       onClick={() =>
                         handleFilterChange(
@@ -391,7 +452,7 @@ const Page = () => {
             )}
             {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                Search: {keyword}
+                {t("common.search", "Search")}: {keyword}
                 <button
                   onClick={() => setKeyword("")}
                   className="hover:text-primary-dark"
@@ -427,7 +488,8 @@ const Page = () => {
                   {/* Sector Badge - Positioned over image */}
                   <div className="absolute bottom-4 left-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                      {item?.Business?.BusinessSector?.name || "No Sector"}
+                      {item?.Business?.BusinessSector?.name ||
+                        t("users.noSector", "No Sector")}
                     </span>
                   </div>
                 </div>
@@ -440,7 +502,8 @@ const Page = () => {
                     </h2>
 
                     <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                      {item?.Business?.email || "No email provided"}
+                      {item?.Business?.email ||
+                        t("users.noEmailProvided", "No email provided")}
                     </p>
                   </div>
 
@@ -512,10 +575,10 @@ const Page = () => {
                         />
                       </svg>
                       <span>
-                        Joined{" "}
+                        {t("users.joined", "Joined")}{" "}
                         {item?.Business?.createdAt
                           ? new Date(item.Business.createdAt).getFullYear()
-                          : "N/A"}
+                          : t("mentorHub.notAvailable", "N/A")}
                       </span>
                     </div>
                   </div>
@@ -562,7 +625,7 @@ const Page = () => {
                 {/* Card Footer */}
                 <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
                   <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                    <span>View Details</span>
+                    <span>{t("users.viewDetails", "View Details")}</span>
                     <svg
                       className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                       fill="none"

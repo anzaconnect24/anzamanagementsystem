@@ -7,18 +7,37 @@ import { sendMentorshipApplication } from "@/app/controllers/mentorship_applicat
 import toast from "react-hot-toast";
 import { uploadFile } from "@/app/controllers/file_upload_controller";
 import { sendInvestmentApplication } from "@/app/controllers/investment_applications_controllers";
+import { useTranslation } from "@/app/locales";
 
 const Page = ({ params }) => {
+  const { t } = useTranslation();
   const investor_uuid = params.uuid;
   const router = useRouter();
   const [loading, setloading] = useState(false);
   const [formValues, setFormValues] = useState({});
+
+  const optionLabel = (val) => {
+    switch (val) {
+      case "Equity":
+        return t("users.equity", "Equity");
+      case "Convertible Note":
+        return t("users.convertibleNote", "Convertible Note");
+      case "Revenue Share":
+        return t("users.revenueShare", "Revenue Share");
+      case "Loan":
+        return t("users.loan", "Loan");
+      case "Not Sure":
+        return t("users.notSure", "Not Sure");
+      default:
+        return val;
+    }
+  };
   return (
     <div>
       <Breadcrumb
-        pageName={"Investment Application"}
+        pageName={t("investmentApplication.title", "Investment Application")}
         prevLink={""}
-        prevPage={"Back"}
+        prevPage={t("common.back", "Back")}
       />
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
@@ -39,7 +58,12 @@ const Page = ({ params }) => {
                 console.log(data);
                 sendInvestmentApplication(data).then(() => {
                   setloading(false);
-                  toast.success("Application sent successfully");
+                  toast.success(
+                    t(
+                      "investmentApplication.success",
+                      "Application sent successfully"
+                    )
+                  );
                   router.back();
                 });
               });
@@ -48,7 +72,10 @@ const Page = ({ params }) => {
             <div className="grid grid-cols-2 gap-x-3 gap-y-3">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  What are you offering to the investor?
+                  {t(
+                    "investmentApplication.offerQuestion",
+                    "What are you offering to the investor?"
+                  )}
                 </label>
                 <select
                   name="offerToInvestor"
@@ -56,7 +83,9 @@ const Page = ({ params }) => {
                   className="w-full rounded border-stroke"
                   placeholder=""
                 >
-                  <option>Select item</option>
+                  <option>
+                    {t("investmentApplication.selectItem", "Select item")}
+                  </option>
                   {[
                     "Equity",
                     "Convertible Note",
@@ -65,7 +94,7 @@ const Page = ({ params }) => {
                     "Not Sure",
                   ].map((item) => (
                     <option key={item} value={item}>
-                      {item}
+                      {optionLabel(item)}
                     </option>
                   ))}
                 </select>
@@ -73,30 +102,45 @@ const Page = ({ params }) => {
             </div>
             <div className="mt-3">
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Amount of Investment Requested (TZS/USD)
+                {t(
+                  "investmentApplication.amountLabel",
+                  "Amount of Investment Requested (TZS/USD)"
+                )}
               </label>
               <input
                 name="amount"
                 type="number"
                 required
-                placeholder="Write here..."
+                placeholder={t(
+                  "investmentApplication.amountPlaceholder",
+                  "Write here..."
+                )}
                 className="border-stroke w-full rounded"
               ></input>
             </div>
             <div className="mt-3">
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Purpose of investment
+                {t(
+                  "investmentApplication.purposeLabel",
+                  "Purpose of investment"
+                )}
               </label>
               <textarea
                 name="purposeOfInvestment"
                 required
-                placeholder="Write here..."
+                placeholder={t(
+                  "investmentApplication.purposePlaceholder",
+                  "Write here..."
+                )}
                 className="border-stroke w-full rounded"
               ></textarea>
             </div>
             <div className="mt-3">
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Attach your pitchdeck
+                {t(
+                  "investmentApplication.attachPitchdeck",
+                  "Attach your pitchdeck"
+                )}
               </label>
               <input
                 name="pitchdeck"
@@ -110,7 +154,11 @@ const Page = ({ params }) => {
               type="submit"
               className="py-2 px-3 mt-4 rounded flex justify-center bg-primary text-white"
             >
-              {loading ? <Spinner /> : "Send Application"}
+              {loading ? (
+                <Spinner />
+              ) : (
+                t("investmentApplication.sendApplication", "Send Application")
+              )}
             </button>
           </form>
         </div>

@@ -11,8 +11,15 @@ import toast from "react-hot-toast";
 import { UserContext } from "../../../(dashboard)/layout";
 import { useTranslation } from "@/app/locales";
 import Loader from "@/components/common/Loader";
-import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
-import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
+import dynamic from "next/dynamic";
+const BusinessDomainScores = dynamic(
+  () => import("@/components/Charts/BusinessDomainScores"),
+  { ssr: false, loading: () => <Loader /> }
+);
+const PerformanceDistribution = dynamic(
+  () => import("@/components/Charts/PerformanceDistribution"),
+  { ssr: false, loading: () => <Loader /> }
+);
 import AIAnalysisPanel from "@/components/AI/AIAnalysisPanel";
 import { useParams } from "next/navigation";
 import { useSearchParams } from "next/navigation";
@@ -264,7 +271,7 @@ const Page = () => {
     // Get the score status and percentage from scoreData
     const sectionScore = scoreData[domainKey]?.percentage || 0;
     const sectionStatus =
-      scoreData[domainKey]?.status || t("report.notReady", "Not ready");
+      scoreData[domainKey]?.status || t("report.notReady", "Not Ready");
 
     // Determine the status color
     const overallStatusColor =
@@ -342,13 +349,13 @@ const Page = () => {
                   )}
                   <button
                     className={`px-4 py-2 text-white rounded-lg transition-colors ${
-                      generalStatus === t("report.notReady", "Not ready")
+                      generalStatus === t("report.notReady", "Not Ready")
                         ? "bg-gray-400 cursor-not-allowed"
                         : "bg-green-600 hover:bg-green-700"
                     }`}
                     onClick={openPublishDialog}
                     disabled={
-                      generalStatus === t("report.notReady", "Not ready")
+                      generalStatus === t("report.notReady", "Not Ready")
                     }
                   >
                     {t("report.publish", "Publish")}
@@ -359,7 +366,9 @@ const Page = () => {
                   className="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed"
                   disabled
                 >
-                  {userDetails.publishStatus}
+                  {userDetails.publishStatus === "On review"
+                    ? t("report.onReview", "On review")
+                    : userDetails.publishStatus}
                 </button>
               )}
             </div>

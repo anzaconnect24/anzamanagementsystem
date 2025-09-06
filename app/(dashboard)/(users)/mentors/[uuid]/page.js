@@ -16,8 +16,10 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { createNotification } from "@/app/controllers/notification_controller";
 import { assignEntreprenuerToMentor } from "@/app/controllers/mentorEntreprenuerController";
 import Spinner from "@/components/spinner";
+import { useTranslation } from "../../../../locales";
 
 const Page = ({ params }) => {
+  const { t } = useTranslation();
   const { uuid } = params;
   const [user, setUser] = useState(null);
   const { userDetails } = useContext(UserContext);
@@ -45,7 +47,11 @@ const Page = ({ params }) => {
     <Loader />
   ) : (
     <div>
-      <Breadcrumb prevLink="" prevPage="Back" pageName={`${user?.name}`} />
+      <Breadcrumb
+        prevLink=""
+        prevPage={t("common.back", "Back")}
+        pageName={`${user?.name}`}
+      />
       <p>{user?.MentorProfile?.position}</p>
       {/* Stats Section - Full Width */}
       <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary/5 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark mt-6">
@@ -54,21 +60,21 @@ const Page = ({ params }) => {
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">👥</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {user?.MentorProfile?.smeFocus || "N/A"}{" "}
+                {user?.MentorProfile?.smeFocus || t("common.notAvailable", "N/A")} {" "}
                 {/* Updated to use numberOfCustomers */}
               </h3>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                SME Focus
-              </p>
+            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
+              {t("mentorProfile.smeFocus", "SME Focus")}
+            </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">📍</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {user?.MentorProfile?.location || "N/A"}{" "}
+                {user?.MentorProfile?.location || t("common.notAvailable", "N/A")} {" "}
                 {/* Updated to use location */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Location
+                {t("business.location", "Location")}
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
@@ -76,20 +82,20 @@ const Page = ({ params }) => {
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 overflow-y-hidden">
                 {Object.values(
                   user?.MentorProfile?.areasOfExperties || {}
-                ).join(", ") || "N/A"}{" "}
+                ).join(", ") || t("common.notAvailable", "N/A")} {" "}
                 {/* Updated to use UserSector.name */}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Experties Area
+                {t("mentorProfile.areasOfExpertise", "Areas of expertise")}
               </p>
             </div>
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">💡</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 ">
-                {user?.MentorProfile?.BusinessSector?.name || "N/A"}
+                {user?.MentorProfile?.BusinessSector?.name || t("common.notAvailable", "N/A")}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                Sector
+                {t("business.sector", "Sector")}
               </p>
             </div>
           </div>
@@ -103,10 +109,10 @@ const Page = ({ params }) => {
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
                 <span className="text-xl mr-3">🙍</span>
-                Bio
+                {t("mentorProfile.bio", "Bio")}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {user?.MentorProfile?.description || "No Information Available"}
+                {user?.MentorProfile?.description || t("mentorProfile.noInfo", "No Information Available")}
               </p>
             </div>
           </div>
@@ -114,7 +120,7 @@ const Page = ({ params }) => {
             <div>
               <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
                 <span className="text-xl mr-3">🎯</span>
-                Mentorship focus
+                {t("mentorProfile.mentorshipFocus", "Mentorship focus")}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed flex flex-wrap gap-3">
                 {Object.values(user?.MentorProfile?.mentorshipFocus || {}).map(
@@ -126,7 +132,7 @@ const Page = ({ params }) => {
                       {item}
                     </div>
                   )
-                ) || "N/A"}{" "}
+                ) || t("common.notAvailable", "N/A")} {" "}
               </p>
             </div>
           </div>
@@ -134,10 +140,10 @@ const Page = ({ params }) => {
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
                 <span className="text-xl mr-3">🗣️</span>
-                Languages
+                {t("mentorProfile.languages", "Languages")}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-                {user?.MentorProfile?.language || "No Information Available"}
+                {user?.MentorProfile?.language || t("mentorProfile.noInfo", "No Information Available")}
               </p>
             </div>
           </div>
@@ -145,11 +151,11 @@ const Page = ({ params }) => {
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
                 <span className="text-xl mr-3">📅 </span>
-                Availability
+                {t("mentorProfile.availability", "Availability")}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
                 {user?.MentorProfile?.mentorAvailability ||
-                  "No Information Available"}
+                  t("mentorProfile.noInfo", "No Information Available")}
               </p>
             </div>
           </div>
@@ -157,7 +163,7 @@ const Page = ({ params }) => {
             <div className="mb-4">
               <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
                 <span className="text-xl mr-3">🌎</span>
-                Areas of expertise
+                {t("mentorProfile.areasOfExpertise", "Areas of expertise")}
               </h2>
               <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed flex flex-wrap gap-3">
                 {Object.values(user?.MentorProfile?.areasOfExperties || {}).map(
@@ -169,7 +175,7 @@ const Page = ({ params }) => {
                       {item}
                     </div>
                   )
-                ) || "No Information Available"}
+                ) || t("mentorProfile.noInfo", "No Information Available")}
               </p>
             </div>
           </div>
@@ -181,11 +187,19 @@ const Page = ({ params }) => {
                   type: "userToUser",
                   lastMessage: "",
                 };
-                toast.success("Enabling end-to-end encryption. Please wait...");
+                toast.success(
+                  t(
+                    "messages.encryptionEnabling",
+                    "Enabling end-to-end encryption. Please wait..."
+                  )
+                );
                 createNotification({
                   user_uuid: user.uuid,
                   to: "User",
-                  message: `You have a new message`,
+                  message: t(
+                    "messages.youHaveNewMessage",
+                    "You have a new message"
+                  ),
                 });
                 createConversation(data).then((data) => {
                   router.push(`/messages/${data.uuid}`);
@@ -193,14 +207,14 @@ const Page = ({ params }) => {
               }}
               className="py-2 px-4 text-white font-bold bg-green-500  hover:text-opacity-80 transition-all duration-300 rounded"
             >
-              Send Message
+              {t("messages.sendMessage", "Send Message")}
             </button>
             {userDetails.role == "Enterprenuer" && (
               <Link
                 href={`/mentorshipApplicationForm/${uuid}`}
                 className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
               >
-                Request for mentorship
+                {t("messages.requestMentorship", "Request for mentorship")}
               </Link>
             )}
           </div>

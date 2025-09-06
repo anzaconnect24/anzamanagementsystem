@@ -13,8 +13,10 @@ import NoData from "@/app/component/noData";
 import Image from "next/image";
 import { getEntreprenuerMentors } from "@/app/controllers/mentorship_applications_controllers";
 import Pagination from "@/app/component/pagination";
+import { useTranslation } from "../../../locales";
 
 const MentorEntreprenuer = () => {
+  const { t } = useTranslation();
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
@@ -24,7 +26,7 @@ const MentorEntreprenuer = () => {
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
   const getMentorName = (item) => {
-    return item?.name || "Unnamed Mentor";
+    return item?.name || t("mentorHub.unnamedMentor", "Unnamed Mentor");
   };
 
   // Helper function to get mentor sector
@@ -32,7 +34,7 @@ const MentorEntreprenuer = () => {
     return (
       item?.MentorProfile?.BusinessSector?.name ||
       Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") ||
-      "No Sector"
+      t("mentorHub.noSector", "No Sector")
     );
   };
   useEffect(() => {
@@ -50,22 +52,25 @@ const MentorEntreprenuer = () => {
   ) : (
     <div>
       <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
-        <h1 className="text-2xl font-bold">Dear {userDetails.name}!</h1>
+        <h1 className="text-2xl font-bold">
+          {t("mentorHub.greeting", "Dear {{name}}!", { name: userDetails.name })}
+        </h1>
         <p>
-          Welcome to your Mentors Hub. Here, you can view your current mentors ,
-          view their profiles , review recent interactions , and schedule
-          upcoming sessions.
+          {t(
+            "mentorHub.welcome",
+            "Welcome to your Mentors Hub. Here, you can view your current mentors, view their profiles, review recent interactions, and schedule upcoming sessions."
+          )}
         </p>
       </div>
       <div className=" mt-4 rounded-xl">
         <div className="flex justify-between">
-          <h1 className="text-xl font-bold">My Mentors</h1>
+          <h1 className="text-xl font-bold">{t("mentorHub.myMentors", "My Mentors")}</h1>
           <input
             onChange={(e) => {
               setKeyword(e.target.value);
             }}
             className="py-1 rounded border-bodydark border-opacity-40 "
-            placeholder="Search here"
+            placeholder={t("mentorHub.searchPlaceholder", "Search here")}
           />
         </div>
         {data.length < 1 ? (
@@ -122,7 +127,7 @@ const MentorEntreprenuer = () => {
                             )
                               .slice(0, 2)
                               .join(", ") ||
-                            "General Expertise"}
+                              t("mentorHub.generalExpertise", "General Expertise")}
                         </span>
                       </div>
 
@@ -140,7 +145,7 @@ const MentorEntreprenuer = () => {
                         </h2>
 
                         <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                          {item?.email || "No email provided"}
+                          {item?.email || t("mentorHub.noEmailProvided", "No email provided")}
                         </p>
                       </div>
 
@@ -204,10 +209,10 @@ const MentorEntreprenuer = () => {
                             />
                           </svg>
                           <span>
-                            Joined{" "}
+                            {t("mentorHub.joined", "Joined")} {" "}
                             {item?.createdAt
                               ? new Date(item.createdAt).getFullYear()
-                              : "N/A"}
+                              : t("mentorHub.notAvailable", "N/A")}
                           </span>
                         </div>
                       </div>
@@ -254,7 +259,7 @@ const MentorEntreprenuer = () => {
                     {/* Card Footer */}
                     <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
                       <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                        <span>View Details</span>
+                        <span>{t("common.viewDetails", "View Details")}</span>
                         <svg
                           className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                           fill="none"

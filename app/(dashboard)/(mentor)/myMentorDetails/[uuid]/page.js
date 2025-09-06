@@ -11,8 +11,10 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Image from "next/image";
 import { getUserInfo } from "@/app/controllers/user_controller";
 import { UserContext } from "@/app/(dashboard)/layout";
+import { useTranslation } from "../../../../locales";
 
 const Page = ({ params }) => {
+  const { t } = useTranslation();
   const { uuid } = params;
   const [business, setBusiness] = useState(null);
   const { userDetails } = useContext(UserContext);
@@ -39,14 +41,21 @@ const Page = ({ params }) => {
     <Loader />
   ) : (
     <div>
-      <Breadcrumb prevLink="" prevPage="Back" pageName={`${user?.name}`} />
+      <Breadcrumb
+        prevLink=""
+        prevPage={t("common.back", "Back")}
+        pageName={`${user?.name}`}
+      />
       {/* Stats Section - Full Width */}
       <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
-        <h1 className="text-2xl font-bold">Dear {userDetails.name}!</h1>
+        <h1 className="text-2xl font-bold">
+          {t("mentorDetails.greeting", "Dear {{name}}!", { name: userDetails.name })}
+        </h1>
         <p>
-          Welcome to your Mentor Hub. Here, you will find reports from your
-          mentor. You can view your mentor profile, access resources you’ve
-          shared by your mentor , and review your mentoring sessions.
+          {t(
+            "mentorDetails.welcome",
+            "Welcome to your Mentor Hub. Here, you will find reports from your mentor. You can view your mentor profile, access resources shared by your mentor, and review your mentoring sessions."
+          )}
         </p>
       </div>
 
@@ -54,17 +63,17 @@ const Page = ({ params }) => {
         {[
           {
             icon: "/profile.png",
-            label: "View Profile",
+            label: t("mentorDetails.viewProfile", "View Profile"),
             path: `/mentors/${uuid}`,
           },
           {
             icon: "/resource.png",
-            label: "Resources",
+            label: t("mentorDetails.resources", "Resources"),
             path: `#`,
           },
           {
             icon: "/report.png",
-            label: "Reports",
+            label: t("mentorDetails.reports", "Reports"),
             path: `#`,
           },
         ].map((item) => {
