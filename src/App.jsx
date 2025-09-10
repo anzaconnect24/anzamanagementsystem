@@ -99,6 +99,104 @@ import CategoryWithParam from "./pages/learnandgrow/generalResources/category/Ca
 import ModuleWithCourse from "./pages/learnandgrow/modules/ModuleWithCourse";
 import MessagesWithUuid from "./pages/chat/messages/MessagesWithUuid";
 
+// Additional Missing Imports - Account Components
+import InvestorProfile from "./pages/account/investorProfile/InvestorProfile";
+
+// Additional Missing Imports - Application Components
+import AcceptedProgramApplications from "./pages/applications/acceptedProgramApplications/AcceptedProgramApplications";
+import AssignProgramApplicationReviewersWithUuid from "./pages/applications/assignProgramApplicationReviewers/AssignProgramApplicationReviewersWithUuid";
+import PendingProgramApplications from "./pages/applications/pendingProgramApplications/PendingProgramApplications";
+import RejectedProgramApplications from "./pages/applications/rejectedProgramApplications/RejectedProgramApplications";
+import UserProgramApplicationWithUuid from "./pages/applications/userProgramApplication/UserProgramApplicationWithUuid";
+import ViewProgramApplicationWithUuid from "./pages/applications/viewProgramApplication/ViewProgramApplicationWithUuid";
+
+// Additional Missing Imports - Assignment Components
+import BusinessAssignments from "./pages/assignments/businessAssignments/BusinessAssignments";
+import ProgramAssignments from "./pages/assignments/programAssignments/ProgramAssignments";
+
+// Additional Missing Imports - Business Components
+import ApplicationRejectionWithUuid from "./pages/business/applicationRejection/ApplicationRejectionWithUuid";
+import ApprovedApplicationWithUuid from "./pages/business/approvedApplications/ApprovedApplicationWithUuid";
+import AssignReviewerWithUuid from "./pages/business/assignReviewer/AssignReviewerWithUuid";
+import CratDocuments from "./pages/business/businessDetails/CratDocuments";
+import BusinessDetailsByMentorWithUuid from "./pages/business/businessDetailsByMentor/BusinessDetailsByMentorWithUuid";
+
+// Additional Missing Imports - Investment Opportunity Components
+import OpportunityWithUuid from "./pages/investment-opportunities/opportunities/OpportunityWithUuid";
+import EditOpportunityWithUuid from "./pages/investment-opportunities/opportunities/EditOpportunityWithUuid";
+
+// Additional Missing Imports - Investment Components
+import AcceptedRequests from "./pages/investment/acceptedRequests/AcceptedRequests";
+import AssignInvestmentRequestReviewersWithUuid from "./pages/investment/assignInvestmentRequestReviewers/AssignInvestmentRequestReviewersWithUuid";
+import InvestmentApplicationWithUuid from "./pages/investment/investmentApplication/InvestmentApplicationWithUuid";
+import InvestmentApplicationByEntreprenuerWithUuid from "./pages/investment/investmentApplicationByEntreprenuer/InvestmentApplicationByEntreprenuerWithUuid";
+import PendingRequests from "./pages/investment/pendingRequests/PendingRequests";
+import RejectApplicationRequestWithUuid from "./pages/investment/rejectApplicationRequest/RejectApplicationRequestWithUuid";
+import RejectedRequests from "./pages/investment/rejectedRequests/RejectedRequests";
+import ReviewerAssignedInvestmentRequests from "./pages/investment/reviewerAssignedInvestmentRequests/ReviewerAssignedInvestmentRequests";
+import ViewInvestmentRequestWithUuid from "./pages/investment/viewInvestmentRequest/ViewInvestmentRequestWithUuid";
+
+// Additional Missing Imports - Investor Components
+import InvestorSectorBusinesses from "./pages/investor/investorSectorBusinesses/InvestorSectorBusinesses";
+
+// Additional Missing Imports - Learn and Grow Components
+import AddModule from "./pages/learnandgrow/modules/add/AddModule";
+import EditModule from "./pages/learnandgrow/modules/edit/EditModule";
+import ProgramsApplicationsWithUuid from "./pages/learnandgrow/programsApplications/ProgramsApplicationsWithUuid";
+import EditProgramsApplicationsWithUuid from "./pages/learnandgrow/programsApplications/EditProgramsApplicationsWithUuid";
+import SlideWithUuid from "./pages/learnandgrow/slides/SlideWithUuid";
+import AddSlide from "./pages/learnandgrow/slides/add/AddSlide";
+import EditSlide from "./pages/learnandgrow/slides/edit/EditSlide";
+
+// Additional Missing Imports - Log Components
+import Logs from "./pages/log/Logs";
+
+// Additional Missing Imports - Mentor Components
+import AddEntreprenuerReportWithUuid from "./pages/mentor/addEntreprenuerReport/AddEntreprenuerReportWithUuid";
+import MentorReportWithUuid from "./pages/mentor/mentorReport/MentorReportWithUuid";
+
+// Additional Missing Imports - Mentorship Components
+import MentorshipApplicationFormWithUuid from "./pages/mentorship/mentorshipApplicationForm/MentorshipApplicationFormWithUuid";
+
+// Additional Missing Imports - Pitch Materials Components
+import Documents from "./pages/pitchMaterials/documents/Documents";
+import UploadMaterialWithType from "./pages/pitchMaterials/uploadMaterial/UploadMaterialWithType";
+import Videos from "./pages/pitchMaterials/videos/Videos";
+import ViewerWithUuid from "./pages/pitchMaterials/viewer/ViewerWithUuid";
+
+// Additional Missing Imports - Program Components
+import BFA from "./pages/programs/bfa/BFA";
+import Consultance from "./pages/programs/consultance/Consultance";
+import EditProgramWithUuid from "./pages/programs/editProgram/EditProgramWithUuid";
+import IRA from "./pages/programs/ira/IRA";
+import NewProgram from "./pages/programs/NewProgram";
+import NewProgramUpdateWithUuid from "./pages/programs/newProgramUpdate/NewProgramUpdateWithUuid";
+import ProgramDetailsWithUuid from "./pages/programs/programDetails/ProgramDetailsWithUuid";
+import ProgramUpdatesWithUuid from "./pages/programs/programUpdates/ProgramUpdatesWithUuid";
+import SendProgramApplicationWithUuid from "./pages/programs/sendProgramApplication/SendProgramApplicationWithUuid";
+
+// Additional Missing Imports - Reviewer Components
+import ApplicationList from "./pages/reviewer/applicationList/ApplicationList";
+import PreviewPage from "./pages/reviewer/previewPage/PreviewPage";
+
+// Additional Missing Imports - Sector Components
+import Sectors from "./pages/sectors/Sectors";
+import AddSector from "./pages/sectors/addSector/AddSector";
+import EditSectorWithUuid from "./pages/sectors/editSector/EditSectorWithUuid";
+import SectorBusinessesWithUuid from "./pages/sectors/sectorBusinesses/SectorBusinessesWithUuid";
+
+// Additional Missing Imports - Stories Components
+import NewStory from "./pages/stories/newStory/NewStory";
+import ReadStoryWithUuid from "./pages/stories/readStory/ReadStoryWithUuid";
+import EditSuccessStoryWithUuid from "./pages/stories/successStories/EditSuccessStoryWithUuid";
+import NewSuccessStory from "./pages/stories/successStories/new/NewSuccessStory";
+import SuccessStoryWithUuid from "./pages/stories/successStories/SuccessStoryWithUuid";
+
+// Additional Missing Imports - User Components
+import InvestorWithUuid from "./pages/users/investors/InvestorWithUuid";
+import MentorEntreprenuerWithUuid from "./pages/users/mentorEntreprenuers/MentorEntreprenuerWithUuid";
+import MentorWithUuid from "./pages/users/mentors/MentorWithUuid";
+
 function App() {
   const [loading, setLoading] = useState(true);
 
@@ -201,6 +299,216 @@ function App() {
               path="rejectedApplications"
               element={<RejectedApplications />}
             />
+
+            {/* Account Routes */}
+            <Route path="accountDetails" element={<InvestorProfile />} />
+            <Route path="accountInformation" element={<InvestorProfile />} />
+            <Route path="investorProfile" element={<InvestorProfile />} />
+
+            {/* Application Routes - Additional */}
+            <Route
+              path="acceptedProgramApplications"
+              element={<AcceptedProgramApplications />}
+            />
+            <Route
+              path="assignProgramApplicationReviewers/:uuid"
+              element={<AssignProgramApplicationReviewersWithUuid />}
+            />
+            <Route
+              path="pendingProgramApplications"
+              element={<PendingProgramApplications />}
+            />
+            <Route
+              path="rejectedProgramApplications"
+              element={<RejectedProgramApplications />}
+            />
+            <Route
+              path="userProgramApplication/:uuid"
+              element={<UserProgramApplicationWithUuid />}
+            />
+            <Route
+              path="viewProgramApplication/:uuid"
+              element={<ViewProgramApplicationWithUuid />}
+            />
+
+            {/* Assignment Routes */}
+            <Route
+              path="businessAssignments"
+              element={<BusinessAssignments />}
+            />
+            <Route path="programAssignments" element={<ProgramAssignments />} />
+
+            {/* Business Routes - Additional */}
+            <Route
+              path="applicationRejection/:uuid"
+              element={<ApplicationRejectionWithUuid />}
+            />
+            <Route
+              path="approvedApplications/:uuid"
+              element={<ApprovedApplicationWithUuid />}
+            />
+            <Route
+              path="assignReviewer/:uuid"
+              element={<AssignReviewerWithUuid />}
+            />
+            <Route
+              path="businessDetails/:uuid/crat-documents"
+              element={<CratDocuments />}
+            />
+            <Route
+              path="businessDetailsByMentor/:uuid"
+              element={<BusinessDetailsByMentorWithUuid />}
+            />
+
+            {/* Investment Opportunity Routes - Additional */}
+            <Route
+              path="opportunities/:uuid"
+              element={<OpportunityWithUuid />}
+            />
+            <Route
+              path="opportunities/:uuid/edit"
+              element={<EditOpportunityWithUuid />}
+            />
+            <Route path="opportunities/new" element={<OpportunityWithUuid />} />
+
+            {/* Investment Routes - Additional */}
+            <Route path="acceptedRequests" element={<AcceptedRequests />} />
+            <Route
+              path="assignInvestmentRequestReviewers/:uuid"
+              element={<AssignInvestmentRequestReviewersWithUuid />}
+            />
+            <Route
+              path="investmentApplication/:uuid"
+              element={<InvestmentApplicationWithUuid />}
+            />
+            <Route
+              path="investmentApplicationByEntreprenuer/:uuid"
+              element={<InvestmentApplicationByEntreprenuerWithUuid />}
+            />
+            <Route path="pendingRequests" element={<PendingRequests />} />
+            <Route
+              path="rejectApplicationRequest/:uuid"
+              element={<RejectApplicationRequestWithUuid />}
+            />
+            <Route path="rejectedRequests" element={<RejectedRequests />} />
+            <Route
+              path="reviewerAssignedInvestmentRequests"
+              element={<ReviewerAssignedInvestmentRequests />}
+            />
+            <Route
+              path="viewInvestmentRequest/:uuid"
+              element={<ViewInvestmentRequestWithUuid />}
+            />
+
+            {/* Investor Routes */}
+            <Route
+              path="investorSectorBusinesses"
+              element={<InvestorSectorBusinesses />}
+            />
+
+            {/* Learn and Grow Routes - Additional */}
+            <Route path="modules/add" element={<AddModule />} />
+            <Route path="modules/edit" element={<EditModule />} />
+            <Route
+              path="programsApplications/:uuid"
+              element={<ProgramsApplicationsWithUuid />}
+            />
+            <Route
+              path="programsApplications/:uuid/edit"
+              element={<EditProgramsApplicationsWithUuid />}
+            />
+            <Route
+              path="programsApplications/new"
+              element={<ProgramsApplicationsWithUuid />}
+            />
+            <Route path="slides/:uuid" element={<SlideWithUuid />} />
+            <Route path="slides/add" element={<AddSlide />} />
+            <Route path="slides/edit" element={<EditSlide />} />
+
+            {/* Log Routes */}
+            <Route path="logs" element={<Logs />} />
+
+            {/* Mentor Routes - Additional */}
+            <Route
+              path="addEntreprenuerReport/:uuid"
+              element={<AddEntreprenuerReportWithUuid />}
+            />
+            <Route
+              path="mentorReport/:uuid"
+              element={<MentorReportWithUuid />}
+            />
+
+            {/* Mentorship Routes */}
+            <Route
+              path="mentorshipApplicationForm/:uuid"
+              element={<MentorshipApplicationFormWithUuid />}
+            />
+
+            {/* Pitch Materials Routes */}
+            <Route path="documents" element={<Documents />} />
+            <Route
+              path="uploadMaterial/:type"
+              element={<UploadMaterialWithType />}
+            />
+            <Route path="videos" element={<Videos />} />
+            <Route path="viewer/:uuid" element={<ViewerWithUuid />} />
+
+            {/* Program Routes - Additional */}
+            <Route path="bfa" element={<BFA />} />
+            <Route path="consultance" element={<Consultance />} />
+            <Route path="editProgram/:uuid" element={<EditProgramWithUuid />} />
+            <Route path="ira" element={<IRA />} />
+            <Route path="newProgram" element={<NewProgram />} />
+            <Route
+              path="newProgramUpdate/:uuid"
+              element={<NewProgramUpdateWithUuid />}
+            />
+            <Route
+              path="programDetails/:uuid"
+              element={<ProgramDetailsWithUuid />}
+            />
+            <Route
+              path="programUpdates/:uuid"
+              element={<ProgramUpdatesWithUuid />}
+            />
+            <Route
+              path="sendProgramApplication/:uuid"
+              element={<SendProgramApplicationWithUuid />}
+            />
+
+            {/* Reviewer Routes - Additional */}
+            <Route path="applicationList" element={<ApplicationList />} />
+            <Route path="previewPage" element={<PreviewPage />} />
+
+            {/* Sector Routes */}
+            <Route path="sectors" element={<Sectors />} />
+            <Route path="addSector" element={<AddSector />} />
+            <Route path="editSector/:uuid" element={<EditSectorWithUuid />} />
+            <Route
+              path="sectorBusinesses/:uuid"
+              element={<SectorBusinessesWithUuid />}
+            />
+
+            {/* Stories Routes - Additional */}
+            <Route path="newStory" element={<NewStory />} />
+            <Route path="readStory/:uuid" element={<ReadStoryWithUuid />} />
+            <Route
+              path="successStories/:uuid/edit"
+              element={<EditSuccessStoryWithUuid />}
+            />
+            <Route
+              path="successStories/:uuid"
+              element={<SuccessStoryWithUuid />}
+            />
+            <Route path="successStories/new" element={<NewSuccessStory />} />
+
+            {/* User Routes - Additional */}
+            <Route path="investors/:uuid" element={<InvestorWithUuid />} />
+            <Route
+              path="mentorEntreprenuers/:uuid"
+              element={<MentorEntreprenuerWithUuid />}
+            />
+            <Route path="mentors/:uuid" element={<MentorWithUuid />} />
 
             {/* Learn and Grow Routes */}
             <Route
