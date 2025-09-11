@@ -36,6 +36,7 @@ const Page = ({ params }) => {
         {[
           {
             icon: "/discussion.avif",
+            englishKey: "Ideation", // English key for URL
             label: t("learnAndGrow.ideation", "Ideation"),
             description: t(
               "learnAndGrow.ideationDescription",
@@ -45,6 +46,7 @@ const Page = ({ params }) => {
           },
           {
             icon: "/discussion.avif",
+            englishKey: "Business Foundation", // English key for URL
             label: t("learnAndGrow.businessFoundation", "Business Foundation"),
             description: t(
               "learnAndGrow.businessFoundationDescription",
@@ -54,6 +56,7 @@ const Page = ({ params }) => {
           },
           {
             icon: "/discussion.avif",
+            englishKey: "Investment readiness", // English key for URL
             label: t(
               "learnAndGrow.investmentReadiness",
               "Investment readiness"
@@ -67,7 +70,7 @@ const Page = ({ params }) => {
         ].map((item) => {
           return (
             <Link
-              key={item.label}
+              key={item.englishKey}
               href={item.path}
               className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-center  "
             >
@@ -76,7 +79,9 @@ const Page = ({ params }) => {
                 <h1 className="font-bold text-lg">{item.label}</h1>
                 <p className="mb-4">{item.description}</p>
                 <Link
-                  href={`/modules/${encodeURIComponent(item.label)}`}
+                  href={`/dashboard/modules/${encodeURIComponent(
+                    item.englishKey
+                  )}`}
                   className="bg-primary px-4 py-2 rounded-lg text-white mt-2"
                 >
                   {t("learnAndGrow.accessClasses", "Access Classes")}

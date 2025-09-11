@@ -15,7 +15,7 @@ const Page = () => {
   const { t } = useTranslation();
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-  const { setSelectedBusiness } = useContext(BusinessContext);
+  const { selectedBusiness, setSelectedBusiness } = useState();
   const [loading, setloading] = useState(true);
   useEffect(() => {
     getRejectedBusinesses(1, 10).then((data) => {

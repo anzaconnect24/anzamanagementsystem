@@ -32,22 +32,46 @@ const Page = ({ params }) => {
       })
       .finally(() => setLoading(false));
   };
-  // Define categories
-  const categories = [
-    t("learnAndGrow.financeAndFundraising", "Finance and Fundraising"),
-    t("learnAndGrow.marketingAndSales", "Marketing & Sales"),
-    t("learnAndGrow.technologyAndInnovation", "Technology & Innovation"),
-    t(
+  // Define categories with English keys (for DB) and translated display names
+  const categoryMapping = {
+    "Finance and Fundraising": t(
+      "learnAndGrow.financeAndFundraising",
+      "Finance and Fundraising"
+    ),
+    "Marketing & Sales": t(
+      "learnAndGrow.marketingAndSales",
+      "Marketing & Sales"
+    ),
+    "Technology & Innovation": t(
+      "learnAndGrow.technologyAndInnovation",
+      "Technology & Innovation"
+    ),
+    "Leadership & Personal Development": t(
       "learnAndGrow.leadershipAndPersonalDevelopment",
       "Leadership & Personal Development"
     ),
-    t("learnAndGrow.impactAndSustainability", "Impact & Sustainability"),
-    t("learnAndGrow.legalAndCompliance", "Legal & Compliance"),
-  ];
+    "Impact & Sustainability": t(
+      "learnAndGrow.impactAndSustainability",
+      "Impact & Sustainability"
+    ),
+    "Legal & Compliance": t(
+      "learnAndGrow.legalAndCompliance",
+      "Legal & Compliance"
+    ),
+  };
 
-  // Group documents by category
-  const groupedDocuments = categories.reduce((acc, category) => {
-    acc[category] = data.filter((doc) => doc.category === category);
+  // Get the English category keys (these match the DB values)
+  const categoryKeys = Object.keys(categoryMapping);
+
+  // Get the translated category names for display
+  const categories = Object.values(categoryMapping);
+
+  // Group documents by English category key first, then map to translated names
+  const groupedDocuments = categoryKeys.reduce((acc, englishCategory) => {
+    const translatedCategory = categoryMapping[englishCategory];
+    acc[translatedCategory] = data.filter(
+      (doc) => doc.category === englishCategory
+    );
     return acc;
   }, {});
 
@@ -117,6 +141,11 @@ const Page = ({ params }) => {
           const categoryDocs = groupedDocuments[category] || [];
           const firstDoc = categoryDocs[0];
 
+          // Find the English category key for this translated category
+          const englishCategory = Object.keys(categoryMapping).find(
+            (key) => categoryMapping[key] === category
+          );
+
           return (
             <div
               key={category}
@@ -150,8 +179,8 @@ const Page = ({ params }) => {
                   type="button"
                   onClick={() =>
                     router.push(
-                      `/generalResources/category/${encodeURIComponent(
-                        category
+                      `/dashboard/generalResources/category/${encodeURIComponent(
+                        englishCategory || category
                       )}`
                     )
                   }

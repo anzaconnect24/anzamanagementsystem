@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { useTranslation } from "@/locales";
+import { useTranslation } from "../../locales";
 
 const LanguageToggle = () => {
   const { language, switchLanguage, isSwahili, isEnglish } = useTranslation();

@@ -6,17 +6,16 @@ import {
   getMentorEntreprenuers,
   getMentors,
 } from "@/controllers/user_controller";
-import { timeAgo } from "../../../../utils/time_ago";
-import Link from "@/utils/link";
+
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
-import Image from "@/utils/image";
 import toast from "react-hot-toast";
 import {
   assignEntreprenuerToMentor,
   unassignEntreprenuerToMentor,
 } from "@/controllers/mentorEntreprenuerController";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import { timeAgo } from "../../../utils/time_ago";
 
 const Page = ({ params }) => {
   const resolvedParams = use(params);
@@ -37,18 +36,20 @@ const Page = ({ params }) => {
 
   const getData = () => {
     setloading(true);
-    getMentorEntreprenuers(uuid, currentPage, 20, keyword).then((response) => {
-      const body = response.body;
-      console.log(body);
-      setUsers(body.data);
-      settotal(body.count);
-      setcurrentPage(body.page);
-      settotalPages(body.totalPages);
-      setloading(false);
-    }).catch((error) => {
-      console.error('Error fetching data:', error);
-      setloading(false);
-    });
+    getMentorEntreprenuers(uuid, currentPage, 20, keyword)
+      .then((response) => {
+        const body = response.body;
+        console.log(body);
+        setUsers(body.data);
+        settotal(body.count);
+        setcurrentPage(body.page);
+        settotalPages(body.totalPages);
+        setloading(false);
+      })
+      .catch((error) => {
+        console.error("Error fetching data:", error);
+        setloading(false);
+      });
   };
 
   return loading ? (
@@ -60,7 +61,7 @@ const Page = ({ params }) => {
         prevPage="Mentors"
         pageName="Assigned Entrepreneurs"
       />
-      
+
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         {/* Header Section */}
         <div className="border-b border-stroke px-6 py-4 dark:border-strokedark">
@@ -81,22 +82,22 @@ const Page = ({ params }) => {
                   />
                 </svg>
               </div>
-      <div>
+              <div>
                 <h4 className="text-2xl font-bold text-black dark:text-white">
                   Assigned Entrepreneurs
-              </h4>
+                </h4>
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   Manage your assigned entrepreneurs and their progress
                 </p>
               </div>
             </div>
-            
+
             <div className="relative w-full md:w-80">
-            <input
-              onChange={(e) => {
-                setKeyword(e.target.value);
-                getData();
-              }}
+              <input
+                onChange={(e) => {
+                  setKeyword(e.target.value);
+                  getData();
+                }}
                 className="w-full rounded-lg border border-stroke bg-white px-4 py-3 pl-10 text-sm focus:border-primary focus-visible:outline-none dark:border-strokedark dark:bg-meta-4 dark:text-white dark:focus:border-primary"
                 placeholder="Search entrepreneurs..."
               />
@@ -125,7 +126,7 @@ const Page = ({ params }) => {
               </span>
             </div>
           </div>
-          </div>
+        </div>
 
         {/* Table Section */}
         <div className="p-6">
@@ -174,7 +175,10 @@ const Page = ({ params }) => {
                 </thead>
                 <tbody>
                   {users.map((item, key) => (
-                    <tr key={key} className="border-b border-[#eee] dark:border-strokedark hover:bg-gray-1 dark:hover:bg-meta-4 transition-colors duration-200">
+                    <tr
+                      key={key}
+                      className="border-b border-[#eee] dark:border-strokedark hover:bg-gray-1 dark:hover:bg-meta-4 transition-colors duration-200"
+                    >
                       <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
                         <div className="flex items-center gap-2">
                           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary bg-opacity-10">
@@ -216,22 +220,10 @@ const Page = ({ params }) => {
                                 d="M13.5 1.5H2.5C1.675 1.5 1 2.175 1 3V13C1 13.825 1.675 14.5 2.5 14.5H13.5C14.325 14.5 15 13.825 15 13V3C15 2.175 14.325 1.5 13.5 1.5ZM13.5 13H2.5V3H13.5V13Z"
                                 fill=""
                               />
-                              <path
-                                d="M7.5 4.5H4.5V5.5H7.5V4.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M11.5 4.5H8.5V5.5H11.5V4.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M7.5 6.5H4.5V7.5H7.5V6.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M11.5 6.5H8.5V7.5H11.5V6.5Z"
-                                fill=""
-                              />
+                              <path d="M7.5 4.5H4.5V5.5H7.5V4.5Z" fill="" />
+                              <path d="M11.5 4.5H8.5V5.5H11.5V4.5Z" fill="" />
+                              <path d="M7.5 6.5H4.5V7.5H7.5V6.5Z" fill="" />
+                              <path d="M11.5 6.5H8.5V7.5H11.5V6.5Z" fill="" />
                             </svg>
                           </div>
                           <p className="text-sm text-black dark:text-white">
@@ -254,22 +246,10 @@ const Page = ({ params }) => {
                                 d="M14.5 11.5C14.5 12.05 14.05 12.5 13.5 12.5H2.5C1.95 12.5 1.5 12.05 1.5 11.5V4.5C1.5 3.95 1.95 3.5 2.5 3.5H13.5C14.05 3.5 14.5 3.95 14.5 4.5V11.5ZM13.5 4.5H2.5V11.5H13.5V4.5Z"
                                 fill=""
                               />
-                              <path
-                                d="M7.5 6.5H4.5V7.5H7.5V6.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M11.5 6.5H8.5V7.5H11.5V6.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M7.5 8.5H4.5V9.5H7.5V8.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M11.5 8.5H8.5V9.5H11.5V8.5Z"
-                                fill=""
-                              />
+                              <path d="M7.5 6.5H4.5V7.5H7.5V6.5Z" fill="" />
+                              <path d="M11.5 6.5H8.5V7.5H11.5V6.5Z" fill="" />
+                              <path d="M7.5 8.5H4.5V9.5H7.5V8.5Z" fill="" />
+                              <path d="M11.5 8.5H8.5V9.5H11.5V8.5Z" fill="" />
                             </svg>
                           </div>
                           <p className="text-sm text-black dark:text-white">
@@ -292,22 +272,10 @@ const Page = ({ params }) => {
                                 d="M14.5 2.5H1.5C1.225 2.5 1 2.725 1 3V13C1 13.275 1.225 13.5 1.5 13.5H14.5C14.775 13.5 15 13.275 15 13V3C15 2.725 14.775 2.5 14.5 2.5ZM14.5 13H1.5V3H14.5V13Z"
                                 fill=""
                               />
-                              <path
-                                d="M7.5 6.5H4.5V7.5H7.5V6.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M11.5 6.5H8.5V7.5H11.5V6.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M7.5 8.5H4.5V9.5H7.5V8.5Z"
-                                fill=""
-                              />
-                              <path
-                                d="M11.5 8.5H8.5V9.5H11.5V8.5Z"
-                                fill=""
-                              />
+                              <path d="M7.5 6.5H4.5V7.5H7.5V6.5Z" fill="" />
+                              <path d="M11.5 6.5H8.5V7.5H11.5V6.5Z" fill="" />
+                              <path d="M7.5 8.5H4.5V9.5H7.5V8.5Z" fill="" />
+                              <path d="M11.5 8.5H8.5V9.5H11.5V8.5Z" fill="" />
                             </svg>
                           </div>
                           <p className="text-sm text-black dark:text-white">
@@ -403,9 +371,11 @@ const Page = ({ params }) => {
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-6 px-4 border-t border-stroke dark:border-strokedark">
             <div className="flex items-center gap-2 text-sm text-black dark:text-white">
               <span>Showing</span>
-              <span className="font-medium">{((currentPage - 1) * 20) + 1}</span>
+              <span className="font-medium">{(currentPage - 1) * 20 + 1}</span>
               <span>to</span>
-              <span className="font-medium">{Math.min(currentPage * 20, total)}</span>
+              <span className="font-medium">
+                {Math.min(currentPage * 20, total)}
+              </span>
               <span>of</span>
               <span className="font-medium">{total}</span>
               <span>entries</span>
@@ -478,15 +448,18 @@ const Page = ({ params }) => {
                 {[...Array(totalPages)].map((_, index) => {
                   const pageNumber = index + 1;
                   const isCurrentPage = pageNumber === currentPage;
-                  const isNearCurrentPage = 
-                    Math.abs(pageNumber - currentPage) <= 1 || 
-                    pageNumber === 1 || 
+                  const isNearCurrentPage =
+                    Math.abs(pageNumber - currentPage) <= 1 ||
+                    pageNumber === 1 ||
                     pageNumber === totalPages;
 
                   if (!isNearCurrentPage) {
                     if (pageNumber === 2 || pageNumber === totalPages - 1) {
                       return (
-                        <span key={pageNumber} className="px-2 text-sm text-black dark:text-white">
+                        <span
+                          key={pageNumber}
+                          className="px-2 text-sm text-black dark:text-white"
+                        >
                           ...
                         </span>
                       );
@@ -502,8 +475,8 @@ const Page = ({ params }) => {
                       }}
                       className={`inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium transition-colors duration-200 ${
                         isCurrentPage
-                          ? 'bg-primary text-white hover:bg-opacity-90'
-                          : 'border border-stroke text-black hover:bg-gray-1 dark:border-strokedark dark:text-white dark:hover:bg-meta-4'
+                          ? "bg-primary text-white hover:bg-opacity-90"
+                          : "border border-stroke text-black hover:bg-gray-1 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
                       }`}
                     >
                       {pageNumber}

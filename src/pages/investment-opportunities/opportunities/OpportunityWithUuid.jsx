@@ -1,17 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "@/utils/navigation";
 import Link from "@/utils/link";
 import { server_url } from "@/utils/endpoint";
 import { headers } from "@/utils/headers";
-import {
-  BsArrowLeft,
-  BsPencil,
-  BsTrash,
-  BsCalendar,
-  BsLink45deg,
-} from "react-icons/bs";
+import { BsArrowLeft, BsPencil, BsTrash, BsCalendar } from "react-icons/bs";
 import Spinner from "@/components/spinner";
+import { useRouter } from "../../../utils/navigation";
+import { useParams } from "react-router-dom";
 
 const ViewInvestmentOpportunity = () => {
   const { uuid } = useParams();

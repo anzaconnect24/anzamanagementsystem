@@ -12,9 +12,10 @@ import { server_url } from "@/utils/endpoint";
 import Spinner from "@/components/spinner";
 import { login, newPassword, register } from "@/controllers/user_controller";
 import { useRouter } from "@/utils/navigation";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const router = useRouter();
   const validationSchema = yup.object().shape({
     // email: yup.string().email('Invalid email').required('Email is required'),

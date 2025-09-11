@@ -43,7 +43,7 @@ const Page = () => {
       lastMessage: "",
     };
     const conversation = await createConversation(data);
-    router.push(`/messages/${conversation.uuid}`);
+    router.push(`/dashboard/messages/${conversation.uuid}`);
   };
 
   return loading ? (

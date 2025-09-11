@@ -261,9 +261,9 @@ const Page = () => {
     }
     console.log(userDetails.role);
     if (userDetails.role === "Enterprenuer") {
-      router.push(`/investors/details/${uuid}`);
+      router.push(`/dashboard/investors/details/${uuid}`);
     } else {
-      router.push(`/investors/${uuid}`);
+      router.push(`/dashboard/investors/${uuid}`);
     }
   };
 

@@ -64,7 +64,7 @@ const Page = () => {
           {
             icon: "/profile.png",
             label: t("mentorDetails.viewProfile", "View Profile"),
-            path: `/mentors/${uuid}`,
+            path: `/dashboard/mentors/${uuid}`,
           },
           {
             icon: "/resource.png",

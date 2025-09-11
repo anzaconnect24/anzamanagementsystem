@@ -17,11 +17,12 @@ import Image from "@/utils/image";
 import Breadcrumb from "@/component/Breadcrumb";
 import { timeAgo } from "@/utils/time_ago";
 import { useTranslation } from "../../../locales";
+import { useParams } from "react-router-dom";
 
 const MessageComponent = ({ params }) => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
 
   useEffect(() => {
     try {

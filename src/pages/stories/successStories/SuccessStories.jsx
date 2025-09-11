@@ -1,20 +1,19 @@
-"use client";
 import { useContext, useEffect, useState } from "react";
 import { timeAgo } from "../../../utils/time_ago";
-import Link from "@/utils/link";
-import Loader from "@/components/common/Loader";
+import Link from "../../../utils/link";
+import Loader from "../../../components/common/Loader";
 import axios from "axios";
 import toast from "react-hot-toast";
-import NoData from "@/component/noData";
-import Spinner from "@/components/spinner";
+import NoData from "../../../component/noData";
+import Spinner from "../../../components/spinner";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
-import { server_url } from "@/utils/endpoint";
-import { headers } from "@/utils/headers";
+import { server_url } from "../../../utils/endpoint";
+import { headers } from "../../../utils/headers";
 import { BsEye, BsPencil, BsTrash, BsSearch } from "react-icons/bs";
 import { useTranslation } from "../../../locales";
 
-const Page = () => {
+const SuccessStories = () => {
   const { t } = useTranslation();
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -64,10 +63,13 @@ const Page = () => {
         setStories(response.data.body.data || []);
         setTotal(response.data.body.count || 0);
         setCurrentPage(response.data.body.page || 1);
+        setLoading(false);
       }
     } catch (error) {
       console.error("Error fetching success stories:", error);
-      toast.error("Failed to fetch success stories");
+      toast.error(
+        t("stories.failedToFetch", "Failed to fetch success stories")
+      );
     } finally {
       setLoading(false);
       setSearchLoading(false);
@@ -162,7 +164,7 @@ const Page = () => {
           </div>
           {userDetails.role === "Admin" && (
             <Link
-              href="/successStories/new"
+              href="/dashboard/successStories/new"
               className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             >
               <svg
@@ -178,7 +180,7 @@ const Page = () => {
                   d="M12 4v16m8-8H4"
                 />
               </svg>
-              Add Story
+              {t("stories.addStory", "Add Story")}
             </Link>
           )}
         </div>
@@ -228,10 +230,13 @@ const Page = () => {
             </svg>
           </div>
           <h3 className="mt-2 text-sm font-medium text-gray-900">
-            No success stories found
+            {t("stories.noStoriesFound", "No success stories found")}
           </h3>
           <p className="mt-1 text-sm text-gray-500">
-            Get started by creating a new success story.
+            {t(
+              "stories.getStartedMessage",
+              "Get started by creating a new success story."
+            )}
           </p>
           {userDetails.role === "Admin" && (
             <div className="mt-6">
@@ -252,7 +257,7 @@ const Page = () => {
                     d="M12 4v16m8-8H4"
                   />
                 </svg>
-                Add Story
+                {t("stories.addStory", "Add Story")}
               </Link>
             </div>
           )}
@@ -307,7 +312,7 @@ const Page = () => {
                   {userDetails.role === "Admin" && (
                     <div className="flex gap-2">
                       <Link
-                        href={`/successStories/${story.uuid}/edit`}
+                        href={`/dashboard/successStories/${story.uuid}/edit`}
                         className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
                         onClick={(e) => e.stopPropagation()}
                       >
@@ -351,7 +356,7 @@ const Page = () => {
               disabled={currentPage <= 1}
               className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              {t("pagination.previous", "Previous")}
             </button>
 
             {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
@@ -377,7 +382,7 @@ const Page = () => {
               disabled={currentPage >= totalPages}
               className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              {t("pagination.next", "Next")}
             </button>
           </nav>
         </div>
@@ -432,7 +437,7 @@ const Page = () => {
               {/* Description */}
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-3 text-gray-900">
-                  Story
+                  {t("stories.story", "Story")}
                 </h3>
                 <div
                   className="text-gray-700 leading-relaxed prose max-w-none"
@@ -446,7 +451,9 @@ const Page = () => {
               <div className="border-t border-black/20 pt-4 mb-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
                   <div>
-                    <span className="font-medium">Published:</span>{" "}
+                    <span className="font-medium">
+                      {t("stories.published", "Published")}:
+                    </span>{" "}
                     {new Date(selectedStory.createdAt).toLocaleString()}
                   </div>
                 </div>
@@ -468,18 +475,18 @@ const Page = () => {
                     >
                       <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                     </svg>
-                    Watch on YouTube
+                    {t("stories.watchOnYouTube", "Watch on YouTube")}
                   </a>
                 )}
 
                 {userDetails.role === "Admin" && (
                   <>
                     <Link
-                      href={`/successStories/${selectedStory.uuid}/edit`}
+                      href={`/dashboard/successStories/${selectedStory.uuid}/edit`}
                       className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       <BsPencil />
-                      Edit Story
+                      {t("stories.editStory", "Edit Story")}
                     </Link>
                     <button
                       onClick={() => handleDelete(selectedStory.uuid)}
@@ -487,7 +494,7 @@ const Page = () => {
                       className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors"
                     >
                       {deleteLoading ? <Spinner /> : <BsTrash />}
-                      Delete Story
+                      {t("stories.deleteStory", "Delete Story")}
                     </button>
                   </>
                 )}
@@ -500,4 +507,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default SuccessStories;

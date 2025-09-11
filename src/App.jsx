@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { TranslationProvider } from "@/locales";
-import LanguageToggle from "@/components/LanguageToggle";
-import Loader from "@/components/common/Loader";
+// import { TranslationProvider } from "./locales";
+import LanguageToggle from "./components/LanguageToggle";
+import Loader from "./components/common/Loader";
 
 // Layouts
 import DashboardLayout from "@/layouts/DashboardLayout";
@@ -149,7 +149,7 @@ import AddSlide from "./pages/learnandgrow/slides/add/AddSlide";
 import EditSlide from "./pages/learnandgrow/slides/edit/EditSlide";
 
 // Additional Missing Imports - Log Components
-import Logs from "./pages/log/Logs";
+// import Logs from "./pages/log/Logs";
 
 // Additional Missing Imports - Mentor Components
 import AddEntreprenuerReportWithUuid from "./pages/mentor/addEntreprenuerReport/AddEntreprenuerReportWithUuid";
@@ -180,7 +180,7 @@ import ApplicationList from "./pages/reviewer/applicationList/ApplicationList";
 import PreviewPage from "./pages/reviewer/previewPage/PreviewPage";
 
 // Additional Missing Imports - Sector Components
-import Sectors from "./pages/sectors/Sectors";
+// import Sectors from "./pages/sectors/Sectors";
 import AddSector from "./pages/sectors/addSector/AddSector";
 import EditSectorWithUuid from "./pages/sectors/editSector/EditSectorWithUuid";
 import SectorBusinessesWithUuid from "./pages/sectors/sectorBusinesses/SectorBusinessesWithUuid";
@@ -196,6 +196,7 @@ import SuccessStoryWithUuid from "./pages/stories/successStories/SuccessStoryWit
 import InvestorWithUuid from "./pages/users/investors/InvestorWithUuid";
 import MentorEntreprenuerWithUuid from "./pages/users/mentorEntreprenuers/MentorEntreprenuerWithUuid";
 import MentorWithUuid from "./pages/users/mentors/MentorWithUuid";
+import { TranslationProvider } from "./locales";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -355,6 +356,7 @@ function App() {
               path="businessDetails/:uuid/crat-documents"
               element={<CratDocuments />}
             />
+
             <Route
               path="businessDetailsByMentor/:uuid"
               element={<BusinessDetailsByMentorWithUuid />}
@@ -365,10 +367,12 @@ function App() {
               path="opportunities/:uuid"
               element={<OpportunityWithUuid />}
             />
+
             <Route
               path="opportunities/:uuid/edit"
               element={<EditOpportunityWithUuid />}
             />
+
             <Route path="opportunities/new" element={<OpportunityWithUuid />} />
 
             {/* Investment Routes - Additional */}
@@ -426,7 +430,7 @@ function App() {
             <Route path="slides/edit" element={<EditSlide />} />
 
             {/* Log Routes */}
-            <Route path="logs" element={<Logs />} />
+            {/* <Route path="logs" element={<Logs />} /> */}
 
             {/* Mentor Routes - Additional */}
             <Route
@@ -481,7 +485,7 @@ function App() {
             <Route path="previewPage" element={<PreviewPage />} />
 
             {/* Sector Routes */}
-            <Route path="sectors" element={<Sectors />} />
+            {/* <Route path="sectors" element={<Sectors />} /> */}
             <Route path="addSector" element={<AddSector />} />
             <Route path="editSector/:uuid" element={<EditSectorWithUuid />} />
             <Route

@@ -1,18 +1,19 @@
-"use client";
 import { useState, useContext } from "react";
-import { useRouter } from "@/utils/navigation";
-import Link from "@/utils/link";
+import { useNavigate } from "react-router-dom";
+import Link from "../../../../utils/link";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { server_url } from "@/utils/endpoint";
-import { headers } from "@/utils/headers";
-import { UserContext } from "../../../layouts/DashboardLayout";
+import { server_url } from "../../../../utils/endpoint";
+import { headers } from "../../../../utils/headers";
 
-import Spinner from "@/components/spinner";
+import Spinner from "../../../../components/spinner";
 import { BsArrowLeft, BsYoutube } from "react-icons/bs";
+import { UserContext } from "../../../../layouts/DashboardLayout";
+import { useTranslation } from "../../../../locales";
 
-const CreateStory = () => {
-  const router = useRouter();
+const NewSuccessStory = () => {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -24,7 +25,7 @@ const CreateStory = () => {
 
   // Check if user is admin
   if (userDetails.role !== "Admin") {
-    router.push("/successStories");
+    navigate("/dashboard/successStories");
     return null;
   }
 
@@ -41,17 +42,26 @@ const CreateStory = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = "Title is required";
+      newErrors.title = t("stories.titleRequired", "Title is required");
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
+      newErrors.description = t(
+        "stories.descriptionRequired",
+        "Description is required"
+      );
     }
 
     if (!formData.videoLink.trim()) {
-      newErrors.videoLink = "YouTube link is required";
+      newErrors.videoLink = t(
+        "stories.youtubeRequired",
+        "YouTube link is required"
+      );
     } else if (!isValidYouTubeUrl(formData.videoLink)) {
-      newErrors.videoLink = "Please enter a valid YouTube URL";
+      newErrors.videoLink = t(
+        "stories.validYoutubeRequired",
+        "Please enter a valid YouTube URL"
+      );
     }
 
     setErrors(newErrors);
@@ -95,14 +105,22 @@ const CreateStory = () => {
       );
 
       if (response.data.status) {
-        toast.success("Success story created successfully!");
-        router.push("/successStories");
+        toast.success(
+          t(
+            "stories.createdSuccessfully",
+            "Success story created successfully!"
+          )
+        );
+        navigate("/dashboard/successStories");
       } else {
-        toast.error(response.data.message || "Failed to create success story");
+        toast.error(
+          response.data.message ||
+            t("stories.failedToCreate", "Failed to create success story")
+        );
       }
     } catch (error) {
       console.error("Error creating success story:", error);
-      toast.error("Error creating success story");
+      toast.error(t("stories.errorCreating", "Error creating success story"));
     } finally {
       setSubmitting(false);
     }
@@ -114,17 +132,20 @@ const CreateStory = () => {
         {/* Header */}
         <div className="p-6 border-b border-stroke dark:border-strokedark">
           <Link
-            href="/successStories"
+            href="/dashboard/successStories"
             className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-4"
           >
             <BsArrowLeft />
-            Back to Success Stories
+            {t("stories.backToSuccessStories", "Back to Success Stories")}
           </Link>
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Create New Success Story
+            {t("stories.createNewSuccessStory", "Create New Success Story")}
           </h4>
           <p className="mt-2 text-bodydark2">
-            Add a new success story with YouTube video integration.
+            {t(
+              "stories.addNewStoryDescription",
+              "Add a new success story with YouTube video integration."
+            )}
           </p>
         </div>
 
@@ -134,14 +155,18 @@ const CreateStory = () => {
             {/* Title */}
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Title <span className="text-red-500">*</span>
+                {t("stories.title", "Title")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder="Enter success story title"
+                placeholder={t(
+                  "stories.enterTitle",
+                  "Enter success story title"
+                )}
                 className={`w-full rounded-lg border-[1.5px] bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary ${
                   errors.title
                     ? "border-red-500 focus:border-red-500 active:border-red-500"
@@ -156,7 +181,8 @@ const CreateStory = () => {
             {/* YouTube Link */}
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                YouTube Video Link <span className="text-red-500">*</span>
+                {t("stories.youtubeLink", "YouTube Video Link")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -180,11 +206,13 @@ const CreateStory = () => {
               {/* Video Preview */}
               {formData.videoLink && isValidYouTubeUrl(formData.videoLink) && (
                 <div className="mt-4">
-                  <p className="text-sm text-bodydark2 mb-2">Preview:</p>
+                  <p className="text-sm text-bodydark2 mb-2">
+                    {t("stories.preview", "Preview")}:
+                  </p>
                   <div className="relative w-full max-w-md">
                     <img
                       src={getYouTubeThumbnail(formData.videoLink)}
-                      alt="Video thumbnail"
+                      alt={t("stories.videoThumbnail", "Video thumbnail")}
                       className="w-full h-auto rounded-lg border border-stroke"
                       onError={(e) => {
                         e.target.style.display = "none";
@@ -209,14 +237,18 @@ const CreateStory = () => {
             {/* Description */}
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Description <span className="text-red-500">*</span>
+                {t("stories.description", "Description")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <textarea
                 name="description"
                 rows={6}
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="Enter success story description"
+                placeholder={t(
+                  "stories.enterDescription",
+                  "Enter success story description"
+                )}
                 className={`w-full rounded-lg border-[1.5px] bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary ${
                   errors.description
                     ? "border-red-500 focus:border-red-500 active:border-red-500"
@@ -229,7 +261,10 @@ const CreateStory = () => {
                 </p>
               )}
               <p className="mt-1 text-sm text-bodydark2">
-                You can use HTML tags for formatting
+                {t(
+                  "stories.htmlFormatting",
+                  "You can use HTML tags for formatting"
+                )}
               </p>
             </div>
 
@@ -243,7 +278,7 @@ const CreateStory = () => {
                 {submitting ? (
                   <>
                     <Spinner />
-                    Creating...
+                    {t("stories.creating", "Creating...")}
                   </>
                 ) : (
                   <>
@@ -260,16 +295,16 @@ const CreateStory = () => {
                         d="M12 4v16m8-8H4"
                       />
                     </svg>
-                    Create Success Story
+                    {t("stories.createSuccessStory", "Create Success Story")}
                   </>
                 )}
               </button>
 
               <Link
-                href="/successStories"
+                href="/dashboard/successStories"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-stroke bg-gray px-6 py-3 text-center font-medium text-dark hover:border-primary hover:bg-primary hover:text-white dark:border-strokedark dark:bg-meta-4 dark:text-white dark:hover:border-primary dark:hover:bg-primary lg:px-8 xl:px-10"
               >
-                Cancel
+                {t("common.cancel", "Cancel")}
               </Link>
             </div>
           </div>
@@ -279,4 +314,4 @@ const CreateStory = () => {
   );
 };
 
-export default CreateStory;
+export default NewSuccessStory;

@@ -1,9 +1,4 @@
 "use client";
-import {
-  getUser,
-  getUserInfo,
-  updateUser,
-} from "@/controllers/user_controller";
 import { useContext, useEffect, useState } from "react";
 import { useRouter } from "@/utils/navigation";
 import { useParams } from "react-router-dom";
@@ -11,14 +6,11 @@ import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import { toast } from "react-hot-toast";
 import { createConversation } from "@/controllers/conversation_controller";
-import Image from "@/utils/image";
 import { UserContext } from "../../../layouts/DashboardLayout";
-
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { createNotification } from "@/controllers/notification_controller";
-import { assignEntreprenuerToMentor } from "@/controllers/mentorEntreprenuerController";
-import Spinner from "@/components/spinner";
-import { useTranslation } from "../../../../locales";
+import { useTranslation } from "../../../locales";
+import { getUserInfo } from "../../../controllers/user_controller";
 
 const Page = () => {
   const { t } = useTranslation();
@@ -27,8 +19,6 @@ const Page = () => {
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
-  const [requesting, setRequesting] = useState(false);
-  const [approving, setApproving] = useState(false);
   const getData = async () => {
     try {
       const data = await getUserInfo(uuid);
@@ -209,7 +199,7 @@ const Page = () => {
                   ),
                 });
                 createConversation(data).then((data) => {
-                  router.push(`/messages/${data.uuid}`);
+                  router.push(`/dashboard/messages/${data.uuid}`);
                 });
               }}
               className="py-2 px-4 text-white font-bold bg-green-500  hover:text-opacity-80 transition-all duration-300 rounded"
@@ -218,7 +208,7 @@ const Page = () => {
             </button>
             {userDetails.role == "Enterprenuer" && (
               <Link
-                href={`/mentorshipApplicationForm/${uuid}`}
+                href={`/dashboard/mentorshipApplicationForm/${uuid}`}
                 className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
               >
                 {t("messages.requestMentorship", "Request for mentorship")}

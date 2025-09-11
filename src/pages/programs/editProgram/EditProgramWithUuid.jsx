@@ -12,13 +12,14 @@ import { useRouter } from "@/utils/navigation";
 import Breadcrumb from "@/component/Breadcrumb";
 import toast from "react-hot-toast";
 import Spinner from "@/components/spinner";
+import { useParams } from "react-router-dom";
 
 // import {Breadcrumb} from "@/component/Breadcrumb"
 const Page = ({ params }) => {
   const [fields, setFields] = useState([]);
   const [requirement, setRequirement] = useState("");
   const router = useRouter();
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const [refresh, setrefresh] = useState(0);
   // const {userDetails}= useContext(UserContext)
   const [program, setProgram] = useState(null);

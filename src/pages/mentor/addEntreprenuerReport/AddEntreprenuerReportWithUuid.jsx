@@ -6,9 +6,10 @@ import { useContext, useState } from "react";
 import Breadcrumb from "@/component/Breadcrumb";
 import toast from "react-hot-toast";
 import { useRouter } from "@/utils/navigation";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
-  const entreprenuer_uuid = params.uuid;
+  const entreprenuer_uuid = useParams().uuid;
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(false);
   const router = useRouter();

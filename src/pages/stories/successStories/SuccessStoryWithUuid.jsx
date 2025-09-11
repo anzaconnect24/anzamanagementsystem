@@ -1,6 +1,5 @@
 "use client";
 import { useState, useEffect, useContext } from "react";
-import { useParams, useRouter } from "@/utils/navigation";
 import Link from "@/utils/link";
 import axios from "axios";
 import { server_url } from "@/utils/endpoint";
@@ -8,9 +7,11 @@ import { headers } from "@/utils/headers";
 import { BsArrowLeft, BsPencil, BsTrash } from "react-icons/bs";
 import Spinner from "@/components/spinner";
 import Loader from "@/components/common/Loader";
-import { UserContext } from "../../../layouts/DashboardLayout";
 
 import toast from "react-hot-toast";
+import { UserContext } from "../../../layouts/DashboardLayout";
+import { useParams } from "react-router-dom";
+import { useRouter } from "../../../utils/navigation";
 
 const StoryDetails = () => {
   const { uuid } = useParams();

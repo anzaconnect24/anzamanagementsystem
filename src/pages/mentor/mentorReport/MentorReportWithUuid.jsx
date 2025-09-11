@@ -3,9 +3,10 @@ import { getSpecificReport } from "@/controllers/mentorReportsController";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Loader from "@/components/common/Loader";
 import { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   useEffect(() => {

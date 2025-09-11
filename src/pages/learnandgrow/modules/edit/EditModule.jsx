@@ -4,13 +4,14 @@ import Breadcrumb from "@/component/Breadcrumb";
 import toast from "react-hot-toast";
 import Spinner from "@/components/spinner";
 import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "@/utils/navigation";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import {
   createModule,
   editModule,
   getModule,
 } from "@/controllers/modules_controller";
+import { useRouter } from "../../../../utils/navigation";
+import { useSearchParams } from "react-router-dom";
 
 const Page = () => {
   const router = useRouter();

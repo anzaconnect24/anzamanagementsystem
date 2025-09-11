@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "@/utils/navigation";
 import Link from "@/utils/link";
 import axios from "axios";
 import { server_url } from "@/utils/endpoint";
 import { headers } from "@/utils/headers";
 import { BsArrowLeft, BsUpload } from "react-icons/bs";
 import Spinner from "@/components/spinner";
+import { useRouter } from "../../../utils/navigation";
+import { useParams } from "react-router-dom";
 
 const EditInvestmentOpportunity = () => {
   const router = useRouter();
@@ -170,7 +171,7 @@ const EditInvestmentOpportunity = () => {
       );
 
       if (response.data.status) {
-        router.push("/opportunities");
+        router.push("/dashboard/opportunities");
       } else {
         alert("Failed to update opportunity");
       }
@@ -195,7 +196,7 @@ const EditInvestmentOpportunity = () => {
       {/* Header */}
       <div className="mb-8">
         <Link
-          href="/opportunities"
+          href="/dashboard/opportunities"
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
         >
           <BsArrowLeft />

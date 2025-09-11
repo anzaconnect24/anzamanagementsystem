@@ -4,11 +4,12 @@ import { sendInvestmentRequest } from "@/controllers/investment_requests_control
 import Spinner from "@/components/spinner";
 import { useRouter } from "@/utils/navigation";
 import { useState } from "react";
-import { useTranslation } from "../../../../locales";
+import { useTranslation } from "../../../locales";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
   const { t } = useTranslation();
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const router = useRouter();
   const [loading, setloading] = useState(false);
   return (

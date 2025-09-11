@@ -12,8 +12,9 @@ import { useContext, useEffect, useState } from "react";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { timeAgo } from "@/utils/time_ago";
 import { useTranslation } from "@/locales";
+import { useParams } from "react-router-dom";
 const Page = ({ params }) => {
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const router = useRouter();
   const { userDetails } = useContext(UserContext);
   const [request, setrequest] = useState(null);

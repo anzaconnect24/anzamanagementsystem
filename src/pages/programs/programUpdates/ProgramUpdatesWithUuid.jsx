@@ -8,9 +8,10 @@ import { UserContext } from "../../../layouts/DashboardLayout";
 
 import Breadcrumb from "@/component/Breadcrumb";
 import NoData from "@/component/noData";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const [updates, setUpdates] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const { userDetails } = useContext(UserContext);

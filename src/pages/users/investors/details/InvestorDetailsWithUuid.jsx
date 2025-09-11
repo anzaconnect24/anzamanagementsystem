@@ -18,10 +18,7 @@ import {
   HiOutlineCash,
   HiOutlineDocumentText,
   HiOutlineUserCircle,
-  HiOutlineClock,
-  HiOutlineLockClosed,
 } from "react-icons/hi";
-import React from "react";
 import Link from "@/utils/link";
 import Image from "@/utils/image";
 import { useTranslation } from "@/locales";
@@ -226,7 +223,7 @@ const Page = () => {
     return (
       <div className="container mx-auto px-4 py-8">
         <Breadcrumb
-          prevLink={`/investors`}
+          prevLink={``}
           prevPage={t("users.investors", "Investors")}
           pageName={
             user.InvestorProfile?.company || t("users.noCompany", "No Company")
@@ -329,7 +326,7 @@ const Page = () => {
           </button>
           {userDetails.role === "Enterprenuer" && (
             <Link
-              href={`/investmentApplicationByEntreprenuer/${user.uuid}`}
+              href={`/dashboard/investmentApplicationByEntreprenuer/${user.uuid}`}
               className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
             >
               {t("users.askForInvestment", "Ask for Investment")}

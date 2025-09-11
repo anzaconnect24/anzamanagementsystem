@@ -8,10 +8,13 @@ import toast from "react-hot-toast";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import { sendInvestmentApplication } from "@/controllers/investment_applications_controllers";
 import { useTranslation } from "@/locales";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
   const { t } = useTranslation();
-  const investor_uuid = params.uuid;
+  const { uuid } = useParams();
+  console.log(uuid);
+  let investor_uuid = uuid;
   const router = useRouter();
   const [loading, setloading] = useState(false);
   const [formValues, setFormValues] = useState({});

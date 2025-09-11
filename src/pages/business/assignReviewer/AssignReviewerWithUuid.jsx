@@ -1,16 +1,21 @@
-"use client"
+"use client";
 import { useContext, useEffect, useState } from "react";
-import {getAllUsers} from "@/controllers/user_controller"
-import {createBusinessReview, deleteBusinessReview, getReviewers} from "@/controllers/business_review_controller"
-import {timeAgo} from "@/utils/time_ago"
-import Link from "@/utils/link"
+import { getAllUsers } from "@/controllers/user_controller";
+import {
+  createBusinessReview,
+  deleteBusinessReview,
+  getReviewers,
+} from "@/controllers/business_review_controller";
+import { timeAgo } from "@/utils/time_ago";
+import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/component/Breadcrumb";
 import { useTranslation } from "@/locales";
+import { useParams } from "react-router-dom";
 
-const Page = ({params}) => {
+const Page = ({ params }) => {
   const { t } = useTranslation();
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const [users, setUsers] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const [refresh, setRefresh] = useState(0);
@@ -21,25 +26,31 @@ const Page = ({params}) => {
   const [totalPages, settotalPages] = useState(1);
 
   useEffect(() => {
-    getReviewers(uuid,currentPage,limit).then((body)=>{
-      setUsers(body.data)
-      settotal(body.count)
-      setcurrentPage(body.page)
-      settotalPages(body.totalPages)
-      setloading(false)
-    })
+    getReviewers(uuid, currentPage, limit).then((body) => {
+      setUsers(body.data);
+      settotal(body.count);
+      setcurrentPage(body.page);
+      settotalPages(body.totalPages);
+      setloading(false);
+    });
   }, [uuid, currentPage, limit, refresh]);
 
-  if (loading) return <Loader/>;
+  if (loading) return <Loader />;
 
   return (
     <div className="">
       <div>
-        <Breadcrumb pageName={t("business.assignReviewer", "Assign reviewer")} prevLink={""} prevPage={t("business.businesses", "Businesses")} />
+        <Breadcrumb
+          pageName={t("business.assignReviewer", "Assign reviewer")}
+          prevLink={""}
+          prevPage={t("business.businesses", "Businesses")}
+        />
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5">
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              {t("business.reviewersCount", "Reviewers ({{count}})", { count: total })}
+              {t("business.reviewersCount", "Reviewers ({{count}})", {
+                count: total,
+              })}
             </h4>
           </div>
 
@@ -48,7 +59,9 @@ const Page = ({params}) => {
               <p className="font-medium">{t("business.sent", "Sent")}</p>
             </div>
             <div className="col-span-1 hidden items-center sm:flex">
-              <p className="font-medium">{t("business.username", "Username")}</p>
+              <p className="font-medium">
+                {t("business.username", "Username")}
+              </p>
             </div>
             <div className="col-span-1 flex items-center">
               <p className="font-medium">{t("business.role", "Role")}</p>
@@ -85,10 +98,14 @@ const Page = ({params}) => {
                 </p>
               </div>
               <div className="col-span-2 flex items-center">
-                <p className="text-sm text-black dark:text-white">{item.phone}</p>
+                <p className="text-sm text-black dark:text-white">
+                  {item.phone}
+                </p>
               </div>
               <div className="col-span-2 flex items-center">
-                <p className="text-sm text-black dark:text-white">{item.email}</p>
+                <p className="text-sm text-black dark:text-white">
+                  {item.email}
+                </p>
               </div>
               <div className="col-span-1 flex items-center">
                 <div
@@ -99,12 +116,18 @@ const Page = ({params}) => {
                         setRefresh(refresh + 1);
                       });
                     } else {
-                      deleteBusinessReview(item.BusinessReview.uuid).then(() => {
-                        setRefresh(refresh + 1);
-                      });
+                      deleteBusinessReview(item.BusinessReview.uuid).then(
+                        () => {
+                          setRefresh(refresh + 1);
+                        }
+                      );
                     }
                   }}
-                  className={`py-2 px-3 ${item.status < 1 ? "bg-primary text-white" : "bg-bodydark1 text-black"} cursor-pointer hover:opacity-95 transition-all rounded`}
+                  className={`py-2 px-3 ${
+                    item.status < 1
+                      ? "bg-primary text-white"
+                      : "bg-bodydark1 text-black"
+                  } cursor-pointer hover:opacity-95 transition-all rounded`}
                 >
                   {item.status < 1
                     ? t("business.assign", "Assign")
@@ -116,7 +139,10 @@ const Page = ({params}) => {
 
           <div className="flex px-5 py-8 justify-between">
             <div>
-              {t("business.pageLabel", "Page {{current}} of {{total}} pages", { current: currentPage, total: totalPages })}
+              {t("business.pageLabel", "Page {{current}} of {{total}} pages", {
+                current: currentPage,
+                total: totalPages,
+              })}
             </div>
             <div className="flex space-x-3 ">
               <div
@@ -147,6 +173,6 @@ const Page = ({params}) => {
       </div>
     </div>
   );
-}
+};
 
 export default Page;

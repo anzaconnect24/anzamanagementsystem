@@ -17,11 +17,12 @@ import Image from "@/utils/image";
 import Breadcrumb from "@/component/Breadcrumb";
 import { timeAgo } from "@/utils/time_ago";
 import { useTranslation } from "@/locales";
+import { useParams } from "react-router-dom";
 
 const MessageComponent = ({ params }) => {
   const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
 
   useEffect(() => {
     try {
@@ -119,7 +120,7 @@ const MessageComponent = ({ params }) => {
         >
           <input
             type="text"
-            placeholder={t('chat.enterMessage', 'Enter text here...')}
+            placeholder={t("chat.enterMessage", "Enter text here...")}
             className="w-full py-4 px-4 rounded-lg  bg-stroke text-black text-lg border-stroke focus:border-stroke focus:ring-stroke"
             name="message"
           />
@@ -127,7 +128,7 @@ const MessageComponent = ({ params }) => {
             className="py-3 px-4 bg-success text-white rounded-lg"
             type="submit"
           >
-            {t('chat.send', 'Send')}
+            {t("chat.send", "Send")}
           </button>
         </form>
       </div>

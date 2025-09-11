@@ -6,10 +6,11 @@ import { useRouter } from "@/utils/navigation";
 import Breadcrumb from "@/component/Breadcrumb";
 import { updateProgramApplication } from "@/controllers/program_application_controller";
 import { updateInvestmentRequest } from "@/controllers/investment_requests_controller";
-import { useTranslation } from "../../../../locales";
+import { useTranslation } from "../../../locales";
+import { useParams } from "react-router-dom";
 // import {Breadcrumb} from "@/component/Breadcrumb"
 const Page = ({ params }) => {
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const { t } = useTranslation();
   const router = useRouter();
 

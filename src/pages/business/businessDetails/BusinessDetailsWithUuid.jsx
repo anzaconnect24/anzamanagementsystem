@@ -1229,7 +1229,7 @@ const Page = () => {
                     )}`,
                   });
                   createConversation(data).then((data) => {
-                    router.push(`/messages/${data.uuid}`);
+                    router.push(`/dashboard/messages/${data.uuid}`);
                   });
                 }}
                 className="inline-flex items-center justify-center w-full px-6 py-4 bg-green-500 text-white rounded-xl hover:bg-green-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"

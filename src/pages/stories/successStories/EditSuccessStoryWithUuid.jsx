@@ -1,19 +1,22 @@
-"use client";
 import { useState, useEffect, useContext } from "react";
-import { useParams, useRouter } from "@/utils/navigation";
-import Link from "@/utils/link";
+// import Link from "../../../../utils/link";
 import axios from "axios";
 import toast from "react-hot-toast";
-import { server_url } from "@/utils/endpoint";
-import { headers } from "@/utils/headers";
-import { UserContext } from "../../../../layout";
-import Spinner from "@/components/spinner";
-import Loader from "@/components/common/Loader";
+import { server_url } from "../../../utils/endpoint";
+import { headers } from "../../../utils/headers";
+import Spinner from "../../../components/spinner";
+import Loader from "../../../components/common/Loader";
 import { BsArrowLeft, BsYoutube } from "react-icons/bs";
+import { UserContext } from "../../../layouts/DashboardLayout";
+import { useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../../locales";
+import Link from "../../../utils/link";
 
-const EditStory = () => {
+const EditSuccessStoryWithUuid = () => {
+  const { t } = useTranslation();
   const { uuid } = useParams();
-  const router = useRouter();
+  const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -26,7 +29,7 @@ const EditStory = () => {
 
   // Check if user is admin
   if (userDetails.role !== "Admin") {
-    router.push("/successStories");
+    navigate("/dashboard/successStories");
     return null;
   }
 
@@ -48,13 +51,17 @@ const EditStory = () => {
             videoLink: story.videoLink || "",
           });
         } else {
-          toast.error("Failed to fetch success story details");
-          router.push("/successStories");
+          toast.error(
+            t("stories.failedToFetch", "Failed to fetch success story details")
+          );
+          navigate("/dashboard/successStories");
         }
       } catch (error) {
         console.error("Error fetching success story:", error);
-        toast.error("Error fetching success story details");
-        router.push("/successStories");
+        toast.error(
+          t("stories.errorFetching", "Error fetching success story details")
+        );
+        navigate("/dashboard/successStories");
       } finally {
         setLoading(false);
       }
@@ -63,8 +70,7 @@ const EditStory = () => {
     if (uuid) {
       fetchStory();
     }
-  }, [uuid, router]);
-
+  }, [uuid, navigate]);
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
@@ -78,17 +84,26 @@ const EditStory = () => {
     const newErrors = {};
 
     if (!formData.title.trim()) {
-      newErrors.title = "Title is required";
+      newErrors.title = t("stories.titleRequired", "Title is required");
     }
 
     if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
+      newErrors.description = t(
+        "stories.descriptionRequired",
+        "Description is required"
+      );
     }
 
     if (!formData.videoLink.trim()) {
-      newErrors.videoLink = "YouTube link is required";
+      newErrors.videoLink = t(
+        "stories.youtubeRequired",
+        "YouTube link is required"
+      );
     } else if (!isValidYouTubeUrl(formData.videoLink)) {
-      newErrors.videoLink = "Please enter a valid YouTube URL";
+      newErrors.videoLink = t(
+        "stories.validYoutubeRequired",
+        "Please enter a valid YouTube URL"
+      );
     }
 
     setErrors(newErrors);
@@ -132,14 +147,22 @@ const EditStory = () => {
       );
 
       if (response.data.status) {
-        toast.success("Success story updated successfully!");
-        router.push("/successStories");
+        toast.success(
+          t(
+            "stories.updatedSuccessfully",
+            "Success story updated successfully!"
+          )
+        );
+        navigate("/dashboard/successStories");
       } else {
-        toast.error(response.data.message || "Failed to update success story");
+        toast.error(
+          response.data.message ||
+            t("stories.failedToUpdate", "Failed to update success story")
+        );
       }
     } catch (error) {
       console.error("Error updating success story:", error);
-      toast.error("Error updating success story");
+      toast.error(t("stories.errorUpdating", "Error updating success story"));
     } finally {
       setSubmitting(false);
     }
@@ -155,17 +178,20 @@ const EditStory = () => {
         {/* Header */}
         <div className="p-6 border-b border-stroke dark:border-strokedark">
           <Link
-            href="/successStories"
+            href="/dashboard/successStories"
             className="inline-flex items-center gap-2 text-primary hover:text-primary/80 mb-4"
           >
             <BsArrowLeft />
-            Back to Success Stories
+            {t("stories.backToSuccessStories", "Back to Success Stories")}
           </Link>
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Edit Success Story
+            {t("stories.editSuccessStory", "Edit Success Story")}
           </h4>
           <p className="mt-2 text-bodydark2">
-            Update the success story details.
+            {t(
+              "stories.updateStoryDetails",
+              "Update the success story details."
+            )}
           </p>
         </div>
 
@@ -175,14 +201,18 @@ const EditStory = () => {
             {/* Title */}
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Title <span className="text-red-500">*</span>
+                {t("stories.title", "Title")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
                 name="title"
                 value={formData.title}
                 onChange={handleInputChange}
-                placeholder="Enter success story title"
+                placeholder={t(
+                  "stories.enterTitle",
+                  "Enter success story title"
+                )}
                 className={`w-full rounded-lg border-[1.5px] bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary ${
                   errors.title
                     ? "border-red-500 focus:border-red-500 active:border-red-500"
@@ -197,7 +227,8 @@ const EditStory = () => {
             {/* YouTube Link */}
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                YouTube Video Link <span className="text-red-500">*</span>
+                {t("stories.youtubeLink", "YouTube Video Link")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -221,11 +252,13 @@ const EditStory = () => {
               {/* Video Preview */}
               {formData.videoLink && isValidYouTubeUrl(formData.videoLink) && (
                 <div className="mt-4">
-                  <p className="text-sm text-bodydark2 mb-2">Preview:</p>
+                  <p className="text-sm text-bodydark2 mb-2">
+                    {t("stories.preview", "Preview")}:
+                  </p>
                   <div className="relative w-full max-w-md">
                     <img
                       src={getYouTubeThumbnail(formData.videoLink)}
-                      alt="Video thumbnail"
+                      alt={t("stories.videoThumbnail", "Video thumbnail")}
                       className="w-full h-auto rounded-lg border border-stroke"
                       onError={(e) => {
                         e.target.style.display = "none";
@@ -250,14 +283,18 @@ const EditStory = () => {
             {/* Description */}
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Description <span className="text-red-500">*</span>
+                {t("stories.description", "Description")}{" "}
+                <span className="text-red-500">*</span>
               </label>
               <textarea
                 name="description"
                 rows={6}
                 value={formData.description}
                 onChange={handleInputChange}
-                placeholder="Enter success story description"
+                placeholder={t(
+                  "stories.enterDescription",
+                  "Enter success story description"
+                )}
                 className={`w-full rounded-lg border-[1.5px] bg-transparent px-5 py-3 text-black outline-none transition focus:border-primary active:border-primary disabled:cursor-default disabled:bg-whiter dark:border-form-strokedark dark:bg-form-input dark:text-white dark:focus:border-primary ${
                   errors.description
                     ? "border-red-500 focus:border-red-500 active:border-red-500"
@@ -270,7 +307,10 @@ const EditStory = () => {
                 </p>
               )}
               <p className="mt-1 text-sm text-bodydark2">
-                You can use HTML tags for formatting
+                {t(
+                  "stories.htmlFormatting",
+                  "You can use HTML tags for formatting"
+                )}
               </p>
             </div>
 
@@ -284,7 +324,7 @@ const EditStory = () => {
                 {submitting ? (
                   <>
                     <Spinner />
-                    Updating...
+                    {t("stories.updating", "Updating...")}
                   </>
                 ) : (
                   <>
@@ -301,16 +341,16 @@ const EditStory = () => {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    Update Success Story
+                    {t("stories.updateSuccessStory", "Update Success Story")}
                   </>
                 )}
               </button>
 
               <Link
-                href="/successStories"
+                href="/dashboard/successStories"
                 className="inline-flex items-center justify-center gap-2 rounded-lg border border-stroke bg-gray px-6 py-3 text-center font-medium text-dark hover:border-primary hover:bg-primary hover:text-white dark:border-strokedark dark:bg-meta-4 dark:text-white dark:hover:border-primary dark:hover:bg-primary lg:px-8 xl:px-10"
               >
-                Cancel
+                {t("common.cancel", "Cancel")}
               </Link>
             </div>
           </div>
@@ -320,4 +360,4 @@ const EditStory = () => {
   );
 };
 
-export default EditStory;
+export default EditSuccessStoryWithUuid;

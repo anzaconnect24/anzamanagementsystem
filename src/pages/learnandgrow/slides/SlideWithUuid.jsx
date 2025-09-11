@@ -16,11 +16,12 @@ import Loader from "@/components/common/Loader";
 import toast from "react-hot-toast";
 import moment from "moment";
 import Image from "@/utils/image";
-import { useTranslation } from "@/hooks/useTranslation";
+import { useTranslation } from "../../../locales";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
   const { t } = useTranslation();
-  const { uuid } = params;
+  const { uuid } = useParams();
   const [modules, setModules] = useState([]);
   const { userDetails, hideSidebar } = useContext(UserContext);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -78,7 +79,9 @@ const Page = ({ params }) => {
     <div>
       {/* Update breadcrumb to go back to modules page for this course */}
       <Breadcrumb
-        prevLink={`/modules/${encodeURIComponent(module?.course || "")}`}
+        prevLink={`/dashboard/modules/${encodeURIComponent(
+          module?.course || ""
+        )}`}
         pageName={module.title}
         prevPage={t("learnAndGrow.modules", "Modules")}
       />

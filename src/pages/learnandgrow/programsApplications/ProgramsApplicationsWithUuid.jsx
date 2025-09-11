@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useContext } from "react";
-import { useParams, useRouter } from "@/utils/navigation";
+
 import Link from "@/utils/link";
 import axios from "axios";
 import { server_url } from "@/utils/endpoint";
@@ -8,6 +8,8 @@ import { headers } from "@/utils/headers";
 import { BsArrowLeft, BsPencil, BsTrash } from "react-icons/bs";
 import Spinner from "@/components/spinner";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import { useRouter } from "../../../utils/navigation";
+import { useParams } from "react-router-dom";
 
 const ProgramDetails = () => {
   const { uuid } = useParams();

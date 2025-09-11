@@ -16,9 +16,10 @@ import { editComment } from "@/controllers/comment_controllers";
 import { useRouter } from "@/utils/navigation";
 import { useTranslation } from "@/locales";
 import Pagination from "../../../component/pagination";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
-  const { course } = params;
+  const { course } = useParams();
   const [modules, setModules] = useState([]);
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
@@ -129,7 +130,7 @@ const Page = ({ params }) => {
               <div className="flex space-x-2  items-center mt-auto">
                 {["Admin"].includes(userDetails.role) ? (
                   <Link
-                    href={`/slides/${item.uuid}`}
+                    href={`/dashboard/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
                   >
                     {t("learnAndGrow.manageSlides", "Manage Slides")}
@@ -148,7 +149,7 @@ const Page = ({ params }) => {
                   </button>
                 ) : percentage > 0 ? (
                   <Link
-                    href={`/slides/${item.uuid}`}
+                    href={`/dashboard/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
                   >
                     {percentage == 100
@@ -157,7 +158,7 @@ const Page = ({ params }) => {
                   </Link>
                 ) : (
                   <Link
-                    href={`/slides/${item.uuid}`}
+                    href={`/dashboard/slides/${item.uuid}`}
                     className="bg-primary px-4 py-2 rounded-lg text-white "
                   >
                     {t("learnAndGrow.startLearning", "Start Learning")}
@@ -179,7 +180,7 @@ const Page = ({ params }) => {
                   <button
                     className="bg-green-100 text-green-500 py-2 px-4 rounded-lg"
                     onClick={() => {
-                      router.push(`/modules/edit/?uuid=${item.uuid}`);
+                      router.push(`/dashboard/modules/edit/?uuid=${item.uuid}`);
                     }}
                   >
                     {t("common.edit", "Edit")}
@@ -191,7 +192,7 @@ const Page = ({ params }) => {
         })}
         {["Admin"].includes(userDetails.role) && (
           <Link
-            href={`/modules/add/?course=${course}`}
+            href={`/dashboard/modules/add/?course=${course}`}
             className="bg-white hover:bg-primary/5 transition-all duration-200 rounded-lg p-5 flex flex-col justify-center items-center border border-black/10 "
           >
             <BsPlus className="text-4xl" />

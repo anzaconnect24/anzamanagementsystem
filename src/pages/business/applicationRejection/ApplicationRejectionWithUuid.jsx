@@ -1,15 +1,16 @@
-"use client"
+"use client";
 import { getBusiness, updateBusiness } from "@/controllers/business_controller";
 import { useEffect, useState } from "react";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import { useRouter } from "@/utils/navigation";
-import Breadcrumb from "../../../../component/Breadcrumb";
 import { useTranslation } from "@/locales";
+import Breadcrumb from "../../../component/Breadcrumb";
+import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
   const { t } = useTranslation();
-  const uuid = params.uuid;
+  const uuid = useParams().uuid;
   const router = useRouter();
   const [business, setBusiness] = useState(null);
   const [loading, setloading] = useState(true);

@@ -1,12 +1,13 @@
 "use client";
 import { useState, useEffect } from "react";
-import { useRouter, useParams } from "@/utils/navigation";
 import Link from "@/utils/link";
 import axios from "axios";
 import { server_url } from "@/utils/endpoint";
 import { headers } from "@/utils/headers";
 import { BsArrowLeft, BsUpload } from "react-icons/bs";
 import Spinner from "@/components/spinner";
+import { useRouter } from "../../../utils/navigation";
+import { useParams } from "react-router-dom";
 
 const EditProgram = () => {
   const router = useRouter();
@@ -36,7 +37,9 @@ const EditProgram = () => {
             description: response.data.body.description || "",
             url: response.data.body.url || "",
             image: response.data.body.image || "",
-            expireDate: response.data.body.expireDate ? response.data.body.expireDate.split('T')[0] : "",
+            expireDate: response.data.body.expireDate
+              ? response.data.body.expireDate.split("T")[0]
+              : "",
           });
         } else {
           alert("Failed to fetch program details");
@@ -158,9 +161,7 @@ const EditProgram = () => {
       const response = await axios.patch(
         `${server_url}/programs/${uuid}`,
         formData,
-        {
-          headers: headers,
-        }
+        { headers: headers }
       );
 
       if (response.data.status) {
@@ -208,7 +209,8 @@ const EditProgram = () => {
               htmlFor="title"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Title <span className="text-red-500">*</span>
+              Title
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -220,7 +222,7 @@ const EditProgram = () => {
                 errors.title ? "border-red-500" : "border-black/20"
               }`}
               placeholder="Enter program title"
-            />
+            />{" "}
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title}</p>
             )}
@@ -232,7 +234,8 @@ const EditProgram = () => {
               htmlFor="description"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Description <span className="text-red-500">*</span>
+              Description
+              <span className="text-red-500">*</span>
             </label>
             <textarea
               id="description"
@@ -244,7 +247,7 @@ const EditProgram = () => {
                 errors.description ? "border-red-500" : "border-black/20"
               }`}
               placeholder="Describe the program"
-            />
+            />{" "}
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description}</p>
             )}
@@ -268,7 +271,7 @@ const EditProgram = () => {
                 errors.url ? "border-red-500" : "border-black/20"
               }`}
               placeholder="https://example.com/program-details"
-            />
+            />{" "}
             {errors.url && (
               <p className="mt-1 text-sm text-red-600">{errors.url}</p>
             )}
@@ -294,12 +297,13 @@ const EditProgram = () => {
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.expireDate ? "border-red-500" : "border-black/20"
               }`}
-            />
+            />{" "}
             {errors.expireDate && (
               <p className="mt-1 text-sm text-red-600">{errors.expireDate}</p>
             )}
             <p className="mt-1 text-sm text-gray-500">
-              When this program expires and is no longer available for applications
+              When this program expires and is no longer available for
+              applications
             </p>
           </div>
 
@@ -319,7 +323,10 @@ const EditProgram = () => {
                 <button
                   type="button"
                   onClick={() =>
-                    setFormData((prev) => ({ ...prev, image: "" }))
+                    setFormData((prev) => ({
+                      ...prev,
+                      image: "",
+                    }))
                   }
                   className="mt-2 text-sm text-red-600 hover:text-red-800"
                 >

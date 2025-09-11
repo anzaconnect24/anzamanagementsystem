@@ -15,16 +15,50 @@ import { BsTrash } from "react-icons/bs";
 import toast from "react-hot-toast";
 import { FaFilePdf, FaArrowLeft } from "react-icons/fa";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import { useTranslation } from "../../../../locales";
 
 const CategoryResourcesPage = () => {
+  const { t } = useTranslation();
   const { category } = useParams();
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
 
-  // Decode the category from URL
+  // Decode the category from URL (this will be in English)
   const decodedCategory = decodeURIComponent(category);
+
+  // Category mapping for display names
+  const categoryMapping = {
+    "Finance and Fundraising": t(
+      "learnAndGrow.financeAndFundraising",
+      "Finance and Fundraising"
+    ),
+    "Marketing & Sales": t(
+      "learnAndGrow.marketingAndSales",
+      "Marketing & Sales"
+    ),
+    "Technology & Innovation": t(
+      "learnAndGrow.technologyAndInnovation",
+      "Technology & Innovation"
+    ),
+    "Leadership & Personal Development": t(
+      "learnAndGrow.leadershipAndPersonalDevelopment",
+      "Leadership & Personal Development"
+    ),
+    "Impact & Sustainability": t(
+      "learnAndGrow.impactAndSustainability",
+      "Impact & Sustainability"
+    ),
+    "Legal & Compliance": t(
+      "learnAndGrow.legalAndCompliance",
+      "Legal & Compliance"
+    ),
+  };
+
+  // Get translated category name for display
+  const displayCategoryName =
+    categoryMapping[decodedCategory] || decodedCategory;
 
   useEffect(() => {
     loadData();
@@ -53,17 +87,22 @@ const CategoryResourcesPage = () => {
   // Admin: delete a resource and update lists
   const handleDeleteDoc = async (doc) => {
     const confirmed = confirm(
-      "Delete this resource? This action cannot be undone."
+      t(
+        "learnAndGrow.deleteResourceConfirm",
+        "Delete this resource? This action cannot be undone."
+      )
     );
     if (!confirmed) return;
     try {
       await deletePitchMaterial(doc.uuid);
-      toast.success("Resource deleted");
+      toast.success(t("learnAndGrow.resourceDeleted", "Resource deleted"));
       // Remove from documents list
       setDocuments((prev) => prev.filter((d) => d.uuid !== doc.uuid));
     } catch (e) {
       console.error(e);
-      toast.error("Failed to delete resource");
+      toast.error(
+        t("learnAndGrow.failedToDelete", "Failed to delete resource")
+      );
     }
   };
 
@@ -74,9 +113,9 @@ const CategoryResourcesPage = () => {
       {/* Breadcrumb */}
       <div className="mb-6">
         <Breadcrumb
-          prevLink="/generalResources"
-          prevPage="General Resources"
-          pageName={decodedCategory}
+          prevLink=""
+          prevPage={t("learnAndGrow.generalResources", "General Resources")}
+          pageName={displayCategoryName}
         />
       </div>
 
@@ -119,17 +158,20 @@ const CategoryResourcesPage = () => {
         <div className="text-center py-12 bg-white dark:bg-boxdark rounded-xl border border-stroke dark:border-strokedark">
           <div className="text-6xl mb-4">📚</div>
           <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-            No Resources Found
+            {t("learnAndGrow.noResourcesFound", "No Resources Found")}
           </h3>
           <p className="text-gray-500 dark:text-gray-400">
-            No materials have been uploaded for this category yet.
+            {t(
+              "learnAndGrow.noMaterialsUploaded",
+              "No materials have been uploaded for this category yet."
+            )}
           </p>
           {["Admin"].includes(userDetails.role) && (
             <Link
               href="/uploadMaterial/document"
               className="inline-block mt-4 bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
             >
-              Add First Material
+              {t("learnAndGrow.addFirstMaterial", "Add First Material")}
             </Link>
           )}
         </div>
@@ -165,7 +207,11 @@ const CategoryResourcesPage = () => {
                     {doc.fileName}
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-                    {doc.description || "No description available"}
+                    {doc.description ||
+                      t(
+                        "learnAndGrow.noDescriptionAvailable",
+                        "No description available"
+                      )}
                   </p>
 
                   {/* Action Buttons */}
@@ -178,7 +224,7 @@ const CategoryResourcesPage = () => {
                   rel="noopener noreferrer"
                   className="w-full bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-center font-medium"
                 >
-                  Open Resource
+                  {t("learnAndGrow.openResource", "Open Resource")}
                 </a>
 
                 {["Admin"].includes(userDetails.role) && (
@@ -187,7 +233,7 @@ const CategoryResourcesPage = () => {
                     className="w-full text-red-600 hover:text-red-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 border border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20 transition-colors"
                   >
                     <BsTrash />
-                    Delete
+                    {t("common.delete", "Delete")}
                   </button>
                 )}
               </div>

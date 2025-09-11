@@ -1,28 +1,26 @@
-"use client";
 import { useContext, useEffect, useState } from "react";
 import {
   getApprovedBusinesses,
   getInvestorBusinesses,
   getPendingBusinesses,
-} from "@/controllers/business_controller";
-import { timeAgo } from "@/utils/time_ago";
-import Link from "@/utils/link";
-import Loader from "@/components/common/Loader";
+} from "../../../controllers/business_controller";
+import { timeAgo } from "../../../utils/time_ago";
+import Link from "../../../utils/link";
+import Loader from "../../../components/common/Loader";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
-import NoData from "@/component/noData";
-import Image from "@/utils/image";
+import NoData from "../../../component/noData";
+import Image from "../../../utils/image";
 import toast from "react-hot-toast";
-import { sendInvestmentInterest } from "@/controllers/investment_interest_controller";
-import { getConversations } from "@/controllers/conversation_controller";
-import { useRouter } from "@/utils/navigation";
-import { useTranslation } from "@/locales";
+import { getConversations } from "../../../controllers/conversation_controller";
+import { useNavigate } from "react-router-dom";
+import { useTranslation } from "../../../locales";
 
-const Page = () => {
+const Conversations = () => {
   const [conversations, setConversations] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
   const { userDetails } = useContext(UserContext);
-  const router = useRouter();
+  const navigate = useNavigate();
   const [loading, setloading] = useState(true);
   const { t } = useTranslation();
   useEffect(() => {
@@ -56,7 +54,7 @@ const Page = () => {
                           "Enabling end-to-end encryption. Please wait..."
                         )
                       );
-                      router.push(`/messages/${item.uuid}`);
+                      navigate(`/dashboard/messages/${item.uuid}`);
                     }}
                     key={key}
                     className="flex space-x-4 cursor-pointer items-center"
@@ -141,4 +139,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default Conversations;

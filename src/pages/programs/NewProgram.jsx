@@ -1,13 +1,11 @@
 "use client";
 import { addProgram } from "@/controllers/program_controller";
 import { useEffect, useState } from "react";
-import Link from "@/utils/link";
-import Loader from "@/components/common/Loader";
 import { useRouter } from "@/utils/navigation";
 import Breadcrumb from "@/component/Breadcrumb";
 import toast from "react-hot-toast";
 import Spinner from "@/components/spinner";
-import { useTranslation } from "../../../locales";
+import { useTranslation } from "../../locales";
 
 // import {Breadcrumb} from "@/component/Breadcrumb"
 const Page = () => {
@@ -19,7 +17,11 @@ const Page = () => {
 
   return (
     <div>
-      <Breadcrumb prevLink={``} prevPage={t("programs.programs", "Programs")} pageName={t("programs.newProgram", "New program")} />
+      <Breadcrumb
+        prevLink={``}
+        prevPage={t("programs.programs", "Programs")}
+        pageName={t("programs.newProgram", "New program")}
+      />
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4 ">
           <h4 className="text-xl font-semibold text-black dark:text-white">
@@ -48,7 +50,10 @@ const Page = () => {
                 <input
                   name="title"
                   className="w-full rounded border-stroke"
-                  placeholder={t("programs.enterProgramTitle", "Enter program title")}
+                  placeholder={t(
+                    "programs.enterProgramTitle",
+                    "Enter program title"
+                  )}
                 />
               </div>
               <div>
@@ -59,7 +64,10 @@ const Page = () => {
                   type="date"
                   name="expireDate"
                   className="w-full rounded border-stroke"
-                  placeholder={t("programs.enterExpireDate", "Enter expire date")}
+                  placeholder={t(
+                    "programs.enterExpireDate",
+                    "Enter expire date"
+                  )}
                 />
               </div>
               <div>
@@ -71,10 +79,24 @@ const Page = () => {
                   className="w-full rounded border-stroke"
                   placeholder=""
                 >
-                  <option>{t("programs.selectProgramType", "Select program type")}</option>
-                  <option value="bfa">{t("programs.businessFoundationAccelerator", "Business foundation accelerator")}</option>
-                  <option value="ira">{t("programs.investmentReadinessAccelerator", "Investment Readiness Accelerator")}</option>
-                  <option value="consultance">{t("programs.consultancePrograms", "Consultance programs")}</option>
+                  <option>
+                    {t("programs.selectProgramType", "Select program type")}
+                  </option>
+                  <option value="bfa">
+                    {t(
+                      "programs.businessFoundationAccelerator",
+                      "Business foundation accelerator"
+                    )}
+                  </option>
+                  <option value="ira">
+                    {t(
+                      "programs.investmentReadinessAccelerator",
+                      "Investment Readiness Accelerator"
+                    )}
+                  </option>
+                  <option value="consultance">
+                    {t("programs.consultancePrograms", "Consultance programs")}
+                  </option>
                 </select>
               </div>
             </div>
@@ -84,13 +106,19 @@ const Page = () => {
               </label>
               <textarea
                 name="description"
-                placeholder={t("programs.writeDescription", "Write description")}
+                placeholder={t(
+                  "programs.writeDescription",
+                  "Write description"
+                )}
                 className="border-stroke w-full rounded"
               ></textarea>
             </div>
             <div className="pt-3">
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                {t("programs.addListOfRequiredDocuments", "Add list of required documents")}
+                {t(
+                  "programs.addListOfRequiredDocuments",
+                  "Add list of required documents"
+                )}
               </label>
               <div className="flex space-x-4">
                 <input
@@ -108,7 +136,9 @@ const Page = () => {
                       setFields(fields);
                       setRequirement("");
                     } else {
-                      toast.error(t("programs.enterFieldFirst", "Enter field first"));
+                      toast.error(
+                        t("programs.enterFieldFirst", "Enter field first")
+                      );
                     }
                   }}
                   className="py-2 px-3 rounded bg-primary text-white"
@@ -152,7 +182,11 @@ const Page = () => {
               type="submit"
               className="py-2 px-3 rounded flex justify-center bg-primary text-white"
             >
-              {loading ? <Spinner /> : t("programs.publishProgram", "Publish program")}
+              {loading ? (
+                <Spinner />
+              ) : (
+                t("programs.publishProgram", "Publish program")
+              )}
             </button>
           </form>
         </div>
