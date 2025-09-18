@@ -1,6 +1,5 @@
 "use client";
 import { useContext, useEffect, useState } from "react";
-import { getAllUsers } from "@/controllers/user_controller";
 import {
   createBusinessReview,
   deleteBusinessReview,
@@ -10,8 +9,9 @@ import { timeAgo } from "@/utils/time_ago";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import Breadcrumb from "@/component/Breadcrumb";
-import { useTranslation } from "@/locales";
+
 import { useParams } from "react-router-dom";
+import { useTranslation } from "../../../locales";
 
 const Page = ({ params }) => {
   const { t } = useTranslation();
@@ -43,12 +43,12 @@ const Page = ({ params }) => {
         <Breadcrumb
           pageName={t("business.assignReviewer", "Assign reviewer")}
           prevLink={""}
-          prevPage={t("business.businesses", "Businesses")}
+          prevPage={t("users.businesses", "Businesses")}
         />
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5">
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              {t("business.reviewersCount", "Reviewers ({{count}})", {
+              {t("users.reviewers", "Reviewers ({{count}})", {
                 count: total,
               })}
             </h4>
@@ -59,12 +59,10 @@ const Page = ({ params }) => {
               <p className="font-medium">{t("business.sent", "Sent")}</p>
             </div>
             <div className="col-span-1 hidden items-center sm:flex">
-              <p className="font-medium">
-                {t("business.username", "Username")}
-              </p>
+              <p className="font-medium">{t("users.username", "Username")}</p>
             </div>
             <div className="col-span-1 flex items-center">
-              <p className="font-medium">{t("business.role", "Role")}</p>
+              <p className="font-medium">{t("users.role", "Role")}</p>
             </div>
             <div className="col-span-2 flex items-center">
               <p className="font-medium">{t("business.phone", "Phone")}</p>
@@ -73,7 +71,7 @@ const Page = ({ params }) => {
               <p className="font-medium">{t("business.email", "Email")}</p>
             </div>
             <div className="col-span-1 flex items-center">
-              <p className="font-medium">{t("business.assign", "Assign")}</p>
+              <p className="font-medium">{t("users.assign", "Assign")}</p>
             </div>
           </div>
 
@@ -130,8 +128,8 @@ const Page = ({ params }) => {
                   } cursor-pointer hover:opacity-95 transition-all rounded`}
                 >
                   {item.status < 1
-                    ? t("business.assign", "Assign")
-                    : t("business.remove", "Remove")}
+                    ? t("users.assign", "Assign")
+                    : t("users.remove", "Remove")}
                 </div>
               </div>
             </div>

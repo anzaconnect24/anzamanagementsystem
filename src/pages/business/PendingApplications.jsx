@@ -12,8 +12,9 @@ import {
 } from "react-icons/hi";
 import { MdOutlineKeyboardArrowRight } from "react-icons/md";
 import { BiFilterAlt } from "react-icons/bi";
-import { useTranslation } from "@/locales";
+
 import { timeAgo } from "../../utils/time_ago";
+import { useTranslation } from "../../locales";
 
 const Page = () => {
   const { t } = useTranslation();
@@ -195,7 +196,7 @@ const Page = () => {
                       <div className="relative">
                         <div className="flex items-center gap-2">
                           <Link
-                            href={`/businessDetails/${item.uuid}`}
+                            href={`/dashboard/enterprenuers/businessDetails/${item.uuid}`}
                             className="p-2 rounded-lg hover:bg-primary/10 text-primary transition-colors"
                             title={t("business.viewDetails", "View Details")}
                           >

@@ -1,26 +1,34 @@
 "use client";
 
-import Breadcrumb from "@/component/Breadcrumb";
+import Breadcrumb from "../../../../component/Breadcrumb";
 import toast from "react-hot-toast";
-import Spinner from "@/components/spinner";
+import Spinner from "../../../../components/spinner";
+import { useTranslation } from "../../../../locales";
 import { useState } from "react";
-import { uploadFile } from "@/controllers/file_upload_controller";
-import { createModule } from "@/controllers/modules_controller";
+import { uploadFile } from "../../../../controllers/file_upload_controller";
+import { createModule } from "../../../../controllers/modules_controller";
 import { useRouter } from "../../../../utils/navigation";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 const Page = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const [loading, setloading] = useState(false);
   const params = useSearchParams();
-  const course = params.get("course");
+  const course = useParams().course;
   return (
     <div>
-      <Breadcrumb prevLink={``} prevPage="Back" pageName="New module" />
+      <Breadcrumb
+        prevLink={``}
+        prevPage={t("common.back", "Back")}
+        pageName={t("modules.newModule", "New module")}
+      />
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4 ">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            Add new {course} module
+            {t("modules.addNewCourseModule", "Add new {{course}} module", {
+              course,
+            })}
           </h4>
           <form
             onSubmit={(e) => {
@@ -46,17 +54,20 @@ const Page = () => {
             <div className="grid grid-cols-2 gap-x-3">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Title
+                  {t("modules.title", "Title")}
                 </label>
                 <input
                   name="title"
                   className="w-full rounded border-stroke"
-                  placeholder="Enter module title"
+                  placeholder={t(
+                    "modules.enterModuleTitle",
+                    "Enter module title"
+                  )}
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Module Cover image
+                  {t("modules.moduleCoverImage", "Module Cover image")}
                 </label>
                 <input
                   name="image"
@@ -66,12 +77,15 @@ const Page = () => {
               </div>
               <div className=" col-span-2">
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Description
+                  {t("modules.description", "Description")}
                 </label>
                 <textarea
                   name="description"
                   className="w-full rounded border-stroke"
-                  placeholder="Enter sector name"
+                  placeholder={t(
+                    "modules.enterModuleDescription",
+                    "Enter module description"
+                  )}
                 />
               </div>
             </div>
@@ -80,7 +94,9 @@ const Page = () => {
               type="submit"
               className="py-3 px-4 mt-4 hover:opacity-95 rounded flex justify-center bg-primary text-white"
             >
-              <div>{loading ? <Spinner /> : "Add module"}</div>
+              <div>
+                {loading ? <Spinner /> : t("modules.addModule", "Add module")}
+              </div>
             </button>
           </form>
         </div>

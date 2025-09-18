@@ -171,7 +171,7 @@ const Page = ({ params }) => {
           <div className="mt-8">
             {["Admin"].includes(userDetails.role) && (
               <Link
-                href={`/slides/add/?uuid=${uuid}`}
+                href={`/dashboard/slides/add/?uuid=${uuid}`}
                 className="text-white bg-primary py-2 px-3 cursor-pointer rounded"
               >
                 {t("learnAndGrow.addSlide", "Add Slide")}

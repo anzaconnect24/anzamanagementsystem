@@ -1,23 +1,24 @@
 "use client";
 
-import Breadcrumb from "@/component/Breadcrumb";
+import Breadcrumb from "../../../../component/Breadcrumb";
 import toast from "react-hot-toast";
-import Spinner from "@/components/spinner";
+import Spinner from "../../../../components/spinner";
+import { useTranslation } from "../../../../locales";
 import { useEffect, useState } from "react";
-import { uploadFile } from "@/controllers/file_upload_controller";
+import { uploadFile } from "../../../../controllers/file_upload_controller";
 import {
   createModule,
   editModule,
   getModule,
-} from "@/controllers/modules_controller";
+} from "../../../../controllers/modules_controller";
 import { useRouter } from "../../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
 
 const Page = () => {
+  const { t } = useTranslation();bu
   const router = useRouter();
-  const params = useSearchParams();
-  const uuid = params.get("uuid");
-  const course = params.get("course"); // ✅ Get course from query
+  const [searchParams] = useSearchParams();
+  const uuid = searchParams.get("uuid");
 
   const [module, setModule] = useState(null);
   const [loading, setloading] = useState(false);
@@ -26,7 +27,7 @@ const Page = () => {
   useEffect(() => {
     getModule(uuid).then((res) => {
       setModule(res);
-      setPreviewImage(res.image); // ✅ Set initial preview image
+      setPreviewImage(res?.image); // ✅ Set initial preview image
     });
   }, [uuid]);
 
@@ -60,10 +61,10 @@ const Page = () => {
 
     try {
       await editModule(uuid, payload);
-      toast.success("Module updated");
+      toast.success(t("modules.moduleUpdated", "Module updated"));
       router.back();
     } catch (err) {
-      toast.error("Update failed");
+      toast.error(t("modules.updateFailed", "Update failed"));
     } finally {
       setloading(false);
     }
@@ -72,30 +73,37 @@ const Page = () => {
   return (
     module && (
       <div>
-        <Breadcrumb prevLink={``} prevPage="Back" pageName="Edit Module" />
+        <Breadcrumb
+          prevLink={``}
+          prevPage={t("common.back", "Back")}
+          pageName={t("modules.editModule", "Edit Module")}
+        />
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4">
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              Edit module
+              {t("modules.editModule", "Edit module")}
             </h4>
 
             <form onSubmit={handleSubmit}>
               <div className="grid grid-cols-2 gap-x-3">
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Title
+                    {t("modules.title", "Title")}
                   </label>
                   <input
                     name="title"
                     defaultValue={module.title}
                     className="w-full rounded border-stroke"
-                    placeholder="Enter module title"
+                    placeholder={t(
+                      "modules.enterModuleTitle",
+                      "Enter module title"
+                    )}
                   />
                 </div>
 
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Module Cover Image
+                    {t("modules.moduleCoverImage", "Module Cover Image")}
                   </label>
                   <input
                     name="image"
@@ -106,7 +114,7 @@ const Page = () => {
                   {previewImage && (
                     <img
                       src={previewImage}
-                      alt="Preview"
+                      alt={t("modules.preview", "Preview")}
                       className="mt-2 h-32 object-cover rounded"
                     />
                   )}
@@ -114,13 +122,16 @@ const Page = () => {
 
                 <div className="col-span-2">
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Description
+                    {t("modules.description", "Description")}
                   </label>
                   <textarea
                     name="description"
                     defaultValue={module.description}
                     className="w-full rounded border-stroke"
-                    placeholder="Enter description"
+                    placeholder={t(
+                      "modules.enterModuleDescription",
+                      "Enter description"
+                    )}
                   />
                 </div>
               </div>
@@ -129,7 +140,11 @@ const Page = () => {
                 type="submit"
                 className="py-3 px-4 mt-4 hover:opacity-95 rounded flex justify-center bg-primary text-white"
               >
-                {loading ? <Spinner /> : "Save Changes"}
+                {loading ? (
+                  <Spinner />
+                ) : (
+                  t("modules.saveChanges", "Save Changes")
+                )}
               </button>
             </form>
           </div>

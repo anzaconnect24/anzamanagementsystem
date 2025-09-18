@@ -70,6 +70,8 @@ export const en = {
     more: "More",
     less: "Less",
     details: "Details",
+    options: "Options",
+    viewDetails: "View details",
     settings: "Settings",
     profile: "Profile",
     account: "Account",
@@ -86,7 +88,6 @@ export const en = {
     noDataAvailable: "No data available",
     noDataImageAlt: "No data image",
     message: "Message",
-    step: "Step {{n}}",
     contactInformation: "Contact Information",
     investmentPreferences: "Investment Preferences",
     backgroundExperience: "Background & Experience",
@@ -104,6 +105,12 @@ export const en = {
       "Contact information is only available to administrators.",
     useMessageButton:
       'You can use the "Message" button to connect with this investor.',
+    accessDenied: "Access denied. Admin or Staff role required.",
+    pleaseSelectImageFile: "Please select an image file",
+    fileSizeMustBeLess: "File size must be less than 5MB",
+    unknownError: "Unknown error",
+    orDragAndDrop: "or drag and drop",
+    supportedImageFormats: "PNG, JPG, JPEG (Max 5MB)",
   },
 
   // Mentor signup labels
@@ -169,6 +176,16 @@ export const en = {
       "I agree to be contacted regarding mentorship opportunities",
     matchingConsent:
       "I consent to my information being used for mentorship matching",
+    // Mentor Report translations
+    reports: "Reports",
+    mentorReports: "Mentors reports",
+    entrepreneurReport: "Entrepreneur report",
+    viewEntrepreneurReport: "View entrepreneur report",
+    mentorName: "Mentor name",
+    entrepreneurName: "Entrepreneur name",
+    reportTitle: "Report title",
+    reportDescription: "Report description",
+    openReport: "Open Report",
   },
 
   // Navigation and Menu
@@ -494,6 +511,13 @@ export const en = {
     failedToUpdateDetails: "Failed to update details",
     updatedSuccessfully: "Updated successfully!",
 
+    // Table headings for business applications
+    sent: "Sent",
+    businessName: "Business name",
+    phone: "Phone",
+    email: "Email",
+    more: "More",
+
     // Details page strings
     overview: "Business Overview",
     marketPotential: "Market Potential",
@@ -617,6 +641,43 @@ export const en = {
       growthPlansMissing: "No growth plans available",
       fundraisingNeedsMissing: "No fundraising needs specified",
     },
+
+    // CRAT Documents page
+    financial: "Financial",
+    legal: "Legal",
+    operations: "Operations",
+    commercial: "Commercial",
+    businessDetails: "Business Details",
+    cratAttachments: "CRAT Attachments",
+    cratAssessmentDescription:
+      "CRAT assessment attachments organized by domain",
+    totalDocuments: "Total Documents",
+    noDocuments: "No {{type}} Documents",
+    noDocumentsDescription:
+      "No CRAT documents have been uploaded for the {{domain}} domain yet.",
+    domain: "Domain",
+    updated: "Updated",
+    openDocument: "Open Document",
+
+    // Application management translations
+    pendingApplications: "Pending Applications",
+    reviewAndProcessApplications: "Review and process business applications",
+    searchApplicationsPlaceholder: "Search applications...",
+    sortByDate: "Sort by Date",
+    sortByName: "Sort by Name",
+    sortByStatus: "Sort by Status",
+    contact: "Contact",
+    timeline: "Timeline",
+    newStatus: "New",
+    urgentStatus: "Urgent",
+    applicationId: "Application ID",
+    viewFullDetails: "View full details",
+    downloadApplication: "Download application",
+    moreOptions: "More Options",
+
+    errors: {
+      failedToLoadData: "Failed to load business data",
+    },
   },
 
   // Investment Opportunities
@@ -666,6 +727,34 @@ export const en = {
     investmentAmount: "Investment Amount",
     investmentType: "Investment Type",
     viewDetails: "View Details",
+    // Edit opportunity specific translations
+    failedToFetchOpportunity: "Failed to fetch opportunity details",
+    pleaseSelectImage: "Please select an image file",
+    fileSizeLimit: "File size must be less than 5MB",
+    failedToUploadImage: "Failed to upload image",
+    errorUploadingImage: "Error uploading image",
+    opportunityUpdatedSuccessfully: "Opportunity updated successfully",
+    pleaseEnterValidUrl: "Please enter a valid URL",
+    title: "Title",
+    description: "Description",
+    detailsUrl: "Details URL",
+    optional: "Optional",
+    urlPlaceholder: "https://example.com/opportunity-details",
+    linkToExternalPage:
+      "Link to external page with more details about this opportunity",
+    opportunityExpireInfo:
+      "When this opportunity expires and is no longer available",
+    image: "Image",
+    opportunity: "Opportunity",
+    removeImage: "Remove Image",
+    uploading: "Uploading...",
+    clickToUploadImage: "Click to upload an image",
+    imageFileTypes: "PNG, JPG, GIF up to 5MB",
+    cancel: "Cancel",
+    updating: "Updating...",
+    updateOpportunity: "Update Opportunity",
+    describeOpportunity: "Describe the investment opportunity",
+    enterOpportunityTitle: "Enter opportunity title",
     editOpportunity: "Edit Opportunity",
     deleting: "Deleting...",
     deleteOpportunity: "Delete Opportunity",
@@ -673,6 +762,44 @@ export const en = {
       "Are you sure you want to delete this investment opportunity?",
     failedToDeleteOpportunity: "Failed to delete opportunity",
     errorDeletingOpportunity: "Error deleting opportunity",
+
+    // Additional form fields
+    sector: "Sector",
+    selectSector: "Select a sector",
+    sectorIsRequired: "Sector is required",
+    amountIsRequired: "Investment amount is required",
+    investmentTypeIsRequired: "Investment type is required",
+    pleaseEnterValidAmount: "Please enter a valid amount",
+    enterInvestmentAmount: "Enter investment amount",
+    selectInvestmentType: "Select investment type",
+    creating: "Creating...",
+    failedToUploadImage: "Failed to upload image",
+
+    // Sectors
+    sectors: {
+      technology: "Technology",
+      healthcare: "Healthcare",
+      finance: "Finance",
+      education: "Education",
+      agriculture: "Agriculture",
+      manufacturing: "Manufacturing",
+      retail: "Retail",
+      energy: "Energy",
+      realEstate: "Real Estate",
+      transportation: "Transportation",
+      entertainment: "Entertainment",
+      other: "Other",
+    },
+
+    // Investment Types
+    types: {
+      equity: "Equity",
+      debt: "Debt",
+      convertible: "Convertible",
+      grant: "Grant",
+      revenueShare: "Revenue Share",
+      hybrid: "Hybrid",
+    },
   },
 
   // Programs
@@ -717,6 +844,35 @@ export const en = {
     viewApplication: "View application",
     assignReviewers: "Assign reviewers",
     pendingApplications: "Pending applications",
+    // New program creation form specific translations
+    pleaseSelectImageFile: "Please select an image file",
+    fileSizeMustBeLess: "File size must be less than 5MB",
+    titleIsRequired: "Title is required",
+    descriptionIsRequired: "Description is required",
+    pleaseEnterValidURL: "Please enter a valid URL",
+    failedToUploadImage: "Failed to upload image",
+    unknownError: "Unknown error",
+    failedToCreateProgram: "Failed to create program",
+    errorCreatingProgram: "Error creating program",
+    title: "Title",
+    description: "Description",
+    optional: "Optional",
+    urlPlaceholder: "https://example.com",
+    linkToExternalPage:
+      "Link to external page with more details about this program",
+    expireDate: "Expire Date",
+    expireDateDescription:
+      "When this program expires and is no longer available for applications",
+    image: "Image",
+    program: "Program",
+    removeImage: "Remove Image",
+    clickToUpload: "Click to upload",
+    orDragAndDrop: "or drag and drop",
+    supportedImageFormats: "PNG, JPG, JPEG (Max 5MB)",
+    creating: "Creating...",
+    cancel: "Cancel",
+    createNewProgramDescription:
+      "Create a new program to share with participants.",
   },
 
   // Users and Profiles
@@ -1302,9 +1458,6 @@ export const en = {
     phone: "Phone",
     email: "Email",
     sent: "Sent",
-    businessName: "Business name",
-    phone: "Phone",
-    email: "Email",
     viewDetails: "View details",
     assignReviewer: "Assign reviewer",
 
@@ -1694,6 +1847,27 @@ export const en = {
     fileName: "File Name",
     uploadedOn: "Uploaded on",
     viewers: "Viewers",
+    // Upload material specific translations
+    uploadNewMaterial: "Upload new material",
+    title: "Title",
+    enterMaterialTitle: "Enter material title",
+    category: "Category",
+    selectCategory: "Select category",
+    materialThumbnail: "Material Thumbnail",
+    uploadMaterialDocument: "Upload material document (pdf,docx/doc)",
+    videoUrl: "Video URL",
+    enterVideoUrl: "Enter video URL",
+    materialDescription: "Material description",
+    writeMaterialDescription: "Write material description",
+    errorUploadingMaterial: "Error uploading material",
+    categories: {
+      financeandfundraising: "Finance and Fundraising",
+      marketingsales: "Marketing & Sales",
+      technologyinnovation: "Technology & Innovation",
+      leadershipandpersonaldevelopment: "Leadership & Personal Development",
+      impactsustainability: "Impact & Sustainability",
+      legalcompliance: "Legal & Compliance",
+    },
   },
 
   // Sectors
@@ -1802,6 +1976,14 @@ export const en = {
     resume: "Resume",
     startLearning: "Start Learning",
     addModule: "Add Module",
+    // Module creation specific translations
+    newModule: "New module",
+    addNewCourseModule: "Add new {{course}} module",
+    title: "Title",
+    enterModuleTitle: "Enter module title",
+    moduleCoverImage: "Module Cover image",
+    description: "Description",
+    enterModuleDescription: "Enter module description",
     // Programs Applications
     programsApplications: "Programs Applications",
     manageProgramApplications: "Manage and explore program applications",
@@ -1826,6 +2008,24 @@ export const en = {
     noComments: "No Comments, Be the first to share your thoughts.",
     addComment: "Add a comment...",
     postComment: "Post Comment",
+  },
+
+  // Modules
+  modules: {
+    newModule: "New module",
+    addNewCourseModule: "Add new {{course}} module",
+    title: "Title",
+    enterModuleTitle: "Enter module title",
+    moduleCoverImage: "Module Cover image",
+    description: "Description",
+    enterModuleDescription: "Enter module description",
+    addModule: "Add module",
+    // Edit module specific translations
+    editModule: "Edit Module",
+    moduleUpdated: "Module updated",
+    updateFailed: "Update failed",
+    preview: "Preview",
+    saveChanges: "Save Changes",
   },
 
   // CRAT Reviews
@@ -1945,6 +2145,144 @@ export const en = {
       status: "Status",
       generated: "AI analysis report generated! (Email sending is disabled)",
     },
+
+    // Additional AI translations
+    executiveSummaryGenerated: "Executive summary generated successfully!",
+    apiKeyNotConfigured:
+      "❌ API key not configured. Please add your Gemini API key to .env.local and restart the server.",
+    failedToGenerateAISummary:
+      "Failed to generate AI summary. Please check your API configuration.",
+    reportDataNotAvailable: "Report data not available for analysis",
+    completeAnalysisGenerated:
+      "Complete AI analysis generated and saved successfully!",
+    noSavedReportAvailable: "No saved report available for download",
+    pdfDownloaded: "PDF downloaded: {{fileName}}",
+    failedToDownloadPDF: "Failed to download PDF",
+    geminiConnectionSuccessful: "✅ Gemini AI connection successful!",
+    connectionFailed: "❌ Connection failed: {{error}}",
+    configureAPIKey: "Please configure your Gemini API key in .env.local file",
+    connectionTestFailed: "❌ Connection test failed: {{message}}",
+    apiKeyNotConfiguredRestart:
+      "API key not configured. Check .env.local file and restart server.",
+    domainDataNotAvailable: "{{domain}} data not available for analysis",
+    domainAnalysisGenerated: "{{domain}} domain analysis generated!",
+    failedToGenerateDomainAnalysis: "Failed to generate {{domain}} analysis",
+    adminAccessRequired: "Admin Access Required",
+    aiAnalysisRestricted:
+      "AI Analysis for CRAT evaluation is restricted to Administrators only.",
+    evaluatingEntrepreneur: "Evaluating: {{name}}",
+    entrepreneur: "Entrepreneur",
+    featureHelpsAdmins:
+      "This feature helps admins evaluate entrepreneur readiness.",
+    aiAnalysisInsights: "AI Analysis & Insights",
+    poweredByGemini:
+      "Powered by Gemini AI - Expert analysis of your CRAT assessment",
+    generateCompleteAnalysis: "Generate Complete Analysis",
+    downloadPDFReport: "Download PDF Report",
+    executiveSummary: "Executive Summary",
+    recommendations: "Recommendations",
+    domainAnalysis: "Domain Analysis",
+    riskAssessment: "Risk Assessment",
+    growthPotential: "Growth Potential",
+    investmentDecision: "Investment Decision",
+    scenarioAnalysis: "Scenario Analysis",
+    aiAnalyzingReport: "AI is analyzing your report...",
+    mayTakeFewMoments: "This may take a few moments",
+    executiveInvestmentBriefing: "Executive Investment Briefing",
+    capitalReadinessAssessment:
+      "Capital Readiness Assessment & Strategic Analysis",
+    aiPoweredInvestmentAnalysis: "AI-Powered Investment Analysis",
+    generatedByAdvancedAI:
+      "Generated by advanced AI with African market expertise",
+    generateExecutiveBriefing: "Generate Executive Briefing",
+    generateCompleteAnalysisDesc:
+      "Generate complete analysis to see detailed recommendations",
+    domainReadMore: "Read More",
+    domainClickAnalyze:
+      'Click "Analyze" to generate AI insights for this domain',
+    domainAnalyzeButton: "Analyze",
+    domainCapitalized: "Domain",
+    highPriority: "HIGH PRIORITY",
+    mediumPriority: "MEDIUM PRIORITY",
+    lowPriority: "LOW PRIORITY",
+    general: "GENERAL",
+    riskAssessmentTitle: "Risk Assessment",
+    overallRiskScore: "Overall Risk Score",
+    capitalReadinessAssessment:
+      "Capital Readiness Assessment & Strategic Analysis",
+    aiAnalysisInsights: "Uchambuzi wa AI na Maarifa",
+    poweredByGemini:
+      "Powered by Gemini AI - Expert analysis of your CRAT assessment",
+    generateCompleteAnalysis: "Generate Complete Analysis",
+    downloadPDFReport: "Download PDF Report",
+    riskLevel: "Risk Level",
+    monthTrend: "6 Month Trend",
+    monthOutlook: "24 Month Outlook",
+    stable: "Stable",
+    decreasing: "Decreasing",
+    keyRiskFactors: "Key Risk Factors",
+    impactLabel: "Impact",
+    high: "High",
+    medium: "Medium",
+    low: "Low",
+    probability: "Probability",
+    mitigationStrategy: "Mitigation Strategy",
+    generateAiAnalysis: "Generate AI Analysis",
+    clickToGenerateAnalysis: "Click to generate comprehensive AI analysis",
+    readyForCompleteAnalysis: "Ready for Complete Analysis?",
+    generateComprehensiveReport:
+      "Generate a comprehensive investment report with detailed domain analysis, risk assessment, and strategic recommendations.",
+    generateCompleteInvestmentReport: "Generate Complete Investment Report",
+    aiInvestmentAnalysis: "AI Investment Analysis",
+    generateProfessionalBriefing:
+      "Generate a professional executive briefing powered by advanced AI analysis of your business assessment.",
+    generateExecutiveBriefing: "Generate Executive Briefing",
+    generateCompleteAnalysisRisk:
+      "Generate complete analysis to see detailed risk assessment",
+    growthScore: "Growth Score",
+    growthCategory: "Growth Category",
+    marketGrowthRate: "Market Growth Rate",
+    revenueProjections: "Revenue Projections (USD)",
+    timeframe: "Timeframe",
+    conservative: "Conservative",
+    realistic: "Realistic",
+    optimistic: "Optimistic",
+    marketExpansionAnalysis: "Market Expansion Analysis",
+    currentMarketSize: "Current Market Size",
+    addressableMarket: "Addressable Market",
+    marketSharePotential: "Market Share Potential",
+    scalingFactors: "Scaling Factors",
+    generateCompleteAnalysisGrowth:
+      "Generate complete analysis to see growth potential data",
+    readinessScore: "Readiness Score",
+    recommendation: "Recommendation",
+    exitStrategy: "Exit Strategy",
+    investmentFramework: "Investment Framework",
+    minimumInvestment: "Minimum Investment",
+    optimalInvestment: "Optimal Investment",
+    maximumInvestment: "Maximum Investment",
+    expectedReturns: "Expected Returns",
+    years3: "3 Years",
+    years5: "5 Years",
+    years7: "7 Years",
+    strategy: "Strategy",
+    timeline: "Timeline",
+    expectedMultiple: "Expected Multiple",
+    investmentConditions: "Investment Conditions",
+    generateCompleteAnalysisInvestment:
+      "Generate complete analysis to see investment decision framework",
+    exploreOutcomes:
+      "Explore different potential outcomes for this investment opportunity",
+    bestCase: "Best Case",
+    mostLikely: "Most Likely",
+    worstCase: "Worst Case",
+    keyDrivers: "Key Drivers",
+    noDescriptionAvailable: "No description available",
+    keyPerformanceMetrics: "Key Performance Metrics",
+    generateCompleteAnalysisScenario:
+      "Generate complete analysis to see scenario analysis",
+    aiAnalysisGenerated: "AI analysis generated using Gemini AI",
+    lastUpdated: "Last updated",
   },
 
   // CRAT Review (Entrepreneur page)

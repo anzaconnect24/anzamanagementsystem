@@ -3,13 +3,14 @@ import { useContext, useEffect, useState } from "react";
 import {
   getPendingBusinesses,
   getRejectedBusinesses,
-} from "@/controllers/business_controller";
-import Link from "@/utils/link";
-import Loader from "@/components/common/Loader";
-import NoData from "@/component/noData";
-import { useTranslation } from "@/locales";
+} from "../../controllers/business_controller";
+import Link from "../../utils/link";
+import Loader from "../../components/common/Loader";
+import NoData from "../../component/noData";
+
 import { timeAgo } from "../../utils/time_ago";
 import { BusinessContext } from "../../context/BusinessContext";
+import { useTranslation } from "../../locales";
 
 const Page = () => {
   const { t } = useTranslation();
@@ -32,7 +33,7 @@ const Page = () => {
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5">
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              {t("rejectedApplications", "Rejected applications")}
+              {t("business.rejectedApplications", "Rejected applications")}
             </h4>
           </div>
           {applications.length < 1 ? (
@@ -105,15 +106,15 @@ const Page = () => {
                       >
                         {[
                           {
-                            title: t("business.viewDetails", "View details"),
-                            path: `/businessDetails/${item.uuid}`,
+                            title: t("common.viewDetails", "View details"),
+                            path: `/dashboard/enterprenuers/businessDetails/${item.uuid}`,
                           },
                           {
                             title: t(
                               "business.assignReviewer",
                               "Assign reviewer"
                             ),
-                            path: `/assignReviewer/${item.uuid}`,
+                            path: `/dashboard/assignReviewer/${item.uuid}`,
                           },
                         ].map((option) => {
                           return (

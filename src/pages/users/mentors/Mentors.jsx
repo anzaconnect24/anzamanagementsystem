@@ -79,6 +79,68 @@ const Mentors = () => {
     Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") ||
     t("business.noSector", "No Sector");
 
+  // Translation helper functions
+  const translateFilterValue = (value) => {
+    switch (value) {
+      // Sectors
+      case "All Sectors":
+        return t("users.allSectors", "All Sectors");
+      case "Technology":
+        return t("users.technology", "Technology");
+      case "Healthcare":
+        return t("users.healthcare", "Healthcare");
+      case "Education":
+        return t("users.education", "Education");
+      case "Agriculture":
+        return t("users.agriculture", "Agriculture");
+      case "Clean Energy":
+        return t("users.cleanEnergy", "Clean Energy");
+      case "Water Sanitation and Hygiene":
+        return t(
+          "users.waterSanitationHygiene",
+          "Water Sanitation and Hygiene"
+        );
+      case "Fintech":
+        return t("users.fintech", "Fintech");
+
+      // Expertise
+      case "All Expertise":
+        return t("users.allExpertise", "All Expertise");
+      case "Business Strategy":
+        return t("users.businessStrategy", "Business Strategy");
+      case "Marketing":
+        return t("users.marketing", "Marketing");
+      case "Finance":
+        return t("users.finance", "Finance");
+      case "Operations":
+        return t("users.operations", "Operations");
+      case "Leadership":
+        return t("users.leadership", "Leadership");
+
+      // Years
+      case "All Years":
+        return t("users.allYears", "All Years");
+
+      default:
+        return value; // numbers & other values
+    }
+  };
+
+  const translateSortLabel = (key) => {
+    switch (key) {
+      case "name":
+        return t("users.name", "Name");
+      case "sector":
+        return t("users.sector", "Sector");
+      case "expertise":
+        return t("users.expertise", "Expertise");
+      case "date":
+        return t("users.joinedDate", "Joined Date");
+      default:
+        return key;
+    }
+  };
+
   const matchesSearchKeyword = (item, searchTerm) => {
     if (!searchTerm.trim()) return true;
     const searchLower = searchTerm.toLowerCase();
@@ -359,7 +421,7 @@ const Mentors = () => {
                     : "bg-white"
                 } flex items-center gap-2`}
               >
-                <span>{filters[key]}</span>
+                <span>{translateFilterValue(filters[key])}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${
                     openDropdown === key ? "rotate-180" : ""
@@ -388,7 +450,7 @@ const Mentors = () => {
                           : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
                       }`}
                     >
-                      {option}
+                      {translateFilterValue(option)}
                     </button>
                   ))}
                 </div>
@@ -402,7 +464,7 @@ const Mentors = () => {
             >
               <span>
                 {t("users.sortBy", "Sort By")}:{" "}
-                {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
+                {translateSortLabel(sortConfig.key)}
               </span>
               <svg
                 className={`w-4 h-4 transition-transform ${
@@ -432,7 +494,7 @@ const Mentors = () => {
                         : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
                     }`}
                   >
-                    {option.label}{" "}
+                    {translateSortLabel(option.value)}{" "}
                     {sortConfig.key === option.value && (
                       <span className="float-right">
                         {sortConfig.direction === "asc" ? "↑" : "↓"}
@@ -463,7 +525,7 @@ const Mentors = () => {
                   key={key}
                   className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
                 >
-                  {value}
+                  {translateFilterValue(value)}
                   <button
                     onClick={() =>
                       handleFilterChange(key, filterOptions[key].options[0])
@@ -656,7 +718,7 @@ const Mentors = () => {
                 </div>
                 <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
                   <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                    <span>{t("users.viewDetails", "View Details")}</span>
+                    <span>{t("investment.viewDetails", "View Details")}</span>
                     <svg
                       className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                       fill="none"

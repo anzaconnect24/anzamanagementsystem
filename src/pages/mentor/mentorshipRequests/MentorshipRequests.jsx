@@ -86,7 +86,7 @@ const MentorEntreprenuer = () => {
                     <td className="py-3">{item.Entreprenuer?.phone}</td>
                     <td className="py-3">
                       <Link
-                        href={`/businessDetails/${item.Entreprenuer?.Business?.uuid}`}
+                        href={`/dashboard/enterprenuers/businessDetails/${item.Entreprenuer?.Business?.uuid}`}
                         className="py-2 px-4 text-primary font-bold  hover:text-opacity-80 transition-all duration-300 rounded"
                       >
                         {t("mentorship.businessDetails", "Business details")}
@@ -95,7 +95,7 @@ const MentorEntreprenuer = () => {
                     {item.approved ? (
                       <td className="py-3">
                         <Link
-                          href={`/addEntreprenuerReport/${item.Entreprenuer?.uuid}`}
+                          href={`/dashboard/addEntreprenuerReport/${item.Entreprenuer?.uuid}`}
                           className="py-2 px-4 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded"
                         >
                           {t("mentorship.submitReport", "Submit report")}

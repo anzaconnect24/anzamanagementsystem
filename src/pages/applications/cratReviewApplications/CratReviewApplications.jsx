@@ -47,7 +47,7 @@ const CratReviewApplicationsPage = () => {
     }
     fetchReviews();
     fetchStaffMembers();
-  }, [currentPage, searchTerm, statusFilter, userDetails, router]);
+  }, [currentPage, searchTerm, statusFilter, userDetails]);
 
   const fetchReviews = async () => {
     try {
@@ -420,7 +420,7 @@ const CratReviewApplicationsPage = () => {
                       <button
                         onClick={() => {
                           router.push(
-                            `/report?user_uuid=${review.entrepreneur?.uuid}`
+                            `/dashboard/report?user_uuid=${review.entrepreneur?.uuid}`
                           );
                         }}
                         className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"

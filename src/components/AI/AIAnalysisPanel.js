@@ -5,12 +5,13 @@ import {
   analyzeDomain,
   generateExecutiveSummary,
   testGeminiConnection,
-} from "@/services/geminiAI";
+} from "../../services/geminiAI";
 import {
   generateAIReport,
   exportReportToPDF,
-} from "@/services/aiReportService";
+} from "../../services/aiReportService";
 import toast from "react-hot-toast";
+import { useTranslation } from "../../locales";
 
 const AIAnalysisPanel = ({
   reportData,
@@ -20,6 +21,7 @@ const AIAnalysisPanel = ({
   isAdminEvaluation = false,
   targetEntrepreneur = null,
 }) => {
+  const { t } = useTranslation();
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("executive");
@@ -68,7 +70,12 @@ const AIAnalysisPanel = ({
         scoreData.general_status
       );
       setAiAnalysis((prev) => ({ ...prev, executiveSummary: summary }));
-      toast.success("Executive summary generated successfully!");
+      toast.success(
+        t(
+          "ai.executiveSummaryGenerated",
+          "Executive summary generated successfully!"
+        )
+      );
     } catch (error) {
       console.error("Error generating executive summary:", error);
 
@@ -77,14 +84,20 @@ const AIAnalysisPanel = ({
         error.message.includes("API key")
       ) {
         toast.error(
-          "❌ API key not configured. Please add your Gemini API key to .env.local and restart the server.",
+          t(
+            "ai.apiKeyNotConfigured",
+            "❌ API key not configured. Please add your Gemini API key to .env.local and restart the server."
+          ),
           {
             duration: 8000,
           }
         );
       } else {
         toast.error(
-          "Failed to generate AI summary. Please check your API configuration."
+          t(
+            "ai.failedToGenerateAISummary",
+            "Failed to generate AI summary. Please check your API configuration."
+          )
         );
       }
     } finally {
@@ -94,7 +107,9 @@ const AIAnalysisPanel = ({
 
   const generateCompleteAnalysis = async () => {
     if (!reportData || !scoreData) {
-      toast.error("Report data not available for analysis");
+      toast.error(
+        t("ai.reportDataNotAvailable", "Report data not available for analysis")
+      );
       return;
     }
 
@@ -135,7 +150,12 @@ const AIAnalysisPanel = ({
       setAiAnalysis(completeReport.aiAnalysis);
       setSavedReport(completeReport);
 
-      toast.success("Complete AI analysis generated and saved successfully!");
+      toast.success(
+        t(
+          "ai.completeAnalysisGenerated",
+          "Complete AI analysis generated and saved successfully!"
+        )
+      );
     } catch (error) {
       console.error("❌ Error generating complete analysis:", error);
       console.error("❌ Error details:", {
@@ -162,16 +182,20 @@ const AIAnalysisPanel = ({
 
   const handleDownloadPDF = async () => {
     if (!savedReport) {
-      toast.error("No saved report available for download");
+      toast.error(
+        t("ai.noSavedReportAvailable", "No saved report available for download")
+      );
       return;
     }
 
     try {
       const fileName = exportReportToPDF(savedReport);
-      toast.success(`PDF downloaded: ${fileName}`);
+      toast.success(
+        t("ai.pdfDownloaded", "PDF downloaded: {{fileName}}", { fileName })
+      );
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      toast.error("Failed to download PDF");
+      toast.error(t("ai.failedToDownloadPDF", "Failed to download PDF"));
     }
   };
 
@@ -181,10 +205,19 @@ const AIAnalysisPanel = ({
       const result = await testGeminiConnection();
 
       if (result.success) {
-        toast.success("✅ Gemini AI connection successful!");
+        toast.success(
+          t(
+            "ai.geminiConnectionSuccessful",
+            "✅ Gemini AI connection successful!"
+          )
+        );
         console.log("Connection test result:", result.message);
       } else {
-        toast.error(`❌ Connection failed: ${result.error}`);
+        toast.error(
+          t("ai.connectionFailed", "❌ Connection failed: {{error}}", {
+            error: result.error,
+          })
+        );
         console.error("API Connection Error:", result.error);
 
         // Show specific instructions for API key issues
@@ -193,7 +226,10 @@ const AIAnalysisPanel = ({
           result.error.includes("not configured")
         ) {
           toast.error(
-            "Please configure your Gemini API key in .env.local file",
+            t(
+              "ai.configureAPIKey",
+              "Please configure your Gemini API key in .env.local file"
+            ),
             {
               duration: 6000,
             }
@@ -201,13 +237,20 @@ const AIAnalysisPanel = ({
         }
       }
     } catch (error) {
-      toast.error(`❌ Connection test failed: ${error.message}`);
+      toast.error(
+        t("ai.connectionTestFailed", "❌ Connection test failed: {{message}}", {
+          message: error.message,
+        })
+      );
       console.error("Connection test error:", error);
 
       // Show helpful error message for API key issues
       if (error.message.includes("not properly initialized")) {
         toast.error(
-          "API key not configured. Check .env.local file and restart server.",
+          t(
+            "ai.apiKeyNotConfiguredRestart",
+            "API key not configured. Check .env.local file and restart server."
+          ),
           {
             duration: 6000,
           }
@@ -287,10 +330,13 @@ const AIAnalysisPanel = ({
         <div className="flex items-center justify-between">
           <div>
             <h3 className="text-xl font-semibold text-black dark:text-white">
-              🤖 AI Analysis & Insights
+              🤖 {t("ai.aiAnalysisInsights", "AI Analysis & Insights")}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-              Powered by Gemini AI - Expert analysis of your CRAT assessment
+              {t(
+                "ai.poweredByGemini",
+                "Powered by Gemini AI - Expert analysis of your CRAT assessment"
+              )}
             </p>
           </div>
 
@@ -336,7 +382,7 @@ const AIAnalysisPanel = ({
                   />
                 </svg>
               )}
-              Generate Complete Analysis
+              {t("ai.generateCompleteAnalysis", "Generate Complete Analysis")}
             </button>
 
             {savedReport && (
@@ -344,7 +390,7 @@ const AIAnalysisPanel = ({
                 <button
                   onClick={handleDownloadPDF}
                   className="inline-flex items-center px-3 py-2 bg-success text-white rounded-md hover:bg-success/80 transition-colors"
-                  title="Download PDF Report"
+                  title={t("ai.downloadPDFReport", "Download PDF Report")}
                 >
                   <svg
                     className="w-4 h-4 mr-1"
@@ -359,7 +405,7 @@ const AIAnalysisPanel = ({
                       d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                     />
                   </svg>
-                  PDF
+                  {t("common.pdf", "PDF")}
                 </button>
               </>
             )}
@@ -371,13 +417,41 @@ const AIAnalysisPanel = ({
       <div className="border-b border-stroke dark:border-strokedark">
         <nav className="flex space-x-4 px-6 overflow-x-auto" aria-label="Tabs">
           {[
-            { id: "executive", name: "Executive Summary", icon: "📊" },
-            { id: "recommendations", name: "Recommendations", icon: "💡" },
-            { id: "domains", name: "Domain Analysis", icon: "🔍" },
-            { id: "risks", name: "Risk Assessment", icon: "⚠️" },
-            { id: "growth", name: "Growth Potential", icon: "📈" },
-            { id: "investment", name: "Investment Decision", icon: "💰" },
-            { id: "scenarios", name: "Scenario Analysis", icon: "🎯" },
+            {
+              id: "executive",
+              name: t("ai.executiveSummary", "Executive Summary"),
+              icon: "📊",
+            },
+            {
+              id: "recommendations",
+              name: t("ai.recommendations", "Recommendations"),
+              icon: "💡",
+            },
+            {
+              id: "domains",
+              name: t("ai.domainAnalysis", "Domain Analysis"),
+              icon: "🔍",
+            },
+            {
+              id: "risks",
+              name: t("ai.riskAssessment", "Risk Assessment"),
+              icon: "⚠️",
+            },
+            {
+              id: "growth",
+              name: t("ai.growthPotential", "Growth Potential"),
+              icon: "📈",
+            },
+            {
+              id: "investment",
+              name: t("ai.investmentDecision", "Investment Decision"),
+              icon: "💰",
+            },
+            {
+              id: "scenarios",
+              name: t("ai.scenarioAnalysis", "Scenario Analysis"),
+              icon: "🎯",
+            },
           ].map((tab) => (
             <button
               key={tab.id}
@@ -421,10 +495,10 @@ const AIAnalysisPanel = ({
                 ></path>
               </svg>
               <p className="text-gray-600 dark:text-gray-400">
-                AI is analyzing your report...
+                {t("ai.aiAnalyzingReport", "AI is analyzing your report...")}
               </p>
               <p className="text-sm text-gray-500 mt-1">
-                This may take a few moments
+                {t("ai.mayTakeFewMoments", "This may take a few moments")}
               </p>
             </div>
           </div>
@@ -455,10 +529,16 @@ const AIAnalysisPanel = ({
                     </div>
                     <div>
                       <h2 className="text-2xl font-bold">
-                        Executive Investment Briefing
+                        {t(
+                          "ai.executiveInvestmentBriefing",
+                          "Executive Investment Briefing"
+                        )}
                       </h2>
                       <p className="text-slate-300">
-                        Capital Readiness Assessment & Strategic Analysis
+                        {t(
+                          "ai.capitalReadinessAssessment",
+                          "Capital Readiness Assessment & Strategic Analysis"
+                        )}
                       </p>
                     </div>
                   </div>
@@ -466,22 +546,22 @@ const AIAnalysisPanel = ({
                     {[
                       {
                         domain: "commercial",
-                        label: "Commercial",
+                        label: t("ai.domains.commercial", "Commercial"),
                         score: scoreData?.commercial?.percentage || 0,
                       },
                       {
                         domain: "financial",
-                        label: "Financial",
+                        label: t("ai.domains.financial", "Financial"),
                         score: scoreData?.financial?.percentage || 0,
                       },
                       {
                         domain: "operations",
-                        label: "Operations",
+                        label: t("ai.domains.operations", "Operations"),
                         score: scoreData?.operations?.percentage || 0,
                       },
                       {
                         domain: "legal",
-                        label: "Legal",
+                        label: t("ai.domains.legal", "Legal"),
                         score: scoreData?.legal?.percentage || 0,
                       },
                     ].map((item, index) => {
@@ -530,10 +610,16 @@ const AIAnalysisPanel = ({
                           d="M13 10V3L4 14h7v7l9-11h-7z"
                         />
                       </svg>
-                      AI-Powered Investment Analysis
+                      {t(
+                        "ai.aiPoweredInvestmentAnalysis",
+                        "AI-Powered Investment Analysis"
+                      )}
                     </h3>
                     <p className="text-blue-100 text-sm mt-1">
-                      Generated by advanced AI with African market expertise
+                      {t(
+                        "ai.generatedByAdvancedAI",
+                        "Generated by advanced AI with African market expertise"
+                      )}
                     </p>
                   </div>
 
@@ -567,19 +653,26 @@ const AIAnalysisPanel = ({
                     </div>
                     <div>
                       <h4 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">
-                        Ready for Complete Analysis?
+                        {t(
+                          "ai.readyForCompleteAnalysis",
+                          "Ready for Complete Analysis?"
+                        )}
                       </h4>
                       <p className="text-green-700 dark:text-green-300 mb-4">
-                        Generate a comprehensive investment report with detailed
-                        domain analysis, risk assessment, and strategic
-                        recommendations.
+                        {t(
+                          "ai.generateComprehensiveReport",
+                          "Generate a comprehensive investment report with detailed domain analysis, risk assessment, and strategic recommendations."
+                        )}
                       </p>
                       <button
                         onClick={generateCompleteAnalysis}
                         disabled={loading}
                         className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
                       >
-                        Generate Complete Investment Report
+                        {t(
+                          "ai.generateCompleteInvestmentReport",
+                          "Generate Complete Investment Report"
+                        )}
                       </button>
                     </div>
                   </div>
@@ -604,18 +697,23 @@ const AIAnalysisPanel = ({
                     </svg>
                   </div>
                   <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                    AI Investment Analysis
+                    {t("ai.aiInvestmentAnalysis", "AI Investment Analysis")}
                   </h3>
                   <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
-                    Generate a professional executive briefing powered by
-                    advanced AI analysis of your business assessment.
+                    {t(
+                      "ai.generateProfessionalBriefing",
+                      "Generate a professional executive briefing powered by advanced AI analysis of your business assessment."
+                    )}
                   </p>
                 </div>
                 <button
                   onClick={generateAIExecutiveSummary}
                   className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold text-lg"
                 >
-                  Generate Executive Briefing
+                  {t(
+                    "ai.generateExecutiveBriefing",
+                    "Generate Executive Briefing"
+                  )}
                 </button>
               </div>
             )}
@@ -651,10 +749,15 @@ const AIAnalysisPanel = ({
                                 : "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
                             }`}
                           >
-                            {rec.priority?.toUpperCase() || "MEDIUM"} PRIORITY
+                            {rec.priority === "high"
+                              ? t("ai.highPriority", "HIGH PRIORITY")
+                              : rec.priority === "medium"
+                              ? t("ai.mediumPriority", "MEDIUM PRIORITY")
+                              : t("ai.lowPriority", "LOW PRIORITY")}
                           </span>
                           <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
-                            {rec.category?.toUpperCase() || "GENERAL"}
+                            {rec.category?.toUpperCase() ||
+                              t("ai.general", "GENERAL")}
                           </span>
                         </div>
                         <p className="text-gray-800 dark:text-gray-200">
@@ -668,7 +771,10 @@ const AIAnalysisPanel = ({
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400">
-                  Generate complete analysis to see detailed recommendations
+                  {t(
+                    "ai.generateCompleteAnalysisDesc",
+                    "Generate complete analysis to see detailed recommendations"
+                  )}
                 </p>
               </div>
             )}
@@ -687,7 +793,8 @@ const AIAnalysisPanel = ({
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-800 dark:text-gray-200 capitalize">
-                        {domain} Domain
+                        {t(`ai.domains.${domain}`, domain)}{" "}
+                        {t("ai.domainCapitalized", "Domain")}
                       </h4>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -697,7 +804,7 @@ const AIAnalysisPanel = ({
                           onClick={() => generateDomainAnalysis(domain)}
                           className="px-3 py-1 text-xs bg-primary text-white rounded hover:bg-primary/80 transition-colors"
                         >
-                          Analyze
+                          {t("ai.domainAnalyzeButton", "Analyze")}
                         </button>
                       </div>
                     </div>
@@ -706,13 +813,15 @@ const AIAnalysisPanel = ({
                       <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
                         {domainAnalysis[domain].analysis.substring(0, 200)}...
                         <button className="text-primary hover:underline ml-2">
-                          Read More
+                          {t("ai.domainReadMore", "Read More")}
                         </button>
                       </div>
                     ) : (
                       <p className="text-sm text-gray-500 dark:text-gray-400">
-                        Click &ldquo;Analyze&rdquo; to generate AI insights for
-                        this domain
+                        {t(
+                          "ai.domainClickAnalyze",
+                          'Click "Analyze" to generate AI insights for this domain'
+                        )}
                       </p>
                     )}
                   </div>
@@ -747,10 +856,10 @@ const AIAnalysisPanel = ({
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-red-800 dark:text-red-200">
-                        Risk Assessment
+                        {t("ai.riskAssessmentTitle", "Risk Assessment")}
                       </h3>
                       <p className="text-red-600 dark:text-red-400">
-                        Overall Risk Score:{" "}
+                        {t("ai.overallRiskScore", "Overall Risk Score")}:{" "}
                         {aiAnalysis.predictions.riskAssessment.overallRiskScore}
                         /100
                       </p>
@@ -759,7 +868,7 @@ const AIAnalysisPanel = ({
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Risk Level
+                        {t("ai.riskLevel", "Risk Level")}
                       </div>
                       <div
                         className={`text-lg font-bold ${
@@ -777,20 +886,20 @@ const AIAnalysisPanel = ({
                     </div>
                     <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        6 Month Trend
+                        {t("ai.monthTrend", "6 Month Trend")}
                       </div>
                       <div className="text-lg font-bold text-gray-800 dark:text-gray-200">
                         {aiAnalysis.predictions.riskAssessment.riskTrends
-                          ?.next6Months || "Stable"}
+                          ?.next6Months || t("ai.stable", "Stable")}
                       </div>
                     </div>
                     <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        24 Month Outlook
+                        {t("ai.monthOutlook", "24 Month Outlook")}
                       </div>
                       <div className="text-lg font-bold text-gray-800 dark:text-gray-200">
                         {aiAnalysis.predictions.riskAssessment.riskTrends
-                          ?.next24Months || "Decreasing"}
+                          ?.next24Months || t("ai.decreasing", "Decreasing")}
                       </div>
                     </div>
                   </div>
@@ -799,7 +908,7 @@ const AIAnalysisPanel = ({
                 {/* Key Risks */}
                 <div className="space-y-4">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200">
-                    Key Risk Factors
+                    {t("ai.keyRiskFactors", "Key Risk Factors")}
                   </h4>
                   {aiAnalysis.predictions.riskAssessment.keyRisks?.map(
                     (risk, index) => (
@@ -818,7 +927,7 @@ const AIAnalysisPanel = ({
                                   : "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
                               }`}
                             >
-                              {risk.impact} Impact
+                              {risk.impact} {t("ai.impactLabel", "Impact")}
                             </span>
                             <span className="px-3 py-1 text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
                               {risk.category}
@@ -832,11 +941,18 @@ const AIAnalysisPanel = ({
                           {risk.risk}
                         </h5>
                         <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                          <strong>Probability:</strong> {risk.probability}
+                          <strong>{t("ai.probability", "Probability")}:</strong>{" "}
+                          {risk.probability}
                         </p>
                         <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
                           <p className="text-sm text-blue-800 dark:text-blue-200">
-                            <strong>Mitigation Strategy:</strong>{" "}
+                            <strong>
+                              {t(
+                                "ai.mitigationStrategy",
+                                "Mitigation Strategy"
+                              )}
+                              :
+                            </strong>{" "}
                             {risk.mitigation}
                           </p>
                         </div>
@@ -856,7 +972,10 @@ const AIAnalysisPanel = ({
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400">
-                  Generate complete analysis to see detailed risk assessment
+                  {t(
+                    "ai.generateCompleteAnalysisRisk",
+                    "Generate complete analysis to see detailed risk assessment"
+                  )}
                 </p>
               </div>
             )}
@@ -888,10 +1007,10 @@ const AIAnalysisPanel = ({
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-green-800 dark:text-green-200">
-                        Growth Potential
+                        {t("ai.growthPotential", "Growth Potential")}
                       </h3>
                       <p className="text-green-600 dark:text-green-400">
-                        Growth Score:{" "}
+                        {t("ai.growthScore", "Growth Score")}:{" "}
                         {aiAnalysis.predictions.growthPotential.growthScore}/100
                       </p>
                     </div>
@@ -899,7 +1018,7 @@ const AIAnalysisPanel = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Growth Category
+                        {t("ai.growthCategory", "Growth Category")}
                       </div>
                       <div className="text-lg font-bold text-green-600 dark:text-green-400">
                         {aiAnalysis.predictions.growthPotential.growthCategory}
@@ -907,7 +1026,7 @@ const AIAnalysisPanel = ({
                     </div>
                     <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Market Growth Rate
+                        {t("ai.marketGrowthRate", "Market Growth Rate")}
                       </div>
                       <div className="text-lg font-bold text-gray-800 dark:text-gray-200">
                         {aiAnalysis.predictions.growthPotential.marketExpansion
@@ -920,23 +1039,23 @@ const AIAnalysisPanel = ({
                 {/* Revenue Projections */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                    Revenue Projections (USD)
+                    {t("ai.revenueProjections", "Revenue Projections (USD)")}
                   </h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-gray-200 dark:border-gray-700">
                           <th className="text-left py-2 text-gray-600 dark:text-gray-400">
-                            Timeframe
+                            {t("ai.timeframe", "Timeframe")}
                           </th>
                           <th className="text-right py-2 text-gray-600 dark:text-gray-400">
-                            Conservative
+                            {t("ai.conservative", "Conservative")}
                           </th>
                           <th className="text-right py-2 text-gray-600 dark:text-gray-400">
-                            Realistic
+                            {t("ai.realistic", "Realistic")}
                           </th>
                           <th className="text-right py-2 text-gray-600 dark:text-gray-400">
-                            Optimistic
+                            {t("ai.optimistic", "Optimistic")}
                           </th>
                         </tr>
                       </thead>
@@ -976,14 +1095,17 @@ const AIAnalysisPanel = ({
                 {/* Market Analysis */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                    Market Expansion Analysis
+                    {t(
+                      "ai.marketExpansionAnalysis",
+                      "Market Expansion Analysis"
+                    )}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <div className="space-y-3">
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">
-                            Current Market Size
+                            {t("ai.currentMarketSize", "Current Market Size")}
                           </span>
                           <span className="font-medium text-gray-800 dark:text-gray-200">
                             $
@@ -993,7 +1115,7 @@ const AIAnalysisPanel = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">
-                            Addressable Market
+                            {t("ai.addressableMarket", "Addressable Market")}
                           </span>
                           <span className="font-medium text-gray-800 dark:text-gray-200">
                             $
@@ -1003,7 +1125,10 @@ const AIAnalysisPanel = ({
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-600 dark:text-gray-400">
-                            Market Share Potential
+                            {t(
+                              "ai.marketSharePotential",
+                              "Market Share Potential"
+                            )}
                           </span>
                           <span className="font-medium text-gray-800 dark:text-gray-200">
                             {aiAnalysis.predictions.growthPotential
@@ -1014,7 +1139,7 @@ const AIAnalysisPanel = ({
                     </div>
                     <div>
                       <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
-                        Scaling Factors
+                        {t("ai.scalingFactors", "Scaling Factors")}
                       </h5>
                       <div className="space-y-2">
                         {aiAnalysis.predictions.growthPotential.scalingFactors?.map(
@@ -1046,7 +1171,10 @@ const AIAnalysisPanel = ({
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400">
-                  Generate complete analysis to see growth potential data
+                  {t(
+                    "ai.generateCompleteAnalysisGrowth",
+                    "Generate complete analysis to see growth potential data"
+                  )}
                 </p>
               </div>
             )}
@@ -1078,10 +1206,10 @@ const AIAnalysisPanel = ({
                     </div>
                     <div>
                       <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200">
-                        Investment Decision
+                        {t("ai.investmentDecision", "Investment Decision")}
                       </h3>
                       <p className="text-blue-600 dark:text-blue-400">
-                        Readiness Score:{" "}
+                        {t("ai.readinessScore", "Readiness Score")}:{" "}
                         {
                           aiAnalysis.predictions.investmentDecision
                             .investmentReadinessScore
@@ -1093,7 +1221,7 @@ const AIAnalysisPanel = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Recommendation
+                        {t("ai.recommendation", "Recommendation")}
                       </div>
                       <div
                         className={`text-lg font-bold ${
@@ -1117,7 +1245,7 @@ const AIAnalysisPanel = ({
                     </div>
                     <div className="bg-white/50 dark:bg-gray-800/50 p-4 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Exit Strategy
+                        {t("ai.exitStrategy", "Exit Strategy")}
                       </div>
                       <div className="text-lg font-bold text-gray-800 dark:text-gray-200">
                         {aiAnalysis.predictions.investmentDecision.exitStrategy
@@ -1130,12 +1258,12 @@ const AIAnalysisPanel = ({
                 {/* Investment Amounts */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                    Investment Framework
+                    {t("ai.investmentFramework", "Investment Framework")}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                     <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Minimum Investment
+                        {t("ai.minimumInvestment", "Minimum Investment")}
                       </div>
                       <div className="text-xl font-bold text-gray-800 dark:text-gray-200">
                         $
@@ -1145,7 +1273,7 @@ const AIAnalysisPanel = ({
                     </div>
                     <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <div className="text-sm text-blue-600 dark:text-blue-400">
-                        Optimal Investment
+                        {t("ai.optimalInvestment", "Optimal Investment")}
                       </div>
                       <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
                         $
@@ -1155,7 +1283,7 @@ const AIAnalysisPanel = ({
                     </div>
                     <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                       <div className="text-sm text-gray-600 dark:text-gray-400">
-                        Maximum Investment
+                        {t("ai.maximumInvestment", "Maximum Investment")}
                       </div>
                       <div className="text-xl font-bold text-gray-800 dark:text-gray-200">
                         $
@@ -1168,12 +1296,12 @@ const AIAnalysisPanel = ({
                   {/* Expected Returns */}
                   <div className="mb-6">
                     <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
-                      Expected Returns
+                      {t("ai.expectedReturns", "Expected Returns")}
                     </h5>
                     <div className="grid grid-cols-3 gap-4">
                       <div className="text-center">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          3 Years
+                          {t("ai.years3", "3 Years")}
                         </div>
                         <div className="text-lg font-bold text-green-600 dark:text-green-400">
                           {aiAnalysis.predictions.investmentDecision
@@ -1182,7 +1310,7 @@ const AIAnalysisPanel = ({
                       </div>
                       <div className="text-center">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          5 Years
+                          {t("ai.years5", "5 Years")}
                         </div>
                         <div className="text-lg font-bold text-green-600 dark:text-green-400">
                           {aiAnalysis.predictions.investmentDecision
@@ -1191,7 +1319,7 @@ const AIAnalysisPanel = ({
                       </div>
                       <div className="text-center">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
-                          7 Years
+                          {t("ai.years7", "7 Years")}
                         </div>
                         <div className="text-lg font-bold text-green-600 dark:text-green-400">
                           {aiAnalysis.predictions.investmentDecision
@@ -1204,12 +1332,12 @@ const AIAnalysisPanel = ({
                   {/* Exit Strategy Details */}
                   <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
                     <h5 className="font-medium text-purple-800 dark:text-purple-200 mb-2">
-                      Exit Strategy
+                      {t("ai.exitStrategy", "Exit Strategy")}
                     </h5>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Strategy:{" "}
+                          {t("ai.strategy", "Strategy")}:{" "}
                         </span>
                         <span className="font-medium text-gray-800 dark:text-gray-200">
                           {aiAnalysis.predictions.investmentDecision
@@ -1218,7 +1346,7 @@ const AIAnalysisPanel = ({
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Timeline:{" "}
+                          {t("ai.timeline", "Timeline")}:{" "}
                         </span>
                         <span className="font-medium text-gray-800 dark:text-gray-200">
                           {aiAnalysis.predictions.investmentDecision
@@ -1227,7 +1355,7 @@ const AIAnalysisPanel = ({
                       </div>
                       <div>
                         <span className="text-gray-600 dark:text-gray-400">
-                          Expected Multiple:{" "}
+                          {t("ai.expectedMultiple", "Expected Multiple")}:{" "}
                         </span>
                         <span className="font-medium text-gray-800 dark:text-gray-200">
                           {aiAnalysis.predictions.investmentDecision
@@ -1241,7 +1369,7 @@ const AIAnalysisPanel = ({
                 {/* Investment Conditions */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                    Investment Conditions
+                    {t("ai.investmentConditions", "Investment Conditions")}
                   </h4>
                   <div className="space-y-3">
                     {aiAnalysis.predictions.investmentDecision.conditions?.map(
@@ -1268,7 +1396,8 @@ const AIAnalysisPanel = ({
                               {condition.condition}
                             </p>
                             <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              Timeline: {condition.timeline}
+                              {t("ai.timeline", "Timeline")}:{" "}
+                              {condition.timeline}
                             </p>
                           </div>
                         </div>
@@ -1280,8 +1409,10 @@ const AIAnalysisPanel = ({
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400">
-                  Generate complete analysis to see investment decision
-                  framework
+                  {t(
+                    "ai.generateCompleteAnalysisInvestment",
+                    "Generate complete analysis to see investment decision framework"
+                  )}
                 </p>
               </div>
             )}
@@ -1295,11 +1426,13 @@ const AIAnalysisPanel = ({
               <div className="space-y-6">
                 <div className="text-center mb-8">
                   <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-2">
-                    Scenario Analysis
+                    {t("ai.scenarioAnalysis", "Scenario Analysis")}
                   </h3>
                   <p className="text-gray-600 dark:text-gray-400">
-                    Explore different potential outcomes for this investment
-                    opportunity
+                    {t(
+                      "ai.exploreOutcomes",
+                      "Explore different potential outcomes for this investment opportunity"
+                    )}
                   </p>
                 </div>
 
@@ -1324,22 +1457,26 @@ const AIAnalysisPanel = ({
                       </div>
                       <div>
                         <h4 className="font-bold text-green-800 dark:text-green-200">
-                          Best Case
+                          {t("ai.bestCase", "Best Case")}
                         </h4>
                         <p className="text-sm text-green-600 dark:text-green-400">
                           {aiAnalysis.predictions.scenarioAnalysis.bestCase
                             ?.probability || "N/A"}{" "}
-                          Probability
+                          {t("ai.probability", "Probability")}
                         </p>
                       </div>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
                       {aiAnalysis.predictions.scenarioAnalysis.bestCase
-                        ?.description || "No description available"}
+                        ?.description ||
+                        t(
+                          "ai.noDescriptionAvailable",
+                          "No description available"
+                        )}
                     </p>
                     <div>
                       <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                        Key Drivers:
+                        {t("ai.keyDrivers", "Key Drivers")}:
                       </h5>
                       <ul className="space-y-1">
                         {aiAnalysis.predictions.scenarioAnalysis.bestCase?.keyDrivers?.map(
@@ -1377,22 +1514,26 @@ const AIAnalysisPanel = ({
                       </div>
                       <div>
                         <h4 className="font-bold text-blue-800 dark:text-blue-200">
-                          Most Likely
+                          {t("ai.mostLikely", "Most Likely")}
                         </h4>
                         <p className="text-sm text-blue-600 dark:text-blue-400">
                           {aiAnalysis.predictions.scenarioAnalysis.mostLikely
                             ?.probability || "N/A"}{" "}
-                          Probability
+                          {t("ai.probability", "Probability")}
                         </p>
                       </div>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
                       {aiAnalysis.predictions.scenarioAnalysis.mostLikely
-                        ?.description || "No description available"}
+                        ?.description ||
+                        t(
+                          "ai.noDescriptionAvailable",
+                          "No description available"
+                        )}
                     </p>
                     <div>
                       <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                        Key Drivers:
+                        {t("ai.keyDrivers", "Key Drivers")}:
                       </h5>
                       <ul className="space-y-1">
                         {aiAnalysis.predictions.scenarioAnalysis.mostLikely?.keyDrivers?.map(
@@ -1430,22 +1571,26 @@ const AIAnalysisPanel = ({
                       </div>
                       <div>
                         <h4 className="font-bold text-red-800 dark:text-red-200">
-                          Worst Case
+                          {t("ai.worstCase", "Worst Case")}
                         </h4>
                         <p className="text-sm text-red-600 dark:text-red-400">
                           {aiAnalysis.predictions.scenarioAnalysis.worstCase
                             ?.probability || "N/A"}{" "}
-                          Probability
+                          {t("ai.probability", "Probability")}
                         </p>
                       </div>
                     </div>
                     <p className="text-gray-700 dark:text-gray-300 mb-4 text-sm">
                       {aiAnalysis.predictions.scenarioAnalysis.worstCase
-                        ?.description || "No description available"}
+                        ?.description ||
+                        t(
+                          "ai.noDescriptionAvailable",
+                          "No description available"
+                        )}
                     </p>
                     <div>
                       <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-2">
-                        Key Drivers:
+                        {t("ai.keyDrivers", "Key Drivers")}:
                       </h5>
                       <ul className="space-y-1">
                         {aiAnalysis.predictions.scenarioAnalysis.worstCase?.keyDrivers?.map(
@@ -1467,7 +1612,7 @@ const AIAnalysisPanel = ({
                 {/* Key Metrics Dashboard */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                    Key Performance Metrics
+                    {t("ai.keyPerformanceMetrics", "Key Performance Metrics")}
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                     {Object.entries(
@@ -1491,7 +1636,10 @@ const AIAnalysisPanel = ({
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500 dark:text-gray-400">
-                  Generate complete analysis to see scenario analysis
+                  {t(
+                    "ai.generateCompleteAnalysisScenario",
+                    "Generate complete analysis to see scenario analysis"
+                  )}
                 </p>
               </div>
             )}
@@ -1517,9 +1665,17 @@ const AIAnalysisPanel = ({
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>AI analysis generated using Gemini AI</span>
+              <span>
+                {t(
+                  "ai.aiAnalysisGenerated",
+                  "AI analysis generated using Gemini AI"
+                )}
+              </span>
             </div>
-            <div>Last updated: {new Date().toLocaleString()}</div>
+            <div>
+              {t("ai.lastUpdated", "Last updated")}:{" "}
+              {new Date().toLocaleString()}
+            </div>
           </div>
         </div>
       )}

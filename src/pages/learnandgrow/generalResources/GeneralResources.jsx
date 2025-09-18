@@ -124,7 +124,7 @@ const Page = ({ params }) => {
       {["Admin"].includes(userDetails.role) && (
         <div className="mb-4">
           <Link
-            href={"/uploadMaterial/document"}
+            href={"/dashboard/uploadMaterial/document"}
             className="text-white bg-primary py-2 px-3 cursor-pointer rounded"
           >
             {t("learnAndGrow.addMaterial", "Add Material")}

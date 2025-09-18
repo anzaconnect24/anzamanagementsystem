@@ -8,13 +8,13 @@ import { uploadFile } from "@/controllers/file_upload_controller";
 import { createModule } from "@/controllers/modules_controller";
 import { createSlide } from "@/controllers/slides_controller";
 import { useRouter } from "../../../../utils/navigation";
-import { useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 const Page = () => {
   const router = useRouter();
   const [loading, setloading] = useState(false);
   const params = useSearchParams();
-  const uuid = params.get("uuid");
+  const uuid = useParams().uuid;
   const [isFile, setIsFile] = useState(false);
 
   return (

@@ -75,7 +75,7 @@ const Page = () => {
                   <td>
                     <Link
                       className="text-primary font-bold hover:scale-105 transition-all"
-                      href={`/mentorReport/${item.uuid}`}
+                      href={`/dashboard/mentorReport/${item.uuid}`}
                     >
                       {t("mentorship.viewReport", "View Report")}
                     </Link>

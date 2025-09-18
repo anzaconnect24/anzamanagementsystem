@@ -8,8 +8,10 @@ import { BsArrowLeft, BsUpload } from "react-icons/bs";
 import Spinner from "@/components/spinner";
 import { useRouter } from "../../../utils/navigation";
 import { useParams } from "react-router-dom";
+import { useTranslation } from "../../../locales";
 
 const EditInvestmentOpportunity = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { uuid } = useParams();
   const [formData, setFormData] = useState({
@@ -46,12 +48,22 @@ const EditInvestmentOpportunity = () => {
               : "",
           });
         } else {
-          alert("Failed to fetch opportunity details");
+          alert(
+            t(
+              "investment.failedToFetchOpportunity",
+              "Failed to fetch opportunity details"
+            )
+          );
           router.push("/opportunities");
         }
       } catch (error) {
         console.error("Error fetching opportunity:", error);
-        alert("Error fetching opportunity details");
+        alert(
+          t(
+            "investment.errorFetchingOpportunity",
+            "Error fetching opportunity details"
+          )
+        );
         router.push("/opportunities");
       } finally {
         setFetching(false);
@@ -84,13 +96,13 @@ const EditInvestmentOpportunity = () => {
 
     // Validate file type
     if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
+      alert(t("investment.pleaseSelectImage", "Please select an image file"));
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("File size must be less than 5MB");
+      alert(t("investment.fileSizeLimit", "File size must be less than 5MB"));
       return;
     }
 
@@ -115,11 +127,11 @@ const EditInvestmentOpportunity = () => {
           image: response.data.body,
         }));
       } else {
-        alert("Failed to upload image");
+        alert(t("investment.failedToUploadImage", "Failed to upload image"));
       }
     } catch (error) {
       console.error("Error uploading image:", error);
-      alert("Error uploading image");
+      alert(t("investment.errorUploadingImage", "Error uploading image"));
     } finally {
       setUploading(false);
     }
@@ -137,7 +149,10 @@ const EditInvestmentOpportunity = () => {
     }
 
     if (formData.url && !isValidUrl(formData.url)) {
-      newErrors.url = "Please enter a valid URL";
+      newErrors.url = t(
+        "investment.pleaseEnterValidUrl",
+        "Please enter a valid URL"
+      );
     }
 
     setErrors(newErrors);
@@ -173,11 +188,18 @@ const EditInvestmentOpportunity = () => {
       if (response.data.status) {
         router.push("/dashboard/opportunities");
       } else {
-        alert("Failed to update opportunity");
+        alert(
+          t(
+            "investment.failedToUpdateOpportunity",
+            "Failed to update opportunity"
+          )
+        );
       }
     } catch (error) {
       console.error("Error updating opportunity:", error);
-      alert("Error updating opportunity");
+      alert(
+        t("investment.errorUpdatingOpportunity", "Error updating opportunity")
+      );
     } finally {
       setLoading(false);
     }
@@ -200,13 +222,19 @@ const EditInvestmentOpportunity = () => {
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
         >
           <BsArrowLeft />
-          Back to Opportunities
+          {t("investment.backToOpportunities", "Back to Opportunities")}
         </Link>
         <h1 className="text-3xl font-bold text-gray-900">
-          Edit Investment Opportunity
+          {t(
+            "investment.editInvestmentOpportunity",
+            "Edit Investment Opportunity"
+          )}
         </h1>
         <p className="mt-2 text-gray-600">
-          Update the investment opportunity details.
+          {t(
+            "investment.updateOpportunityDetails",
+            "Update the investment opportunity details."
+          )}
         </p>
       </div>
 
@@ -219,7 +247,8 @@ const EditInvestmentOpportunity = () => {
               htmlFor="title"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Title <span className="text-red-500">*</span>
+              {t("investment.title", "Title")}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -230,7 +259,10 @@ const EditInvestmentOpportunity = () => {
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.title ? "border-red-500" : "border-black/20"
               }`}
-              placeholder="Enter opportunity title"
+              placeholder={t(
+                "investment.enterOpportunityTitle",
+                "Enter opportunity title"
+              )}
             />
             {errors.title && (
               <p className="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -243,7 +275,8 @@ const EditInvestmentOpportunity = () => {
               htmlFor="description"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Description <span className="text-red-500">*</span>
+              {t("investment.description", "Description")}{" "}
+              <span className="text-red-500">*</span>
             </label>
             <textarea
               id="description"
@@ -254,7 +287,10 @@ const EditInvestmentOpportunity = () => {
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.description ? "border-red-500" : "border-black/20"
               }`}
-              placeholder="Describe the investment opportunity"
+              placeholder={t(
+                "investment.describeOpportunity",
+                "Describe the investment opportunity"
+              )}
             />
             {errors.description && (
               <p className="mt-1 text-sm text-red-600">{errors.description}</p>
@@ -267,7 +303,8 @@ const EditInvestmentOpportunity = () => {
               htmlFor="url"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Details URL (Optional)
+              {t("investment.detailsUrl", "Details URL")} (
+              {t("investment.optional", "Optional")})
             </label>
             <input
               type="url"
@@ -278,13 +315,19 @@ const EditInvestmentOpportunity = () => {
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 errors.url ? "border-red-500" : "border-black/20"
               }`}
-              placeholder="https://example.com/opportunity-details"
+              placeholder={t(
+                "investment.urlPlaceholder",
+                "https://example.com/opportunity-details"
+              )}
             />
             {errors.url && (
               <p className="mt-1 text-sm text-red-600">{errors.url}</p>
             )}
             <p className="mt-1 text-sm text-gray-500">
-              Link to external page with more details about this opportunity
+              {t(
+                "investment.linkToExternalPage",
+                "Link to external page with more details about this opportunity"
+              )}
             </p>
           </div>
 
@@ -294,7 +337,8 @@ const EditInvestmentOpportunity = () => {
               htmlFor="expireDate"
               className="block text-sm font-medium text-gray-700 mb-2"
             >
-              Expire Date (Optional)
+              {t("investment.expireDate", "Expire Date")} (
+              {t("investment.optional", "Optional")})
             </label>
             <input
               type="date"
@@ -310,21 +354,25 @@ const EditInvestmentOpportunity = () => {
               <p className="mt-1 text-sm text-red-600">{errors.expireDate}</p>
             )}
             <p className="mt-1 text-sm text-gray-500">
-              When this opportunity expires and is no longer available
+              {t(
+                "investment.opportunityExpireInfo",
+                "When this opportunity expires and is no longer available"
+              )}
             </p>
           </div>
 
           {/* Image Upload */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Image (Optional)
+              {t("investment.image", "Image")} (
+              {t("investment.optional", "Optional")})
             </label>
 
             {formData.image ? (
               <div className="mb-4">
                 <img
                   src={formData.image}
-                  alt="Opportunity"
+                  alt={t("investment.opportunity", "Opportunity")}
                   className="w-full max-w-md h-48 object-cover rounded-lg"
                 />
                 <button
@@ -334,7 +382,7 @@ const EditInvestmentOpportunity = () => {
                   }
                   className="mt-2 text-sm text-red-600 hover:text-red-800"
                 >
-                  Remove Image
+                  {t("investment.removeImage", "Remove Image")}
                 </button>
               </div>
             ) : (
@@ -359,10 +407,15 @@ const EditInvestmentOpportunity = () => {
                     )}
                   </div>
                   <p className="text-sm text-gray-600">
-                    {uploading ? "Uploading..." : "Click to upload an image"}
+                    {uploading
+                      ? t("investment.uploading", "Uploading...")
+                      : t(
+                          "investment.clickToUploadImage",
+                          "Click to upload an image"
+                        )}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
-                    PNG, JPG, GIF up to 5MB
+                    {t("investment.imageFileTypes", "PNG, JPG, GIF up to 5MB")}
                   </p>
                 </label>
               </div>
@@ -376,7 +429,7 @@ const EditInvestmentOpportunity = () => {
             href="/opportunities"
             className="px-6 py-2 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
           >
-            Cancel
+            {t("investment.cancel", "Cancel")}
           </Link>
           <button
             type="submit"
@@ -384,7 +437,9 @@ const EditInvestmentOpportunity = () => {
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
           >
             {loading && <Spinner />}
-            {loading ? "Updating..." : "Update Opportunity"}
+            {loading
+              ? t("investment.updating", "Updating...")
+              : t("investment.updateOpportunity", "Update Opportunity")}
           </button>
         </div>
       </form>

@@ -8,7 +8,7 @@ import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
 import { timeAgo } from "../../utils/time_ago";
-import { useTranslation } from "@/locales";
+import { useTranslation } from "../../locales";
 
 const Page = () => {
   const { t } = useTranslation();
@@ -85,7 +85,7 @@ const Page = () => {
                 }}
                 className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative"
               >
-                Options
+                {t("common.options", "Options")}
                 <div
                   className={`absolute z-9  transition-all ${
                     ShowOptions == item.uuid ? " scale-100 " : " scale-0 "
@@ -93,8 +93,8 @@ const Page = () => {
                 >
                   {[
                     {
-                      title: "View details",
-                      path: `/businessDetails/${item.uuid}`,
+                      title: t("common.viewDetails", "View details"),
+                      path: `/dashboard/enterprenuers/businessDetails/${item.uuid}`,
                     },
                   ].map((item) => {
                     return (

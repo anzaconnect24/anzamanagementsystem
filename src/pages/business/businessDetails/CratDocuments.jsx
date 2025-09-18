@@ -1,18 +1,21 @@
 "use client";
 import { useState, useEffect, useContext } from "react";
-import { useRouter } from "@/utils/navigation";
-import { getBusiness } from "@/controllers/business_controller";
+import { useNavigate } from "react-router-dom";
+import { getBusiness } from "../../../controllers/business_controller";
 
-import Loader from "@/components/common/Loader";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import Loader from "../../../components/common/Loader";
+import Breadcrumb from "../../../components/Breadcrumbs/Breadcrumb";
 import { FaFilePdf, FaArrowLeft } from "react-icons/fa";
 import { toast } from "react-hot-toast";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import { useParams } from "react-router-dom";
+import { useTranslation } from "../../../locales";
 
 const CratDocumentsPage = ({ params }) => {
-  const { uuid } = params;
+  const { uuid } = useParams();
   const { userDetails } = useContext(UserContext);
-  const router = useRouter();
+  const navigate = useNavigate();
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [business, setBusiness] = useState(null);
   const [activeTab, setActiveTab] = useState("financial");
@@ -26,13 +29,15 @@ const CratDocumentsPage = ({ params }) => {
   useEffect(() => {
     // Check permissions
     if (!["Admin", "Staff"].includes(userDetails?.role)) {
-      toast.error("Access denied. Admin or Staff role required.");
-      router.push("/");
+      toast.error(
+        t("common.accessDenied", "Access denied. Admin or Staff role required.")
+      );
+      navigate("/");
       return;
     }
 
     fetchBusinessData();
-  }, [uuid, userDetails, router]);
+  }, [uuid, userDetails, navigate]);
 
   const fetchBusinessData = async () => {
     try {
@@ -42,7 +47,9 @@ const CratDocumentsPage = ({ params }) => {
       setLoading(false);
     } catch (error) {
       console.error("Error fetching business:", error);
-      toast.error("Failed to load business data");
+      toast.error(
+        t("business.errors.failedToLoadData", "Failed to load business data")
+      );
       setLoading(false);
     }
   };
@@ -83,17 +90,27 @@ const CratDocumentsPage = ({ params }) => {
   };
 
   const tabs = [
-    { key: "financial", label: "Financial", icon: "💰", color: "bg-green-500" },
-    { key: "legal", label: "Legal", icon: "⚖️", color: "bg-blue-500" },
+    {
+      key: "financial",
+      label: t("business.financial", "Financial"),
+      icon: "💰",
+      color: "bg-green-500",
+    },
+    {
+      key: "legal",
+      label: t("business.legal", "Legal"),
+      icon: "⚖️",
+      color: "bg-blue-500",
+    },
     {
       key: "operations",
-      label: "Operations",
+      label: t("business.operations", "Operations"),
       icon: "⚙️",
       color: "bg-purple-500",
     },
     {
       key: "commercial",
-      label: "Commercial",
+      label: t("business.commercial", "Commercial"),
       icon: "📊",
       color: "bg-orange-500",
     },
@@ -115,8 +132,10 @@ const CratDocumentsPage = ({ params }) => {
       <div className="mb-6">
         <Breadcrumb
           prevLink={`/businessDetails/${uuid}`}
-          prevPage={business?.name || "Business Details"}
-          pageName="CRAT Attachments"
+          prevPage={
+            business?.name || t("business.businessDetails", "Business Details")
+          }
+          pageName={t("business.cratAttachments", "CRAT Attachments")}
         />
       </div>
 
@@ -126,24 +145,28 @@ const CratDocumentsPage = ({ params }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
-                onClick={() => router.back()}
+                onClick={() => navigate(-1)}
                 className="flex items-center gap-2 text-black/50 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
               >
                 <FaArrowLeft />
-                Back
+                {t("common.back", "Back")}
               </button>
               <div>
                 <h4 className="text-xl font-semibold text-black dark:text-white">
-                  CRAT Attachments
+                  {t("business.cratAttachments", "CRAT Attachments")}
                 </h4>
                 <p className="mt-1 text-bodydark2">
-                  {business?.name} - CRAT assessment attachments organized by
-                  domain
+                  {business?.name} -{" "}
+                  {t(
+                    "business.cratAssessmentDescription",
+                    "CRAT assessment attachments organized by domain"
+                  )}
                 </p>
               </div>
             </div>
             <div className="text-sm text-gray-500 dark:text-gray-400">
-              Total Documents: {Object.values(categorizedDocs).flat().length}
+              {t("business.totalDocuments", "Total Documents")}:{" "}
+              {Object.values(categorizedDocs).flat().length}
             </div>
           </div>
         </div>
@@ -187,12 +210,20 @@ const CratDocumentsPage = ({ params }) => {
                 {tabs.find((tab) => tab.key === activeTab)?.icon}
               </div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                No {tabs.find((tab) => tab.key === activeTab)?.label} Documents
+                {t("business.noDocuments", "No {{type}} Documents", {
+                  type: tabs.find((tab) => tab.key === activeTab)?.label,
+                })}
               </h3>
               <p className="text-gray-500 dark:text-gray-400">
-                No CRAT documents have been uploaded for the{" "}
-                {tabs.find((tab) => tab.key === activeTab)?.label.toLowerCase()}{" "}
-                domain yet.
+                {t(
+                  "business.noDocumentsDescription",
+                  "No CRAT documents have been uploaded for the {{domain}} domain yet.",
+                  {
+                    domain: tabs
+                      .find((tab) => tab.key === activeTab)
+                      ?.label.toLowerCase(),
+                  }
+                )}
               </p>
             </div>
           ) : (
@@ -219,12 +250,13 @@ const CratDocumentsPage = ({ params }) => {
                     </h3>
                     {doc.subDomain && (
                       <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Domain: {doc.subDomain}
+                        {t("business.domain", "Domain")}: {doc.subDomain}
                       </p>
                     )}
                     {doc.updatedAt && (
                       <p className="text-xs text-gray-500 dark:text-gray-500">
-                        Updated: {new Date(doc.updatedAt).toLocaleDateString()}
+                        {t("business.updated", "Updated")}:{" "}
+                        {new Date(doc.updatedAt).toLocaleDateString()}
                       </p>
                     )}
                     {doc.description && (
@@ -243,7 +275,7 @@ const CratDocumentsPage = ({ params }) => {
                       className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors duration-200 text-sm font-medium"
                     >
                       <FaFilePdf />
-                      Open Document
+                      {t("business.openDocument", "Open Document")}
                     </a>
                   </div>
                 </div>

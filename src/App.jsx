@@ -122,6 +122,7 @@ import CratDocuments from "./pages/business/businessDetails/CratDocuments";
 import BusinessDetailsByMentorWithUuid from "./pages/business/businessDetailsByMentor/BusinessDetailsByMentorWithUuid";
 
 // Additional Missing Imports - Investment Opportunity Components
+import NewOpportunity from "./pages/investment-opportunities/opportunities/{new}";
 import OpportunityWithUuid from "./pages/investment-opportunities/opportunities/OpportunityWithUuid";
 import EditOpportunityWithUuid from "./pages/investment-opportunities/opportunities/EditOpportunityWithUuid";
 
@@ -142,6 +143,7 @@ import InvestorSectorBusinesses from "./pages/investor/investorSectorBusinesses/
 // Additional Missing Imports - Learn and Grow Components
 import AddModule from "./pages/learnandgrow/modules/add/AddModule";
 import EditModule from "./pages/learnandgrow/modules/edit/EditModule";
+import NewProgramsApplication from "./pages/learnandgrow/programsApplications/NewProgramsApplication";
 import ProgramsApplicationsWithUuid from "./pages/learnandgrow/programsApplications/ProgramsApplicationsWithUuid";
 import EditProgramsApplicationsWithUuid from "./pages/learnandgrow/programsApplications/EditProgramsApplicationsWithUuid";
 import SlideWithUuid from "./pages/learnandgrow/slides/SlideWithUuid";
@@ -373,7 +375,7 @@ function App() {
               element={<EditOpportunityWithUuid />}
             />
 
-            <Route path="opportunities/new" element={<OpportunityWithUuid />} />
+            <Route path="opportunities/new" element={<NewOpportunity />} />
 
             {/* Investment Routes - Additional */}
             <Route path="acceptedRequests" element={<AcceptedRequests />} />
@@ -423,7 +425,7 @@ function App() {
             />
             <Route
               path="programsApplications/new"
-              element={<ProgramsApplicationsWithUuid />}
+              element={<NewProgramsApplication />}
             />
             <Route path="slides/:uuid" element={<SlideWithUuid />} />
             <Route path="slides/add" element={<AddSlide />} />

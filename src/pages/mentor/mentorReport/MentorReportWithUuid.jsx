@@ -1,11 +1,13 @@
 "use client";
-import { getSpecificReport } from "@/controllers/mentorReportsController";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import Loader from "@/components/common/Loader";
+import { getSpecificReport } from "../../../controllers/mentorReportsController";
+import Breadcrumb from "../../../components/Breadcrumbs/Breadcrumb";
+import Loader from "../../../components/common/Loader";
+import { useTranslation } from "../../../locales";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
+  const { t } = useTranslation();
   const uuid = useParams().uuid;
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,29 +23,41 @@ const Page = ({ params }) => {
   ) : (
     <div className="">
       <Breadcrumb
-        prevLink={"/mentorReports"}
-        pageName={"Reports"}
-        prevPage={"Mentors reports"}
+        prevLink={"/dashboard/mentorReports"}
+        pageName={t("mentor.reports", "Reports")}
+        prevPage={t("mentor.mentorReports", "Mentors reports")}
       />
       <div className="bg-white p-5 w-full">
-        <h1 className="font-bold text-2xl">Entreprenuer report</h1>
-        <p className="text-muted ">View entreprenuer report</p>
+        <h1 className="font-bold text-2xl">
+          {t("mentor.entrepreneurReport", "Entrepreneur report")}
+        </h1>
+        <p className="text-muted ">
+          {t("mentor.viewEntrepreneurReport", "View entrepreneur report")}
+        </p>
 
         <div className="space-y-2 mt-4">
           <div className="flex space-x-2 ">
-            <h1 className="text-muted w-3/12">Mentor name:</h1>
-            <p className="text-muted font-bold ">{data.Mentor.name}</p>
+            <h1 className="text-muted w-3/12">
+              {t("mentor.mentorName", "Mentor name")}:
+            </h1>
+            <p className="text-muted font-bold ">{data.Mentor?.name}</p>
           </div>
           <div className="flex space-x-2 ">
-            <h1 className="text-muted w-3/12">Entreprenuer name:</h1>
-            <p className="text-muted font-bold ">{data.Entreprenuer.name}</p>
+            <h1 className="text-muted w-3/12">
+              {t("mentor.entrepreneurName", "Entrepreneur name")}:
+            </h1>
+            <p className="text-muted font-bold ">{data.Entreprenuer?.name}</p>
           </div>
           <div className="flex space-x-2 ">
-            <h1 className="text-muted w-3/12">Report title:</h1>
+            <h1 className="text-muted w-3/12">
+              {t("mentor.reportTitle", "Report title")}:
+            </h1>
             <p className="text-muted font-bold ">{data.title}</p>
           </div>
           <div className="flex space-x-2 ">
-            <h1 className="text-muted w-3/12">Report description:</h1>
+            <h1 className="text-muted w-3/12">
+              {t("mentor.reportDescription", "Report description")}:
+            </h1>
             <p className="text-muted font-bold ">{data.description}</p>
           </div>
         </div>
@@ -53,7 +67,7 @@ const Page = ({ params }) => {
           }}
           className="py-2 px-4 mt-8 bg-primary w-38 flex justify-center text-white hover:bg-opacity-90 transition-all duration-300 rounded"
         >
-          Open Report
+          {t("mentor.openReport", "Open Report")}
         </button>
       </div>
     </div>

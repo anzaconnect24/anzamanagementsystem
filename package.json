@@ -6,7 +6,8 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext js,jsx,ts,tsx"
+    "lint": "eslint src --ext js,jsx,ts,tsx",
+    "push": "npm run build && ssh anza 'mkdir -p /var/www/anzatestweb' && scp -C -r dist/* anza:/var/www/anzatestweb/"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",
