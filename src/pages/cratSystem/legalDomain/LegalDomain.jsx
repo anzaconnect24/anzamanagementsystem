@@ -46,31 +46,41 @@ const LegalDomainPage = () => {
     const fetchData = async () => {
       try {
         const responseData = await getLegalData();
+        console.log("Fetched legal data:", responseData);
+        console.log("Translated template:", translatedTemplate);
         if (responseData == null || responseData.length == 0) {
           await createLegalData(translatedTemplate);
           fetchData(); // Fetch again after creating legal data
         } else {
           const updatedData = { ...translatedTemplate };
-
+          console.log("updatedData:", updatedData);
           // Create English template for stable database matching
           const englishTemplate = getInitialDataTemplate(
             (key, fallback) => fallback || key
           );
 
+          // Create a mapping of English subDomains with their occurrence count
+          const subDomainCounts = {};
+          
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item, index) => {
               // Get corresponding English subdomain for database matching
               const englishSubDomain =
                 englishTemplate[section]?.[index]?.subDomain || item.subDomain;
 
-              // Try to match by English subdomain first (most likely to match database)
-              const fetchedItem =
-                responseData.find(
-                  (dataItem) => dataItem.subDomain === englishSubDomain
-                ) ||
-                responseData.find(
-                  (dataItem) => dataItem.subDomain === item.subDomain
-                );
+              // Track occurrence count for this subdomain
+              subDomainCounts[englishSubDomain] = (subDomainCounts[englishSubDomain] || 0);
+
+              // Find all matching items from responseData
+              const matchingItems = responseData.filter(
+                (dataItem) => dataItem.subDomain === englishSubDomain
+              );
+
+              // Get the specific item based on occurrence count
+              const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
+              
+              // Increment count for next occurrence
+              subDomainCounts[englishSubDomain]++;
 
               return fetchedItem
                 ? {
@@ -80,6 +90,7 @@ const LegalDomainPage = () => {
                     userId: fetchedItem.userId,
                     attachment: fetchedItem.attachment,
                     comments: fetchedItem.comments,
+                    uuid: fetchedItem.uuid, // Add uuid for future reference
                     // Don't overwrite subDomain - keep the translated one from item
                   }
                 : item;
@@ -169,20 +180,28 @@ const LegalDomainPage = () => {
         (key, fallback) => fallback || key
       );
 
+      // Create a mapping of English subDomains with their occurrence count
+      const subDomainCounts = {};
+
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item, index) => {
           // Get corresponding English subdomain for database matching
           const englishSubDomain =
             englishTemplate[section]?.[index]?.subDomain || item.subDomain;
 
-          // Try to match by English subdomain first (most likely to match database)
-          const fetchedItem =
-            responseData.find(
-              (dataItem) => dataItem.subDomain === englishSubDomain
-            ) ||
-            responseData.find(
-              (dataItem) => dataItem.subDomain === item.subDomain
-            );
+          // Track occurrence count for this subdomain
+          subDomainCounts[englishSubDomain] = (subDomainCounts[englishSubDomain] || 0);
+
+          // Find all matching items from responseData
+          const matchingItems = responseData.filter(
+            (dataItem) => dataItem.subDomain === englishSubDomain
+          );
+
+          // Get the specific item based on occurrence count
+          const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
+          
+          // Increment count for next occurrence
+          subDomainCounts[englishSubDomain]++;
 
           return fetchedItem
             ? {
@@ -192,6 +211,7 @@ const LegalDomainPage = () => {
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
                 comments: fetchedItem.comments,
+                uuid: fetchedItem.uuid, // Add uuid for future reference
                 // Don't overwrite subDomain - keep the translated one from item
               }
             : item;
@@ -233,20 +253,28 @@ const LegalDomainPage = () => {
         (key, fallback) => fallback || key
       );
 
+      // Create a mapping of English subDomains with their occurrence count
+      const subDomainCounts = {};
+
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item, index) => {
           // Get corresponding English subdomain for database matching
           const englishSubDomain =
             englishTemplate[section]?.[index]?.subDomain || item.subDomain;
 
-          // Try to match by English subdomain first (most likely to match database)
-          const fetchedItem =
-            responseData.find(
-              (dataItem) => dataItem.subDomain === englishSubDomain
-            ) ||
-            responseData.find(
-              (dataItem) => dataItem.subDomain === item.subDomain
-            );
+          // Track occurrence count for this subdomain
+          subDomainCounts[englishSubDomain] = (subDomainCounts[englishSubDomain] || 0);
+
+          // Find all matching items from responseData
+          const matchingItems = responseData.filter(
+            (dataItem) => dataItem.subDomain === englishSubDomain
+          );
+
+          // Get the specific item based on occurrence count
+          const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
+          
+          // Increment count for next occurrence
+          subDomainCounts[englishSubDomain]++;
 
           return fetchedItem
             ? {
@@ -255,6 +283,7 @@ const LegalDomainPage = () => {
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
+                uuid: fetchedItem.uuid, // Add uuid for future reference
                 // Don't overwrite subDomain - keep the translated one from item
               }
             : item;
@@ -316,7 +345,7 @@ const LegalDomainPage = () => {
     const englishTemplate = getInitialDataTemplate(
       (key, fallback) => fallback || key
     );
-
+    console.log("Data:", data);
     return data[domain].map((item, index) => {
       // Get corresponding English subdomain for API calls
       const englishSubDomain =
