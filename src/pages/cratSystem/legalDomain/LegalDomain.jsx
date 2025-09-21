@@ -61,7 +61,7 @@ const LegalDomainPage = () => {
 
           // Create a mapping of English subDomains with their occurrence count
           const subDomainCounts = {};
-          
+
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item, index) => {
               // Get corresponding English subdomain for database matching
@@ -69,7 +69,8 @@ const LegalDomainPage = () => {
                 englishTemplate[section]?.[index]?.subDomain || item.subDomain;
 
               // Track occurrence count for this subdomain
-              subDomainCounts[englishSubDomain] = (subDomainCounts[englishSubDomain] || 0);
+              subDomainCounts[englishSubDomain] =
+                subDomainCounts[englishSubDomain] || 0;
 
               // Find all matching items from responseData
               const matchingItems = responseData.filter(
@@ -77,8 +78,9 @@ const LegalDomainPage = () => {
               );
 
               // Get the specific item based on occurrence count
-              const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
-              
+              const fetchedItem =
+                matchingItems[subDomainCounts[englishSubDomain]];
+
               // Increment count for next occurrence
               subDomainCounts[englishSubDomain]++;
 
@@ -190,7 +192,8 @@ const LegalDomainPage = () => {
             englishTemplate[section]?.[index]?.subDomain || item.subDomain;
 
           // Track occurrence count for this subdomain
-          subDomainCounts[englishSubDomain] = (subDomainCounts[englishSubDomain] || 0);
+          subDomainCounts[englishSubDomain] =
+            subDomainCounts[englishSubDomain] || 0;
 
           // Find all matching items from responseData
           const matchingItems = responseData.filter(
@@ -199,7 +202,7 @@ const LegalDomainPage = () => {
 
           // Get the specific item based on occurrence count
           const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
-          
+
           // Increment count for next occurrence
           subDomainCounts[englishSubDomain]++;
 
@@ -263,7 +266,8 @@ const LegalDomainPage = () => {
             englishTemplate[section]?.[index]?.subDomain || item.subDomain;
 
           // Track occurrence count for this subdomain
-          subDomainCounts[englishSubDomain] = (subDomainCounts[englishSubDomain] || 0);
+          subDomainCounts[englishSubDomain] =
+            subDomainCounts[englishSubDomain] || 0;
 
           // Find all matching items from responseData
           const matchingItems = responseData.filter(
@@ -272,7 +276,7 @@ const LegalDomainPage = () => {
 
           // Get the specific item based on occurrence count
           const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
-          
+
           // Increment count for next occurrence
           subDomainCounts[englishSubDomain]++;
 
