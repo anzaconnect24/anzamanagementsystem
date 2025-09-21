@@ -13,7 +13,7 @@ import {
   updateMarketData,
   attachDocument,
   deleteAttachment,
-  initialDataTemplate,
+  getInitialDataTemplate,
 } from "@/controllers/crat_market_controller";
 
 import { useTranslation } from "@/locales";
@@ -30,9 +30,13 @@ const tableHeaders = [
 
 const MarketDomainPage = () => {
   const { t } = useTranslation();
+
+  // Create translated template
+  const translatedTemplate = getInitialDataTemplate(t);
+
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(initialDataTemplate);
-  const [originalData, setOriginalData] = useState(initialDataTemplate);
+  const [data, setData] = useState(translatedTemplate);
+  const [originalData, setOriginalData] = useState(translatedTemplate);
   const [changesMade, setChangesMade] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -53,7 +57,7 @@ const MarketDomainPage = () => {
           await createMarketData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
         } else {
-          const updatedData = { ...initialDataTemplate };
+          const updatedData = { ...translatedTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               //console.log('my items', updatedData);
@@ -175,7 +179,7 @@ const MarketDomainPage = () => {
 
       // Fetch updated data
       const responseData = await getMarketData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
       console.log("this is my res", responseData);
 
       Object.keys(updatedData).forEach((section) => {
@@ -226,7 +230,7 @@ const MarketDomainPage = () => {
       submitChanges();
       // Fetch updated data
       const responseData = await getMarketData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {

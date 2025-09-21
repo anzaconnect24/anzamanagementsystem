@@ -53,9 +53,9 @@ const DropdownUser = () => {
           <span className="block text-sm font-medium text-black dark:text-white">
             {userDetails?.name || "Loading..."}
           </span>
-          <span className="block text-xs">
+          {/* <span className="block text-xs">
             {t("users.role", "Role")}: {userDetails?.role || "Loading..."}
-          </span>
+          </span> */}
         </span>
 
         <span className="h-12 w-12 rounded-full">

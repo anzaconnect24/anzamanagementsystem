@@ -626,7 +626,7 @@ const Enterprenuers = () => {
                 {/* Card Footer */}
                 <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
                   <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                    <span>{t("users.viewDetails", "View Details")}</span>
+                    <span>{t("programs.viewDetails", "View Details")}</span>
                     <svg
                       className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
                       fill="none"

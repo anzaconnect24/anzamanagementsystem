@@ -13,19 +13,24 @@ import {
   attachDocument,
   deleteAttachment,
   initialDataTemplate,
+  getInitialDataTemplate,
 } from "@/controllers/crat_financials_controller"; // Import updated API functions
 
 import Spinner from "@/components/spinner";
-import { useTranslation } from "@/locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import { useTranslation } from "../../../locales";
 
 // Table headers will be translated inline in renderSection
 
 const FinancialDomain = () => {
   const { t } = useTranslation();
+
+  // Create translated template
+  const translatedTemplate = getInitialDataTemplate(t);
+
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(initialDataTemplate);
-  const [originalData, setOriginalData] = useState(initialDataTemplate);
+  const [data, setData] = useState(translatedTemplate);
+  const [originalData, setOriginalData] = useState(translatedTemplate);
   const [changesMade, setChangesMade] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -43,7 +48,7 @@ const FinancialDomain = () => {
           await createFinancialData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
         } else {
-          const updatedData = { ...initialDataTemplate };
+          const updatedData = { ...translatedTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               const fetchedItem = responseData.find(
@@ -95,20 +100,6 @@ const FinancialDomain = () => {
   const submitChanges = async () => {
     try {
       await updateFinancialData(data);
-
-      // Update initialDataTemplate here
-      Object.keys(data).forEach((section) => {
-        initialDataTemplate[section] = data[section].map((item) => ({
-          subDomain: item.subDomain,
-          rating: item.rating,
-          score: item.score,
-          userId: item.userId,
-          attachment: item.attachment,
-          comments: item.comments,
-          question: item.question,
-          description: item.description,
-        }));
-      });
 
       setOriginalData(data); // Update original data after successful submission
       setChangesMade(false);
@@ -164,7 +155,7 @@ const FinancialDomain = () => {
 
       // Fetch updated data
       const responseData = await getFinancialData(userDetails.id);
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
@@ -222,7 +213,7 @@ const FinancialDomain = () => {
 
       // Fetch the updated data after the rating is changed
       const responseData = await getFinancialData(userDetails.id);
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
 
       // Map over sections to apply updates
       Object.keys(updatedData).forEach((section) => {

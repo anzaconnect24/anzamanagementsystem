@@ -12,7 +12,7 @@ import {
   updateLegalData,
   attachDocument,
   deleteAttachment,
-  initialDataTemplate,
+  getInitialDataTemplate,
 } from "@/controllers/crat_legal_controller"; // Import updated API functions
 const tableHeaders = [
   "Sub Domain",
@@ -27,9 +27,13 @@ import { UserContext } from "../../../layouts/DashboardLayout";
 
 const LegalDomainPage = () => {
   const { t } = useTranslation();
+
+  // Create translated template
+  const translatedTemplate = getInitialDataTemplate(t);
+
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(initialDataTemplate);
-  const [originalData, setOriginalData] = useState(initialDataTemplate);
+  const [data, setData] = useState(translatedTemplate);
+  const [originalData, setOriginalData] = useState(translatedTemplate);
   const [changesMade, setChangesMade] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -43,23 +47,40 @@ const LegalDomainPage = () => {
       try {
         const responseData = await getLegalData();
         if (responseData == null || responseData.length == 0) {
-          await createLegalData(initialDataTemplate);
-          fetchData(); // Fetch again after creating market data
+          await createLegalData(translatedTemplate);
+          fetchData(); // Fetch again after creating legal data
         } else {
-          const updatedData = { ...initialDataTemplate };
+          const updatedData = { ...translatedTemplate };
+
+          // Create English template for stable database matching
+          const englishTemplate = getInitialDataTemplate(
+            (key, fallback) => fallback || key
+          );
+
           Object.keys(updatedData).forEach((section) => {
-            updatedData[section] = updatedData[section].map((item) => {
-              const fetchedItem = responseData.find(
-                (dataItem) => dataItem.subDomain === item.subDomain
-              );
+            updatedData[section] = updatedData[section].map((item, index) => {
+              // Get corresponding English subdomain for database matching
+              const englishSubDomain =
+                englishTemplate[section]?.[index]?.subDomain || item.subDomain;
+
+              // Try to match by English subdomain first (most likely to match database)
+              const fetchedItem =
+                responseData.find(
+                  (dataItem) => dataItem.subDomain === englishSubDomain
+                ) ||
+                responseData.find(
+                  (dataItem) => dataItem.subDomain === item.subDomain
+                );
+
               return fetchedItem
                 ? {
-                    ...item,
+                    ...item, // Keep the translated template (including translated subDomain)
                     rating: fetchedItem.rating,
                     score: fetchedItem.score,
                     userId: fetchedItem.userId,
                     attachment: fetchedItem.attachment,
                     comments: fetchedItem.comments,
+                    // Don't overwrite subDomain - keep the translated one from item
                   }
                 : item;
             });
@@ -99,18 +120,9 @@ const LegalDomainPage = () => {
     try {
       await updateLegalData(data);
 
-      // Update initialDataTemplate here
+      // Update translatedTemplate here (though it's not needed since it's recreated on render)
       Object.keys(data).forEach((section) => {
-        initialDataTemplate[section] = data[section].map((item) => ({
-          subDomain: item.subDomain,
-          rating: item.rating,
-          score: item.score,
-          userId: item.userId,
-          attachment: item.attachment,
-          comments: item.comments,
-          question: item.question,
-          description: item.description,
-        }));
+        // No need to update translatedTemplate as it's dynamically generated
       });
 
       setOriginalData(data); // Update original data after successful submission
@@ -150,21 +162,37 @@ const LegalDomainPage = () => {
 
       // Fetch updated data
       const responseData = await getLegalData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
+
+      // Create English template for stable database matching
+      const englishTemplate = getInitialDataTemplate(
+        (key, fallback) => fallback || key
+      );
 
       Object.keys(updatedData).forEach((section) => {
-        updatedData[section] = updatedData[section].map((item) => {
-          const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
-          );
+        updatedData[section] = updatedData[section].map((item, index) => {
+          // Get corresponding English subdomain for database matching
+          const englishSubDomain =
+            englishTemplate[section]?.[index]?.subDomain || item.subDomain;
+
+          // Try to match by English subdomain first (most likely to match database)
+          const fetchedItem =
+            responseData.find(
+              (dataItem) => dataItem.subDomain === englishSubDomain
+            ) ||
+            responseData.find(
+              (dataItem) => dataItem.subDomain === item.subDomain
+            );
+
           return fetchedItem
             ? {
-                ...item,
+                ...item, // Keep the translated template (including translated subDomain)
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
                 comments: fetchedItem.comments,
+                // Don't overwrite subDomain - keep the translated one from item
               }
             : item;
         });
@@ -198,20 +226,36 @@ const LegalDomainPage = () => {
 
       // Fetch updated data
       const responseData = await getLegalData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
+
+      // Create English template for stable database matching
+      const englishTemplate = getInitialDataTemplate(
+        (key, fallback) => fallback || key
+      );
 
       Object.keys(updatedData).forEach((section) => {
-        updatedData[section] = updatedData[section].map((item) => {
-          const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
-          );
+        updatedData[section] = updatedData[section].map((item, index) => {
+          // Get corresponding English subdomain for database matching
+          const englishSubDomain =
+            englishTemplate[section]?.[index]?.subDomain || item.subDomain;
+
+          // Try to match by English subdomain first (most likely to match database)
+          const fetchedItem =
+            responseData.find(
+              (dataItem) => dataItem.subDomain === englishSubDomain
+            ) ||
+            responseData.find(
+              (dataItem) => dataItem.subDomain === item.subDomain
+            );
+
           return fetchedItem
             ? {
-                ...item,
+                ...item, // Keep the translated template (including translated subDomain)
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
+                // Don't overwrite subDomain - keep the translated one from item
               }
             : item;
         });
@@ -268,51 +312,70 @@ const LegalDomainPage = () => {
   };
 
   const renderTableRows = (domain) => {
-    return data[domain].map((item, index) => (
-      <div
-        className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark"
-        key={index}
-      >
-        <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
+    // Create English template for stable database identifiers
+    const englishTemplate = getInitialDataTemplate(
+      (key, fallback) => fallback || key
+    );
+
+    return data[domain].map((item, index) => {
+      // Get corresponding English subdomain for API calls
+      const englishSubDomain =
+        englishTemplate[domain]?.[index]?.subDomain || item.subDomain;
+
+      return (
+        <div
+          className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark"
+          key={index}
+        >
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white">
+              {item.subDomain}
+            </p>
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white">
+              {item.question}
+            </p>
+          </div>
+          <div className="flex items-center px-2">
+            <DropdownTwo
+              value={item.rating}
+              onChange={(e) =>
+                handleRatingChange(domain, index, e.target.value)
+              }
+            />
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white">{item.score}</p>
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white">
+              {item.description}
+            </p>
+          </div>
+          <div className="flex items-center px-2 space-x-2">
+            <ReactIcons
+              onAdd={(file) =>
+                handleAddFile(englishSubDomain, file, item.userId)
+              }
+              onDelete={() =>
+                openDeleteDialog(
+                  englishSubDomain,
+                  item.userId,
+                  item.attachment,
+                  domain,
+                  index
+                )
+              }
+              onView={() => handleViewFile(item.attachment)}
+              attachment={item.attachment}
+              onEdit={(comment) => handleEdit(domain, index, comment)}
+              comment={item.comments}
+            />
+          </div>
         </div>
-        <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.question}</p>
-        </div>
-        <div className="flex items-center px-2">
-          <DropdownTwo
-            value={item.rating}
-            onChange={(e) => handleRatingChange(domain, index, e.target.value)}
-          />
-        </div>
-        <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.score}</p>
-        </div>
-        <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">
-            {item.description}
-          </p>
-        </div>
-        <div className="flex items-center px-2 space-x-2">
-          <ReactIcons
-            onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
-            onDelete={() =>
-              openDeleteDialog(
-                item.subDomain,
-                item.userId,
-                item.attachment,
-                domain,
-                index
-              )
-            }
-            onView={() => handleViewFile(item.attachment)}
-            attachment={item.attachment}
-            onEdit={(comment) => handleEdit(domain, index, comment)}
-            comment={item.comments}
-          />
-        </div>
-      </div>
-    ));
+      );
+    });
   };
 
   const renderSection = (domain, title) => (

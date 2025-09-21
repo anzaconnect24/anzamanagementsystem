@@ -1294,6 +1294,85 @@ export const en = {
         competition: "Competition",
         marketing: "Marketing",
       },
+      assessments: {
+        // Sub Domain translations
+        demandSubDomain: "Demand",
+        marketShareSubDomain: "Market share",
+        salesSubDomain: "Sales",
+        customerSegmentsSubDomain: "Customer segments",
+        paymentTermsSubDomain: "Payment terms",
+        salesStrategySubDomain: "Sales strategy",
+        productDevelopmentSubDomain: "Product development",
+        productDistributionSubDomain: "Product distribution",
+        productPricingBasisSubDomain: "Product pricing basis",
+        levelOfCompetitionSubDomain: "Level of competition",
+        competitiveAdvantageSubDomain: "Competitive advantage",
+        marketingStrategySubDomain: "Marketing strategy",
+        packagingBrandingSubDomain: "Packaging & branding",
+        productPromotionSubDomain: "Product promotion",
+
+        // Rating translations
+        ratingYes: "Yes",
+        ratingNo: "No",
+        ratingMaybe: "Maybe",
+
+        demand: "Demand",
+        demandQuestion:
+          "Is there sufficient evidence for demand of your product?",
+        demandDescription:
+          "Industry research reports, Stats citation, # of users",
+        marketShare: "Market share",
+        marketShareQuestion: "Is the market share growing?",
+        marketShareDescription:
+          "Customer database, Competition reports, Industry reports",
+        sales: "Sales",
+        salesQuestion: "Are sales growing on a monthly/quarterly/annual basis?",
+        salesDescription: "One year monthly sales report",
+        customerSegments: "Customer segments",
+        customerSegmentsQuestion:
+          "Are there customer segments and clear focus?",
+        customerSegmentsDescription: "Customer database",
+        paymentTerms: "Payment terms",
+        paymentTermsQuestion: "Are payment terms in favor of the company?",
+        paymentTermsDescription:
+          "Check payment terms, invoices and or customer contracts",
+        salesStrategy: "Sales strategy",
+        salesStrategyQuestion:
+          "Is the sales strategy consistent with growth plans?",
+        salesStrategyDescription:
+          "Sales strategy document/Sales pitch/Customers or users or subscribers database",
+        productDevelopment: "Product development",
+        productDevelopmentQuestion: "Are there clear product road maps?",
+        productDevelopmentDescription: "Product road map",
+        productDistribution: "Product distribution",
+        productDistributionQuestion: "Are products properly distributed?",
+        productDistributionDescription: "Check delivery models",
+        productPricingBasis: "Product pricing basis",
+        productPricingBasisQuestion: "Are products properly priced?",
+        productPricingBasisDescription:
+          "Check pricing strategy/Do comparable analysis of competitors",
+        levelOfCompetition: "Level of competition",
+        levelOfCompetitionQuestion:
+          "Do you understand the level of competition and have you conducted analysis?",
+        levelOfCompetitionDescription: "Competitors analysis report",
+        competitiveAdvantage: "Competitive advantage",
+        competitiveAdvantageQuestion:
+          "Does the company have a clear competitive advantage?",
+        competitiveAdvantageDescription:
+          "Value proposition, any other supporting info",
+        marketingStrategy: "Marketing strategy",
+        marketingStrategyQuestion:
+          "Is the marketing strategy consistent with growth plans?",
+        marketingStrategyDescription: "Marketing strategy doc vs projections",
+        packagingBranding: "Packaging & branding",
+        packagingBrandingQuestion:
+          "Are the company's products properly packed and branded?",
+        packagingBrandingDescription:
+          "Brand guidelines, packaging guidelines, product offering etc",
+        productPromotion: "Product promotion",
+        productPromotionQuestion: "Is there a clear promotion strategy?",
+        productPromotionDescription: "Promotion strategy doc vs projections",
+      },
     },
     legal: {
       title: "Legal Domain Assessment",
@@ -1313,6 +1392,261 @@ export const en = {
         qualityManagement: "3. Quality Management",
         overallOperations: "4. Overall Operations",
         strategyPlanning: "5. Strategy & Planning",
+      },
+    },
+    financial: {
+      title: "Financial Domain Assessment",
+      sections: {
+        profitability: "Profitability",
+        balanceSheet: "Balance Sheet",
+        cashFlows: "Cash Flows",
+        projections: "Projections",
+        financialManagement: "Financial Management",
+      },
+      assessments: {
+        // Sub Domain translations
+        revenueSubDomain: "Revenue",
+        costManagementSubDomain: "Cost Management",
+        workingCapitalManagementSubDomain: "Working Capital Management",
+        assetsManagementSubDomain: "Assets Management",
+        debtManageabilitySubDomain: "Debt Manageability",
+        obsItemsSubDomain: "OBS Items",
+        operatingCashFlowSubDomain: "Operating Cash Flow",
+        capitalExpensesSubDomain: "Capital Expenses",
+        assumptionsSubDomain: "Assumptions",
+        qualityOfFinancialRecordsSubDomain: "Quality of Financial Records",
+        financialReportingSubDomain: "Financial Reporting",
+        internalControlsSubDomain: "Internal Controls",
+        taxLiabilitySubDomain: "Tax Liability",
+
+        // Rating translations
+        ratingYes: "Yes",
+        ratingNo: "No",
+        ratingMaybe: "Maybe",
+
+        revenue: "Revenue",
+        revenueQuestion: "Is revenue growing?",
+        revenueDescription: "Management accounts",
+        costManagement: "Cost Management",
+        costManagementQuestion: "Are unit costs declining?",
+        costManagementDescription: "Management accounts/projections",
+        workingCapitalManagement: "Working Capital Management",
+        workingCapitalQuestion: "Is WC well managed?",
+        workingCapitalDescription: "BS-Management accounts/liquidity ratios",
+        assetsManagement: "Assets Management",
+        assetsManagementQuestion: "Are assets well managed?",
+        assetsManagementDescription: "BS-Management accounts/assets turnover",
+        debtManageability: "Debt Manageability",
+        debtManageabilityQuestion: "Is debt properly managed?",
+        debtManageabilityDescription:
+          "D/E ratios, Interest cover, Debt service ratios",
+        obsItems: "OBS Items",
+        obsItemsQuestion: "Are OBS items in favor of the company?",
+        obsItemsDescription: "OBS values vis-a-vis on-balance items",
+        operatingCashFlow: "Operating Cash Flow",
+        operatingCashFlowQuestion: "Is OCF stable and growing?",
+        operatingCashFlowDescription:
+          "Cash flows statement/Cash ratio/burn rate/run way",
+        capitalExpenses: "Capital Expenses",
+        capitalExpensesQuestion:
+          "Has the company made notable and necessary CAPEX?",
+        capitalExpensesDescription:
+          "Investment plans, Changes in Non-current assets",
+        assumptions: "Assumptions",
+        assumptionsQuestion:
+          "Are assumptions realistic (based on existing facts)?",
+        assumptionsDescription: "Financial projections",
+        qualityOfFinancialRecords: "Quality of Financial Records",
+        qualityOfFinancialRecordsQuestion:
+          "Does the company have proper financial records?",
+        qualityOfFinancialRecordsDescription: "Accounting systems in use",
+        financialReporting: "Financial Reporting",
+        financialReportingQuestion: "Are financials properly reported?",
+        financialReportingDescription:
+          "Accounting systems in use, Financial statements",
+        internalControls: "Internal Controls",
+        internalControlsQuestion: "Do internal controls exist?",
+        internalControlsDescription: "Policies + Adherence to policies",
+        taxLiability: "Tax Liability",
+        taxLiabilityQuestion: "Are all taxes fully paid?",
+        taxLiabilityDescription: "Tax returns",
+      },
+    },
+    legal: {
+      title: "Legal Domain Assessment",
+      sections: {
+        corporateDocumentsCompliance: "Corporate Documents Compliance",
+        contractsAgreements: "Contracts & Agreements",
+        intellectualProperty: "Intellectual Property",
+        entrepreneurFamily: "Entrepreneur & Family",
+        corporateGovernance: "Corporate Governance",
+      },
+      assessments: {
+        // Sub Domain translations
+        businessIncorporationSubDomain: "Business incorporation",
+        taxIdentificationSubDomain: "Tax Identification",
+        taxComplianceSubDomain: "Tax compliance",
+        businessLicenceSubDomain: "Business Licence",
+        sectorSpecificComplianceSubDomain: "Sector specific compliance",
+        leaseAgreementsSubDomain: "Lease agreements",
+        customerContractsSubDomain: "Customer contracts",
+        supplierContractsSubDomain: "Supplier contracts",
+        employeesContractsSubDomain: "Employees contracts",
+        ipOwnershipSubDomain: "IP ownership",
+        entrepreneurialCharacterSubDomain: "Entrepreneurial character",
+        personalLegalLiabilitySubDomain: "Personal legal liability",
+        successionPlanSubDomain: "Succession plan",
+        boardOfDirectorsSubDomain: "Board of directors",
+
+        // Rating translations
+        ratingYes: "Yes",
+        ratingNo: "No",
+        ratingMaybe: "Maybe",
+
+        businessIncorporation: "Business incorporation",
+        businessIncorporationQuestion:
+          "Is the business incorporated/registered?",
+        businessIncorporationDescription:
+          "BRELA incorporation Certificate, MEMART",
+        taxIdentification: "Tax Identification",
+        taxIdentificationQuestion:
+          "Does the company have tax identification number?",
+        taxIdentificationDescription: "TIN Certificate",
+        taxCompliance: "Tax compliance",
+        taxComplianceQuestion:
+          "Is the business up to date with the required taxes?",
+        taxComplianceDescription: "Current tax fillings",
+        businessLicence: "Business Licence",
+        businessLicenceQuestion: "Does the business have required licenses?",
+        businessLicenceDescription: "Business licence certificate",
+        sectorSpecificCompliance: "Sector specific compliance",
+        sectorSpecificComplianceQuestion:
+          "Does the company have other certifications per the respective industry regulations?",
+        sectorSpecificComplianceDescription: "BOT Licence etc",
+        leaseAgreements: "Lease agreements",
+        leaseAgreementsQuestion: "Are lease agreements available and clear?",
+        leaseAgreementsDescription: "Contract",
+        customerContracts: "Customer contracts",
+        customerContractsQuestion:
+          "Are customer agreements available and clear?",
+        customerContractsDescription: "Contract",
+        supplierContracts: "Supplier contracts",
+        supplierContractsQuestion:
+          "Are supplier agreements available and clear?",
+        supplierContractsDescription: "Contract",
+        employeesContracts: "Employees contracts",
+        employeesContractsQuestion:
+          "Do employees have contracts (including the founders)?",
+        employeesContractsDescription: "Contract",
+        ipOwnership: "IP ownership",
+        ipOwnershipQuestion:
+          "Does the company own copyrights to its source codes/or patent to its solution?",
+        ipOwnershipDescription: "Copyrights",
+        entrepreneurialCharacter: "Entrepreneurial character",
+        entrepreneurialCharacterQuestion:
+          "Is the entrepreneur adaptable, resilient, and reliable?",
+        entrepreneurialCharacterDescription:
+          "Track record, pitch, innovation in business",
+        personalLegalLiability: "Personal legal liability",
+        personalLegalLiabilityQuestion:
+          "Does the management team have any personal liability that would affect the company?",
+        personalLegalLiabilityDescription: "Credit reports",
+        successionPlan: "Succession plan",
+        successionPlanQuestion: "Does the succession plan exist?",
+        successionPlanDescription: "Succession plans/Contracts/JD",
+        boardOfDirectors: "Board of directors",
+        boardOfDirectorsQuestion: "Does the company have an active BOD?",
+        boardOfDirectorsDescription: "List of board members + CVs",
+      },
+    },
+    operations: {
+      title: "Operations Domain Assessment",
+      sections: {
+        managementCapacity: "Management Capacity",
+        mis: "Management Information System",
+        qualityManagement: "Quality Management",
+        overallOperations: "Overall Operations",
+        strategyPlanning: "Strategy & Planning",
+      },
+      assessments: {
+        // Sub Domain translations
+        visionClaritySubDomain: "Vision clarity",
+        managementStructureSubDomain: "Management structure",
+        trackRecordSubDomain: "Track record",
+        managementCommitmentSubDomain: "Management commitment",
+        teamCapacitySubDomain: "Team capacity",
+        performanceMeasurementSubDomain: "Performance measurement",
+        professionalDevelopmentSubDomain: "Professional development",
+        dataManagementSubDomain: "Data management",
+        systemUsedSubDomain: "System used",
+        systemEffectivenessSubDomain: "System effectiveness",
+        qualityControlSubDomain: "Quality control",
+        qualityManagementTeamSubDomain: "Quality management team",
+        platformUtilizationSubDomain: "Platform utilization",
+        customerRelationsSubDomain: "Customer relations",
+        businessStrategySubDomain: "Business strategy",
+        organizationPlanningSubDomain: "Organization Planning",
+
+        // Rating translations
+        ratingYes: "Yes",
+        ratingNo: "No",
+        ratingMaybe: "Maybe",
+
+        visionClarity: "Vision clarity",
+        visionClarityQuestion: "Is the vision clear?",
+        visionClarityDescription: "Vision statement",
+        managementStructure: "Management structure",
+        managementStructureQuestion: "Is the management structure clear?",
+        managementStructureDescription: "Organogram",
+        trackRecord: "Track record",
+        trackRecordQuestion: "Does the team have credible track record?",
+        trackRecordDescription: "Management CVs",
+        managementCommitment: "Management commitment",
+        managementCommitmentQuestion: "Is the management fully committed?",
+        managementCommitmentDescription: "Works schedules and contracts",
+        teamCapacity: "Team capacity",
+        teamCapacityQuestion:
+          "Does the team have relevant technical competence?",
+        teamCapacityDescription: "CVs",
+        performanceMeasurement: "Performance measurement",
+        performanceMeasurementQuestion: "Is performance measured?",
+        performanceMeasurementDescription: "KPIs",
+        professionalDevelopment: "Professional development",
+        professionalDevelopmentQuestion:
+          "Does the company have a proper PD and or on-job training?",
+        professionalDevelopmentDescription:
+          "Organization PD plans/Job training modules",
+        dataManagement: "Data management",
+        dataManagementQuestion: "Is data collected and properly managed?",
+        dataManagementDescription: "Data protection policy",
+        systemUsed: "System used",
+        systemUsedQuestion:
+          "Is there an MIS for handling organization operations?",
+        systemUsedDescription: "MIS",
+        systemEffectiveness: "System effectiveness",
+        systemEffectivenessQuestion: "Is the MIS used effective?",
+        systemEffectivenessDescription: "MIS",
+        qualityControl: "Quality control",
+        qualityControlQuestion: "Is quality check a norm at the company?",
+        qualityControlDescription: "Quality manuals, quality control reports",
+        qualityManagementTeam: "Quality management team",
+        qualityManagementTeamQuestion:
+          "Are there personnel in charge of quality control?",
+        qualityManagementTeamDescription: "JD",
+        platformUtilization: "Platform utilization",
+        platformUtilizationQuestion: "Is the platform optimally utilized?",
+        platformUtilizationDescription: "Actual vis-a-vis ideal",
+        customerRelations: "Customer relations",
+        customerRelationsQuestion:
+          "Is customer relationship management organized?",
+        customerRelationsDescription:
+          "CRM/Platform/MIS/Automated Real-Time Responses",
+        businessStrategy: "Business strategy",
+        businessStrategyQuestion: "Does the company have a business strategy?",
+        businessStrategyDescription: "Strategy documents",
+        organizationPlanning: "Organization Planning",
+        organizationPlanningQuestion: "Is there a formal planning process?",
+        organizationPlanningDescription: "Planning doc/tool",
       },
     },
   },

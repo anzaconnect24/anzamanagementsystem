@@ -12,7 +12,7 @@ import {
   updateOperationData,
   attachDocument,
   deleteAttachment,
-  initialDataTemplate,
+  getInitialDataTemplate,
 } from "@/controllers/crat_operation_controller"; // Import updated API functions
 const tableHeaders = [
   "Sub Domain",
@@ -27,9 +27,13 @@ import { UserContext } from "../../../layouts/DashboardLayout";
 
 const OperationsDomain = () => {
   const { t } = useTranslation();
+
+  // Create translated template
+  const translatedTemplate = getInitialDataTemplate(t);
+
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(initialDataTemplate);
-  const [originalData, setOriginalData] = useState(initialDataTemplate);
+  const [data, setData] = useState(translatedTemplate);
+  const [originalData, setOriginalData] = useState(translatedTemplate);
   const [changesMade, setChangesMade] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
@@ -47,7 +51,7 @@ const OperationsDomain = () => {
           fetchData(); // Fetch again after creating market data
         } else {
           //console.log(responseData);
-          const updatedData = { ...initialDataTemplate };
+          const updatedData = { ...translatedTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               const fetchedItem = responseData.find(
@@ -151,7 +155,7 @@ const OperationsDomain = () => {
 
       // Fetch updated data
       const responseData = await getOperationData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
@@ -203,7 +207,7 @@ const OperationsDomain = () => {
       submitChanges();
       // Fetch updated data
       const responseData = await getOperationData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...translatedTemplate };
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {

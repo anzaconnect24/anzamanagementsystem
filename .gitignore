@@ -33,7 +33,7 @@ yarn.lock
 
 # vercel
 .vercel
-
+dist
 # typescript
 *.tsbuildinfo
 next-env.d.ts

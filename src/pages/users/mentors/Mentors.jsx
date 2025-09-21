@@ -5,8 +5,8 @@ import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
 import Image from "@/utils/image";
-import { useTranslation } from "../../../locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import { useTranslation } from "../../../locales";
 
 const Mentors = () => {
   const { t } = useTranslation();
