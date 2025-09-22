@@ -1,10 +1,15 @@
+import { useTranslation } from "../locales";
+
 const Pagination = ({ page, limit, count, setPage }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex justify-between md:items-start pt-4 items-center  text-sm md:text-base">
       {/* Showing results */}
       <div className="flex space-x-2 whitespace-nowrap text-gray-400 ">
-        Showing {(page - 1) * limit + 1} to {Math.min(page * limit, count)} of{" "}
-        {count} results
+        {t("pagination.showingEntries")} {(page - 1) * limit + 1}{" "}
+        {t("pagination.to")} {Math.min(page * limit, count)}{" "}
+        {t("pagination.of")} {count} {t("filters.results")}
       </div>
 
       {/* Pagination controls */}
@@ -17,7 +22,7 @@ const Pagination = ({ page, limit, count, setPage }) => {
             page === 1 ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
-          Previous
+          {t("pagination.previous")}
         </button>
 
         {/* Next button, disabled if on the last page */}
@@ -28,7 +33,7 @@ const Pagination = ({ page, limit, count, setPage }) => {
             page * limit >= count ? "opacity-50 cursor-not-allowed" : ""
           }`}
         >
-          Next
+          {t("pagination.next")}
         </button>
       </div>
     </div>

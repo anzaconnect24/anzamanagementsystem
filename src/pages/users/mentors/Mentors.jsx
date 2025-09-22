@@ -300,7 +300,9 @@ const Mentors = () => {
     setCurrentPage(1);
     setOpenDropdown(null);
   };
-
+  const makeFirstLetterLowercase = (str) => {
+    return str.charAt(0).toLowerCase() + str.slice(1);
+  };
   // Handle sort changes
   const handleSortChange = (key) => {
     setSortConfig((prev) => ({
@@ -596,11 +598,17 @@ const Mentors = () => {
                   <div className="absolute bottom-4 left-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
                       {item?.MentorProfile?.expertise ||
-                        Object.values(
-                          item?.MentorProfile?.areasOfExperties || {}
-                        )
-                          .slice(0, 2)
-                          .join(", ") ||
+                        t(
+                          `mentor.expertise.${makeFirstLetterLowercase(
+                            Object.values(
+                              item?.MentorProfile?.areasOfExperties || {}
+                            )
+                              .slice(0, 2)
+                              .join(", ")
+                              .replace("&", "And")
+                              .replaceAll(" ", "")
+                          )}`
+                        ) ||
                         t("users.generalExpertise", "General Expertise")}
                     </span>
                   </div>
@@ -654,7 +662,9 @@ const Mentors = () => {
                             d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                           />
                         </svg>
-                        <span className="line-clamp-1">{item.role}</span>
+                        <span className="line-clamp-1">
+                          {t("users.mentor", "mentor")}
+                        </span>
                       </div>
                     )}
                     <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">

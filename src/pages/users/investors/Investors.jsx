@@ -10,7 +10,7 @@ import { useTranslation } from "../../../locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
 const Page = () => {
-  const { t } = useTranslation();
+  const { t, isSwahili } = useTranslation();
   const router = useRouter();
   const { userDetails } = useContext(UserContext);
 
@@ -304,7 +304,6 @@ const Page = () => {
               {count} {t("users.investors", "Investors")}
             </span>
           </div>
-
           <div className="relative">
             <input
               type="text"
@@ -490,8 +489,10 @@ const Page = () => {
                     {/* Sector Badge */}
                     <div className="absolute bottom-4 left-4">
                       <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                        {investor?.InvestorProfile?.BusinessSector?.name ||
-                          t("users.noSector", "No Sector")}
+                        {isSwahili
+                          ? investor?.InvestorProfile?.BusinessSector?.swName
+                          : investor?.InvestorProfile?.BusinessSector?.name ||
+                            t("users.noSector", "No Sector")}
                       </span>
                     </div>
                   </div>
@@ -551,9 +552,14 @@ const Page = () => {
                           />
                         </svg>
                         <span className="line-clamp-1">
-                          {Object.values(
-                            investor?.InvestorProfile?.investmentType || {}
-                          ).join(", ") ||
+                          {t(
+                            `investor.type.${Object.values(
+                              investor?.InvestorProfile?.investmentType || {}
+                            ).join(", ")}`,
+                            Object.values(
+                              investor?.InvestorProfile?.investmentType || {}
+                            ).join(", ")
+                          ) ||
                             t(
                               "users.structureNotSpecified",
                               "Structure not specified"

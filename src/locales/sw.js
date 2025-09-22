@@ -355,7 +355,7 @@ export const sw = {
     noSector: "Hakuna Sekta",
     greeting: "Mpendwa {{name}}!",
     welcome:
-      "Karibu kwenye Mentors Hub yako. Hapa, unaweza kuona washauri wako wa sasa, kutazama wasifu wao, kupitia mawasiliano ya karibuni, na kupanga vipindi vijavyo.",
+      "Karibu kwenye ukurasa wa washauri wa biashara. Hapa, unaweza kuona washauri wako wa sasa, kutazama wasifu wao, kupitia mawasiliano ya karibuni, na kupanga vipindi vijavyo.",
     myMentors: "Washauri Wangu",
     searchPlaceholder: "Tafuta hapa",
     generalExpertise: "Utaalamu wa Jumla",
@@ -368,7 +368,7 @@ export const sw = {
   mentorDetails: {
     greeting: "Mpendwa {{name}}!",
     welcome:
-      "Karibu kwenye Mentor Hub yako. Hapa, utapata ripoti kutoka kwa mshauri wako. Unaweza kutazama wasifu wa mshauri wako, kufikia rasilimali alizoshiriki, na kupitia vipindi vyako vya ushauri.",
+      "Karibu kwenye ukurasa wa washauri wa biashara. Hapa, utapata ripoti kutoka kwa mshauri wako. Unaweza kutazama wasifu wa mshauri wako, kufikia rasilimali alizoshiriki, na kupitia vipindi vyako vya ushauri.",
     viewProfile: "Tazama Wasifu",
     resources: "Rasilimali",
     reports: "Ripoti",
@@ -948,7 +948,7 @@ export const sw = {
     admin: "Msimamizi",
     staff: "Mfanyakazi",
     investor: "Mwekezaji",
-    mentor: "Mshauri",
+    mentor: "Mshauri wa biashara",
     entrepreneur: "Mjasiriamali",
     reviewer: "Mhakiki",
     reviewers: "Wahakiki",
@@ -1020,7 +1020,7 @@ export const sw = {
     next: "Ifuatayo",
     pageLabel: "Ukurasa {{current}} wa {{total}}",
 
-    members: "wanachama",
+    members: "Wajasiriamali",
     usersCount: "watumiaji",
     searchEntrepreneurs: "Tafuta wajasiriamali...",
     allPrograms: "Programu Zote",

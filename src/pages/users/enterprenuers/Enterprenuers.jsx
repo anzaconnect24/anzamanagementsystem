@@ -10,7 +10,7 @@ import { UserContext } from "../../../layouts/DashboardLayout";
 
 import { useTranslation } from "@/locales";
 const Enterprenuers = () => {
-  const { t } = useTranslation();
+  const { t, isSwahili } = useTranslation();
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
   const [refresh, setRefresh] = useState(0);
@@ -61,7 +61,6 @@ const Enterprenuers = () => {
         "Investment Readiness",
         "Business Foundation",
         "Mentorship Program",
-        "Accelerator",
       ],
     },
     revenue: {
@@ -489,8 +488,10 @@ const Enterprenuers = () => {
                   {/* Sector Badge - Positioned over image */}
                   <div className="absolute bottom-4 left-4">
                     <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                      {item?.Business?.BusinessSector?.name ||
-                        t("users.noSector", "No Sector")}
+                      {isSwahili
+                        ? item?.Business?.BusinessSector?.swName
+                        : item?.Business?.BusinessSector?.name ||
+                          t("users.noSector", "No Sector")}
                     </span>
                   </div>
                 </div>

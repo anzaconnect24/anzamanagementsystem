@@ -23,7 +23,7 @@ import { useTranslation } from "@/locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
 const Page = () => {
-  const { t } = useTranslation();
+  const { t, isSwahili } = useTranslation();
   const { uuid } = useParams();
   const [business, setBusiness] = useState(null);
   const { userDetails } = useContext(UserContext);
@@ -645,8 +645,10 @@ const Page = () => {
               <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300">
                 <div className="text-4xl mb-3">🏢</div>
                 <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-1">
-                  {business?.BusinessSector?.name ||
-                    t("common.notProvided", "N/A")}{" "}
+                  {isSwahili
+                    ? business?.BusinessSector?.swName
+                    : business?.BusinessSector?.name ||
+                      t("common.notProvided", "N/A")}{" "}
                   {/* Updated to use BusinessSector.name */}
                 </h3>
                 <p className="text-sm font-medium text-gray-600 dark:text-gray-400">

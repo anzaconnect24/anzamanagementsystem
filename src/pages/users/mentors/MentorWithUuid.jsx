@@ -13,7 +13,7 @@ import { useTranslation } from "../../../locales";
 import { getUserInfo } from "../../../controllers/user_controller";
 
 const Page = () => {
-  const { t } = useTranslation();
+  const { t, isSwahili } = useTranslation();
   const { uuid } = useParams();
   const [user, setUser] = useState(null);
   const { userDetails } = useContext(UserContext);
@@ -86,8 +86,10 @@ const Page = () => {
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">💡</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 ">
-                {user?.MentorProfile?.BusinessSector?.name ||
-                  t("common.notAvailable", "N/A")}
+                {isSwahili
+                  ? user?.MentorProfile?.BusinessSector?.swName
+                  : user?.MentorProfile?.BusinessSector?.name ||
+                    t("common.notAvailable", "N/A")}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 {t("business.sector", "Sector")}

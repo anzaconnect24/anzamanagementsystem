@@ -52,7 +52,6 @@ const MentorEntreprenuer = () => {
         "Investment Readiness",
         "Business Foundation",
         "Mentorship Program",
-        "Accelerator",
       ],
     },
   };

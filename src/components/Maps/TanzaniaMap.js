@@ -175,7 +175,7 @@ const TANZANIA_BOUNDS = [
 ];
 
 const TanzaniaMap = () => {
-  const { t } = useTranslation();
+  const { t, isSwahili } = useTranslation();
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [mapData, setMapData] = useState({});
   const [loading, setLoading] = useState(true);
@@ -669,7 +669,9 @@ const TanzaniaMap = () => {
                               )}
                           </div>
                           <div className="text-xs text-gray-500">
-                            {entrepreneur.Business.BusinessSector.name}
+                            {isSwahili
+                              ? entrepreneur.Business.BusinessSector.swName
+                              : entrepreneur.Business.BusinessSector.name}
                           </div>
                         </div>
                         <div className="text-xs text-gray-500">

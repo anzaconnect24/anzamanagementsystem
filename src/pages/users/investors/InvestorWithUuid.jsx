@@ -63,7 +63,7 @@ const InvestorProfilePage = ({ params }) => {
   // Unwrap params using React.use()
   const unwrappedParams = params;
   const uuid = useParams().uuid;
-  const { t } = useTranslation();
+  const { t, isSwahili } = useTranslation();
 
   const { userDetails } = useContext(UserContext);
   const [user, setuser] = useState(null);
@@ -263,7 +263,9 @@ const InvestorProfilePage = ({ params }) => {
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
               <div className="text-4xl mb-3">💡</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 ">
-                {user?.InvestorProfile?.BusinessSector?.name || "N/A"}
+                {isSwahili
+                  ? user?.InvestorProfile?.BusinessSector?.swName
+                  : user?.InvestorProfile?.BusinessSector?.name || "N/A"}
               </h3>
               <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
                 {t("business.businessSector", "Sector")}
