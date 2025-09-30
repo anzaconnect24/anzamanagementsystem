@@ -15,6 +15,7 @@ import toast from "react-hot-toast";
 import { getConversations } from "../../../controllers/conversation_controller";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "../../../locales";
+import moment from "moment";
 
 const Conversations = () => {
   const [conversations, setConversations] = useState([]);
@@ -37,7 +38,7 @@ const Conversations = () => {
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            {t("chat.allChats", "Chats")}
+            {t("common.chats", "Chats")}
           </h4>
           <div className="mt-6 space-y-4">
             {conversations.length < 1 ? (
@@ -127,7 +128,9 @@ const Conversations = () => {
                       </div>
                     </div>
 
-                    <div className="w-2/12">{timeAgo(item.createdAt)}</div>
+                    <div className="w-2/12">
+                      {moment(item.createdAt).format("DD/MM/YYYY")}
+                    </div>
                   </div>
                 );
               })

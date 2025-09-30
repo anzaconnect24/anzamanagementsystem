@@ -3,12 +3,11 @@ import { useState, useContext, useEffect } from "react";
 import {
   getReportData,
   getScoreData,
-  initialData,
+  getInitialData,
   publishReport,
 } from "@/controllers/crat_general_controller"; // Import updated API functions
 import Modal2 from "@/components/Model2";
 import toast from "react-hot-toast";
-import { useTranslation } from "@/locales";
 import Loader from "@/components/common/Loader";
 import dynamic from "@/utils/dynamic";
 const BusinessDomainScores = dynamic(
@@ -24,16 +23,329 @@ import Breadcrumb from "@/component/Breadcrumb";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import { useRouter } from "../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "../../../locales";
 
 // Define the table headers
 const Report = () => {
-  const { t } = useTranslation();
+  const { t, switchLanguage, language, translations } = useTranslation();
   const tableHeaders = [
     t("report.subDomain", "Sub Domain"),
     t("report.score", "Score"),
     t("report.reportNarrative", "Report Narrative"),
   ];
-  const [data, setData] = useState(initialData);
+  const [data, setData] = useState({});
+  // Store incoming scores from backend so we can merge them once translations are ready
+  const [incomingScores, setIncomingScores] = useState(null);
+
+  // Map backend subDomain labels to our canonical item keys
+  const labelToKey = (labelRaw = "") => {
+    const label = String(labelRaw).trim().toLowerCase();
+    const map = {
+      // Market/Commercial
+      demand: "demand",
+      "market share": "marketShare",
+      sales: "sales",
+      "customer segments": "customerSegments",
+      "payment terms": "paymentTerms",
+      "sales strategy": "salesStrategy",
+      "product development": "productDevelopment",
+      "product distribution": "productDistribution",
+      "product pricing": "productPricing",
+      "product pricing basis": "productPricing",
+      "level of competition": "competitionLevel",
+      "competitive advantage": "competitiveAdvantage",
+      "marketing strategy": "marketingStrategy",
+      "branding and packaging": "branding",
+      "packaging & branding": "branding",
+      "product promotion": "promotionStrategy",
+      "promotion strategy": "promotionStrategy",
+
+      // Financial
+      revenue: "revenueGrowth",
+      "revenue growth": "revenueGrowth",
+      cost: "cost",
+      "cost management": "cost",
+      "working capital management": "workingCapital",
+      "assets management": "assetsManagement",
+      "debt manageability": "debtManagement",
+      "debt management": "debtManagement",
+      "obs items": "obsItems",
+      "operating cash flow": "operatingCashFlows",
+      "operating cash flows": "operatingCashFlows",
+      capex: "capex",
+      "capital expenses": "capex",
+      assumptions: "assumptions",
+      "quality of financial records": "financialRecords",
+      "financial reporting": "financialReporting",
+      "internal controls": "internalControls",
+      "tax liability": "taxLiabilities",
+      "tax liabilities": "taxLiabilities",
+
+      // Operations
+      "vision clarity": "visionClarity",
+      "management structure": "managementStructure",
+      "team capacity": "teamCapacity",
+      "professional development": "professionalDevelopment",
+      "track record": "trackRecord",
+      "performance measurement": "performanceMeasurement",
+      "management commitment": "managementCommitment",
+      "data management": "dataManagement",
+      "system used": "systemUsed",
+      "system effectiveness": "systemEffectiveness",
+      "quality control": "qualityControl",
+      "quality management team": "qualityManagementTeam",
+      "platform utilization": "platformUtilization",
+      "customer relations": "crm",
+      crm: "crm",
+      "business strategy": "businessStrategy",
+      "organizational planning": "organizationalPlanning",
+      "organization planning": "organizationalPlanning",
+
+      // Legal
+      "business incorporation": "businessIncorporation",
+      "tax identification": "taxIdentification",
+      "tax compliance": "taxCompliance",
+      "business licence": "businessLicense",
+      "business license": "businessLicense",
+      "sector specific compliance": "sectorSpecificLicense",
+      "sector specific license": "sectorSpecificLicense",
+      "lease agreements": "leaseAgreements",
+      "customer contracts": "customerAgreements",
+      "customer agreements": "customerAgreements",
+      "supplier contracts": "supplierAgreements",
+      "supplier agreements": "supplierAgreements",
+      "employees contracts": "employeeAgreements",
+      "employee agreements": "employeeAgreements",
+      "ip ownership": "ipOwnership",
+      "entrepreneurial character": "character",
+      character: "character",
+      "personal legal liability": "personalLegalLiability",
+      "succession plan": "successionPlan",
+      "board of directors": "bod",
+      bod: "bod",
+    };
+    return map[label] || null;
+  };
+
+  // Function to translate sections
+  const translateSection = (sectionData, sectionKey) => {
+    if (!sectionData || typeof sectionData !== "object") {
+      return {};
+    }
+
+    // Some domain keys differ between data and locales (e.g., commercial -> market)
+    const localeDomainKey = sectionKey === "commercial" ? "market" : sectionKey;
+    const translatedSection = {};
+
+    // Map item.key -> locale subdomain keys for sections that store labels under assessments
+    const getSubdomainLocaleKey = (domainKey, itemKey) => {
+      if (!domainKey || !itemKey) return null;
+      // Currently needed for financial where subdomain labels live in assessments.*SubDomain
+      if (domainKey === "financial") {
+        const map = {
+          revenueGrowth: "revenueSubDomain",
+          cost: "costManagementSubDomain",
+          workingCapital: "workingCapitalManagementSubDomain",
+          assetsManagement: "assetsManagementSubDomain",
+          debtManagement: "debtManageabilitySubDomain",
+          obsItems: "obsItemsSubDomain",
+          operatingCashFlows: "operatingCashFlowSubDomain",
+          capex: "capitalExpensesSubDomain",
+          assumptions: "assumptionsSubDomain",
+          financialRecords: "qualityOfFinancialRecordsSubDomain",
+          financialReporting: "financialReportingSubDomain",
+          internalControls: "internalControlsSubDomain",
+          taxLiabilities: "taxLiabilitySubDomain",
+        };
+        return map[itemKey]
+          ? `crat.${domainKey}.assessments.${map[itemKey]}`
+          : null;
+      }
+      if (domainKey === "operations") {
+        const map = {
+          visionClarity: "visionClaritySubDomain",
+          managementStructure: "managementStructureSubDomain",
+          trackRecord: "trackRecordSubDomain",
+          managementCommitment: "managementCommitmentSubDomain",
+          teamCapacity: "teamCapacitySubDomain",
+          performanceMeasurement: "performanceMeasurementSubDomain",
+          professionalDevelopment: "professionalDevelopmentSubDomain",
+          dataManagement: "dataManagementSubDomain",
+          systemUsed: "systemUsedSubDomain",
+          systemEffectiveness: "systemEffectivenessSubDomain",
+          qualityControl: "qualityControlSubDomain",
+          qualityManagementTeam: "qualityManagementTeamSubDomain",
+          platformUtilization: "platformUtilizationSubDomain",
+          crm: "customerRelationsSubDomain",
+          businessStrategy: "businessStrategySubDomain",
+          organizationalPlanning: "organizationPlanningSubDomain",
+        };
+        return map[itemKey]
+          ? `crat.${domainKey}.assessments.${map[itemKey]}`
+          : null;
+      }
+      if (domainKey === "legal") {
+        const map = {
+          businessIncorporation: "businessIncorporationSubDomain",
+          taxIdentification: "taxIdentificationSubDomain",
+          taxCompliance: "taxComplianceSubDomain",
+          businessLicense: "businessLicenceSubDomain", // British spelling in locale
+          sectorSpecificLicense: "sectorSpecificComplianceSubDomain",
+          leaseAgreements: "leaseAgreementsSubDomain",
+          customerAgreements: "customerContractsSubDomain",
+          supplierAgreements: "supplierContractsSubDomain",
+          employeeAgreements: "employeesContractsSubDomain",
+          ipOwnership: "ipOwnershipSubDomain",
+          character: "entrepreneurialCharacterSubDomain",
+          personalLegalLiability: "personalLegalLiabilitySubDomain",
+          successionPlan: "successionPlanSubDomain",
+          bod: "boardOfDirectorsSubDomain",
+        };
+        return map[itemKey]
+          ? `crat.${domainKey}.assessments.${map[itemKey]}`
+          : null;
+      }
+      if (domainKey === "market") {
+        const map = {
+          demand: "demandSubDomain",
+          marketShare: "marketShareSubDomain",
+          sales: "salesSubDomain",
+          customerSegments: "customerSegmentsSubDomain",
+          paymentTerms: "paymentTermsSubDomain",
+          salesStrategy: "salesStrategySubDomain",
+          productDevelopment: "productDevelopmentSubDomain",
+          productDistribution: "productDistributionSubDomain",
+          productPricing: "productPricingBasisSubDomain",
+          competitionLevel: "levelOfCompetitionSubDomain",
+          competitiveAdvantage: "competitiveAdvantageSubDomain",
+          marketingStrategy: "marketingStrategySubDomain",
+          branding: "packagingBrandingSubDomain",
+          promotionStrategy: "productPromotionSubDomain",
+        };
+        return map[itemKey]
+          ? `crat.${domainKey}.assessments.${map[itemKey]}`
+          : null;
+      }
+      return null;
+    };
+
+    // Safe nested lookup in current translations without defaulting to key strings
+    const getRawTranslation = (path) => {
+      if (!path) return undefined;
+      const parts = path.split(".");
+      let cur = translations;
+      for (const p of parts) {
+        if (cur && Object.prototype.hasOwnProperty.call(cur, p)) {
+          cur = cur[p];
+        } else {
+          return undefined;
+        }
+      }
+      return typeof cur === "string" ? cur : undefined;
+    };
+
+    Object.keys(sectionData).forEach((subsectionKey) => {
+      // Some subsection keys differ between data and locales
+      const subsectionKeyAliasMap = {
+        salesAndTraction: "salesTraction",
+        product: "productDevelopment",
+        competitionAnalysis: "competition",
+      };
+      const subsectionKeyForLocale =
+        subsectionKeyAliasMap[subsectionKey] || subsectionKey;
+      // Translate the section title (like "marketDemandShare" -> "Mahitaji ya Soko na Mgao")
+      const translatedSubsectionTitle = t(
+        `crat.${localeDomainKey}.sections.${subsectionKeyForLocale}`,
+        subsectionKey
+      );
+
+      console.log(
+        `Translating section: ${sectionKey}.sections.${subsectionKey} -> ${translatedSubsectionTitle}`
+      );
+
+      translatedSection[translatedSubsectionTitle] = sectionData[
+        subsectionKey
+      ].map((item) => {
+        // Prefer domain-specific subdomain key mapping when available
+        const subdomainKeyFromMap = getSubdomainLocaleKey(
+          localeDomainKey,
+          item.key
+        );
+        const translatedSubDomain = subdomainKeyFromMap
+          ? t(subdomainKeyFromMap, item.subDomain)
+          : item.key
+          ? t(`crat.${localeDomainKey}.${item.key}.title`, item.subDomain)
+          : item.subDomain;
+
+        return {
+          ...item,
+          subDomain: translatedSubDomain,
+          narrative: item.narrative.map((n) => {
+            // Try a few narrative key patterns. If none exist, keep original text.
+            const candidates = [
+              `crat.${localeDomainKey}.narratives.${item.key}.score${n.score}`,
+              `crat.${localeDomainKey}.${item.key}.score${n.score}`,
+            ];
+            let translatedText;
+            for (const cand of candidates) {
+              const val = getRawTranslation(cand);
+              if (typeof val === "string") {
+                translatedText = val;
+                break;
+              }
+            }
+            if (!translatedText) translatedText = n.text;
+            return { ...n, text: translatedText };
+          }),
+        };
+      });
+    });
+
+    return translatedSection;
+  };
+
+  // Merge incoming scores into translated data when language or scores change
+  useEffect(() => {
+    const initialData = getInitialData();
+
+    // Build translated data snapshot
+    let translatedData = {
+      commercial: translateSection(initialData.commercial, "commercial"),
+      financial: translateSection(initialData.financial, "financial"),
+      operations: translateSection(initialData.operations, "operations"),
+      legal: translateSection(initialData.legal, "legal"),
+    };
+
+    // Apply incoming scores (if any) by matching backend labels to item keys
+    if (Array.isArray(incomingScores) && incomingScores.length > 0) {
+      const applyScores = (draft) => {
+        const domains = ["commercial", "financial", "operations", "legal"];
+        const next = { ...draft };
+        incomingScores.forEach(({ subDomain, score }) => {
+          const key = labelToKey(subDomain);
+          if (!key) {
+            console.warn("No key mapping for backend subDomain:", subDomain);
+            return;
+          }
+          domains.forEach((domain) => {
+            const sectionObj = next[domain];
+            if (!sectionObj || typeof sectionObj !== "object") return;
+            Object.keys(sectionObj).forEach((sectionTitle) => {
+              const arr = sectionObj[sectionTitle];
+              if (!Array.isArray(arr)) return;
+              sectionObj[sectionTitle] = arr.map((item) =>
+                item?.key === key ? { ...item, score } : item
+              );
+            });
+          });
+        });
+        return next;
+      };
+      translatedData = applyScores(translatedData);
+    }
+
+    setData(translatedData);
+  }, [language, t, incomingScores]);
   const [scoreData, setScoreData] = useState({}); // State to hold the score data
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
@@ -61,7 +373,7 @@ const Report = () => {
         uuid: user_uuid || userDetails?.uuid,
       });
 
-      console.log("Raw score data:", responseData1);
+      console.log("Raw response data:", responseData);
 
       // Ensure scoreData has the correct structure
       if (responseData1 && Object.keys(responseData1).length > 0) {
@@ -87,7 +399,8 @@ const Report = () => {
         console.log("Using dummy data for charts:", dummyData);
       }
 
-      updateDataWithBackendResponse(responseData);
+      // Store scores to be merged into translated data by the effect above
+      setIncomingScores(responseData);
     } catch (error) {
       console.log("Error fetching data:", error);
 
@@ -113,35 +426,7 @@ const Report = () => {
     }
   };
 
-  const updateDataWithBackendResponse = (responseData) => {
-    const updatedData = { ...data };
-
-    responseData.forEach((responseItem) => {
-      const { subDomain, score } = responseItem;
-
-      Object.keys(updatedData).forEach((section) => {
-        if (Array.isArray(updatedData[section])) {
-          updatedData[section].forEach((subDomainGroup) => {
-            if (subDomainGroup.subDomain === subDomain) {
-              subDomainGroup.score = score;
-            }
-          });
-        } else {
-          Object.keys(updatedData[section]).forEach((subSection) => {
-            if (Array.isArray(updatedData[section][subSection])) {
-              updatedData[section][subSection].forEach((subDomainGroup) => {
-                if (subDomainGroup.subDomain === subDomain) {
-                  subDomainGroup.score = score;
-                }
-              });
-            }
-          });
-        }
-      });
-    });
-
-    setData(updatedData);
-  };
+  // Note: legacy update method removed in favor of score-merging effect above
 
   const publishChanges = async () => {
     try {
@@ -265,6 +550,13 @@ const Report = () => {
   };
 
   const renderSection = (title, sectionData) => {
+    console.log("Rendering section:", title, sectionData);
+    console.log("Rendering section:", title, Object.keys(sectionData));
+    // Return null if sectionData is not available
+    if (!sectionData || typeof sectionData !== "object") {
+      return null;
+    }
+
     // Generate the key from the title
     const domainKey = title.toLowerCase().replace(/[^a-z]/g, "");
 
@@ -326,6 +618,7 @@ const Report = () => {
         prevPage={t("common.back", "Back")}
         prevLink={""}
       />
+
       <div className="bg-white rounded-lg shadow-sm">
         <div className=" border-b border-black/0">
           <div className="flex justify-between items-center">
@@ -398,10 +691,13 @@ const Report = () => {
         </div>
       </div>
 
-      {renderSection(t("report.commercial", "Commercial"), data.commercial)}
-      {renderSection(t("report.financial", "Financial"), data.financial)}
-      {renderSection(t("report.operations", "Operations"), data.operations)}
-      {renderSection(t("report.legal", "Legal"), data.legal)}
+      {data.commercial &&
+        renderSection(t("report.commercial", "Commercial"), data.commercial)}
+      {data.financial &&
+        renderSection(t("report.financial", "Financial"), data.financial)}
+      {data.operations &&
+        renderSection(t("report.operations", "Operations"), data.operations)}
+      {data.legal && renderSection(t("report.legal", "Legal"), data.legal)}
 
       <Modal2
         isOpen={deletemodalOpen}

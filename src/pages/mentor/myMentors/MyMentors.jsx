@@ -29,7 +29,9 @@ const MentorEntreprenuer = () => {
   const getMentorName = (item) => {
     return item?.name || t("mentorHub.unnamedMentor", "Unnamed Mentor");
   };
-
+  const makeFirstLetterLowercase = (str) => {
+    return str.charAt(0).toLowerCase() + str.slice(1);
+  };
   // Helper function to get mentor sector
   const getMentorSector = (item) => {
     return (
@@ -127,11 +129,17 @@ const MentorEntreprenuer = () => {
                       <div className="absolute bottom-4 left-4">
                         <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
                           {item?.MentorProfile?.expertise ||
-                            Object.values(
-                              item?.MentorProfile?.areasOfExperties || {}
-                            )
-                              .slice(0, 2)
-                              .join(", ") ||
+                            t(
+                              `mentor.expertise.${makeFirstLetterLowercase(
+                                Object.values(
+                                  item?.MentorProfile?.areasOfExperties || {}
+                                )
+                                  .slice(0, 2)
+                                  .join(", ")
+                                  .replace("&", "And")
+                                  .replaceAll(" ", "")
+                              )}`
+                            ) ||
                             t(
                               "mentorHub.generalExpertise",
                               "General Expertise"
@@ -198,7 +206,9 @@ const MentorEntreprenuer = () => {
                                 d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
                               />
                             </svg>
-                            <span className="line-clamp-1">{item.role}</span>
+                            <span className="line-clamp-1">
+                              {t("users.mentor", "mentor")}
+                            </span>
                           </div>
                         )}
 

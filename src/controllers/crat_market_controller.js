@@ -106,7 +106,10 @@ export const deleteAttachment = async (domain, userId, attachment) => {
 export const getInitialDataTemplate = (t) => ({
   market: [
     {
-      subDomain: t("crat.market.assessments.demandSubDomain", "Demand"),
+      subDomain: t(
+        "report.capitalReadinessAssessmentReport",
+        "Capital Readiness Assessment Report"
+      ),
       question: t(
         "crat.market.assessments.demandQuestion",
         "Is there sufficient evidence for demand of your product?"

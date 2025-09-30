@@ -275,13 +275,13 @@ const InvestmentOpportunities = () => {
 
                 {/* Opportunity Details */}
                 <div className="space-y-2 mb-4">
-                  {opportunity.sector && (
+                  {/* {opportunity.sector && (
                     <div className="flex items-center gap-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {opportunity.sector}
                       </span>
                     </div>
-                  )}
+                  )} */}
 
                   {opportunity.amount && (
                     <div className="text-sm text-gray-600">
@@ -297,7 +297,12 @@ const InvestmentOpportunities = () => {
                       <span className="font-medium">
                         {t("investment.type", "Type")}:
                       </span>{" "}
-                      {opportunity.investmentType}
+                      {t(
+                        "investment.types." +
+                          opportunity.investmentType.toLowerCase(),
+                        opportunity.investmentType
+                      ) || opportunity.investmentType}
+                      {/* { opportunity.investmentType} */}
                     </div>
                   )}
                 </div>

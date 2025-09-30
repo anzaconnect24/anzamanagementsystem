@@ -1294,6 +1294,111 @@ export const en = {
         competition: "Competition",
         marketing: "Marketing",
       },
+      narratives: {
+        demand: {
+          score0:
+            "The business is operating in an industry it doesn't understand essential demand dynamics. It has no reports or statistical evidence to back up its claim of sufficient demand for its products or services",
+          score1:
+            "The business is operating in an industry in which it has limited understanding of demand dynamics. Nonetheless, there are either outdated data or reports to back its demand",
+          score2:
+            "The business is operating in an industry it fully understands with clear industry data on demand dynamics",
+        },
+        marketShare: {
+          score0:
+            "The company's market share is declining relative to its competitors and there seem to be no indication of acquiring more in the foreseeable future",
+          score1:
+            "The company's market share hasn't changed in the last 12 months but is likely to improve given the company's overall strategy",
+          score2:
+            "The company's market share has been growing in the past 12 months and is likely to continue growing in the foreseeable future relative to competitors",
+        },
+        sales: {
+          score0:
+            "Sales have not grown on a month-to-month or quarter-to-quarter basis for the past 12 months; i.e., MRR has been a net negative for the past 12 months",
+          score1:
+            "Sales didn't grow to the projected values but grew at a positive rate, with month growths alternating between positive and negative territories, leaving overall monthly change constant for the past 12 months",
+          score2:
+            "Monthly or quarterly sales were recording a positive increase, i.e., MRR recorded positive change throughout the year for the past 12 months",
+        },
+        customerSegments: {
+          score0:
+            "The company hasn't clearly identified key customers and segmented them; data-based is still raw",
+          score1:
+            "The company has identified the customer segments but has not yet determined which of them is the most valuable customer",
+          score2:
+            "The company has already done thorough customer segmentation and identified which are MVCs, focusing their sales resources on these segments",
+        },
+        paymentTerms: {
+          score0:
+            "The company has no clear payment terms; invoices to customers contain different payment durations for the same products",
+          score1:
+            "The company is working to improve its payment terms with customers; invoices for the same services to different customers are becoming increasingly similar, and there are potential customer agreement drafting conversations going on",
+          score2:
+            "There are clear payment terms as per the contract or subscription agreements",
+        },
+        salesStrategy: {
+          score0: "The company lacks a defined sales strategy",
+          score1: "The company is developing its sales strategy",
+          score2:
+            "The company has a sales strategy that guides its sales process",
+        },
+        productDevelopment: {
+          score0:
+            "The company doesn't have a product roadmap, and all improvements are impromptu",
+          score1:
+            "The company has some form of product roadmap, but it's not properly scheduled",
+          score2:
+            "The company has a proper product roadmap with a schedule of features to be released and a mode of testing the customer feedback of the same",
+        },
+        productDistribution: {
+          score0:
+            "The company hasn't figured out its product distribution model; there are multiple trials going on",
+          score1:
+            "The company has figured out several distribution models that work for the product and is gathering evidence on which would be economical and sustainable",
+          score2:
+            "The company already has a distribution model that works and is economical and sustainable",
+        },
+        productPricing: {
+          score0:
+            "The company has not yet figured out how to price its products/services and is trying to develop a pricing structure for the same",
+          score1:
+            "The company has established pricing for its products but remains open to changes following customer feedback",
+          score2:
+            "The company has developed a well-structured pricing system for its products/services",
+        },
+        competitionLevel: {
+          score0: "There's unhealthy competition in the industry",
+          score1:
+            "The competitive landscape is improving, enabling the company to innovate",
+          score2: "There is a very healthy competitive landscape",
+        },
+        competitiveAdvantage: {
+          score0: "The company has no apparent competitive advantage",
+          score1:
+            "The company is improving its value proposition to cement its competitive advantage in the market",
+          score2: "The company has a clear and visible competitive advantage",
+        },
+        marketingStrategy: {
+          score0: "The company has no marketing strategy",
+          score1: "The company is developing its marketing strategy",
+          score2:
+            "The company has an active and well-executed marketing strategy",
+        },
+        branding: {
+          score0:
+            "The company is not properly branded; no brand guidelines exist",
+          score1:
+            "The company is developing its branding and packaging, including such brand and packaging items relevant and consistent with its overall business strategy",
+          score2:
+            "The company is properly packaged and branded, manifested by their existing brand guidelines and execution",
+        },
+        promotionStrategy: {
+          score0: "The company has no promotion strategy",
+          score1:
+            "The company is developing a promotional strategy for its suite of products",
+          score2:
+            "The company has a working promotional strategy consistent with their growth plans",
+        },
+      },
       assessments: {
         // Sub Domain translations
         demandSubDomain: "Demand",
@@ -1374,26 +1479,6 @@ export const en = {
         productPromotionDescription: "Promotion strategy doc vs projections",
       },
     },
-    legal: {
-      title: "Legal Domain Assessment",
-      sections: {
-        corporateDocsCompliance: "1. Corporate Documents & Compliance",
-        contractsAgreements: "2. Contracts & Agreements",
-        intellectualProperty: "3. Intellectual Property",
-        entrepreneurFamily: "4. Entrepreneur & Family",
-        corporateGovernance: "5. Corporate Governance",
-      },
-    },
-    operations: {
-      title: "Operations Domain Assessment",
-      sections: {
-        managementCapacity: "1. Management Capacity",
-        mis: "2. MIS",
-        qualityManagement: "3. Quality Management",
-        overallOperations: "4. Overall Operations",
-        strategyPlanning: "5. Strategy & Planning",
-      },
-    },
     financial: {
       title: "Financial Domain Assessment",
       sections: {
@@ -1402,6 +1487,93 @@ export const en = {
         cashFlows: "Cash Flows",
         projections: "Projections",
         financialManagement: "Financial Management",
+      },
+      narratives: {
+        revenueGrowth: {
+          score0:
+            "Revenue has been declining on a month-to-month or quarter-to-quarter basis, with a net negative growth for the past year",
+          score1:
+            "Revenue growth trended between negative and positive, alternating between months/quarters, resulting in 0% overall growth in a year",
+          score2:
+            "Revenue growth was positive month-on-month or quarter-on-quarter, recording overall positive growth for the year",
+        },
+        cost: {
+          score0: "Unit costs increased in the year",
+          score1: "Unit costs remained relatively constant in the year",
+          score2: "Unit costs declined in the year",
+        },
+        workingCapital: {
+          score0:
+            "Working capital was not well managed, and the company had to seek short-term funding to cover shortfalls",
+          score1:
+            "Working capital was adequately managed but not well enough to support growth",
+          score2:
+            "Working capital was well managed and supported the growth of the business",
+        },
+        assetsManagement: {
+          score0:
+            "Assets were not well managed, with asset turnover substantially below 1",
+          score1:
+            "Assets were satisfactorily managed, with asset turnover at or slightly above 1",
+          score2:
+            "Assets were well managed, with asset turnover substantially above 1",
+        },
+        debtManagement: {
+          score0: "Debt is mismanaged and is causing stress to the company",
+          score1:
+            "Debt is satisfactorily managed but there are visible risks in the near future",
+          score2:
+            "Debt is well managed and is proving to be very useful in generating value for shareholders",
+        },
+        obsItems: {
+          score0:
+            "OBS items have a substantial negative effect on the company's financial health",
+          score1: "OBS items have a small negative effect on the balance sheet",
+          score2:
+            "OBS items have no negative effect on the company's balance sheet",
+        },
+        operatingCashFlows: {
+          score0:
+            "OCF is negative, and funding for operations came from other sources",
+          score1:
+            "OCF was negative but showed substantial improvement across the year, with no additional cash required from other sources to finance operations",
+          score2: "OCF was positive and fully funded the company's operations",
+        },
+        capex: {
+          score0:
+            "No CapEx were done, and the company is running on depleted fixed assets",
+          score1:
+            "Small CapEx was undertaken but not enough to facilitate growth",
+          score2: "CapEx was done consistent with the growth plan",
+        },
+        assumptions: {
+          score0: "Financial assumptions are overly hypothetical",
+          score1: "Financial assumptions are a mix of reality and hypothesis",
+          score2: "Financial assumptions are rooted in reality",
+        },
+        financialRecords: {
+          score0: "No clear financial records available",
+          score1:
+            "Financial records available but have questionable accuracy and consistency",
+          score2: "Excellent financial records",
+        },
+        financialReporting: {
+          score0: "No financial statements available",
+          score1: "No consistency in publishing financial reports",
+          score2: "Financial reports are consistently published",
+        },
+        internalControls: {
+          score0: "No internal controls exist",
+          score1: "Internal controls exist but are not adhered to",
+          score2: "Internal controls exist and are adhered to",
+        },
+        taxLiabilities: {
+          score0:
+            "There are unsettled taxes that might jeopardize the compliance of the company in the future",
+          score1:
+            "The tax liabilities existing are being addressed by management",
+          score2: "There are no outstanding tax liabilities",
+        },
       },
       assessments: {
         // Sub Domain translations
@@ -1475,11 +1647,97 @@ export const en = {
     legal: {
       title: "Legal Domain Assessment",
       sections: {
-        corporateDocumentsCompliance: "Corporate Documents Compliance",
+        corporateDocumentsAndCompliance: "Corporate Documents Compliance",
         contractsAgreements: "Contracts & Agreements",
         intellectualProperty: "Intellectual Property",
         entrepreneurFamily: "Entrepreneur & Family",
         corporateGovernance: "Corporate Governance",
+      },
+      narratives: {
+        businessIncorporation: {
+          score0: "The business is not legally registered",
+          score1: "The business has filed with BRELA for registration",
+          score2:
+            "The business is legally registered and has a relevant BRELA certificate",
+        },
+        taxIdentification: {
+          score0: "The company has no TIN",
+          score1: "The company has filed for TIN",
+          score2: "The company has a current TIN",
+        },
+        taxCompliance: {
+          score0: "The company has not yet filed its tax returns",
+          score1: "The company has filed tax returns but not yet cleared",
+          score2: "The company has tax clearance",
+        },
+        businessLicense: {
+          score0: "The business has not yet received a business license",
+          score1:
+            "The company has already sent in an application for a license",
+          score2: "The company has a business license",
+        },
+        sectorSpecificLicense: {
+          score0: "The company doesn't have a sector-specific license",
+          score1:
+            "The company has already submitted an application for a license to the regulator",
+          score2: "The company has a license from the regulator",
+        },
+        leaseAgreements: {
+          score0: "Lease agreements don't exist and/or are unclear",
+          score1: "Lease agreements are being developed",
+          score2: "Lease agreements are very clear",
+        },
+        customerAgreements: {
+          score0:
+            "Customer agreements available are not in favor of the company",
+          score1:
+            "Company is renegotiating the terms with customers to improve its position on the contracts",
+          score2: "Contracts available are in favor of the company",
+        },
+        supplierAgreements: {
+          score0:
+            "Supplier agreements available are not in favor of the company",
+          score1:
+            "Company is renegotiating supplier agreements to improve its position",
+          score2: "Supplier agreements are in favor of the company",
+        },
+        employeeAgreements: {
+          score0: "Employees don't have contracts",
+          score1:
+            "Employees have contracts which require a revisit for improvements",
+          score2: "Employee contracts are available",
+        },
+        ipOwnership: {
+          score0:
+            "Company doesn't own its IP (trademarks or copyrights) to source code or brand",
+          score1: "Company is transitioning from renting IP to owning it",
+          score2:
+            "Company owns its IP, including source code, trademarks, and other trade secrets",
+        },
+        character: {
+          score0: "The founder's character is questionable",
+          score1: "The founder has a history with a tainted image",
+          score2:
+            "The founder's character is that of a reliable, adaptable, and trustworthy person",
+        },
+        personalLegalLiability: {
+          score0:
+            "The founder has legal liabilities which have a negative effect on the company",
+          score1:
+            "The founder has legal liabilities which have a moderate effect on the functioning of the company",
+          score2:
+            "The founder has little or no legal liabilities that have no or extremely limited effect on the functioning of the company",
+        },
+        successionPlan: {
+          score0: "There's no succession plan",
+          score1: "The founder has created an informal succession plan",
+          score2: "There's a formal succession plan for the company",
+        },
+        bod: {
+          score0: "Company doesn't have a board of directors or advisors",
+          score1: "Company has a board but it isn't active",
+          score2: "The BOD is active and provides oversight as required",
+        },
       },
       assessments: {
         // Sub Domain translations
@@ -1567,6 +1825,120 @@ export const en = {
         qualityManagement: "Quality Management",
         overallOperations: "Overall Operations",
         strategyPlanning: "Strategy & Planning",
+      },
+      narratives: {
+        visionClarity: {
+          score0: "The vision of the company is vague",
+          score1:
+            "The vision is not very clear and the management makes efforts to enable employees to understand it",
+          score2:
+            "The vision is very clear and everyone at the company lives to see it fulfilled",
+        },
+        managementStructure: {
+          score0:
+            "There's no particular structure and thus reporting lines are not clear",
+          score1:
+            "The team is making efforts to establish clear reporting lines to support its operational goals",
+          score2:
+            "The company has clear reporting lines and is equipped to deliver on operational goals",
+        },
+        trackRecord: {
+          score0:
+            "The team's track record is inadequate to deliver on the mandate of the company",
+          score1:
+            "The team's track record is mixed with limited ability to deliver on the company's mandate",
+          score2:
+            "The team has a credible track record and is able to deliver on the company's mandate",
+        },
+        managementCommitment: {
+          score0:
+            "The management is substantially partially committed with key managers spending less than 25% of their time on day-to-day running of the company",
+          score1:
+            "The management is partially committed with key managers spending only 50% of their time on running the company",
+          score2:
+            "The management is fully committed and each senior manager spends 100% of their time in running the company",
+        },
+        teamCapacity: {
+          score0:
+            "There are notable technical and managerial gaps in the company's team",
+          score1:
+            "There are a few technical and managerial gaps but they are addressed through part-time consulting services",
+          score2:
+            "The team is complete in its technical and managerial capabilities",
+        },
+        performanceMeasurement: {
+          score0:
+            "The team doesn't gauge performance, and as such every action taken seems ad hoc",
+          score1:
+            "The team has some form of performance measurement but not standardized",
+          score2:
+            "The company measures performance and tracks it through standardized means, including KPIs",
+        },
+        professionalDevelopment: {
+          score0: "The company has no structured PD or on-job trainings",
+          score1:
+            "The company is developing PD plans and on-job training manuals",
+          score2:
+            "The company has well-structured PD and on-job training sessions that are well executed",
+        },
+        dataManagement: {
+          score0: "Data is not consciously collected or managed by the company",
+          score1:
+            "Data collected is not managed properly for informing the company's strategy",
+          score2:
+            "The company consciously collects data, manages it, and uses the data to inform its strategy",
+        },
+        systemUsed: {
+          score0: "The company doesn't have any MIS in use",
+          score1:
+            "The company has an MIS but it doesn't seem to be compatible with its operations",
+          score2:
+            "The company uses an MIS that is compatible with its operations",
+        },
+        systemEffectiveness: {
+          score0: "The MIS used is not effective",
+          score1: "The MIS used is slightly effective",
+          score2: "The MIS used is very effective",
+        },
+        qualityControl: {
+          score0:
+            "No quality checks exist in the company for its products or services",
+          score1: "There are occasional product/service checks",
+          score2:
+            "Quality checks for products/services are standardized and fully integrated into the company's operations",
+        },
+        qualityManagementTeam: {
+          score0: "No quality management team or function in the company",
+          score1:
+            "Quality management function exists but is managed occasionally by consultants",
+          score2:
+            "The quality management function is fully operational and adequately staffed",
+        },
+        platformUtilization: {
+          score0: "The company's assets lie idle",
+          score1: "Assets are underutilized, i.e., below 50% of their capacity",
+          score2: "Assets are fully utilized",
+        },
+        crm: {
+          score0: "Customer relations at the company are not organized",
+          score1:
+            "There's some form of customer relations management but it's not very organized",
+          score2:
+            "Customer relation management is managed well with the support of relevant tools",
+        },
+        businessStrategy: {
+          score0: "The company doesn't have a consistent business strategy",
+          score1:
+            "The company is crafting a business strategy to guide its operations",
+          score2:
+            "The company has a clear business strategy that guides its organizational goal setting and operations",
+        },
+        organizationalPlanning: {
+          score0: "No organizational planning exists",
+          score1:
+            "Organizational planning is occasional and subject to particular needs",
+          score2: "Organizational planning process is standardized",
+        },
       },
       assessments: {
         // Sub Domain translations

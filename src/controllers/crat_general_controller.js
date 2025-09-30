@@ -67,10 +67,11 @@ export const getScoreData = async ({ uuid }) => {
   }
 };
 
-export const initialData = {
+export const getInitialData = () => ({
   commercial: {
-    "Market demand and share": [
+    marketDemandShare: [
       {
+        key: "demand",
         subDomain: "Demand",
         score: 0,
         narrative: [
@@ -89,6 +90,7 @@ export const initialData = {
         ],
       },
       {
+        key: "marketShare",
         subDomain: "Market share",
         score: 0,
         narrative: [
@@ -107,8 +109,9 @@ export const initialData = {
         ],
       },
     ],
-    "Sales and traction": [
+    salesAndTraction: [
       {
+        key: "sales",
         subDomain: "Sales",
         score: 0,
         narrative: [
@@ -127,6 +130,7 @@ export const initialData = {
         ],
       },
       {
+        key: "customerSegments",
         subDomain: "Customer segments",
         score: 0,
         narrative: [
@@ -145,6 +149,7 @@ export const initialData = {
         ],
       },
       {
+        key: "paymentTerms",
         subDomain: "Payment terms",
         score: 0,
         narrative: [
@@ -163,11 +168,18 @@ export const initialData = {
         ],
       },
       {
+        key: "salesStrategy",
         subDomain: "Sales strategy",
         score: 0,
         narrative: [
-          { score: 0, text: "The company lacks a defined sales strategy" },
-          { score: 1, text: "The company is developing its sales strategy" },
+          {
+            score: 0,
+            text: "The company lacks a defined sales strategy",
+          },
+          {
+            score: 1,
+            text: "The company is developing its sales strategy",
+          },
           {
             score: 2,
             text: "The company has a sales strategy that guides its sales process",
@@ -175,8 +187,9 @@ export const initialData = {
         ],
       },
     ],
-    Product: [
+    product: [
       {
+        key: "productDevelopment",
         subDomain: "Product development",
         score: 0,
         narrative: [
@@ -195,6 +208,7 @@ export const initialData = {
         ],
       },
       {
+        key: "productDistribution",
         subDomain: "Product distribution",
         score: 0,
         narrative: [
@@ -213,6 +227,7 @@ export const initialData = {
         ],
       },
       {
+        key: "productPricing",
         subDomain: "Product pricing",
         score: 0,
         narrative: [
@@ -231,20 +246,28 @@ export const initialData = {
         ],
       },
     ],
-    "Competition analysis": [
+    competitionAnalysis: [
       {
+        key: "competitionLevel",
         subDomain: "Level of competition",
         score: 0,
         narrative: [
-          { score: 0, text: "There's unhealthy competition in the industry" },
+          {
+            score: 0,
+            text: "There's unhealthy competition in the industry",
+          },
           {
             score: 1,
             text: "The competitive landscape is improving, enabling the company to innovate",
           },
-          { score: 2, text: "There is a very healthy competitive landscape" },
+          {
+            score: 2,
+            text: "There is a very healthy competitive landscape",
+          },
         ],
       },
       {
+        key: "competitiveAdvantage",
         subDomain: "Competitive advantage",
         score: 0,
         narrative: [
@@ -263,12 +286,16 @@ export const initialData = {
         ],
       },
     ],
-    Marketing: [
+    marketing: [
       {
+        key: "marketingStrategy",
         subDomain: "Marketing strategy",
         score: 0,
         narrative: [
-          { score: 0, text: "The company has no marketing strategy" },
+          {
+            score: 0,
+            text: "The company has no marketing strategy",
+          },
           {
             score: 1,
             text: "The company is developing its marketing strategy",
@@ -280,6 +307,7 @@ export const initialData = {
         ],
       },
       {
+        key: "branding",
         subDomain: "Branding and packaging",
         score: 0,
         narrative: [
@@ -298,10 +326,14 @@ export const initialData = {
         ],
       },
       {
+        key: "promotionStrategy",
         subDomain: "Promotion strategy",
         score: 0,
         narrative: [
-          { score: 0, text: "The company has no promotion strategy" },
+          {
+            score: 0,
+            text: "The company has no promotion strategy",
+          },
           {
             score: 1,
             text: "The company is developing a promotional strategy for its suite of products",
@@ -315,8 +347,9 @@ export const initialData = {
     ],
   },
   financial: {
-    Profitability: [
+    profitability: [
       {
+        key: "revenueGrowth",
         subDomain: "Revenue growth",
         score: 0,
         narrative: [
@@ -335,6 +368,7 @@ export const initialData = {
         ],
       },
       {
+        key: "cost",
         subDomain: "Cost",
         score: 0,
         narrative: [
@@ -347,8 +381,9 @@ export const initialData = {
         ],
       },
     ],
-    "Balance sheet": [
+    balanceSheet: [
       {
+        key: "workingCapital",
         subDomain: "Working capital management",
         score: 0,
         narrative: [
@@ -367,6 +402,7 @@ export const initialData = {
         ],
       },
       {
+        key: "assetsManagement",
         subDomain: "Assets management",
         score: 0,
         narrative: [
@@ -385,6 +421,7 @@ export const initialData = {
         ],
       },
       {
+        key: "debtManagement",
         subDomain: "Debt management",
         score: 0,
         narrative: [
@@ -403,6 +440,7 @@ export const initialData = {
         ],
       },
       {
+        key: "obsItems",
         subDomain: "OBS Items",
         score: 0,
         narrative: [
@@ -421,8 +459,9 @@ export const initialData = {
         ],
       },
     ],
-    "Cash flows": [
+    cashFlows: [
       {
+        key: "operatingCashFlows",
         subDomain: "Operating cash flows",
         score: 0,
         narrative: [
@@ -441,6 +480,7 @@ export const initialData = {
         ],
       },
       {
+        key: "capex",
         subDomain: "CAPEX",
         score: 0,
         narrative: [
@@ -456,8 +496,9 @@ export const initialData = {
         ],
       },
     ],
-    Projections: [
+    projections: [
       {
+        key: "assumptions",
         subDomain: "Assumptions",
         score: 0,
         narrative: [
@@ -470,8 +511,9 @@ export const initialData = {
         ],
       },
     ],
-    "Financial management": [
+    financialManagement: [
       {
+        key: "financialRecords",
         subDomain: "Quality of financial records",
         score: 0,
         narrative: [
@@ -484,6 +526,7 @@ export const initialData = {
         ],
       },
       {
+        key: "financialReporting",
         subDomain: "Financial reporting",
         score: 0,
         narrative: [
@@ -493,6 +536,7 @@ export const initialData = {
         ],
       },
       {
+        key: "internalControls",
         subDomain: "Internal controls",
         score: 0,
         narrative: [
@@ -502,6 +546,7 @@ export const initialData = {
         ],
       },
       {
+        key: "taxLiabilities",
         subDomain: "Tax liabilities",
         score: 0,
         narrative: [
@@ -519,8 +564,9 @@ export const initialData = {
     ],
   },
   operations: {
-    "Management Capacity": [
+    managementCapacity: [
       {
+        key: "visionClarity",
         subDomain: "Vision clarity",
         score: 0,
         narrative: [
@@ -536,6 +582,7 @@ export const initialData = {
         ],
       },
       {
+        key: "managementStructure",
         subDomain: "Management structure",
         score: 0,
         narrative: [
@@ -554,6 +601,7 @@ export const initialData = {
         ],
       },
       {
+        key: "trackRecord",
         subDomain: "Track record",
         score: 0,
         narrative: [
@@ -572,6 +620,7 @@ export const initialData = {
         ],
       },
       {
+        key: "managementCommitment",
         subDomain: "Management commitment",
         score: 0,
         narrative: [
@@ -590,6 +639,7 @@ export const initialData = {
         ],
       },
       {
+        key: "teamCapacity",
         subDomain: "Team capacity",
         score: 0,
         narrative: [
@@ -608,6 +658,7 @@ export const initialData = {
         ],
       },
       {
+        key: "performanceMeasurement",
         subDomain: "Performance measurement",
         score: 0,
         narrative: [
@@ -626,6 +677,7 @@ export const initialData = {
         ],
       },
       {
+        key: "professionalDevelopment",
         subDomain: "Professional development",
         score: 0,
         narrative: [
@@ -644,8 +696,9 @@ export const initialData = {
         ],
       },
     ],
-    "Management Information System": [
+    mis: [
       {
+        key: "dataManagement",
         subDomain: "Data management",
         score: 0,
         narrative: [
@@ -664,6 +717,7 @@ export const initialData = {
         ],
       },
       {
+        key: "systemUsed",
         subDomain: "System used",
         score: 0,
         narrative: [
@@ -679,6 +733,7 @@ export const initialData = {
         ],
       },
       {
+        key: "systemEffectiveness",
         subDomain: "System effectiveness",
         score: 0,
         narrative: [
@@ -688,8 +743,9 @@ export const initialData = {
         ],
       },
     ],
-    "Quality management": [
+    qualityManagement: [
       {
+        key: "qualityControl",
         subDomain: "Quality control",
         score: 0,
         narrative: [
@@ -705,6 +761,7 @@ export const initialData = {
         ],
       },
       {
+        key: "qualityManagementTeam",
         subDomain: "Quality management team",
         score: 0,
         narrative: [
@@ -723,8 +780,9 @@ export const initialData = {
         ],
       },
     ],
-    "Overall Operations": [
+    overallOperations: [
       {
+        key: "platformUtilization",
         subDomain: "Platform utilization",
         score: 0,
         narrative: [
@@ -737,6 +795,7 @@ export const initialData = {
         ],
       },
       {
+        key: "crm",
         subDomain: "CRM",
         score: 0,
         narrative: [
@@ -755,8 +814,9 @@ export const initialData = {
         ],
       },
     ],
-    "Planning and Strategy": [
+    strategyPlanning: [
       {
+        key: "businessStrategy",
         subDomain: "Business strategy",
         score: 0,
         narrative: [
@@ -775,6 +835,7 @@ export const initialData = {
         ],
       },
       {
+        key: "organizationalPlanning",
         subDomain: "Organizational planning",
         score: 0,
         narrative: [
@@ -788,10 +849,10 @@ export const initialData = {
       },
     ],
   },
-
   legal: {
-    "Corporate Documents and Compliance": [
+    corporateDocumentsAndCompliance: [
       {
+        key: "businessIncorporation",
         subDomain: "Business incorporation",
         score: 0,
         narrative: [
@@ -807,6 +868,7 @@ export const initialData = {
         ],
       },
       {
+        key: "taxIdentification",
         subDomain: "Tax Identification",
         score: 0,
         narrative: [
@@ -816,6 +878,7 @@ export const initialData = {
         ],
       },
       {
+        key: "taxCompliance",
         subDomain: "Tax compliance",
         score: 0,
         narrative: [
@@ -828,6 +891,7 @@ export const initialData = {
         ],
       },
       {
+        key: "businessLicense",
         subDomain: "Business license",
         score: 0,
         narrative: [
@@ -843,6 +907,7 @@ export const initialData = {
         ],
       },
       {
+        key: "sectorSpecificLicense",
         subDomain: "Sector specific license",
         score: 0,
         narrative: [
@@ -858,8 +923,9 @@ export const initialData = {
         ],
       },
     ],
-    "Contracts & Agreements": [
+    contractsAgreements: [
       {
+        key: "leaseAgreements",
         subDomain: "Lease agreements",
         score: 0,
         narrative: [
@@ -869,6 +935,7 @@ export const initialData = {
         ],
       },
       {
+        key: "customerAgreements",
         subDomain: "Customer agreements",
         score: 0,
         narrative: [
@@ -884,6 +951,7 @@ export const initialData = {
         ],
       },
       {
+        key: "supplierAgreements",
         subDomain: "Supplier agreements",
         score: 0,
         narrative: [
@@ -899,6 +967,7 @@ export const initialData = {
         ],
       },
       {
+        key: "employeeAgreements",
         subDomain: "Employee agreements",
         score: 0,
         narrative: [
@@ -911,8 +980,9 @@ export const initialData = {
         ],
       },
     ],
-    "Intellectual Property": [
+    intellectualProperty: [
       {
+        key: "ipOwnership",
         subDomain: "IP ownership",
         score: 0,
         narrative: [
@@ -931,8 +1001,9 @@ export const initialData = {
         ],
       },
     ],
-    "Entrepreneur & Family": [
+    entrepreneurFamily: [
       {
+        key: "character",
         subDomain: "Character",
         score: 0,
         narrative: [
@@ -945,6 +1016,7 @@ export const initialData = {
         ],
       },
       {
+        key: "personalLegalLiability",
         subDomain: "Personal legal liability",
         score: 0,
         narrative: [
@@ -963,6 +1035,7 @@ export const initialData = {
         ],
       },
       {
+        key: "successionPlan",
         subDomain: "Succession plan",
         score: 0,
         narrative: [
@@ -978,8 +1051,9 @@ export const initialData = {
         ],
       },
     ],
-    "Corporate Governance": [
+    corporateGovernance: [
       {
+        key: "bod",
         subDomain: "BOD",
         score: 0,
         narrative: [
@@ -987,7 +1061,10 @@ export const initialData = {
             score: 0,
             text: "Company doesn't have a board of directors or advisors",
           },
-          { score: 1, text: "Company has a board but it isn't active" },
+          {
+            score: 1,
+            text: "Company has a board but it isn't active",
+          },
           {
             score: 2,
             text: "The BOD is active and provides oversight as required",
@@ -996,4 +1073,4 @@ export const initialData = {
       },
     ],
   },
-};
+});

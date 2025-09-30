@@ -12,6 +12,7 @@ export const sw = {
     programs: "Fursa",
     opportunities: "Fursa za Uwekezaji",
     chats: "Ujumbe Mfupi",
+    allChats: "Jumbe Zote",
     logout: "Toka",
     login: "Ingia",
     signup: "Jisajili",
@@ -989,7 +990,7 @@ export const sw = {
     sortBy: "Panga Kwa",
 
     // Filter values - Sectors
-    allSectors: "Sekta Zote",
+    allSectors: "Sekta",
     allExpertise: "Utaalam",
     technology: "Teknolojia",
     healthcare: "Afya",
@@ -1008,7 +1009,7 @@ export const sw = {
     leadership: "Uongozi",
 
     // Filter values - Years
-    allYears: "Miaka Yote",
+    allYears: "Miaka",
 
     // Pagination
     showingRange: "Inaonyesha {{start}} - {{end}} ya {{total}} {{type}}",
@@ -1023,8 +1024,8 @@ export const sw = {
     members: "Wajasiriamali",
     usersCount: "watumiaji",
     searchEntrepreneurs: "Tafuta wajasiriamali...",
-    allPrograms: "Programu Zote",
-    allRevenue: "Mapato Yote",
+    allPrograms: "Programu",
+    allRevenue: "Mapato",
     investmentReadiness: "Uwezo wa Uwekezaji",
     businessFoundation: "Msingi wa Biashara",
     mentorshipProgram: "Programu ya Ulezi",
@@ -1056,8 +1057,8 @@ export const sw = {
     askForInvestment: "Omba Uwekezaji",
     ticketSize: "Kiwango cha Tiketi",
     structure: "Muundo",
-    allTicketSizes: "Viwango Vyote vya Tiketi",
-    allStructures: "Miundo Yote",
+    allTicketSizes: "Viwango vya Tiketi",
+    allStructures: "Aina ya Uwekezaje",
     ticketSizeNotSpecified: "Kiwango cha tiketi hakijawekwa",
     structureNotSpecified: "Muundo haujaainishwa",
     joinedYear: "Amejiunga {{year}}",
@@ -1132,10 +1133,10 @@ export const sw = {
 
   // Filters and Search
   filters: {
-    allSectors: "Sekta Zote",
-    allYears: "Miaka Yote",
-    allPrograms: "Programu Zote",
-    allRevenue: "Mapato Yote",
+    allSectors: "Sekta",
+    allYears: "Miaka",
+    allPrograms: "Programu",
+    allRevenue: "Mapato",
     search: "Tafuta",
     sortBy: "Panga kwa",
     filterBy: "Chuja kwa",
@@ -1330,6 +1331,110 @@ export const sw = {
         competition: "Ushindani",
         marketing: "Masoko",
       },
+      narratives: {
+        demand: {
+          score0:
+            "Biashara inafanya kazi katika tasnia ambayo haijaelewa mienendo muhimu ya mahitaji. Haina ripoti au ushahidi wa takwimu kuthibitisha madai ya mahitaji ya kutosha ya bidhaa au huduma zake",
+          score1:
+            "Biashara inafanya kazi katika tasnia yenye uelewa mdogo wa mienendo ya mahitaji. Hata hivyo, kuna data au ripoti zilizopitwa na wakati kuunga mkono mahitaji",
+          score2:
+            "Biashara inafanya kazi katika tasnia inayoielewa kikamilifu ikiwa na data wazi za tasnia kuhusu mienendo ya mahitaji",
+        },
+        marketShare: {
+          score0:
+            "Sehemu ya soko ya kampuni inashuka ikilinganishwa na washindani wake na hakuna dalili ya kuongezeka katika siku zijazo",
+          score1:
+            "Sehemu ya soko haijabadilika katika miezi 12 iliyopita lakini ina uwezekano wa kuboreshwa kutokana na mkakati wa jumla wa kampuni",
+          score2:
+            "Sehemu ya soko ya kampuni imekuwa ikikua katika miezi 12 iliyopita na ina uwezekano wa kuendelea kukua ikilinganishwa na washindani",
+        },
+        sales: {
+          score0:
+            "Mauzo hayajaongezeka mwezi hadi mwezi au robo hadi robo kwa miezi 12 iliyopita; yaani, MRR imekuwa hasi kwa jumla",
+          score1:
+            "Mauzo hayakufikia makadirio lakini yalikuwa na ukuaji chanya, ukuaji wa miezi ukibadilishana kati ya chanya na hasi, na kuacha mabadiliko ya jumla ya kila mwezi mara kwa mara",
+          score2:
+            "Mauzo ya kila mwezi au ya kila robo yalionyesha ongezeko chanya, yaani, MRR ilirekodi mabadiliko chanya mwaka mzima",
+        },
+        customerSegments: {
+          score0:
+            "Kampuni haijawatambua wazi wateja wakuu na kuwagawanya; hifadhidata bado mbichi",
+          score1:
+            "Kampuni imetambua mgawanyiko wa wateja lakini bado haijabaini ni upi wenye thamani kubwa",
+          score2:
+            "Kampuni imefanya mgawanyiko wa wateja kwa kina na kubaini MVCs, ikilenga rasilimali za mauzo kwenye makundi haya",
+        },
+        paymentTerms: {
+          score0:
+            "Kampuni haina masharti ya malipo yaliyo wazi; ankara kwa wateja zina muda tofauti wa malipo kwa bidhaa zilezile",
+          score1:
+            "Kampuni inaboresha masharti ya malipo kwa wateja; ankara kwa huduma zilezile kwa wateja tofauti zinafanana zaidi, na kuna mazungumzo ya mikataba yanayoendelea",
+          score2:
+            "Kuna masharti ya malipo yaliyo wazi kulingana na mikataba au makubaliano ya usajili",
+        },
+        salesStrategy: {
+          score0: "Kampuni haina mkakati ulioainishwa wa mauzo",
+          score1: "Kampuni inatengeneza mkakati wa mauzo",
+          score2: "Kampuni ina mkakati wa mauzo unaoongoza mchakato wa mauzo",
+        },
+        productDevelopment: {
+          score0:
+            "Kampuni haina ramani ya bidhaa, na maboresho yote ni ya ghafla",
+          score1:
+            "Kampuni ina aina fulani ya ramani ya bidhaa, lakini haijapangiliwa ipasavyo",
+          score2:
+            "Kampuni ina ramani nzuri ya bidhaa yenye ratiba ya vipengele vitakavyotolewa na njia ya kupima mrejesho wa wateja",
+        },
+        productDistribution: {
+          score0:
+            "Kampuni haijagundua muundo wa usambazaji wa bidhaa; kuna majaribio mengi yanayoendelea",
+          score1:
+            "Kampuni imegundua miundo kadhaa ya usambazaji inayofanya kazi na inakusanya ushahidi wa upi ungekuwa wa kiuchumi na endelevu",
+          score2:
+            "Kampuni tayari ina muundo wa usambazaji unaofanya kazi na unaofaa kiuchumi na kudumu",
+        },
+        productPricing: {
+          score0:
+            "Kampuni bado haijabaini jinsi ya kuweka bei za bidhaa/huduma na inajaribu kutengeneza muundo wa bei",
+          score1:
+            "Kampuni imeweka bei za bidhaa zake lakini iko wazi kwa mabadiliko kufuatia mrejesho wa wateja",
+          score2:
+            "Kampuni imeunda mfumo wa bei ulio na muundo mzuri kwa bidhaa/huduma zake",
+        },
+        competitionLevel: {
+          score0: "Kuna ushindani usio mzuri kwenye tasnia",
+          score1:
+            "Mazinga ya ushindani yanaboreka, na kuiwezesha kampuni kubuni",
+          score2: "Kuna mazingira mazuri sana ya ushindani",
+        },
+        competitiveAdvantage: {
+          score0: "Kampuni haina faida inayoonekana ya ushindani",
+          score1:
+            "Kampuni inaboresha pendekezo la thamani ili kuimarisha faida ya ushindani sokoni",
+          score2: "Kampuni ina faida ya ushindani iliyo wazi na inayoonekana",
+        },
+        marketingStrategy: {
+          score0: "Kampuni haina mkakati wa masoko",
+          score1: "Kampuni inatengeneza mkakati wa masoko",
+          score2:
+            "Kampuni ina mkakati wa masoko unaotekelezwa kikamilifu na kwa ufanisi",
+        },
+        branding: {
+          score0:
+            "Kampuni haijawekewa chapa ipasavyo; hakuna miongozo ya chapa",
+          score1:
+            "Kampuni inaendeleza chapa na ufungashaji wake, ikijumuisha vipengele vinavyohusiana na mkakati wa jumla wa biashara",
+          score2:
+            "Kampuni imefungasha na kuweka chapa ipasavyo, kama inavyoonekana kwenye miongozo na utekelezaji uliopo",
+        },
+        promotionStrategy: {
+          score0: "Kampuni haina mkakati wa uhamasishaji",
+          score1:
+            "Kampuni inatengeneza mkakati wa uhamasishaji kwa mkusanyiko wa bidhaa zake",
+          score2:
+            "Kampuni ina mkakati wa uhamasishaji unaofanya kazi sambamba na mipango ya ukuaji",
+        },
+      },
       assessments: {
         // Sub Domain translations
         demandSubDomain: "Uhitaji",
@@ -1421,6 +1526,94 @@ export const sw = {
         projections: "Makadiirio",
         financialManagement: "Usimamizi wa Fedha",
       },
+      narratives: {
+        revenueGrowth: {
+          score0:
+            "Mapato yamekuwa yakipungua mwezi hadi mwezi au robo hadi robo, kwa ukuaji hasi kwa mwaka uliopita",
+          score1:
+            "Ukuaji wa mapato umebadilika kati ya hasi na chanya, ukibadilika kati ya miezi/robo, na kusababisha ukuaji wa 0% kwa mwaka",
+          score2:
+            "Ukuaji wa mapato ulikuwa chanya mwezi kwa mwezi au robo kwa robo, ukirekodi ukuaji chanya kwa ujumla kwa mwaka",
+        },
+        cost: {
+          score0: "Gharama za kitengo zimeongezeka katika mwaka",
+          score1: "Gharama za kitengo zilibaki karibu sawa katika mwaka",
+          score2: "Gharama za kitengo zilipungua katika mwaka",
+        },
+        workingCapital: {
+          score0:
+            "Mtaji wa kufanya kazi haukusimamiwa vizuri, na kampuni ililazimika kutafuta ufadhili wa muda mfupi kufidia upungufu",
+          score1:
+            "Mtaji wa kufanya kazi ulisimamiwa vya kutosha lakini si vya kutosha kuunga mkono ukuaji",
+          score2:
+            "Mtaji wa kufanya kazi ulisimamiwa vizuri na uliunga mkono ukuaji wa biashara",
+        },
+        assetsManagement: {
+          score0:
+            "Mali hazikusimamiwa vizuri, na mzunguko wa mali uko chini sana ya 1",
+          score1:
+            "Mali zilisimamiwa kwa kuridhisha, na mzunguko wa mali uko 1 au juu kidogo ya 1",
+          score2:
+            "Mali zilisimamiwa vizuri, na mzunguko wa mali uko juu sana ya 1",
+        },
+        debtManagement: {
+          score0:
+            "Deni halikusimamiwa vizuri na linasababisha msongo kwa kampuni",
+          score1:
+            "Deni linasimamiwa kwa kuridhisha lakini kuna hatari zinazoonekana katika siku za karibu",
+          score2:
+            "Deni linasimamiwa vizuri na linathibitisha kuwa na manufaa katika kuleta thamani kwa wanahisa",
+        },
+        obsItems: {
+          score0:
+            "Vipengele vya OBS vina athari kubwa hasi kwa afya ya kifedha ya kampuni",
+          score1: "Vipengele vya OBS vina athari ndogo hasi kwenye mizani",
+          score2:
+            "Vipengele vya OBS havina athari hasi kwenye mizani ya kampuni",
+        },
+        operatingCashFlows: {
+          score0:
+            "OCF ni hasi, na ufadhili wa shughuli ulitokana na vyanzo vingine",
+          score1:
+            "OCF ulikuwa hasi lakini ulionyesha uboreshaji mkubwa mwaka mzima, bila kuhitaji fedha za ziada kutoka vyanzo vingine kufadhili shughuli",
+          score2:
+            "OCF ulikuwa chanya na uligharamia kikamilifu shughuli za kampuni",
+        },
+        capex: {
+          score0:
+            "Hakuna CapEx zilizofanywa, na kampuni inaendesha kwa mali zisizohamishika zilizochoka",
+          score1: "CapEx ndogo ilifanyika lakini haikutosha kuwezesha ukuaji",
+          score2: "CapEx ilifanyika kulingana na mpango wa ukuaji",
+        },
+        assumptions: {
+          score0: "Makadirio ya kifedha ni ya kubahatisha kupita kiasi",
+          score1:
+            "Makadirio ya kifedha ni mchanganyiko wa uhalisia na kubahatisha",
+          score2: "Makadirio ya kifedha yanategemea uhalisia",
+        },
+        financialRecords: {
+          score0: "Hakuna rekodi za kifedha zilizo wazi",
+          score1:
+            "Rekodi za kifedha zinapatikana lakini zina mashaka katika usahihi na uthabiti",
+          score2: "Rekodi bora za kifedha",
+        },
+        financialReporting: {
+          score0: "Hakuna taarifa za kifedha zinazopatikana",
+          score1: "Hakuna uthabiti katika kuchapisha taarifa za kifedha",
+          score2: "Taarifa za kifedha zinachapishwa kwa uthabiti",
+        },
+        internalControls: {
+          score0: "Hakuna vidhibiti vya ndani",
+          score1: "Vidhibiti vya ndani vipo lakini havifuatwi",
+          score2: "Vidhibiti vya ndani vipo na vinazingatiwa",
+        },
+        taxLiabilities: {
+          score0:
+            "Kuna ushuru ambao haujalipwa ambao unaweza kuhatarisha utii wa kampuni siku zijazo",
+          score1: "Uwajibikaji wa ushuru uliopo unashughulikiwa na uongozi",
+          score2: "Hakuna madeni ya ushuru yaliyosalia",
+        },
+      },
       assessments: {
         // Sub Domain translations
         revenueSubDomain: "Mapato",
@@ -1500,11 +1693,94 @@ export const sw = {
     legal: {
       title: "Tathmini ya Eneo la Kisheria",
       sections: {
-        corporateDocumentsCompliance: "Kufuata Nyaraka za Shirika",
+        corporateDocumentsAndCompliance: "Kufuata Nyaraka za Shirika",
         contractsAgreements: "Mikataba na Makubaliano",
         intellectualProperty: "Mali ya Kiakili",
         entrepreneurFamily: "Familia ya Ujasiriamali",
         corporateGovernance: "Utawala wa Shirika",
+      },
+      narratives: {
+        businessIncorporation: {
+          score0: "Biashara haijasajiliwa kisheria",
+          score1: "Biashara imewasilisha maombi ya usajili BRELA",
+          score2: "Biashara imesajiliwa kisheria na ina cheti husika cha BRELA",
+        },
+        taxIdentification: {
+          score0: "Kampuni haina TIN",
+          score1: "Kampuni imeomba TIN",
+          score2: "Kampuni ina TIN ya sasa",
+        },
+        taxCompliance: {
+          score0: "Kampuni haijawasilisha taarifa zake za ushuru",
+          score1:
+            "Kampuni imewasilisha taarifa za ushuru lakini bado haijapata kibali",
+          score2: "Kampuni ina cheti cha uthibitisho wa ulipaji ushuru",
+        },
+        businessLicense: {
+          score0: "Biashara haijapata leseni ya biashara",
+          score1: "Kampuni imewasilisha ombi la leseni",
+          score2: "Kampuni ina leseni ya biashara",
+        },
+        sectorSpecificLicense: {
+          score0: "Kampuni haina leseni maalum ya sekta",
+          score1: "Kampuni imewasilisha ombi la leseni kwa mdhibiti",
+          score2: "Kampuni ina leseni kutoka kwa mdhibiti",
+        },
+        leaseAgreements: {
+          score0: "Mikataba ya upangaji haipo na/au haiko wazi",
+          score1: "Mikataba ya upangaji inaandaliwa",
+          score2: "Mikataba ya upangaji iko wazi sana",
+        },
+        customerAgreements: {
+          score0: "Mikataba ya wateja iliyopo haiko kwa manufaa ya kampuni",
+          score1:
+            "Kampuni inajadili upya masharti na wateja kuboresha msimamo wake kwenye mikataba",
+          score2: "Mikataba iliyopo iko kwa manufaa ya kampuni",
+        },
+        supplierAgreements: {
+          score0:
+            "Mikataba ya wasambazaji iliyopo haiko kwa manufaa ya kampuni",
+          score1:
+            "Kampuni inajadili upya mikataba ya wasambazaji kuboresha msimamo wake",
+          score2: "Mikataba ya wasambazaji iko kwa manufaa ya kampuni",
+        },
+        employeeAgreements: {
+          score0: "Wafanyakazi hawana mikataba",
+          score1:
+            "Wafanyakazi wana mikataba inayohitaji kupitia upya kwa maboresho",
+          score2: "Mikataba ya wafanyakazi inapatikana",
+        },
+        ipOwnership: {
+          score0:
+            "Kampuni haimiliki IP yake (alama za biashara au hakimiliki) kwa msimbo chanzo au chapa",
+          score1: "Kampuni inahamia kutoka kukodisha IP hadi kuimiliki",
+          score2:
+            "Kampuni inamiliki IP yake, ikijumuisha msimbo chanzo, alama za biashara, na siri nyingine za biashara",
+        },
+        character: {
+          score0: "Tabia ya mwanzilishi ni ya kutiliwa shaka",
+          score1: "Mwanzilishi ana historia iliyochafuliwa",
+          score2:
+            "Mwanzilishi ana tabia ya mtu anayeaminika, anayebadilika, na mwaminifu",
+        },
+        personalLegalLiability: {
+          score0:
+            "Mwanzilishi ana madeni ya kisheria yanayoathiri kampuni vibaya",
+          score1:
+            "Mwanzilishi ana madeni ya kisheria yenye athari za wastani katika uendeshaji wa kampuni",
+          score2:
+            "Mwanzilishi ana madeni machache au hayapo ya kisheria yasiyoathiri au yenye athari ndogo sana kwa uendeshaji wa kampuni",
+        },
+        successionPlan: {
+          score0: "Hakuna mpango wa urithi",
+          score1: "Mwanzilishi ametengeneza mpango wa urithi usio rasmi",
+          score2: "Kuna mpango rasmi wa urithi wa kampuni",
+        },
+        bod: {
+          score0: "Kampuni haina bodi ya wakurugenzi au washauri",
+          score1: "Kampuni ina bodi lakini haifanyi kazi",
+          score2: "BOD inafanya kazi na inatoa usimamizi ipasavyo",
+        },
       },
       assessments: {
         // Sub Domain translations
@@ -1593,6 +1869,120 @@ export const sw = {
         overallOperations: "Uendeshaji kwa Ujumla",
         strategyPlanning: "Mikakati na Mipango",
       },
+      narratives: {
+        visionClarity: {
+          score0: "Maono ya kampuni hayajaeleweka vizuri",
+          score1:
+            "Maono hayako wazi sana na uongozi unafanya juhudi kuwawezesha wafanyakazi kuyaelewa",
+          score2:
+            "Maono ni wazi kabisa na kila mmoja kampuni anafanya kazi ili yawe halisi",
+        },
+        managementStructure: {
+          score0:
+            "Hakuna muundo mahsusi hivyo njia za utoaji taarifa haziko wazi",
+          score1:
+            "Timu inafanya juhudi kuweka njia wazi za utoaji taarifa kuunga mkono malengo ya uendeshaji",
+          score2:
+            "Kampuni ina njia wazi za utoaji taarifa na imewezeshwa kutekeleza malengo ya uendeshaji",
+        },
+        trackRecord: {
+          score0:
+            "Rekodi ya utendaji ya timu haitoshi kutekeleza dhamira ya kampuni",
+          score1:
+            "Rekodi ya timu ni ya mchanganyiko na uwezo mdogo wa kutekeleza dhamira ya kampuni",
+          score2:
+            "Timu ina rekodi inayotegemewa na ina uwezo wa kutekeleza dhamira ya kampuni",
+        },
+        managementCommitment: {
+          score0:
+            "Uongozi umejitolea kwa sehemu kubwa, wakuu wakitumia chini ya 25% ya muda wao katika uendeshaji wa kila siku",
+          score1:
+            "Uongozi umejitolea kwa sehemu, wakuu wakitumia takribani 50% ya muda wao kuendesha kampuni",
+          score2:
+            "Uongozi umejitolea kikamilifu na kila meneja mwandamizi hutumia 100% ya muda wake kuendesha kampuni",
+        },
+        teamCapacity: {
+          score0:
+            "Kuna mapungufu yanayoonekana ya kiufundi na kiutawala katika timu ya kampuni",
+          score1:
+            "Kuna mapungufu machache ya kiufundi na kiutawala lakini yanashughulikiwa kupitia huduma za ushauri za muda",
+          score2: "Timu imekamilika katika uwezo wake wa kiufundi na kiutawala",
+        },
+        performanceMeasurement: {
+          score0:
+            "Timu haipimi utendaji, hivyo kila hatua inaonekana ya kubahatisha",
+          score1:
+            "Timu ina aina fulani ya upimaji wa utendaji lakini haijasanifiwa",
+          score2:
+            "Kampuni hupima utendaji na kuufuatilia kupitia mbinu zilizosanifiwa ikiwemo KPIs",
+        },
+        professionalDevelopment: {
+          score0: "Kampuni haina PD iliyo na muundo au mafunzo ya kazini",
+          score1:
+            "Kampuni inatengeneza mipango ya PD na mwongozo wa mafunzo kazini",
+          score2:
+            "Kampuni ina PD na mafunzo ya kazini yaliyo na muundo mzuri na yanatekelezwa ipasavyo",
+        },
+        dataManagement: {
+          score0:
+            "Taarifa hazikusanywi kwa makusudi wala kusimamiwa na kampuni",
+          score1:
+            "Taarifa zinazokusanywa hazisimamiwi ipasavyo kuarifu mkakati wa kampuni",
+          score2:
+            "Kampuni hukusanya taarifa kwa makusudi, huzisimamia, na huzitumia kuarifu mkakati wake",
+        },
+        systemUsed: {
+          score0: "Kampuni haina mfumo wa MIS unaotumika",
+          score1:
+            "Kampuni ina MIS lakini haionekani kuendana na uendeshaji wake",
+          score2: "Kampuni hutumia MIS unaoendana na uendeshaji wake",
+        },
+        systemEffectiveness: {
+          score0: "MIS unaotumika hauna ufanisi",
+          score1: "MIS unaotumika una ufanisi wa wastani",
+          score2: "MIS unaotumika una ufanisi wa juu",
+        },
+        qualityControl: {
+          score0: "Hakuna ukaguzi wa ubora kwa bidhaa au huduma za kampuni",
+          score1: "Kuna ukaguzi wa bidhaa/huduma mara kwa mara",
+          score2:
+            "Ukaguzi wa ubora wa bidhaa/huduma umesanifiwa na umeunganishwa kikamilifu kwenye uendeshaji wa kampuni",
+        },
+        qualityManagementTeam: {
+          score0:
+            "Hakuna timu au kitengo cha usimamizi wa ubora ndani ya kampuni",
+          score1:
+            "Kazi ya usimamizi wa ubora ipo lakini inasimamiwa mara chache na washauri",
+          score2:
+            "Kazi ya usimamizi wa ubora inafanya kazi kikamilifu na imekidhi mahitaji ya watendaji",
+        },
+        platformUtilization: {
+          score0: "Rasilimali za kampuni hazitumiki",
+          score1:
+            "Rasilimali zinatumika chini ya kiwango, yaani chini ya 50% ya uwezo",
+          score2: "Rasilimali zinatumika kikamilifu",
+        },
+        crm: {
+          score0: "Mahusiano ya wateja katika kampuni hayajapangwa",
+          score1:
+            "Kuna aina fulani ya usimamizi wa mahusiano ya wateja lakini haujapangwa vizuri",
+          score2:
+            "Usimamizi wa mahusiano ya wateja unasimamiwa vizuri kwa msaada wa zana husika",
+        },
+        businessStrategy: {
+          score0: "Kampuni haina mkakati thabiti wa biashara",
+          score1:
+            "Kampuni inatengeneza mkakati wa biashara wa kuongoza uendeshaji wake",
+          score2:
+            "Kampuni ina mkakati wazi wa biashara unaoongoza upangaji na uendeshaji wa malengo ya shirika",
+        },
+        organizationalPlanning: {
+          score0: "Hakuna mipango ya shirika",
+          score1:
+            "Mipango ya shirika hufanyika mara chache kulingana na mahitaji maalum",
+          score2: "Mchakato wa mipango ya shirika umesanifiwa",
+        },
+      },
       assessments: {
         // Sub Domain translations
         visionClaritySubDomain: "Uwazi wa Maono",
@@ -1655,53 +2045,6 @@ export const sw = {
         businessStrategyQuestion: "Je, kampuni ina mkakati wa biashara?",
         organizationPlanning: "Mipango ya Shirika",
         organizationPlanningQuestion: "Je, kuna mchakato rasmi wa kupanga?",
-      },
-    },
-    legal: {
-      title: "Tathmini ya Eneo la Kisheria",
-      sections: {
-        corporateDocsCompliance: "Nyaraka za Kampuni & Uzingatiaji",
-        contractsAgreements: "Mikataba na Makubaliaano",
-        intellectualProperty: "Haki Miliki",
-        entrepreneurFamily: "Ujasiriamali na Familia",
-        corporateGovernance: "Utawala wa Kampuni",
-      },
-      assessments: {
-        businessIncorporation: "Usajili wa Biashara",
-        businessIncorporationQuestion: "Je, Biaashara imesajiliwa?",
-        taxIdentification: "Utambulisho wa Kodi",
-        taxIdentificationQuestion:
-          "Je, kampuni ina nambari ya kitambulisho cha kodi?",
-        taxCompliance: "Utratibu wa Kulip kodi",
-        taxComplianceQuestion: "Je biashara inalipia kodi zinazohitaajika?",
-        businessLicense: "Leseni ya Biashara",
-        businessLicenseQuestion: "Je, biashara ina leseni zinazohitajika?",
-        sectorSpecificCompliance: "Utaratibu wa Kisekta",
-        sectorSpecificComplianceQuestion:
-          "Je, kampuni ina vyeti vingine kwa mujibu wa kanuni za sekta husika?",
-        leaseAgreement: "Makubaliano ya kukodisha",
-        leaseAgreementQuestion:
-          "Je mikataba ya kukodisha inapatikana na ipo sahihi?",
-        customerContracts: "Mikataba ya Wateja",
-        customerContractsQuestion: "Je, kampuni ina mikataba ya wateja?",
-        supplierContracts: "Mikataba ya Wasambazaji",
-        supplierContractsQuestion: "Je kampuni ina mikataba ya wasambazaji?",
-        employeesContracts: "Mikataba ya wafanykazi",
-        employeesContractsQuestion: "Je wafanyakazi wana mikataba?",
-        intellectualProperty: "Haki miliki",
-        intellectualPropertyQuestion:
-          "Je, kampuni inamiliki hakimiliki kwa misimbo yake ya chanzo/au hataza ya suluhisho lake?",
-        entrepreneurialCharacter: "Tabia ya ujasiriamali",
-        entrepreneurialCharacterQuestion:
-          "Je, mjasiriamali anaweza kubadilika, kustahimili na kutegemewa?",
-        personalLegalLiability: "Dhima ya binafsi ya kisheria",
-        personalLegalLiabilityQuestion:
-          "Je, timu ya usimamizi ina dhima yoyote ya kibinafsi ambayo inaweza kuathiri kampuni?",
-        successionPlan: "Mpango wa urithi",
-        successionPlanQuestion: "Je, mpango wa urithi upo?",
-        boardOfDirectors: "Bodi ya wakurugenzi",
-        boardOfDirectorsQuestion:
-          "Je kampuni inaa bodi ya wakurugenzi walio hai",
       },
     },
   },
@@ -1891,7 +2234,6 @@ export const sw = {
     emoji: "Emoji",
     newConversation: "Mazungumzo Mapya",
     searchConversations: "Tafuta mazungumzo...",
-    allChats: "Ujumbe Mfupi Zote",
     activeNow: "Anafanya sasa",
     typing: "anaandika...",
     delivered: "Imewasilishwa",
@@ -2137,7 +2479,7 @@ export const sw = {
     addMaterial: "Ongeza Nyenzo",
     availableResources: "Rasilimali Zinazopatikana",
     resource: "rasilimali",
-    availableInCategory: "zinapatikana katika kategoria hii",
+    availableInCategory: "Rasilimali Zinazopatikana",
     noMaterialsAvailable: "Hakuna nyenzo zinazopatikana katika kategoria hii",
     viewResources: "Tazama Rasilimali",
     deleteResourceConfirm:

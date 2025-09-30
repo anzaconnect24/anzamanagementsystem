@@ -86,14 +86,14 @@ const LegalDomainPage = () => {
 
               return fetchedItem
                 ? {
-                    ...item, // Keep the translated template (including translated subDomain)
+                    ...item, // Keep the translated template (including translated subDomain, question, description)
                     rating: fetchedItem.rating,
                     score: fetchedItem.score,
                     userId: fetchedItem.userId,
                     attachment: fetchedItem.attachment,
                     comments: fetchedItem.comments,
                     uuid: fetchedItem.uuid, // Add uuid for future reference
-                    // Don't overwrite subDomain - keep the translated one from item
+                    // Keep translated: subDomain, question, description from item
                   }
                 : item;
             });
@@ -208,14 +208,14 @@ const LegalDomainPage = () => {
 
           return fetchedItem
             ? {
-                ...item, // Keep the translated template (including translated subDomain)
+                ...item, // Keep the translated template (including translated subDomain, question, description)
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
                 comments: fetchedItem.comments,
                 uuid: fetchedItem.uuid, // Add uuid for future reference
-                // Don't overwrite subDomain - keep the translated one from item
+                // Keep translated: subDomain, question, description from item
               }
             : item;
         });
@@ -282,13 +282,13 @@ const LegalDomainPage = () => {
 
           return fetchedItem
             ? {
-                ...item, // Keep the translated template (including translated subDomain)
+                ...item, // Keep the translated template (including translated subDomain, question, description)
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
                 uuid: fetchedItem.uuid, // Add uuid for future reference
-                // Don't overwrite subDomain - keep the translated one from item
+                // Keep translated: subDomain, question, description from item
               }
             : item;
         });
