@@ -13,13 +13,16 @@ import {
   attachDocument,
   deleteAttachment,
   getInitialDataTemplate,
-} from "@/controllers/crat_operation_controller"; // Import updated API functions
+  updateSingleOperationItem,
+} from "@/controllers/crat_operation_controller"; // Updated with single-item patch
 const tableHeaders = [
   "Sub Domain",
   "Question",
   "Rating",
   "Score",
   "Attachment",
+  "Your Comment",
+  "Reviewer Comment",
   "Actions",
 ];
 import { useTranslation } from "@/locales";
@@ -47,10 +50,9 @@ const OperationsDomain = () => {
       try {
         const responseData = await getOperationData();
         if (responseData == null || responseData.length == 0) {
-          await createOperationData(initialDataTemplate);
+          await createOperationData(translatedTemplate);
           fetchData(); // Fetch again after creating market data
         } else {
-          //console.log(responseData);
           const updatedData = { ...translatedTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
@@ -60,11 +62,14 @@ const OperationsDomain = () => {
               return fetchedItem
                 ? {
                     ...item,
+                    uuid: fetchedItem.uuid,
                     rating: fetchedItem.rating,
                     score: fetchedItem.score,
                     userId: fetchedItem.userId,
                     attachment: fetchedItem.attachment,
                     comment: fetchedItem.comment,
+                    customerComment: fetchedItem.customerComment,
+                    reviewerComment: fetchedItem.reviewerComment,
                   }
                 : item;
             });
@@ -81,10 +86,57 @@ const OperationsDomain = () => {
     setLoading(false);
   }, []);
 
-  const handleRatingChange = (section, index, newRating) => {
+  // When the logged-in user changes, reload domain data to prevent stale cross-user data
+  useEffect(() => {
+    if (!userDetails || !userDetails.id) return;
+    const reload = async () => {
+      setLoading(true);
+      try {
+        const responseData = await getOperationData();
+        const updatedData = { ...translatedTemplate };
+        Object.keys(updatedData).forEach((section) => {
+          updatedData[section] = updatedData[section].map((item) => {
+            const fetchedItem = responseData.find(
+              (dataItem) => dataItem.subDomain === item.subDomain
+            );
+            return fetchedItem
+              ? {
+                  ...item,
+                  uuid: fetchedItem.uuid,
+                  rating: fetchedItem.rating,
+                  score: fetchedItem.score,
+                  userId: fetchedItem.userId,
+                  attachment: fetchedItem.attachment,
+                  comment: fetchedItem.comment,
+                  customerComment: fetchedItem.customerComment,
+                  reviewerComment: fetchedItem.reviewerComment,
+                }
+              : item;
+          });
+        });
+        setData(updatedData);
+        setOriginalData(updatedData);
+      } catch (e) {
+        console.log("reload error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    reload();
+  }, [userDetails && userDetails.id]);
+
+  // Debounced bulk auto-save fallback
+  useEffect(() => {
+    if (!changesMade) return;
+    const timer = setTimeout(() => submitChanges(), 500);
+    return () => clearTimeout(timer);
+  }, [changesMade]);
+
+  const handleRatingChange = async (section, index, newRating) => {
     const newData = { ...data };
+    const current = newData[section][index];
     const score = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
-    if (newRating === "Yes" && !newData[section][index].attachment) {
+    if (newRating === "Yes" && !current.attachment) {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
@@ -92,46 +144,56 @@ const OperationsDomain = () => {
         )
       );
       setModalOpen(true);
-    } else {
-      newData[section][index].rating = newRating;
-      newData[section][index].score = score;
-      setData(newData);
-      setChangesMade(true);
+      return;
+    }
+    current.rating = newRating;
+    current.score = score;
+    setData(newData);
+    try {
+      if (!current.uuid) {
+        setChangesMade(true); // fallback bulk save
+        toast(
+          t(
+            "crat.uuidMissingDeferredSave",
+            "Record missing id; will save shortly"
+          )
+        );
+        return;
+      }
+      await updateSingleOperationItem(current.uuid, {
+        rating: newRating,
+        score,
+      });
+      setOriginalData((prev) => {
+        const clone = { ...prev };
+        clone[section] = clone[section].map((it, i) =>
+          i === index ? { ...it, rating: newRating, score } : it
+        );
+        return clone;
+      });
+      toast.success(
+        t("crat.ratingUpdated", "Rating & score updated successfully")
+      );
+    } catch (e) {
+      toast.error(t("crat.updateFailed", "Failed to update rating"));
+      setData(originalData);
     }
   };
 
   const submitChanges = async () => {
-    console.log("submitting");
     try {
       await updateOperationData(data);
-      // Update initialDataTemplate here
-      Object.keys(data).forEach((section) => {
-        initialDataTemplate[section] = data[section].map((item) => ({
-          subDomain: item.subDomain,
-          rating: item.rating,
-          score: item.score,
-          userId: item.userId,
-          attachment: item.attachment,
-          comments: item.comments,
-          question: item.question,
-          description: item.description,
-        }));
-      });
-
-      setOriginalData(data); // Update original data after successful submission
+      setOriginalData(data);
       setChangesMade(false);
-
       toast.success(
         t("crat.changesSubmittedSuccess", "Changes successfully submitted")
       );
-      console.log("Changes successfully submitted");
     } catch (error) {
       toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
-      console.error("Error submitting changes:", error);
     }
   };
 
-  const handleAddFile = async (domain, file, userId) => {
+  const handleAddFile = async (domain, file, userId, uuid) => {
     if (!file) return;
 
     // Extract the file extension
@@ -145,9 +207,10 @@ const OperationsDomain = () => {
     const updatedFile = new File([file], uniqueFileName, { type: file.type });
 
     const fileData = {
-      file: updatedFile, // Use the updated file
-      subDomain: domain,
-      userId: userId,
+      file: updatedFile,
+      userId,
+      uuid,
+      subDomain: domain, // fallback
     };
 
     try {
@@ -165,10 +228,13 @@ const OperationsDomain = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
+                customerComment: fetchedItem.customerComment,
+                reviewerComment: fetchedItem.reviewerComment,
               }
             : item;
         });
@@ -183,13 +249,13 @@ const OperationsDomain = () => {
     }
   };
 
-  const openDeleteDialog = (domain, id, attachment, section, index) => {
+  const openDeleteDialog = (domain, id, attachment, section, index, uuid) => {
     // Open the delete modal with the confirmation message
     deleteModalOpen(true);
     deleteModalMessage(
       t("crat.confirmDelete", "Are you sure you want to delete?")
     );
-    setDeleteCache([domain, id, attachment, section, index]);
+    setDeleteCache([domain, id, attachment, section, index, uuid]);
   };
 
   const handleDeleteCancel = () => {
@@ -198,11 +264,16 @@ const OperationsDomain = () => {
   };
 
   const handleDeleteFile = async () => {
-    const [domain, id, attachment, section, index] = deleteCache;
+    const [domain, id, attachment, section, index, uuid] = deleteCache;
     console.log(domain, id, attachment, section, index);
     try {
       // Proceed with deletion directly
-      await deleteAttachment(domain, id, attachment, section, index);
+      await deleteAttachment({
+        uuid,
+        subDomain: domain,
+        userId: id,
+        attachment,
+      });
       handleRatingChange(section, index, "No");
       submitChanges();
       // Fetch updated data
@@ -217,10 +288,13 @@ const OperationsDomain = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
+                customerComment: fetchedItem.customerComment,
+                reviewerComment: fetchedItem.reviewerComment,
               }
             : item;
         });
@@ -252,6 +326,24 @@ const OperationsDomain = () => {
     toast.success(
       t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
     );
+  };
+
+  const handleCustomerCommentBlur = async (domain, index, comment) => {
+    try {
+      const newData = { ...data };
+      newData[domain][index].customerComment = comment;
+      setData(newData);
+
+      // Auto-save the comment
+      await updateOperationData(newData);
+
+      toast.success(
+        t("crat.commentSavedAutomatically", "Comment saved automatically")
+      );
+    } catch (error) {
+      toast.error(t("crat.errorSavingComment", "Error saving comment"));
+      console.error("Error saving customer comment:", error);
+    }
   };
 
   const calculateTotalScore = (domain) => {
@@ -290,20 +382,43 @@ const OperationsDomain = () => {
           <p className="text-sm text-black dark:text-white">{item.score}</p>
         </div>
         <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">
-            {item.description}
-          </p>
+          {item.attachment ? (
+            <a
+              href={item.attachment}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-blue-600 hover:underline break-all"
+              title={t("crat.openAttachment", "Open attachment")}
+            >
+              {(() => {
+                try {
+                  const url = new URL(item.attachment);
+                  return url.pathname.split("/").pop();
+                } catch {
+                  return item.attachment.split("/").pop();
+                }
+              })()}
+            </a>
+          ) : (
+            <p className="text-sm text-gray-500">
+              {t("crat.noFile", "No file")}
+            </p>
+          )}
         </div>
+
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
-            onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
+            onAdd={(file) =>
+              handleAddFile(item.subDomain, file, item.userId, item.uuid)
+            }
             onDelete={() =>
               openDeleteDialog(
                 item.subDomain,
                 item.userId,
                 item.attachment,
                 domain,
-                index
+                index,
+                item.uuid
               )
             }
             onView={() => handleViewFile(item.attachment)}

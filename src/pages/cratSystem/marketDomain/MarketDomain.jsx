@@ -25,6 +25,8 @@ const tableHeaders = [
   "Rating",
   "Score",
   "Attachment",
+  "Your Comment",
+  "Reviewer Comment",
   "Actions",
 ];
 
@@ -33,6 +35,8 @@ const MarketDomainPage = () => {
 
   // Create translated template
   const translatedTemplate = getInitialDataTemplate(t);
+  // Alias for backward compatibility with older code referencing initialDataTemplate
+  const initialDataTemplate = translatedTemplate;
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(translatedTemplate);
@@ -60,7 +64,7 @@ const MarketDomainPage = () => {
           const updatedData = { ...translatedTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
-              //console.log('my items', updatedData);
+              // Match by canonical English subDomain key stored in DB
               const fetchedItem = responseData.find(
                 (dataItem) => dataItem.subDomain === item.subDomain
               );
@@ -72,6 +76,8 @@ const MarketDomainPage = () => {
                     userId: fetchedItem.userId,
                     attachment: fetchedItem.attachment,
                     comments: fetchedItem.comments,
+                    customerComment: fetchedItem.customerComment,
+                    reviewerComment: fetchedItem.reviewerComment,
                   }
                 : item;
             });
@@ -87,6 +93,44 @@ const MarketDomainPage = () => {
     fetchData();
     setLoading(false);
   }, []);
+
+  // Reload when account changes to avoid stale previous user's data
+  useEffect(() => {
+    if (!userDetails || !userDetails.id) return;
+    const reload = async () => {
+      setLoading(true);
+      try {
+        const responseData = await getMarketData();
+        const updatedData = { ...translatedTemplate };
+        Object.keys(updatedData).forEach((section) => {
+          updatedData[section] = updatedData[section].map((item) => {
+            const fetchedItem = responseData.find(
+              (dataItem) => dataItem.subDomain === item.subDomain
+            );
+            return fetchedItem
+              ? {
+                  ...item,
+                  rating: fetchedItem.rating,
+                  score: fetchedItem.score,
+                  userId: fetchedItem.userId,
+                  attachment: fetchedItem.attachment,
+                  comments: fetchedItem.comments,
+                  customerComment: fetchedItem.customerComment,
+                  reviewerComment: fetchedItem.reviewerComment,
+                }
+              : item;
+          });
+        });
+        setData(updatedData);
+        setOriginalData(updatedData);
+      } catch (e) {
+        console.log("reload market error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    reload();
+  }, [userDetails && userDetails.id]);
 
   const handleRatingChange = (section, index, newRating) => {
     const newData = { ...data };
@@ -135,6 +179,8 @@ const MarketDomainPage = () => {
           userId: item.userId,
           attachment: item.attachment,
           comments: item.comments,
+          customerComment: item.customerComment,
+          reviewerComment: item.reviewerComment,
           question: item.question,
           description: item.description,
         }));
@@ -152,6 +198,15 @@ const MarketDomainPage = () => {
       console.error("Error submitting changes:", error);
     }
   };
+
+  // Auto-submit whenever changesMade flips to true (debounced slightly to batch rapid edits)
+  useEffect(() => {
+    if (!changesMade) return;
+    const timer = setTimeout(() => {
+      submitChanges();
+    }, 400); // 400ms debounce to group quick successive changes
+    return () => clearTimeout(timer);
+  }, [changesMade]);
 
   const handleAddFile = async (domain, file, userId) => {
     if (!file) return;
@@ -195,6 +250,8 @@ const MarketDomainPage = () => {
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
                 comments: fetchedItem.comments,
+                customerComment: fetchedItem.customerComment,
+                reviewerComment: fetchedItem.reviewerComment,
               }
             : item;
         });
@@ -245,6 +302,8 @@ const MarketDomainPage = () => {
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
                 comments: fetchedItem.comments,
+                customerComment: fetchedItem.customerComment,
+                reviewerComment: fetchedItem.reviewerComment,
               }
             : item;
         });
@@ -285,6 +344,24 @@ const MarketDomainPage = () => {
     );
   };
 
+  const handleCustomerCommentBlur = async (domain, index, comment) => {
+    try {
+      const newData = { ...data };
+      newData[domain][index].customerComment = comment;
+      setData(newData);
+
+      // Auto-save the comment
+      await updateMarketData(newData);
+
+      toast.success(
+        t("crat.commentSavedAutomatically", "Comment saved automatically")
+      );
+    } catch (error) {
+      toast.error(t("crat.errorSavingComment", "Error saving comment"));
+      console.error("Error saving customer comment:", error);
+    }
+  };
+
   const calculateTotalScore = (domain) => {
     return data[domain].reduce((acc, item) => acc + (item.score || 0), 0);
   };
@@ -306,7 +383,9 @@ const MarketDomainPage = () => {
         key={index}
       >
         <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
+          <p className="text-sm text-black dark:text-white">
+            {item.label || item.subDomain}
+          </p>
         </div>
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white">{item.question}</p>
@@ -343,6 +422,7 @@ const MarketDomainPage = () => {
             </p>
           )}
         </div>
+
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
             onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
@@ -402,16 +482,7 @@ const MarketDomainPage = () => {
           <h4 className="text-xl font-semibold text-black dark:text-white">
             {t("crat.market.title", "Market Domain Assessment")}
           </h4>
-          {changesMade && (
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={submitChanges}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                {t("crat.submitChanges", "Submit Changes")}
-              </button>
-            </div>
-          )}
+          {/* Submit Changes button removed; auto-save is handled by useEffect watching changesMade */}
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

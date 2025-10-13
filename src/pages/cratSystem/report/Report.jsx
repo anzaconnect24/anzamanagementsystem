@@ -2,10 +2,12 @@
 import { useState, useContext, useEffect } from "react";
 import {
   getReportData,
-  getScoreData,
   getInitialData,
   publishReport,
 } from "@/controllers/crat_general_controller"; // Import updated API functions
+import axios from "axios";
+import { server_url } from "@/utils/endpoint";
+import { headers } from "@/utils/headers";
 import Modal2 from "@/components/Model2";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
@@ -32,6 +34,8 @@ const Report = () => {
     t("report.subDomain", "Sub Domain"),
     t("report.score", "Score"),
     t("report.reportNarrative", "Report Narrative"),
+    t("crat.tableHeaders.customerComment", "Customer Comment"),
+    t("crat.tableHeaders.reviewerComment", "Reviewer Comment"),
   ];
   const [data, setData] = useState({});
   // Store incoming scores from backend so we can merge them once translations are ready
@@ -125,6 +129,97 @@ const Report = () => {
       bod: "bod",
     };
     return map[label] || null;
+  };
+
+  // Function to determine which CRAT domain and endpoint to use for a given subDomain
+  const getDomainEndpoint = (subDomain) => {
+    const domain = subDomain.toLowerCase().trim();
+
+    // Commercial/Market domain items
+    const marketItems = [
+      "demand",
+      "market share",
+      "sales",
+      "customer segments",
+      "payment terms",
+      "sales strategy",
+      "product development",
+      "product distribution",
+      "product pricing basis",
+      "level of competition",
+      "competitive advantage",
+      "marketing strategy",
+      "packaging & branding",
+      "product promotion",
+    ];
+
+    // Financial domain items
+    const financialItems = [
+      "revenue",
+      "cost management",
+      "working capital management",
+      "assets management",
+      "operating cash flow",
+      "capital expenses",
+      "obs items",
+      "debt manageability",
+      "assumptions",
+      "quality of financial records",
+      "financial reporting",
+      "internal controls",
+      "tax liability",
+    ];
+
+    // Operations domain items
+    const operationsItems = [
+      "vision clarity",
+      "management structure",
+      "team capacity",
+      "professional development",
+      "track record",
+      "performance measurement",
+      "management commitment",
+      "data management",
+      "system used",
+      "system effectiveness",
+      "quality control",
+      "quality management team",
+      "platform utilization",
+      "customer relations",
+      "business strategy",
+      "organization planning",
+    ];
+
+    // Legal domain items
+    const legalItems = [
+      "business incorporation",
+      "tax identification",
+      "tax compliance",
+      "business licence",
+      "sector specific compliance",
+      "lease agreements",
+      "customer contracts",
+      "supplier contracts",
+      "employees contracts",
+      "ip ownership",
+      "entrepreneurial character",
+      "personal legal liability",
+      "succession plan",
+      "board of directors",
+    ];
+
+    if (marketItems.includes(domain)) {
+      return { endpoint: "crat_market", domain: "market" };
+    } else if (financialItems.includes(domain)) {
+      return { endpoint: "crat_financial", domain: "financial" };
+    } else if (operationsItems.includes(domain)) {
+      return { endpoint: "crat_operation", domain: "operations" };
+    } else if (legalItems.includes(domain)) {
+      return { endpoint: "crat_legal", domain: "legal" };
+    }
+
+    // Default fallback
+    return { endpoint: "crat_general", domain: "general" };
   };
 
   // Function to translate sections
@@ -316,32 +411,42 @@ const Report = () => {
       legal: translateSection(initialData.legal, "legal"),
     };
 
-    // Apply incoming scores (if any) by matching backend labels to item keys
+    // Apply incoming scores and comments (if any) by matching backend labels to item keys
     if (Array.isArray(incomingScores) && incomingScores.length > 0) {
-      const applyScores = (draft) => {
+      const applyScoresAndComments = (draft) => {
         const domains = ["commercial", "financial", "operations", "legal"];
         const next = { ...draft };
-        incomingScores.forEach(({ subDomain, score }) => {
-          const key = labelToKey(subDomain);
-          if (!key) {
-            console.warn("No key mapping for backend subDomain:", subDomain);
-            return;
-          }
-          domains.forEach((domain) => {
-            const sectionObj = next[domain];
-            if (!sectionObj || typeof sectionObj !== "object") return;
-            Object.keys(sectionObj).forEach((sectionTitle) => {
-              const arr = sectionObj[sectionTitle];
-              if (!Array.isArray(arr)) return;
-              sectionObj[sectionTitle] = arr.map((item) =>
-                item?.key === key ? { ...item, score } : item
-              );
+        incomingScores.forEach(
+          ({ subDomain, score, uuid, customerComment, reviewerComment }) => {
+            const key = labelToKey(subDomain);
+            if (!key) {
+              console.warn("No key mapping for backend subDomain:", subDomain);
+              return;
+            }
+            domains.forEach((domain) => {
+              const sectionObj = next[domain];
+              if (!sectionObj || typeof sectionObj !== "object") return;
+              Object.keys(sectionObj).forEach((sectionTitle) => {
+                const arr = sectionObj[sectionTitle];
+                if (!Array.isArray(arr)) return;
+                sectionObj[sectionTitle] = arr.map((item) =>
+                  item?.key === key
+                    ? {
+                        ...item,
+                        score,
+                        uuid,
+                        customerComment,
+                        reviewerComment,
+                      }
+                    : item
+                );
+              });
             });
-          });
-        });
+          }
+        );
         return next;
       };
-      translatedData = applyScores(translatedData);
+      translatedData = applyScoresAndComments(translatedData);
     }
 
     setData(translatedData);
@@ -365,38 +470,45 @@ const Report = () => {
     try {
       setLoading(true);
 
-      // Fetch both report and score data
+      // Fetch report data
       const responseData = await getReportData({
         user_uuid: user_uuid || userDetails?.uuid,
-      });
-      const responseData1 = await getScoreData({
-        uuid: user_uuid || userDetails?.uuid,
       });
 
       console.log("Raw response data:", responseData);
 
-      // Ensure scoreData has the correct structure
-      if (responseData1 && Object.keys(responseData1).length > 0) {
-        setScoreData(responseData1);
+      // Calculate score data from actual report data
+      const calculatedScoreData =
+        calculateScoreDataFromReportData(responseData);
+
+      if (calculatedScoreData && Object.keys(calculatedScoreData).length > 0) {
+        setScoreData(calculatedScoreData);
         setGeneralStatus(
-          responseData1?.general_status || t("report.notReady", "Not Ready")
+          calculatedScoreData?.general_status ||
+            t("report.notReady", "Not Ready")
         );
-        console.log("Score data set successfully:", responseData1);
+        console.log("Calculated score data from report:", calculatedScoreData);
       } else {
-        // If no data, create dummy data for testing
-        const dummyData = {
-          commercial: { percentage: 75, status: t("report.ready", "Ready") },
-          financial: {
-            percentage: 60,
+        // If no data, create fallback data
+        const fallbackData = {
+          commercial: {
+            percentage: 0,
             status: t("report.notReady", "Not Ready"),
           },
-          operations: { percentage: 80, status: t("report.ready", "Ready") },
-          legal: { percentage: 55, status: t("report.notReady", "Not Ready") },
+          financial: {
+            percentage: 0,
+            status: t("report.notReady", "Not Ready"),
+          },
+          operations: {
+            percentage: 0,
+            status: t("report.notReady", "Not Ready"),
+          },
+          legal: { percentage: 0, status: t("report.notReady", "Not Ready") },
           general_status: t("report.notReady", "Not Ready"),
         };
-        setScoreData(dummyData);
+        setScoreData(fallbackData);
         setGeneralStatus(t("report.notReady", "Not Ready"));
-        console.log("Using dummy data for charts:", dummyData);
+        console.log("Using fallback data for charts:", fallbackData);
       }
 
       // Store scores to be merged into translated data by the effect above
@@ -427,6 +539,95 @@ const Report = () => {
   };
 
   // Note: legacy update method removed in favor of score-merging effect above
+
+  // Function to calculate domain scores from actual report data
+  const calculateScoreDataFromReportData = (reportData) => {
+    if (!reportData) return {};
+
+    // If backend returns structured object by domains
+    if (!Array.isArray(reportData)) {
+      const domains = ["commercial", "financial", "operations", "legal"];
+      const calculatedScores = {};
+      domains.forEach((domain) => {
+        if (reportData[domain]) {
+          const domainData = reportData[domain];
+          let totalScore = 0;
+          let totalQuestions = 0;
+          Object.values(domainData).forEach((subdomain) => {
+            if (Array.isArray(subdomain)) {
+              subdomain.forEach((item) => {
+                if (typeof item.score === "number") {
+                  totalScore += item.score;
+                  totalQuestions += 1;
+                }
+              });
+            }
+          });
+          const percentage = Math.round(
+            totalQuestions > 0 ? (totalScore / (totalQuestions * 2)) * 100 : 0
+          );
+          calculatedScores[domain] = {
+            percentage,
+            status:
+              percentage >= 70
+                ? t("report.ready", "Ready")
+                : t("report.notReady", "Not Ready"),
+          };
+        }
+      });
+      const percentages = Object.values(calculatedScores).map(
+        (item) => item.percentage
+      );
+      const overall =
+        percentages.length > 0
+          ? percentages.reduce((s, v) => s + v, 0) / percentages.length
+          : 0;
+      calculatedScores.general_status =
+        overall >= 70
+          ? t("report.ready", "Ready")
+          : t("report.notReady", "Not Ready");
+      return calculatedScores;
+    }
+
+    // When backend returns a flat array of items across all domains
+    const buckets = {
+      commercial: { actual: 0, count: 0 },
+      financial: { actual: 0, count: 0 },
+      operations: { actual: 0, count: 0 },
+      legal: { actual: 0, count: 0 },
+    };
+    reportData.forEach((row) => {
+      const sub = row?.subDomain;
+      const score = typeof row?.score === "number" ? row.score : null;
+      if (!sub || score === null) return;
+      const { domain } = getDomainEndpoint(String(sub));
+      const key = domain === "market" ? "commercial" : domain; // map market->commercial
+      if (!buckets[key]) return;
+      buckets[key].actual += score;
+      buckets[key].count += 1;
+    });
+    const result = {};
+    Object.entries(buckets).forEach(([key, { actual, count }]) => {
+      const target = count * 2; // each question max score 2
+      const percentage = target > 0 ? Math.round((actual / target) * 100) : 0;
+      result[key] = {
+        percentage,
+        status:
+          percentage >= 70
+            ? t("report.ready", "Ready")
+            : t("report.notReady", "Not Ready"),
+      };
+    });
+    const vals = Object.values(result).map((v) => v.percentage);
+    const overall = vals.length
+      ? vals.reduce((s, v) => s + v, 0) / vals.length
+      : 0;
+    result.general_status =
+      overall >= 70
+        ? t("report.ready", "Ready")
+        : t("report.notReady", "Not Ready");
+    return result;
+  };
 
   const publishChanges = async () => {
     try {
@@ -462,6 +663,113 @@ const Report = () => {
         "Are you sure you want to publish this report for review?"
       )
     );
+  };
+
+  const handleCustomerCommentBlur = async (uuid, comment, subDomain) => {
+    // Check if user is Entrepreneur - only they can edit customer comments
+    if (userDetails?.role !== "Enterprenuer") {
+      toast.warning(
+        t(
+          "report.noPermissionCustomer",
+          "Only entrepreneurs can edit customer comments"
+        )
+      );
+      return;
+    }
+
+    try {
+      const { endpoint } = getDomainEndpoint(subDomain);
+      const response = await axios.patch(
+        `${server_url}/${endpoint}/${uuid}`,
+        {
+          customerComment: comment,
+        },
+        { headers }
+      );
+
+      if (response.data.status) {
+        toast.success(
+          t("report.commentSavedAutomatically", "Comment saved automatically")
+        );
+        // Update the local data to reflect the change
+        updateLocalComment(uuid, "customerComment", comment);
+      } else {
+        toast.error(t("report.errorSavingComment", "Error saving comment"));
+      }
+    } catch (error) {
+      toast.error(t("report.errorSavingComment", "Error saving comment"));
+      console.error("Error saving customer comment:", error);
+    }
+  };
+
+  const handleReviewerCommentBlur = async (uuid, comment, subDomain) => {
+    // Check if user is Staff - only they can edit reviewer comments
+    if (userDetails?.role !== "Staff") {
+      toast.warning(
+        t(
+          "report.noPermissionReviewer",
+          "Only staff members can edit reviewer comments"
+        )
+      );
+      return;
+    }
+
+    try {
+      const { endpoint } = getDomainEndpoint(subDomain);
+      const response = await axios.patch(
+        `${server_url}/${endpoint}/${uuid}`,
+        {
+          reviewerComment: comment,
+        },
+        { headers }
+      );
+
+      if (response.data.status) {
+        toast.success(
+          t("report.reviewerCommentSaved", "Reviewer comment saved")
+        );
+        // Update the local data to reflect the change
+        updateLocalComment(uuid, "reviewerComment", comment);
+      } else {
+        toast.error(t("report.errorSavingComment", "Error saving comment"));
+      }
+    } catch (error) {
+      toast.error(t("report.errorSavingComment", "Error saving comment"));
+      console.error("Error saving reviewer comment:", error);
+    }
+  };
+
+  const updateLocalComment = (uuid, commentType, comment) => {
+    setData((prevData) => {
+      const newData = { ...prevData };
+
+      // Update the comment in the nested data structure
+      Object.keys(newData).forEach((sectionKey) => {
+        if (Array.isArray(newData[sectionKey])) {
+          newData[sectionKey].forEach((subsection) => {
+            if (Array.isArray(subsection)) {
+              subsection.forEach((item) => {
+                if (item.uuid === uuid) {
+                  item[commentType] = comment;
+                }
+              });
+            }
+          });
+        } else if (typeof newData[sectionKey] === "object") {
+          Object.keys(newData[sectionKey]).forEach((subKey) => {
+            if (Array.isArray(newData[sectionKey][subKey])) {
+              newData[sectionKey][subKey].forEach((item) => {
+                if (item.uuid === uuid) {
+                  item[commentType] = comment;
+                }
+              });
+            }
+          });
+        }
+      });
+
+      return newData;
+    });
   };
 
   const handleDeleteCancel = () => {
@@ -506,7 +814,7 @@ const Report = () => {
   };
 
   const renderTableHeaders = () => (
-    <div className="grid grid-cols-3 border-b border-stroke py-4 px-4 dark:border-strokedark">
+    <div className="grid grid-cols-5 border-b border-stroke py-4 px-4 dark:border-strokedark">
       {tableHeaders.map((header, index) => (
         <div key={index} className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white font-semibold">
@@ -522,9 +830,14 @@ const Report = () => {
       const narrative =
         item.narrative.find((n) => n.score === item.score)?.text ||
         t("report.narrativeNotFound", "Narrative not found");
+
+      // Check user permissions
+      const canEditCustomerComment = userDetails?.role === "Enterprenuer";
+      const canEditReviewerComment = userDetails?.role === "Staff";
+
       return (
         <div
-          className="grid grid-cols-3 border-t border-stroke py-4 px-4 dark:border-strokedark"
+          className="grid grid-cols-5 border-t border-stroke py-4 px-4 dark:border-strokedark"
           key={index}
         >
           <div className="flex items-center px-2">
@@ -537,6 +850,56 @@ const Report = () => {
           </div>
           <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white">{narrative}</p>
+          </div>
+          <div className="flex items-center px-2">
+            {canEditCustomerComment ? (
+              <textarea
+                defaultValue={item.customerComment || ""}
+                onBlur={(e) =>
+                  handleCustomerCommentBlur(
+                    item.uuid,
+                    e.target.value,
+                    item.subDomain
+                  )
+                }
+                placeholder={t(
+                  "crat.enterYourComment",
+                  "Enter your comment..."
+                )}
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                rows={2}
+              />
+            ) : (
+              <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
+                {item.customerComment ||
+                  t("crat.noCustomerComment", "No customer comment")}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center px-2">
+            {canEditReviewerComment ? (
+              <textarea
+                defaultValue={item.reviewerComment || ""}
+                onBlur={(e) =>
+                  handleReviewerCommentBlur(
+                    item.uuid,
+                    e.target.value,
+                    item.subDomain
+                  )
+                }
+                placeholder={t(
+                  "crat.enterReviewerComment",
+                  "Enter reviewer comment..."
+                )}
+                className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                rows={2}
+              />
+            ) : (
+              <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
+                {item.reviewerComment ||
+                  t("crat.noReviewerComment", "No reviewer comment")}
+              </p>
+            )}
           </div>
         </div>
       );
@@ -618,7 +981,7 @@ const Report = () => {
         prevPage={t("common.back", "Back")}
         prevLink={""}
       />
-
+      {/* {userDetails.role} */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className=" border-b border-black/0">
           <div className="flex justify-between items-center">
@@ -627,7 +990,7 @@ const Report = () => {
                 Capital Readiness Assessment Report
               </h2> */}
             </div>
-            <div className="flex space-x-3">
+            <div className="flex space-x-3 pt-4 pr-4">
               {userDetails.publishStatus === "Draft" ? (
                 <>
                   {userDetails.reportPdf && (
@@ -640,7 +1003,7 @@ const Report = () => {
                       {t("report.viewReport", "View Report")}
                     </button>
                   )}
-                  <button
+                  {/* <button
                     className={`px-4 py-2 text-white rounded-lg transition-colors ${
                       generalStatus === t("report.notReady", "Not Ready")
                         ? "bg-gray-400 cursor-not-allowed"
@@ -652,7 +1015,7 @@ const Report = () => {
                     }
                   >
                     {t("report.publish", "Publish")}
-                  </button>
+                  </button> */}
                 </>
               ) : (
                 <button

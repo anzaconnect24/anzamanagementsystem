@@ -13,6 +13,7 @@ import {
   attachDocument,
   deleteAttachment,
   getInitialDataTemplate,
+  updateSingleLegalItem,
 } from "@/controllers/crat_legal_controller"; // Import updated API functions
 const tableHeaders = [
   "Sub Domain",
@@ -20,6 +21,8 @@ const tableHeaders = [
   "Rating",
   "Score",
   "Attachment",
+  "Your Comment",
+  "Reviewer Comment",
   "Actions",
 ];
 import { useTranslation } from "@/locales";
@@ -53,47 +56,22 @@ const LegalDomainPage = () => {
           fetchData(); // Fetch again after creating legal data
         } else {
           const updatedData = { ...translatedTemplate };
-          console.log("updatedData:", updatedData);
-          // Create English template for stable database matching
-          const englishTemplate = getInitialDataTemplate(
-            (key, fallback) => fallback || key
-          );
-
-          // Create a mapping of English subDomains with their occurrence count
-          const subDomainCounts = {};
-
           Object.keys(updatedData).forEach((section) => {
-            updatedData[section] = updatedData[section].map((item, index) => {
-              // Get corresponding English subdomain for database matching
-              const englishSubDomain =
-                englishTemplate[section]?.[index]?.subDomain || item.subDomain;
-
-              // Track occurrence count for this subdomain
-              subDomainCounts[englishSubDomain] =
-                subDomainCounts[englishSubDomain] || 0;
-
-              // Find all matching items from responseData
-              const matchingItems = responseData.filter(
-                (dataItem) => dataItem.subDomain === englishSubDomain
+            updatedData[section] = updatedData[section].map((item) => {
+              const fetchedItem = responseData.find(
+                (dataItem) => dataItem.subDomain === item.subDomain
               );
-
-              // Get the specific item based on occurrence count
-              const fetchedItem =
-                matchingItems[subDomainCounts[englishSubDomain]];
-
-              // Increment count for next occurrence
-              subDomainCounts[englishSubDomain]++;
-
               return fetchedItem
                 ? {
-                    ...item, // Keep the translated template (including translated subDomain, question, description)
+                    ...item,
+                    uuid: fetchedItem.uuid,
                     rating: fetchedItem.rating,
                     score: fetchedItem.score,
                     userId: fetchedItem.userId,
                     attachment: fetchedItem.attachment,
                     comments: fetchedItem.comments,
-                    uuid: fetchedItem.uuid, // Add uuid for future reference
-                    // Keep translated: subDomain, question, description from item
+                    customerComment: fetchedItem.customerComment,
+                    reviewerComment: fetchedItem.reviewerComment,
                   }
                 : item;
             });
@@ -110,10 +88,57 @@ const LegalDomainPage = () => {
     setLoading(false);
   }, []);
 
-  const handleRatingChange = (section, index, newRating) => {
+  // Reload when the logged-in user changes to avoid stale previous user's data
+  useEffect(() => {
+    if (!userDetails || !userDetails.id) return;
+    const reload = async () => {
+      setLoading(true);
+      try {
+        const responseData = await getLegalData();
+        const updatedData = { ...translatedTemplate };
+        Object.keys(updatedData).forEach((section) => {
+          updatedData[section] = updatedData[section].map((item) => {
+            const fetchedItem = responseData.find(
+              (dataItem) => dataItem.subDomain === item.subDomain
+            );
+            return fetchedItem
+              ? {
+                  ...item,
+                  uuid: fetchedItem.uuid,
+                  rating: fetchedItem.rating,
+                  score: fetchedItem.score,
+                  userId: fetchedItem.userId,
+                  attachment: fetchedItem.attachment,
+                  comments: fetchedItem.comments,
+                  customerComment: fetchedItem.customerComment,
+                  reviewerComment: fetchedItem.reviewerComment,
+                }
+              : item;
+          });
+        });
+        setData(updatedData);
+        setOriginalData(updatedData);
+      } catch (e) {
+        console.log("reload legal error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    reload();
+  }, [userDetails && userDetails.id]);
+
+  // Debounced auto-submit for bulk fallback changes
+  useEffect(() => {
+    if (!changesMade) return;
+    const timer = setTimeout(() => submitChanges(), 500);
+    return () => clearTimeout(timer);
+  }, [changesMade]);
+
+  const handleRatingChange = async (section, index, newRating) => {
     const newData = { ...data };
+    const current = newData[section][index];
     const score = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
-    if (newRating === "Yes" && !newData[section][index].attachment) {
+    if (newRating === "Yes" && !current.attachment) {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
@@ -121,37 +146,71 @@ const LegalDomainPage = () => {
         )
       );
       setModalOpen(true);
-    } else {
-      newData[section][index].rating = newRating;
-      newData[section][index].score = score;
+      return;
+    }
+    current.rating = newRating;
+    current.score = score;
+    setData(newData);
+    try {
+      if (!current.uuid) {
+        setChangesMade(true); // fallback bulk save
+        toast(
+          t(
+            "crat.uuidMissingDeferredSave",
+            "Record missing id; will save shortly"
+          )
+        );
+        return;
+      }
+      await updateSingleLegalItem(current.uuid, { rating: newRating, score });
+      setOriginalData((prev) => {
+        const clone = { ...prev };
+        clone[section] = clone[section].map((it, i) =>
+          i === index ? { ...it, rating: newRating, score } : it
+        );
+        return clone;
+      });
+      toast.success(
+        t("crat.ratingUpdated", "Rating & score updated successfully")
+      );
+    } catch (e) {
+      toast.error(t("crat.updateFailed", "Failed to update rating"));
+      setData(originalData);
+    }
+  };
+
+  const handleCustomerCommentBlur = async (domain, index, comment) => {
+    try {
+      const newData = { ...data };
+      newData[domain][index].customerComment = comment;
       setData(newData);
-      setChangesMade(true);
+
+      // Auto-save the comment
+      await updateLegalData(newData);
+
+      toast.success(
+        t("crat.commentSavedAutomatically", "Comment saved automatically")
+      );
+    } catch (error) {
+      toast.error(t("crat.errorSavingComment", "Error saving comment"));
+      console.error("Error saving customer comment:", error);
     }
   };
 
   const submitChanges = async () => {
     try {
       await updateLegalData(data);
-
-      // Update translatedTemplate here (though it's not needed since it's recreated on render)
-      Object.keys(data).forEach((section) => {
-        // No need to update translatedTemplate as it's dynamically generated
-      });
-
-      setOriginalData(data); // Update original data after successful submission
+      setOriginalData(data);
       setChangesMade(false);
-
       toast.success(
         t("crat.changesSubmittedSuccess", "Changes successfully submitted")
       );
-      console.log("Changes successfully submitted");
     } catch (error) {
       toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
-      console.error("Error submitting changes:", error);
     }
   };
 
-  const handleAddFile = async (domain, file, userId) => {
+  const handleAddFile = async (domain, file, userId, uuid) => {
     if (!file) return;
 
     // Extract the file extension
@@ -165,9 +224,10 @@ const LegalDomainPage = () => {
     const updatedFile = new File([file], uniqueFileName, { type: file.type });
 
     const fileData = {
-      file: updatedFile, // Use the updated file
-      subDomain: domain,
-      userId: userId,
+      file: updatedFile,
+      userId,
+      uuid, // prefer uuid
+      subDomain: domain, // legacy fallback
     };
 
     try {
@@ -177,45 +237,22 @@ const LegalDomainPage = () => {
       const responseData = await getLegalData();
       const updatedData = { ...translatedTemplate };
 
-      // Create English template for stable database matching
-      const englishTemplate = getInitialDataTemplate(
-        (key, fallback) => fallback || key
-      );
-
-      // Create a mapping of English subDomains with their occurrence count
-      const subDomainCounts = {};
-
       Object.keys(updatedData).forEach((section) => {
-        updatedData[section] = updatedData[section].map((item, index) => {
-          // Get corresponding English subdomain for database matching
-          const englishSubDomain =
-            englishTemplate[section]?.[index]?.subDomain || item.subDomain;
-
-          // Track occurrence count for this subdomain
-          subDomainCounts[englishSubDomain] =
-            subDomainCounts[englishSubDomain] || 0;
-
-          // Find all matching items from responseData
-          const matchingItems = responseData.filter(
-            (dataItem) => dataItem.subDomain === englishSubDomain
+        updatedData[section] = updatedData[section].map((item) => {
+          const fetchedItem = responseData.find(
+            (dataItem) => dataItem.subDomain === item.subDomain
           );
-
-          // Get the specific item based on occurrence count
-          const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
-
-          // Increment count for next occurrence
-          subDomainCounts[englishSubDomain]++;
-
           return fetchedItem
             ? {
-                ...item, // Keep the translated template (including translated subDomain, question, description)
+                ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
                 comments: fetchedItem.comments,
-                uuid: fetchedItem.uuid, // Add uuid for future reference
-                // Keep translated: subDomain, question, description from item
+                customerComment: fetchedItem.customerComment,
+                reviewerComment: fetchedItem.reviewerComment,
               }
             : item;
         });
@@ -230,20 +267,25 @@ const LegalDomainPage = () => {
     }
   };
 
-  const openDeleteDialog = (domain, id, attachment, section, index) => {
+  const openDeleteDialog = (domain, id, attachment, section, index, uuid) => {
     // Open the delete modal with the confirmation message
     deleteModalOpen(true);
     deleteModalMessage(
       t("crat.confirmDelete", "Are you sure you want to delete?")
     );
-    setDeleteCache([domain, id, attachment, section, index]);
+    setDeleteCache([domain, id, attachment, section, index, uuid]);
   };
 
   const handleDeleteFile = async () => {
-    const [domain, id, attachment, section, index] = deleteCache;
+    const [domain, id, attachment, section, index, uuid] = deleteCache;
     try {
       // Proceed with deletion directly
-      await deleteAttachment(domain, id, attachment);
+      await deleteAttachment({
+        uuid,
+        subDomain: domain,
+        userId: id,
+        attachment,
+      });
       handleRatingChange(section, index, "No");
       submitChanges();
 
@@ -251,44 +293,20 @@ const LegalDomainPage = () => {
       const responseData = await getLegalData();
       const updatedData = { ...translatedTemplate };
 
-      // Create English template for stable database matching
-      const englishTemplate = getInitialDataTemplate(
-        (key, fallback) => fallback || key
-      );
-
-      // Create a mapping of English subDomains with their occurrence count
-      const subDomainCounts = {};
-
       Object.keys(updatedData).forEach((section) => {
-        updatedData[section] = updatedData[section].map((item, index) => {
-          // Get corresponding English subdomain for database matching
-          const englishSubDomain =
-            englishTemplate[section]?.[index]?.subDomain || item.subDomain;
-
-          // Track occurrence count for this subdomain
-          subDomainCounts[englishSubDomain] =
-            subDomainCounts[englishSubDomain] || 0;
-
-          // Find all matching items from responseData
-          const matchingItems = responseData.filter(
-            (dataItem) => dataItem.subDomain === englishSubDomain
+        updatedData[section] = updatedData[section].map((item) => {
+          const fetchedItem = responseData.find(
+            (dataItem) => dataItem.subDomain === item.subDomain
           );
-
-          // Get the specific item based on occurrence count
-          const fetchedItem = matchingItems[subDomainCounts[englishSubDomain]];
-
-          // Increment count for next occurrence
-          subDomainCounts[englishSubDomain]++;
-
           return fetchedItem
             ? {
-                ...item, // Keep the translated template (including translated subDomain, question, description)
+                ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
                 attachment: fetchedItem.attachment,
-                uuid: fetchedItem.uuid, // Add uuid for future reference
-                // Keep translated: subDomain, question, description from item
+                comments: fetchedItem.comments,
               }
             : item;
         });
@@ -319,12 +337,11 @@ const LegalDomainPage = () => {
   };
 
   const handleEdit = (domain, index, comment) => {
-    console.log("Editing item:", domain, index, comment);
-
     const newData = [...data[domain]];
-    newData[index].comments = comment;
+    const target = newData[index];
+    target.comments = comment;
     setData({ ...data, [domain]: newData });
-    submitChanges();
+    setChangesMade(true); // auto-save debounce
     toast.success(
       t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
     );
@@ -345,70 +362,77 @@ const LegalDomainPage = () => {
   };
 
   const renderTableRows = (domain) => {
-    // Create English template for stable database identifiers
-    const englishTemplate = getInitialDataTemplate(
-      (key, fallback) => fallback || key
-    );
     console.log("Data:", data);
-    return data[domain].map((item, index) => {
-      // Get corresponding English subdomain for API calls
-      const englishSubDomain =
-        englishTemplate[domain]?.[index]?.subDomain || item.subDomain;
-
-      return (
-        <div
-          className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark"
-          key={index}
-        >
-          <div className="flex items-center px-2">
-            <p className="text-sm text-black dark:text-white">
-              {item.subDomain}
-            </p>
-          </div>
-          <div className="flex items-center px-2">
-            <p className="text-sm text-black dark:text-white">
-              {item.question}
-            </p>
-          </div>
-          <div className="flex items-center px-2">
-            <DropdownTwo
-              value={item.rating}
-              onChange={(e) =>
-                handleRatingChange(domain, index, e.target.value)
-              }
-            />
-          </div>
-          <div className="flex items-center px-2">
-            <p className="text-sm text-black dark:text-white">{item.score}</p>
-          </div>
-          <div className="flex items-center px-2">
-            <p className="text-sm text-black dark:text-white">
-              {item.description}
-            </p>
-          </div>
-          <div className="flex items-center px-2 space-x-2">
-            <ReactIcons
-              onAdd={(file) =>
-                handleAddFile(englishSubDomain, file, item.userId)
-              }
-              onDelete={() =>
-                openDeleteDialog(
-                  englishSubDomain,
-                  item.userId,
-                  item.attachment,
-                  domain,
-                  index
-                )
-              }
-              onView={() => handleViewFile(item.attachment)}
-              attachment={item.attachment}
-              onEdit={(comment) => handleEdit(domain, index, comment)}
-              comment={item.comments}
-            />
-          </div>
+    return data[domain].map((item, index) => (
+      <div
+        className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark"
+        key={index}
+      >
+        <div className="flex items-center px-2">
+          <p className="text-sm text-black dark:text-white">
+            {item.label || item.subDomain}
+          </p>
         </div>
-      );
-    });
+        <div className="flex items-center px-2">
+          <p className="text-sm text-black dark:text-white">{item.question}</p>
+        </div>
+        <div className="flex items-center px-2">
+          <DropdownTwo
+            value={item.rating}
+            onChange={(e) => handleRatingChange(domain, index, e.target.value)}
+          />
+        </div>
+        <div className="flex items-center px-2">
+          <p className="text-sm text-black dark:text-white">{item.score}</p>
+        </div>
+        <div className="flex items-center px-2">
+          <p className="text-sm text-black dark:text-white">
+            {item.attachment ? (
+              <a
+                href={item.attachment}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline break-all"
+                title={t("crat.openAttachment", "Open attachment")}
+              >
+                {(() => {
+                  try {
+                    const url = new URL(item.attachment);
+                    return url.pathname.split("/").pop();
+                  } catch {
+                    return item.attachment.split("/").pop();
+                  }
+                })()}
+              </a>
+            ) : (
+              <span className="">{t("crat.noAttachment", "No data")}</span>
+            )}
+          </p>
+        </div>
+
+        <div className="flex items-center px-2 space-x-2">
+          <ReactIcons
+            onAdd={(file) =>
+              handleAddFile(item.subDomain, file, item.userId, item.uuid)
+            }
+            onDelete={() =>
+              openDeleteDialog(
+                item.subDomain,
+                item.userId,
+                item.attachment,
+                domain,
+                index,
+                item.uuid
+              )
+            }
+            onView={() => handleViewFile(item.attachment)}
+            attachment={item.attachment}
+            onEdit={(comment) => handleEdit(domain, index, comment)}
+            comment={item.comments}
+          />
+        </div>
+      </div>
+    ));
   };
 
   const renderSection = (domain, title) => (
@@ -448,16 +472,7 @@ const LegalDomainPage = () => {
           <h4 className="text-xl font-semibold text-black dark:text-white">
             {t("crat.legal.title", "Legal Domain Assessment")}
           </h4>
-          {changesMade && (
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={submitChanges}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                {t("crat.submitChanges", "Submit Changes")}
-              </button>
-            </div>
-          )}
+          {/* Manual Submit button removed – auto-save enabled */}
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">

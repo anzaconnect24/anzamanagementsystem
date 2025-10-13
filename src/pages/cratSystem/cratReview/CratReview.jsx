@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { useRouter } from "@/utils/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -34,7 +34,7 @@ const CratReviewPage = () => {
       return;
     }
     fetchCratReviews();
-  }, [userDetails, router]);
+  }, [userDetails?.role, userDetails?.id]);
 
   const handleResubmitReview = async () => {
     try {
@@ -88,7 +88,7 @@ const CratReviewPage = () => {
     }
   };
 
-  const fetchCratReviews = async () => {
+  const fetchCratReviews = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -114,7 +114,7 @@ const CratReviewPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userDetails.id, t]);
   const handleSubmitReview = async () => {
     // Check if there's already a review
     if (hasReview) {

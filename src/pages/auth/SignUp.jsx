@@ -75,7 +75,7 @@ const SignUp = () => {
     });
   }, []);
   return (
-    <div className=" bg-slate-800 min-h-screen flex items-center">
+    <div className="w-full text-start">
       <form
         onSubmit={(e) => {
           e.preventDefault();
@@ -236,12 +236,30 @@ const SignUp = () => {
         }}
         className=" w-11/12 md:w-8/12 2xl:w-6/12 mx-auto "
       >
-        <div
-          className=" bg-white hover:shadow border-black rounded-lg ring-1
-ring-stroke "
-        >
-          <div className="grid grid-cols-12">
-            <div
+        <h1 className="text-4xl font-bold text-center mb-5">
+          {t("auth.createAnAccount", "Create an account")}
+        </h1>
+        <div className="flex bg-black/20 rounded-lg w-full">
+          <div className=" text-center py-2 w-1/2 rounded-lg">
+            <Link
+              href="/auth/signin"
+              className=" py-2 px-6   hover:text-gray-900"
+            >
+              {t("common.login", "Login")}
+            </Link>
+          </div>
+          <div className="flex-1 text-center text-white bg-primary rounded-lg py-2">
+            <Link
+              href="/auth/signup"
+              className="text-gray-700 hover:text-gray-900"
+            >
+              {t("auth.register", "Register")}
+            </Link>
+          </div>
+        </div>
+        <div className="  ">
+          <div className="">
+            {/* <div
               className="col-span-4 bg-slate-100 h-full p-8 py-16 rounded-l-lg flex
 flex-col justify-between "
             >
@@ -275,8 +293,8 @@ flex-col justify-between "
                   {t("auth.signIn", "Sign In")}
                 </Link>
               </p>
-            </div>
-            <div className="col-span-8 p-8 py-16 flex flex-col justify-center w-full">
+            </div> */}
+            <div className=" py-16 flex flex-col justify-center w-full">
               {/* <div className="flex justify-center">
 <Image height={100} width={100} alt="" src={"/anza.png"}/>
 </div> */}

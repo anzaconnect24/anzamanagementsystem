@@ -32,26 +32,53 @@ dark:text-white"
               className="form-style"
             >
               {[
-                "No Poverty",
-                "Zero Hunger",
-                "Good Health and Well-being",
-                "Quality Education",
-                "Gender Equality",
-                "Clean Water and Sanitation",
-                "Affordable and Clean Energy",
-                "Decent Work and Economic Growth",
-                "Industry, Innovation, and Infrastructure",
-                "Reduced Inequalities",
-                "Sustainable Cities and Communities",
-                "Responsible Consumption and Production",
-                "Climate Action",
-                "Life Below Water",
-                "Life on Land",
-                "Peace, Justice, and Strong Institutions",
-                "Partnerships for the Goals",
+                { key: "noPoverty", value: "No Poverty" },
+                { key: "zeroHunger", value: "Zero Hunger" },
+                {
+                  key: "goodHealthWellBeing",
+                  value: "Good Health and Well-being",
+                },
+                { key: "qualityEducation", value: "Quality Education" },
+                { key: "genderEquality", value: "Gender Equality" },
+                {
+                  key: "cleanWaterSanitation",
+                  value: "Clean Water and Sanitation",
+                },
+                {
+                  key: "affordableCleanEnergy",
+                  value: "Affordable and Clean Energy",
+                },
+                {
+                  key: "decentWorkEconomicGrowth",
+                  value: "Decent Work and Economic Growth",
+                },
+                {
+                  key: "industryInnovationInfrastructure",
+                  value: "Industry, Innovation, and Infrastructure",
+                },
+                { key: "reducedInequalities", value: "Reduced Inequalities" },
+                {
+                  key: "sustainableCitiesCommunities",
+                  value: "Sustainable Cities and Communities",
+                },
+                {
+                  key: "responsibleConsumptionProduction",
+                  value: "Responsible Consumption and Production",
+                },
+                { key: "climateAction", value: "Climate Action" },
+                { key: "lifeBelowWater", value: "Life Below Water" },
+                { key: "lifeOnLand", value: "Life on Land" },
+                {
+                  key: "peaceJusticeStrongInstitutions",
+                  value: "Peace, Justice, and Strong Institutions",
+                },
+                {
+                  key: "partnershipsForGoals",
+                  value: "Partnerships for the Goals",
+                },
               ].map((item, index) => (
-                <option key={index} value={item}>
-                  {item}
+                <option key={index} value={item.value}>
+                  {t(`business.sdgGoals.${item.key}`, item.value)}
                 </option>
               ))}
             </select>

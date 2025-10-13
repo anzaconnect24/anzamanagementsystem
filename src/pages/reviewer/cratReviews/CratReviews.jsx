@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useCallback } from "react";
 import { useRouter } from "@/utils/navigation";
 import axios from "axios";
 import toast from "react-hot-toast";
@@ -30,15 +30,7 @@ const CratReviewsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [reviewComments, setReviewComments] = useState("");
 
-  useEffect(() => {
-    if (!["Staff"].includes(userDetails?.role)) {
-      router.push("/");
-      return;
-    }
-    fetchReviews();
-  }, [currentPage, searchTerm, userDetails, router]);
-
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(
@@ -64,7 +56,15 @@ const CratReviewsPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userDetails.id, currentPage, limit, searchTerm]);
+
+  useEffect(() => {
+    if (!["Staff"].includes(userDetails?.role)) {
+      router.push("/");
+      return;
+    }
+    fetchReviews();
+  }, [userDetails?.role, fetchReviews]);
 
   const handleStartReview = async (review) => {
     try {
@@ -275,7 +275,7 @@ const CratReviewsPage = () => {
                     <button
                       onClick={() => {
                         router.push(
-                          `/report?user_uuid=${review.entrepreneur.uuid}`
+                          `/dashboard/report?user_uuid=${review.entrepreneur.uuid}`
                         );
                       }}
                       className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"

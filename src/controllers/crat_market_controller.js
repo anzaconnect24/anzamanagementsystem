@@ -3,13 +3,19 @@ import { headers } from "@/utils/headers";
 import { server_url } from "@/utils/endpoint";
 import { getUser, storeUser } from "../utils/local_storage";
 
+// Build Authorization headers from current local storage at call time to avoid stale tokens
+const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getUser() && getUser().ACCESS_TOKEN}`,
+});
+
 // Create market data
 export const createMarketData = async (data) => {
   try {
     const response = await axios.post(
       `${server_url}/crat_market/create`,
       data,
-      { headers }
+      { headers: authHeaders() }
     );
     return response.data;
   } catch (error) {
@@ -23,7 +29,7 @@ export const getMarketData = async () => {
   console.log("marketData: " + headers);
   try {
     const response = await axios.get(`${server_url}/crat_market/data`, {
-      headers,
+      headers: authHeaders(),
     });
     return response.data.body;
   } catch (error) {
@@ -39,11 +45,26 @@ export const updateMarketData = async (data) => {
     const response = await axios.post(
       `${server_url}/crat_market/update`,
       data,
-      { headers }
+      { headers: authHeaders() }
     );
     return response.data;
   } catch (error) {
     console.log("Error updating market data:", error.response);
+    throw error;
+  }
+};
+
+// Update a single market item by uuid (partial patch)
+export const updateSingleMarketItem = async (uuid, payload) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/crat_market/${uuid}`,
+      payload,
+      { headers: authHeaders() }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Error updating single market item:", error.response || error);
     throw error;
   }
 };
@@ -67,10 +88,7 @@ export const attachDocument = async (data) => {
       `${server_url}/crat_market/attachment`,
       formData,
       {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${getUser().ACCESS_TOKEN}`,
-        },
+        headers: { ...authHeaders(), "Content-Type": "multipart/form-data" },
       }
     );
 
@@ -86,14 +104,8 @@ export const deleteAttachment = async (domain, userId, attachment) => {
   try {
     const response = await axios.post(
       `${server_url}/crat_market/delete_attachment`,
-      {
-        subDomain: domain,
-        userId,
-        attachment,
-      },
-      {
-        headers,
-      }
+      { subDomain: domain, userId, attachment },
+      { headers: authHeaders() }
     );
 
     return response.data;
@@ -106,15 +118,13 @@ export const deleteAttachment = async (domain, userId, attachment) => {
 export const getInitialDataTemplate = (t) => ({
   market: [
     {
-      subDomain: t(
-        "report.capitalReadinessAssessmentReport",
-        "Capital Readiness Assessment Report"
-      ),
+      subDomain: "Demand", // canonical key stored in DB
+      label: t("crat.market.assessments.demandSubDomain", "Demand"),
       question: t(
         "crat.market.assessments.demandQuestion",
         "Is there sufficient evidence for demand of your product?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.demandDescription",
@@ -123,15 +133,13 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
-        "crat.market.assessments.marketShareSubDomain",
-        "Market share"
-      ),
+      subDomain: "Market share",
+      label: t("crat.market.assessments.marketShareSubDomain", "Market share"),
       question: t(
         "crat.market.assessments.marketShareQuestion",
         "Is the market share growing?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.marketShareDescription",
@@ -142,12 +150,13 @@ export const getInitialDataTemplate = (t) => ({
   ],
   salesTraction: [
     {
-      subDomain: t("crat.market.assessments.salesSubDomain", "Sales"),
+      subDomain: "Sales",
+      label: t("crat.market.assessments.salesSubDomain", "Sales"),
       question: t(
         "crat.market.assessments.salesQuestion",
         "Are sales growing on a monthly/quarterly/annual basis?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.salesDescription",
@@ -156,7 +165,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Customer segments",
+      label: t(
         "crat.market.assessments.customerSegmentsSubDomain",
         "Customer segments"
       ),
@@ -164,7 +174,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.customerSegmentsQuestion",
         "Are there customer segments and clear focus?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.customerSegmentsDescription",
@@ -173,7 +183,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Payment terms",
+      label: t(
         "crat.market.assessments.paymentTermsSubDomain",
         "Payment terms"
       ),
@@ -181,7 +192,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.paymentTermsQuestion",
         "Are payment terms in favor of the company?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.paymentTermsDescription",
@@ -190,7 +201,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Sales strategy",
+      label: t(
         "crat.market.assessments.salesStrategySubDomain",
         "Sales strategy"
       ),
@@ -198,7 +210,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.salesStrategyQuestion",
         "Is the sales strategy consistent with growth plans?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.salesStrategyDescription",
@@ -209,7 +221,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   product: [
     {
-      subDomain: t(
+      subDomain: "Product development",
+      label: t(
         "crat.market.assessments.productDevelopmentSubDomain",
         "Product development"
       ),
@@ -217,7 +230,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.productDevelopmentQuestion",
         "Are there clear product road maps?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.productDevelopmentDescription",
@@ -226,7 +239,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Product distribution",
+      label: t(
         "crat.market.assessments.productDistributionSubDomain",
         "Product distribution"
       ),
@@ -234,7 +248,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.productDistributionQuestion",
         "Are products properly distributed?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.productDistributionDescription",
@@ -243,7 +257,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Product pricing basis",
+      label: t(
         "crat.market.assessments.productPricingBasisSubDomain",
         "Product pricing basis"
       ),
@@ -251,7 +266,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.productPricingBasisQuestion",
         "Are products properly priced?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.productPricingBasisDescription",
@@ -262,7 +277,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   competition: [
     {
-      subDomain: t(
+      subDomain: "Level of competition",
+      label: t(
         "crat.market.assessments.levelOfCompetitionSubDomain",
         "Level of competition"
       ),
@@ -270,7 +286,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.levelOfCompetitionQuestion",
         "Do you understand the level of competition and have you conducted analysis?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.levelOfCompetitionDescription",
@@ -279,7 +295,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Competitive advantage",
+      label: t(
         "crat.market.assessments.competitiveAdvantageSubDomain",
         "Competitive advantage"
       ),
@@ -287,7 +304,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.competitiveAdvantageQuestion",
         "Does the company have a clear competitive advantage?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.competitiveAdvantageDescription",
@@ -298,7 +315,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   marketing: [
     {
-      subDomain: t(
+      subDomain: "Marketing strategy",
+      label: t(
         "crat.market.assessments.marketingStrategySubDomain",
         "Marketing strategy"
       ),
@@ -306,7 +324,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.marketingStrategyQuestion",
         "Is the marketing strategy consistent with growth plans?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.marketingStrategyDescription",
@@ -315,7 +333,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Packaging & branding",
+      label: t(
         "crat.market.assessments.packagingBrandingSubDomain",
         "Packaging & branding"
       ),
@@ -323,7 +342,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.packagingBrandingQuestion",
         "Are the company's products properly packed and branded?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.packagingBrandingDescription",
@@ -332,7 +351,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Product promotion",
+      label: t(
         "crat.market.assessments.productPromotionSubDomain",
         "Product promotion"
       ),
@@ -340,7 +360,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.market.assessments.productPromotionQuestion",
         "Is there a clear promotion strategy?"
       ),
-      rating: t("crat.market.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.market.assessments.productPromotionDescription",

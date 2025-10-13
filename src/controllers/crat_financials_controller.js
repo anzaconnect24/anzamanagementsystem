@@ -3,6 +3,11 @@ import { headers } from "@/utils/headers";
 import { server_url } from "@/utils/endpoint";
 import { getUser, storeUser } from "../utils/local_storage";
 
+const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getUser() && getUser().ACCESS_TOKEN}`,
+});
+
 // Create financial data
 export const createFinancialData = async (data) => {
   console.log("creating financials");
@@ -10,7 +15,7 @@ export const createFinancialData = async (data) => {
     const response = await axios.post(
       `${server_url}/crat_financial/create`,
       data,
-      { headers }
+      { headers: authHeaders() }
     );
     return response.data;
   } catch (error) {
@@ -25,7 +30,7 @@ export const getFinancialData = async () => {
 
   try {
     const response = await axios.get(`${server_url}/crat_financial/data`, {
-      headers,
+      headers: authHeaders(),
     });
     return response.data.body;
   } catch (error) {
@@ -40,7 +45,7 @@ export const updateFinancialData = async (data) => {
     const response = await axios.post(
       `${server_url}/crat_financial/update`,
       data,
-      { headers }
+      { headers: authHeaders() }
     );
     return response.data;
   } catch (error) {
@@ -51,56 +56,67 @@ export const updateFinancialData = async (data) => {
 
 // Attach a document
 export const attachDocument = async (data) => {
-  console.log(data);
   try {
     const formData = new FormData();
     formData.append("file", data.file);
-    formData.append("subDomain", data.subDomain);
+    if (data.uuid) formData.append("uuid", data.uuid);
+    else if (data.subDomain) formData.append("subDomain", data.subDomain);
     formData.append("userId", data.userId);
     delete data.file;
-    delete data.subDomain; // Remove file and subDomain from the data object
-
-    Object.keys(data).forEach((key) => {
-      formData.append(key, data[key]);
+    delete data.subDomain;
+    Object.keys(data).forEach((k) => {
+      if (data[k] !== undefined && data[k] !== null)
+        formData.append(k, data[k]);
     });
-
-    console.log("imepita");
-
     const response = await axios.post(
       `${server_url}/crat_financial/attachment`,
       formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${getUser().ACCESS_TOKEN}`,
-        },
-      }
+      { headers: { ...authHeaders(), "Content-Type": "multipart/form-data" } }
     );
-
     return response.data;
   } catch (error) {
-    console.log("Error attaching document:", error.response);
+    console.log("Error attaching document:", error.response || error.message);
     throw error;
   }
 };
 
-export const deleteAttachment = async (domain, userId, attachment) => {
+export const deleteAttachment = async ({
+  uuid,
+  subDomain,
+  userId,
+  attachment,
+}) => {
   try {
+    const payload = { userId, attachment };
+    if (uuid) payload.uuid = uuid;
+    else if (subDomain) payload.subDomain = subDomain;
     const response = await axios.post(
       `${server_url}/crat_financial/delete_attachment`,
-      {
-        subDomain: domain,
-        userId,
-        attachment,
-      },
-      {
-        headers,
-      }
+      payload,
+      { headers: authHeaders() }
     );
     return response.data;
   } catch (error) {
     console.log("Error deleting attachment:", error.response || error.message);
-    throw error; // Rethrow the error for further handling if needed
+    throw error;
+  }
+};
+
+// Single item patch
+export const updateSingleFinancialItem = async (uuid, payload) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/crat_financial/${uuid}`,
+      payload,
+      { headers: authHeaders() }
+    );
+    return response.data;
+  } catch (error) {
+    console.log(
+      "Error updating single financial item:",
+      error.response || error
+    );
+    throw error;
   }
 };
 

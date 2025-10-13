@@ -88,24 +88,16 @@ const NewInvestmentOpportunity = () => {
       newErrors.sector = t("investment.sectorIsRequired", "Sector is required");
     }
 
-    if (!formData.amount.trim()) {
-      newErrors.amount = t(
-        "investment.amountIsRequired",
-        "Investment amount is required"
-      );
-    } else if (isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
-      newErrors.amount = t(
-        "investment.pleaseEnterValidAmount",
-        "Please enter a valid amount"
-      );
+    // amount optional: validate only when provided
+    if (formData.amount && formData.amount.trim() !== "") {
+      if (isNaN(formData.amount) || parseFloat(formData.amount) <= 0) {
+        newErrors.amount = t(
+          "investment.pleaseEnterValidAmount",
+          "Please enter a valid amount"
+        );
+      }
     }
-
-    if (!formData.investmentType.trim()) {
-      newErrors.investmentType = t(
-        "investment.investmentTypeIsRequired",
-        "Investment type is required"
-      );
-    }
+    // investmentType optional: no required check
 
     if (formData.url && !isValidUrl(formData.url)) {
       newErrors.url = t(
@@ -173,6 +165,14 @@ const NewInvestmentOpportunity = () => {
       const finalFormData = {
         ...formData,
         image: imageUrl,
+        amount:
+          formData.amount && formData.amount.trim() !== ""
+            ? parseFloat(formData.amount)
+            : null,
+        investmentType:
+          formData.investmentType && formData.investmentType.trim() !== ""
+            ? formData.investmentType
+            : null,
       };
 
       console.log("Submitting form data:", finalFormData);
@@ -386,11 +386,10 @@ const NewInvestmentOpportunity = () => {
                 )}
               </div>
 
-              {/* Investment Amount */}
+              {/* Investment Amount (Optional) */}
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  {t("investment.investmentAmount", "Investment Amount (USD)")}{" "}
-                  <span className="text-red-500">*</span>
+                  {t("investment.investmentAmount", "Investment Amount (USD)")}
                 </label>
                 <input
                   type="number"
@@ -401,8 +400,8 @@ const NewInvestmentOpportunity = () => {
                     errors.amount ? "border-red-500" : ""
                   }`}
                   placeholder={t(
-                    "investment.enterInvestmentAmount",
-                    "Enter investment amount"
+                    "investment.enterInvestmentAmountOptional",
+                    "Enter investment amount (optional)"
                   )}
                   min="0"
                   step="0.01"
@@ -412,11 +411,10 @@ const NewInvestmentOpportunity = () => {
                 )}
               </div>
 
-              {/* Investment Type */}
+              {/* Investment Type (Optional) */}
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  {t("investment.investmentType", "Investment Type")}{" "}
-                  <span className="text-red-500">*</span>
+                  {t("investment.investmentType", "Investment Type")}
                 </label>
                 <select
                   name="investmentType"
@@ -428,8 +426,8 @@ const NewInvestmentOpportunity = () => {
                 >
                   <option value="">
                     {t(
-                      "investment.selectInvestmentType",
-                      "Select investment type"
+                      "investment.selectInvestmentTypeOptional",
+                      "Select investment type (optional)"
                     )}
                   </option>
                   {investmentTypes.map((type) => (

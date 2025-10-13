@@ -40,21 +40,13 @@ const Page = () => {
 
   return (
     <>
-      <div className="rounded-lg border h-screen items-center border-stroke bg-bodydark1 min-w-screen dark:border-strokedark dark:bg-boxdark">
-        <div className="flex flex-wrap">
-          <div className="w-full mx-auto  xl:w-1/2  ">
+      <div className="rounded-lg h-screen  min-w-screen ">
+        <div className="flex flex-col justify-center h-full">
+          <div className=" mx-auto  w-9/12 text-start ">
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              <div className="shadow-2xl px-8 py-10 ring-1 bg-white ring-stroke rounded-lg">
-                <div className="flex justify-center">
-                  <Image
-                    alt="Forgot password logo"
-                    height={100}
-                    width={100}
-                    src={"/anza.png"}
-                  />
-                </div>
+              <div className=" px-8 py-10   rounded-lg">
                 {/* <span className="mb-1.5 block text-center text-primary font-bold">Forgot password ?</span> */}
-                <h2 className="mb-9 text-2xl text-center font-bold text-black dark:text-white sm:text-title-xl2">
+                <h2 className="mb-9 text-xl text-center font-bold text-black dark:text-white sm:text-title-xl2">
                   Get password reset link
                 </h2>
                 <Formik

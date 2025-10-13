@@ -10,10 +10,10 @@ import Spinner from "@/components/spinner";
 import {
   getMarketData,
   createMarketData,
-  updateMarketData,
   attachDocument,
   deleteAttachment,
-  initialDataTemplate,
+  getInitialDataTemplate,
+  updateSingleMarketItem,
 } from "@/controllers/crat_market_controller";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { useTranslation } from "@/locales";
@@ -30,9 +30,11 @@ const tableHeaders = [
 const Page = () => {
   const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState(initialDataTemplate);
-  const [originalData, setOriginalData] = useState(initialDataTemplate);
-  const [changesMade, setChangesMade] = useState(false);
+  const initialTemplate = getInitialDataTemplate(t); // build per-render (translations stable after hydration)
+  // Backwards compatibility alias in case any deferred code still references initialDataTemplate
+  const initialDataTemplate = initialTemplate;
+  const [data, setData] = useState(initialTemplate);
+  const [originalData, setOriginalData] = useState(initialTemplate);
   const [modalOpen, setModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState("");
   const [deletemodalOpen, deleteModalOpen] = useState(false);
@@ -48,20 +50,20 @@ const Page = () => {
       try {
         const responseData = await getMarketData();
         console.log(responseData);
-        if (responseData == null || responseData.length == 0) {
-          await createMarketData(initialDataTemplate);
+        if (!responseData || responseData.length === 0) {
+          await createMarketData(initialTemplate);
           fetchData(); // Fetch again after creating market data
         } else {
-          const updatedData = { ...initialDataTemplate };
+          const updatedData = { ...initialTemplate };
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
-              //console.log('my items', updatedData);
               const fetchedItem = responseData.find(
                 (dataItem) => dataItem.subDomain === item.subDomain
               );
               return fetchedItem
                 ? {
                     ...item,
+                    uuid: fetchedItem.uuid,
                     rating: fetchedItem.rating,
                     score: fetchedItem.score,
                     userId: fetchedItem.userId,
@@ -83,63 +85,55 @@ const Page = () => {
     setLoading(false);
   }, []);
 
-  const handleRatingChange = (section, index, newRating) => {
+  const handleRatingChange = async (section, index, newRating) => {
     const newData = { ...data };
+    const current = newData[section][index];
     const score = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
-    if (newRating === "Yes" && !newData[section][index].attachment) {
-  setModalMessage(t("crat.pleaseUploadAttachmentFirst", "Please upload an attachment first."));
+    if (newRating === "Yes" && !current.attachment) {
+      setModalMessage(
+        t(
+          "crat.pleaseUploadAttachmentFirst",
+          "Please upload an attachment first."
+        )
+      );
       setModalOpen(true);
-    } else {
-      newData[section][index].rating = newRating;
-      newData[section][index].score = score;
-      setData(newData);
-      setChangesMade(true);
+      return; // abort persist
     }
-  };
-
-  // const submitChanges = async () => {
-  //   try {
-  //     console.log(data);
-  //     await updateMarketData(data);
-  //     setOriginalData(data);
-  //     setChangesMade(false);
-
-  //     toast.success("Changes successfully submitted");
-  //     console.log("Changes successfully submitted");
-  //   } catch (error) {
-  //     toast.error("Error submitting changes");
-  //     console.error("Error submitting changes:", error);
-  //   }
-  // };
-
-  const submitChanges = async () => {
+    // Optimistic UI update
+    current.rating = newRating;
+    current.score = score;
+    setData(newData);
     try {
-      await updateMarketData(data);
-
-      // Update initialDataTemplate here
-      Object.keys(data).forEach((section) => {
-        initialDataTemplate[section] = data[section].map((item) => ({
-          subDomain: item.subDomain,
-          rating: item.rating,
-          score: item.score,
-          userId: item.userId,
-          attachment: item.attachment,
-          comments: item.comments,
-          question: item.question,
-          description: item.description,
-        }));
+      if (!current.uuid) {
+        toast(
+          t("crat.uuidMissingDeferredSave", "Record missing id; reload page.")
+        );
+        return;
+      }
+      await updateSingleMarketItem(current.uuid, {
+        rating: newRating,
+        score,
       });
-
-      setOriginalData(data); // Update original data after successful submission
-      setChangesMade(false);
-
-  toast.success(t("crat.changesSubmittedSuccess", "Changes successfully submitted"));
-      console.log("Changes successfully submitted");
-    } catch (error) {
-  toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
-      console.error("Error submitting changes:", error);
+      // sync originalData snapshot for this item
+      setOriginalData((prev) => {
+        const clone = { ...prev };
+        clone[section] = clone[section].map((it, i) =>
+          i === index ? { ...it, rating: newRating, score } : it
+        );
+        return clone;
+      });
+      toast.success(
+        t("crat.ratingUpdated", "Rating & score updated successfully")
+      );
+    } catch (e) {
+      toast.error(t("crat.updateFailed", "Failed to update rating"));
+      // Revert UI on failure
+      const revertData = { ...originalData };
+      setData(revertData);
     }
   };
+
+  // Removed legacy submitChanges flow; page now fully auto-saves.
 
   const handleAddFile = async (domain, file, userId) => {
     if (!file) return;
@@ -167,7 +161,7 @@ const Page = () => {
 
       // Fetch updated data
       const responseData = await getMarketData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...initialTemplate };
       console.log("this is my res", responseData);
 
       Object.keys(updatedData).forEach((section) => {
@@ -178,6 +172,7 @@ const Page = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
@@ -188,12 +183,12 @@ const Page = () => {
         });
       });
 
-  toast.success(t("crat.attachmentUploaded", "Attachment uploaded"));
+      toast.success(t("crat.attachmentUploaded", "Attachment uploaded"));
       setData(updatedData);
       setUploading((s) => ({ ...s, [domain]: false }));
       // setChangesMade(true);
     } catch (error) {
-  toast.error(t("crat.errorAttachingFile", "Error attaching file"));
+      toast.error(t("crat.errorAttachingFile", "Error attaching file"));
       console.error("Error attaching file:", error);
       // clear uploading flag on error
       setUploading((s) => ({ ...s, [domain]: false }));
@@ -202,8 +197,10 @@ const Page = () => {
 
   const openDeleteDialog = (domain, id, attachment, section, index) => {
     console.log(domain, id, attachment, section, index);
-  deleteModalOpen(true);
-  deleteModalMessage(t("crat.confirmDelete", "Are you sure you want to delete?"));
+    deleteModalOpen(true);
+    deleteModalMessage(
+      t("crat.confirmDelete", "Are you sure you want to delete?")
+    );
     setDeleteCache([domain, id, attachment, section, index]);
   };
 
@@ -212,11 +209,11 @@ const Page = () => {
     try {
       // Proceed with deletion directly
       await deleteAttachment(domain, id, attachment, section, index);
-      handleRatingChange(section, index, "No");
-      submitChanges();
+      // Update rating locally & persist (will also adjust score)
+      await handleRatingChange(section, index, "No");
       // Fetch updated data
       const responseData = await getMarketData();
-      const updatedData = { ...initialDataTemplate };
+      const updatedData = { ...initialTemplate };
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
@@ -226,6 +223,7 @@ const Page = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
@@ -236,12 +234,11 @@ const Page = () => {
         });
       });
 
-  toast.success(t("crat.deletedSuccessfully", "Deleted successfully"));
+      toast.success(t("crat.deletedSuccessfully", "Deleted successfully"));
       setData(updatedData);
-      setChangesMade(true);
       deleteModalOpen(false); // Close modal
     } catch (error) {
-  toast.error(t("crat.errorDeletingFile", "Error deleting file"));
+      toast.error(t("crat.errorDeletingFile", "Error deleting file"));
       console.error("Error deleting file:", error);
     }
   };
@@ -263,10 +260,31 @@ const Page = () => {
 
   const handleEdit = (domain, index, comment) => {
     const newData = [...data[domain]];
-    newData[index].comments = comment;
+    const target = newData[index];
+    target.comments = comment;
     setData({ ...data, [domain]: newData });
-    submitChanges();
-  toast.success(t("crat.commentUpdatedSuccessfully", "Comment updated successfully"));
+    if (target.uuid) {
+      updateSingleMarketItem(target.uuid, { reviewerComment: comment })
+        .then(() => {
+          setOriginalData((prev) => {
+            const clone = { ...prev };
+            clone[domain] = clone[domain].map((it, i) =>
+              i === index ? { ...it, comments: comment } : it
+            );
+            return clone;
+          });
+          toast.success(
+            t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+          );
+        })
+        .catch(() =>
+          toast.error(t("crat.updateFailed", "Failed to update rating"))
+        );
+    } else {
+      toast(
+        t("crat.uuidMissingDeferredSave", "Record missing id; reload page.")
+      );
+    }
   };
 
   const calculateTotalScore = (domain) => {
@@ -305,10 +323,12 @@ const Page = () => {
           <p className="text-sm text-black dark:text-white">{item.score}</p>
         </div>
         <div className="flex items-center px-2">
-      {uploading[item.subDomain] ? (
+          {uploading[item.subDomain] ? (
             <div className="flex items-center gap-2">
               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-        <span className="text-sm text-gray-500">{t("crat.uploading", "Uploading...")}</span>
+              <span className="text-sm text-gray-500">
+                {t("crat.uploading", "Uploading...")}
+              </span>
             </div>
           ) : item.attachment ? (
             <a
@@ -320,7 +340,9 @@ const Page = () => {
               {item.attachment.split("/").pop()}
             </a>
           ) : (
-            <p className="text-sm text-gray-500">{t("crat.noFile", "No file")}</p>
+            <p className="text-sm text-gray-500">
+              {t("crat.noFile", "No file")}
+            </p>
           )}
         </div>
         <div className="flex items-center px-2 space-x-2">
@@ -382,16 +404,7 @@ const Page = () => {
           <h4 className="text-xl font-semibold text-black dark:text-white">
             {t("crat.market.title", "Market Domain Assessment")}
           </h4>
-          {changesMade && (
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={submitChanges}
-                className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                {t("crat.submitChanges", "Submit Changes")}
-              </button>
-            </div>
-          )}
+          {/* Manual save removed – auto-save on change */}
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
@@ -403,11 +416,32 @@ const Page = () => {
           </div>
         ) : (
           <>
-            {renderSection("market", t("crat.market.sections.marketDemandShare", "Market Demand & Share"))}
-            {renderSection("salesTraction", t("crat.market.sections.salesTraction", "Sales & Traction"))}
-            {renderSection("product", t("crat.market.sections.productDevelopment", "Product Development"))}
-            {renderSection("competition", t("crat.market.sections.competition", "Competition"))}
-            {renderSection("marketing", t("crat.market.sections.marketing", "Marketing"))}
+            {renderSection(
+              "market",
+              t(
+                "crat.market.sections.marketDemandShare",
+                "Market Demand & Share"
+              )
+            )}
+            {renderSection(
+              "salesTraction",
+              t("crat.market.sections.salesTraction", "Sales & Traction")
+            )}
+            {renderSection(
+              "product",
+              t(
+                "crat.market.sections.productDevelopment",
+                "Product Development"
+              )
+            )}
+            {renderSection(
+              "competition",
+              t("crat.market.sections.competition", "Competition")
+            )}
+            {renderSection(
+              "marketing",
+              t("crat.market.sections.marketing", "Marketing")
+            )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
                 <h4 className="text-xl font-semibold text-black dark:text-white">

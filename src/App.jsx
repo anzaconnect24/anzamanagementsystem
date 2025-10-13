@@ -579,7 +579,10 @@ function App() {
             />
             <Route path="modules/:course" element={<ModuleWithCourse />} />
             <Route path="messages/:uuid" element={<MessagesWithUuid />} />
+            <Route path="report" element={<Report />} />
           </Route>
+
+          {/* Standalone Report Route (accessible outside dashboard) */}
 
           {/* Root redirect */}
           <Route path="/" element={<Navigate to="/dashboard" replace />} />

@@ -3,12 +3,17 @@ import { headers } from "@/utils/headers";
 import { server_url } from "@/utils/endpoint";
 import { getUser, storeUser } from "../utils/local_storage";
 
+const authHeaders = () => ({
+  "Content-Type": "application/json",
+  Authorization: `Bearer ${getUser() && getUser().ACCESS_TOKEN}`,
+});
+
 // Create financial data
 export const createLegalData = async (data) => {
   console.log("creating legal");
   try {
     const response = await axios.post(`${server_url}/crat_legal/create`, data, {
-      headers,
+      headers: authHeaders(),
     });
     return response.data;
   } catch (error) {
@@ -23,7 +28,7 @@ export const getLegalData = async () => {
 
   try {
     const response = await axios.get(`${server_url}/crat_legal/data`, {
-      headers,
+      headers: authHeaders(),
     });
     return response.data.body;
   } catch (error) {
@@ -36,7 +41,7 @@ export const getLegalData = async () => {
 export const updateLegalData = async (data) => {
   try {
     const response = await axios.post(`${server_url}/crat_legal/update`, data, {
-      headers,
+      headers: authHeaders(),
     });
     return response.data;
   } catch (error) {
@@ -47,64 +52,66 @@ export const updateLegalData = async (data) => {
 
 // Attach a document
 export const attachDocument = async (data) => {
-  console.log(data);
   try {
     const formData = new FormData();
     formData.append("file", data.file);
-    formData.append("subDomain", data.subDomain);
+    if (data.uuid) {
+      formData.append("uuid", data.uuid);
+    } else if (data.subDomain) {
+      // legacy fallback
+      formData.append("subDomain", data.subDomain);
+    }
     formData.append("userId", data.userId);
+
+    // Remove fields we manually appended
     delete data.file;
-    delete data.subDomain; // Remove file and subDomain from the data object
+    delete data.subDomain;
 
     Object.keys(data).forEach((key) => {
-      formData.append(key, data[key]);
+      if (data[key] !== undefined && data[key] !== null) {
+        formData.append(key, data[key]);
+      }
     });
-
-    console.log("imepita");
 
     const response = await axios.post(
       `${server_url}/crat_legal/attachment`,
       formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${getUser().ACCESS_TOKEN}`,
-        },
-      }
+      { headers: { ...authHeaders(), "Content-Type": "multipart/form-data" } }
     );
-
     return response.data;
   } catch (error) {
-    console.log("Error attaching document:", error.response);
+    console.log("Error attaching document:", error.response || error.message);
     throw error;
   }
 };
 
-export const deleteAttachment = async (domain, userId, attachment) => {
+export const deleteAttachment = async ({
+  uuid,
+  subDomain,
+  userId,
+  attachment,
+}) => {
   try {
+    const payload = { userId, attachment };
+    if (uuid) payload.uuid = uuid;
+    else if (subDomain) payload.subDomain = subDomain;
     const response = await axios.post(
       `${server_url}/crat_legal/delete_attachment`,
-      {
-        subDomain: domain,
-        userId,
-        attachment,
-      },
-      {
-        headers,
-      }
+      payload,
+      { headers: authHeaders() }
     );
-
     return response.data;
   } catch (error) {
     console.log("Error deleting attachment:", error.response || error.message);
-    throw error; // Rethrow the error for further handling if needed
+    throw error;
   }
 };
 
 export const getInitialDataTemplate = (t) => ({
   corporateDocumentsCompliance: [
     {
-      subDomain: t(
+      subDomain: "Business incorporation",
+      label: t(
         "crat.legal.assessments.businessIncorporationSubDomain",
         "Business incorporation"
       ),
@@ -112,7 +119,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.businessIncorporationQuestion",
         "Is the business incorporated/registered?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.businessIncorporationDescription",
@@ -121,7 +128,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Tax Identification",
+      label: t(
         "crat.legal.assessments.taxIdentificationSubDomain",
         "Tax Identification"
       ),
@@ -129,7 +137,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.taxIdentificationQuestion",
         "Does the company have tax identification number?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.taxIdentificationDescription",
@@ -138,7 +146,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Tax compliance",
+      label: t(
         "crat.legal.assessments.taxComplianceSubDomain",
         "Tax compliance"
       ),
@@ -146,7 +155,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.taxComplianceQuestion",
         "Is the business up to date with the required taxes?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.taxComplianceDescription",
@@ -155,7 +164,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Business Licence",
+      label: t(
         "crat.legal.assessments.businessLicenceSubDomain",
         "Business Licence"
       ),
@@ -163,7 +173,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.businessLicenceQuestion",
         "Does the business have required licenses?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.businessLicenceDescription",
@@ -172,7 +182,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Sector specific compliance",
+      label: t(
         "crat.legal.assessments.sectorSpecificComplianceSubDomain",
         "Sector specific compliance"
       ),
@@ -180,7 +191,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.sectorSpecificComplianceQuestion",
         "Does the company have other certifications per the respective industry regulations?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.sectorSpecificComplianceDescription",
@@ -191,7 +202,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   contractsAgreements: [
     {
-      subDomain: t(
+      subDomain: "Lease agreements",
+      label: t(
         "crat.legal.assessments.leaseAgreementsSubDomain",
         "Lease agreements"
       ),
@@ -199,7 +211,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.leaseAgreementsQuestion",
         "Are lease agreements available and clear?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.leaseAgreementsDescription",
@@ -208,7 +220,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Customer contracts",
+      label: t(
         "crat.legal.assessments.customerContractsSubDomain",
         "Customer contracts"
       ),
@@ -216,7 +229,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.customerContractsQuestion",
         "Are customer agreements available and clear?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.customerContractsDescription",
@@ -225,7 +238,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Supplier contracts",
+      label: t(
         "crat.legal.assessments.supplierContractsSubDomain",
         "Supplier contracts"
       ),
@@ -233,7 +247,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.supplierContractsQuestion",
         "Are supplier agreements available and clear?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.supplierContractsDescription",
@@ -242,7 +256,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Employees contracts",
+      label: t(
         "crat.legal.assessments.employeesContractsSubDomain",
         "Employees contracts"
       ),
@@ -250,7 +265,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.employeesContractsQuestion",
         "Do employees have contracts (including the founders)?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.employeesContractsDescription",
@@ -261,15 +276,13 @@ export const getInitialDataTemplate = (t) => ({
   ],
   intellectualProperty: [
     {
-      subDomain: t(
-        "crat.legal.assessments.ipOwnershipSubDomain",
-        "IP ownership"
-      ),
+      subDomain: "IP ownership",
+      label: t("crat.legal.assessments.ipOwnershipSubDomain", "IP ownership"),
       question: t(
         "crat.legal.assessments.ipOwnershipQuestion",
         "Does the company own copyrights to its source codes/or patent to its solution?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.ipOwnershipDescription",
@@ -280,7 +293,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   entrepreneurFamily: [
     {
-      subDomain: t(
+      subDomain: "Entrepreneurial character",
+      label: t(
         "crat.legal.assessments.entrepreneurialCharacterSubDomain",
         "Entrepreneurial character"
       ),
@@ -288,7 +302,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.entrepreneurialCharacterQuestion",
         "Is the entrepreneur adaptable, resilient, and reliable?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.entrepreneurialCharacterDescription",
@@ -297,7 +311,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Personal legal liability",
+      label: t(
         "crat.legal.assessments.personalLegalLiabilitySubDomain",
         "Personal legal liability"
       ),
@@ -305,7 +320,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.personalLegalLiabilityQuestion",
         "Does the management team have any personal liability that would affect the company?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.personalLegalLiabilityDescription",
@@ -314,7 +329,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Succession plan",
+      label: t(
         "crat.legal.assessments.successionPlanSubDomain",
         "Succession plan"
       ),
@@ -322,7 +338,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.successionPlanQuestion",
         "Does the succession plan exist?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.successionPlanDescription",
@@ -333,7 +349,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   corporateGovernance: [
     {
-      subDomain: t(
+      subDomain: "Board of directors",
+      label: t(
         "crat.legal.assessments.boardOfDirectorsSubDomain",
         "Board of directors"
       ),
@@ -341,7 +358,7 @@ export const getInitialDataTemplate = (t) => ({
         "crat.legal.assessments.boardOfDirectorsQuestion",
         "Does the company have an active BOD?"
       ),
-      rating: t("crat.legal.assessments.ratingNo", "No"),
+      rating: "No",
       score: 0,
       description: t(
         "crat.legal.assessments.boardOfDirectorsDescription",
@@ -351,3 +368,18 @@ export const getInitialDataTemplate = (t) => ({
     },
   ],
 });
+
+// Single item patch
+export const updateSingleLegalItem = async (uuid, payload) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/crat_legal/${uuid}`,
+      payload,
+      { headers }
+    );
+    return response.data;
+  } catch (error) {
+    console.log("Error updating single legal item:", error.response || error);
+    throw error;
+  }
+};

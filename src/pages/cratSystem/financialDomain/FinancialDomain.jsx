@@ -14,7 +14,8 @@ import {
   deleteAttachment,
   initialDataTemplate,
   getInitialDataTemplate,
-} from "@/controllers/crat_financials_controller"; // Import updated API functions
+  updateSingleFinancialItem,
+} from "@/controllers/crat_financials_controller"; // Updated
 
 import Spinner from "@/components/spinner";
 import { UserContext } from "../../../layouts/DashboardLayout";
@@ -57,6 +58,7 @@ const FinancialDomain = () => {
               return fetchedItem
                 ? {
                     ...item,
+                    uuid: fetchedItem.uuid,
                     rating: fetchedItem.rating,
                     score: fetchedItem.score,
                     userId: fetchedItem.userId,
@@ -78,10 +80,55 @@ const FinancialDomain = () => {
     setLoading(false);
   }, []);
 
-  const handleRatingChange = (section, index, newRating) => {
+  // Reload when account changes to avoid showing previous user's data
+  useEffect(() => {
+    if (!userDetails || !userDetails.id) return;
+    const reload = async () => {
+      setLoading(true);
+      try {
+        const responseData = await getFinancialData(userDetails.id);
+        const updatedData = { ...translatedTemplate };
+        Object.keys(updatedData).forEach((section) => {
+          updatedData[section] = updatedData[section].map((item) => {
+            const fetchedItem = responseData.find(
+              (dataItem) => dataItem.subDomain === item.subDomain
+            );
+            return fetchedItem
+              ? {
+                  ...item,
+                  uuid: fetchedItem.uuid,
+                  rating: fetchedItem.rating,
+                  score: fetchedItem.score,
+                  userId: fetchedItem.userId,
+                  attachment: fetchedItem.attachment,
+                  comments: fetchedItem.comments,
+                }
+              : item;
+          });
+        });
+        setData(updatedData);
+        setOriginalData(updatedData);
+      } catch (e) {
+        console.log("reload financial error", e);
+      } finally {
+        setLoading(false);
+      }
+    };
+    reload();
+  }, [userDetails && userDetails.id]);
+
+  // Debounced bulk fallback
+  useEffect(() => {
+    if (!changesMade) return;
+    const timer = setTimeout(() => submitChanges(), 500);
+    return () => clearTimeout(timer);
+  }, [changesMade]);
+
+  const handleRatingChange = async (section, index, newRating) => {
     const newData = { ...data };
+    const current = newData[section][index];
     const score = newRating === "No" ? 0 : newRating === "Maybe" ? 1 : 2;
-    if (newRating === "Yes" && !newData[section][index].attachment) {
+    if (newRating === "Yes" && !current.attachment) {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
@@ -89,28 +136,52 @@ const FinancialDomain = () => {
         )
       );
       setModalOpen(true);
-    } else {
-      newData[section][index].rating = newRating;
-      newData[section][index].score = score;
-      setData(newData);
-      setChangesMade(true);
+      return;
+    }
+    current.rating = newRating;
+    current.score = score;
+    setData(newData);
+    try {
+      if (!current.uuid) {
+        setChangesMade(true); // fallback
+        toast(
+          t(
+            "crat.uuidMissingDeferredSave",
+            "Record missing id; will save shortly"
+          )
+        );
+        return;
+      }
+      await updateSingleFinancialItem(current.uuid, {
+        rating: newRating,
+        score,
+      });
+      setOriginalData((prev) => {
+        const clone = { ...prev };
+        clone[section] = clone[section].map((it, i) =>
+          i === index ? { ...it, rating: newRating, score } : it
+        );
+        return clone;
+      });
+      toast.success(
+        t("crat.ratingUpdated", "Rating & score updated successfully")
+      );
+    } catch (e) {
+      toast.error(t("crat.updateFailed", "Failed to update rating"));
+      setData(originalData);
     }
   };
 
   const submitChanges = async () => {
     try {
       await updateFinancialData(data);
-
-      setOriginalData(data); // Update original data after successful submission
+      setOriginalData(data);
       setChangesMade(false);
-
       toast.success(
         t("crat.changesSubmittedSuccess", "Changes successfully submitted")
       );
-      console.log("Changes successfully submitted");
     } catch (error) {
       toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
-      console.error("Error submitting changes:", error);
     }
   };
 
@@ -129,7 +200,7 @@ const FinancialDomain = () => {
   //   }
   // };
 
-  const handleAddFile = async (domain, file, userId) => {
+  const handleAddFile = async (domain, file, userId, uuid) => {
     if (!file) return;
 
     // Extract the file extension
@@ -143,9 +214,10 @@ const FinancialDomain = () => {
     const updatedFile = new File([file], uniqueFileName, { type: file.type });
 
     const fileData = {
-      file: updatedFile, // Use the updated file
-      subDomain: domain,
-      userId: userId,
+      file: updatedFile,
+      userId,
+      uuid,
+      subDomain: domain, // fallback
     };
 
     try {
@@ -165,6 +237,7 @@ const FinancialDomain = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
@@ -188,12 +261,12 @@ const FinancialDomain = () => {
     }
   };
 
-  const openDeleteDialog = (domain, id, attachment, section, index) => {
+  const openDeleteDialog = (domain, id, attachment, section, index, uuid) => {
     deleteModalOpen(true);
     deleteModalMessage(
       t("crat.confirmDelete", "Are you sure you want to delete?")
     );
-    setDeleteCache([domain, id, attachment, section, index]);
+    setDeleteCache([domain, id, attachment, section, index, uuid]);
   };
 
   const handleDeleteCancel = () => {
@@ -202,11 +275,16 @@ const FinancialDomain = () => {
   };
 
   const handleDeleteFile = async () => {
-    const [domain, id, attachment, section, index] = deleteCache;
+    const [domain, id, attachment, section, index, uuid] = deleteCache;
 
     try {
       // Proceed with deletion of the attachment
-      await deleteAttachment(domain, id, attachment);
+      await deleteAttachment({
+        uuid,
+        subDomain: domain,
+        userId: id,
+        attachment,
+      });
 
       handleRatingChange(section, index, "No");
       submitChanges();
@@ -224,6 +302,7 @@ const FinancialDomain = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
@@ -266,6 +345,24 @@ const FinancialDomain = () => {
     toast.success(
       t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
     );
+  };
+
+  const handleCustomerCommentBlur = async (domain, index, comment) => {
+    try {
+      const newData = { ...data };
+      newData[domain][index].customerComment = comment;
+      setData(newData);
+
+      // Auto-save the comment
+      await updateFinancialData(newData);
+
+      toast.success(
+        t("crat.commentSavedAutomatically", "Comment saved automatically")
+      );
+    } catch (error) {
+      toast.error(t("crat.errorSavingComment", "Error saving comment"));
+      console.error("Error saving customer comment:", error);
+    }
   };
 
   const calculateTotalScore = (domain) => {
@@ -329,14 +426,17 @@ const FinancialDomain = () => {
 
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
-            onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
+            onAdd={(file) =>
+              handleAddFile(item.subDomain, file, item.userId, item.uuid)
+            }
             onDelete={() =>
               openDeleteDialog(
                 item.subDomain,
                 item.userId,
                 item.attachment,
                 domain,
-                index
+                index,
+                item.uuid
               )
             }
             onView={() => handleViewFile(item.attachment)}
