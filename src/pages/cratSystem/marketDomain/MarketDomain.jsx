@@ -15,6 +15,9 @@ import {
   deleteAttachment,
   getInitialDataTemplate,
 } from "@/controllers/crat_market_controller";
+import axios from "axios";
+import { server_url } from "@/utils/endpoint";
+import { headers } from "@/utils/headers";
 
 import { useTranslation } from "@/locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
@@ -345,20 +348,125 @@ const MarketDomainPage = () => {
   };
 
   const handleCustomerCommentBlur = async (domain, index, comment) => {
-    try {
-      const newData = { ...data };
-      newData[domain][index].customerComment = comment;
-      setData(newData);
+    console.log("🔧 DEBUG: handleCustomerCommentBlur called in MarketDomain");
+    console.log("🔧 DEBUG: User role:", userDetails?.role);
+    console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
+    console.log("🔧 DEBUG: Comment:", comment);
 
-      // Auto-save the comment
-      await updateMarketData(newData);
-
-      toast.success(
-        t("crat.commentSavedAutomatically", "Comment saved automatically")
+    // Check if user is Entrepreneur - only they can edit customer comments
+    if (userDetails?.role !== "Enterprenuer") {
+      console.log("🔧 DEBUG: Permission denied - user is not Entrepreneur");
+      toast.warning(
+        t(
+          "crat.noPermissionCustomer",
+          "Only entrepreneurs can edit customer comments"
+        )
       );
+      return;
+    }
+
+    const item = data[domain][index];
+    if (!item.uuid) {
+      console.log("🔧 DEBUG: No UUID found, cannot save comment");
+      toast.error(t("crat.noUuidError", "Cannot save comment - missing ID"));
+      return;
+    }
+
+    try {
+      console.log(
+        "🔧 DEBUG: Making PATCH request to:",
+        `${server_url}/crat_market/${item.uuid}`
+      );
+
+      const response = await axios.patch(
+        `${server_url}/crat_market/${item.uuid}`,
+        {
+          customerComment: comment,
+        },
+        { headers }
+      );
+
+      console.log("🔧 DEBUG: API Response:", response.data);
+
+      if (response.data.status) {
+        console.log("🔧 DEBUG: Comment saved successfully");
+        const newData = { ...data };
+        newData[domain][index].customerComment = comment;
+        setData(newData);
+
+        toast.success(
+          t("crat.commentSavedAutomatically", "Comment saved automatically")
+        );
+      } else {
+        console.log("🔧 DEBUG: API returned error status:", response.data);
+        toast.error(t("crat.errorSavingComment", "Error saving comment"));
+      }
     } catch (error) {
+      console.log("🔧 DEBUG: Exception occurred:", error);
       toast.error(t("crat.errorSavingComment", "Error saving comment"));
       console.error("Error saving customer comment:", error);
+    }
+  };
+
+  const handleReviewerCommentBlur = async (domain, index, comment) => {
+    console.log("🔧 DEBUG: handleReviewerCommentBlur called in MarketDomain");
+    console.log("🔧 DEBUG: User role:", userDetails?.role);
+    console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
+    console.log("🔧 DEBUG: Comment:", comment);
+
+    // Check if user is Admin - only they can edit reviewer comments
+    if (userDetails?.role !== "Admin") {
+      console.log("🔧 DEBUG: Permission denied - user is not Admin");
+      toast.warning(
+        t("crat.noPermissionReviewer", "Only admins can edit reviewer comments")
+      );
+      return;
+    }
+
+    const item = data[domain][index];
+    if (!item.uuid) {
+      console.log("🔧 DEBUG: No UUID found, cannot save reviewer comment");
+      toast.error(t("crat.noUuidError", "Cannot save comment - missing ID"));
+      return;
+    }
+
+    try {
+      console.log(
+        "🔧 DEBUG: Making PATCH request to:",
+        `${server_url}/crat_market/${item.uuid}`
+      );
+
+      const response = await axios.patch(
+        `${server_url}/crat_market/${item.uuid}`,
+        {
+          reviewerComment: comment,
+        },
+        { headers }
+      );
+
+      console.log("🔧 DEBUG: API Response:", response.data);
+
+      if (response.data.status) {
+        console.log("🔧 DEBUG: Reviewer comment saved successfully");
+        const newData = { ...data };
+        newData[domain][index].reviewerComment = comment;
+        setData(newData);
+
+        toast.success(
+          t("crat.reviewerCommentSaved", "Reviewer comment saved automatically")
+        );
+      } else {
+        console.log("🔧 DEBUG: API returned error status:", response.data);
+        toast.error(
+          t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+        );
+      }
+    } catch (error) {
+      console.log("🔧 DEBUG: Exception occurred:", error);
+      toast.error(
+        t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+      );
+      console.error("Error saving reviewer comment:", error);
     }
   };
 
@@ -379,7 +487,7 @@ const MarketDomainPage = () => {
   const renderTableRows = (domain) => {
     return data[domain].map((item, index) => (
       <div
-        className="grid grid-cols-6 border-t border-stroke py-4 px-4 dark:border-strokedark"
+        className="grid grid-cols-8 border-t border-stroke py-4 px-4 dark:border-strokedark"
         key={index}
       >
         <div className="flex items-center px-2">
@@ -423,6 +531,61 @@ const MarketDomainPage = () => {
           )}
         </div>
 
+        {/* Customer Comment Column */}
+        <div className="flex items-center px-2">
+          {userDetails?.role === "Enterprenuer" ? (
+            <textarea
+              className="w-full p-2 text-sm border border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none"
+              placeholder={t("crat.enterYourComment", "Enter your comment...")}
+              value={item.customerComment || ""}
+              onChange={(e) => {
+                const newData = { ...data };
+                newData[domain][index].customerComment = e.target.value;
+                setData(newData);
+              }}
+              onBlur={(e) =>
+                handleCustomerCommentBlur(domain, index, e.target.value)
+              }
+              rows={2}
+            />
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {item.customerComment || t("crat.noComment", "No comment")}
+            </p>
+          )}
+        </div>
+
+        {/* Reviewer Comment Column */}
+        <div className="flex items-center px-2">
+          {userDetails?.role === "Admin" ? (
+            <textarea
+              className="w-full p-2 text-sm border border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none"
+              placeholder={t(
+                "crat.enterReviewerComment",
+                "Enter reviewer comment..."
+              )}
+              value={item.reviewerComment || ""}
+              onChange={(e) => {
+                const newData = { ...data };
+                newData[domain][index].reviewerComment = e.target.value;
+                setData(newData);
+              }}
+              onBlur={(e) =>
+                handleReviewerCommentBlur(domain, index, e.target.value)
+              }
+              rows={2}
+            />
+          ) : userDetails?.role === "Enterprenuer" ? (
+            <p className="text-sm text-gray-500 italic">
+              {t("crat.hiddenFromEntrepreneur", "Hidden")}
+            </p>
+          ) : (
+            <p className="text-sm text-gray-600 dark:text-gray-300">
+              {item.reviewerComment || t("crat.noComment", "No comment")}
+            </p>
+          )}
+        </div>
+
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
             onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
@@ -452,13 +615,15 @@ const MarketDomainPage = () => {
           {title}
         </h4>
       </div>
-      <div className="grid grid-cols-6 border-b border-stroke py-4 px-4 dark:border-strokedark">
+      <div className="grid grid-cols-8 border-b border-stroke py-4 px-4 dark:border-strokedark">
         {[
           t("crat.tableHeaders.subDomain", "Sub Domain"),
           t("crat.tableHeaders.question", "Question"),
           t("crat.tableHeaders.rating", "Rating"),
           t("crat.tableHeaders.score", "Score"),
           t("crat.tableHeaders.attachment", "Attachment"),
+          t("crat.tableHeaders.yourComment", "Your Comment"),
+          t("crat.tableHeaders.reviewerComment", "Reviewer Comment"),
           t("crat.tableHeaders.actions", "Actions"),
         ].map((header, index) => (
           <div key={index} className="flex items-center px-2">

@@ -53,10 +53,10 @@ const SignInForm = () => {
           className="space-y-6 w-10/12 md:w-6/12 2xl:w-4/12 text-start mx-auto "
         >
           {/* Email Field */}
-          <h1 className="text-4xl font-bold">
+          <h1 className="text-4xl font-bold text-primary text-center">
             {t("auth.signInToContinue", "Sign in to continue")}
           </h1>
-          <div className="flex bg-black/20 rounded-lg w-full">
+          <div className="flex bg-black/10 rounded-lg w-full">
             <div className=" text-center py-2 w-1/2 bg-primary rounded-lg">
               <Link
                 href="/auth/signin"
@@ -65,7 +65,7 @@ const SignInForm = () => {
                 {t("common.login", "Login")}
               </Link>
             </div>
-            <div className="flex-1 text-center  py-2">
+            <div className="flex-1 text-center text-primary font-bold  py-2">
               <Link
                 href="/auth/signup"
                 className="text-gray-700 hover:text-gray-900"
@@ -76,7 +76,7 @@ const SignInForm = () => {
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-primary font-semibold mb-2">
               {t("auth.email", "Email")} <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -96,7 +96,7 @@ const SignInForm = () => {
 
           {/* Password Field */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm  text-primary font-semibold mb-2">
               {t("auth.password", "Password")}{" "}
               <span className="text-red-500">*</span>
             </label>
@@ -159,7 +159,10 @@ const SignInForm = () => {
               <p className="text-red-500 text-sm mt-1">{errors.password}</p>
             )}
             <div className="flex justify-end mt-2">
-              <Link href="/forgotPassword" className="text-sm text-primary">
+              <Link
+                href="/forgotPassword"
+                className="text-sm font-semibold text-primary"
+              >
                 {t("auth.forgotPassword", "Forgot Password ?")}
               </Link>
             </div>

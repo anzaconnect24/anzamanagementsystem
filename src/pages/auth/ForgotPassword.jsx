@@ -46,7 +46,7 @@ const Page = () => {
             <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
               <div className=" px-8 py-10   rounded-lg">
                 {/* <span className="mb-1.5 block text-center text-primary font-bold">Forgot password ?</span> */}
-                <h2 className="mb-9 text-xl text-center font-bold text-black dark:text-white sm:text-title-xl2">
+                <h2 className="mb-9 text-xl text-center font-bold text-primary dark:text-white sm:text-title-xl2">
                   Get password reset link
                 </h2>
                 <Formik

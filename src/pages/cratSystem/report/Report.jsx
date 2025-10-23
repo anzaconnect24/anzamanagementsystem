@@ -133,7 +133,9 @@ const Report = () => {
 
   // Function to determine which CRAT domain and endpoint to use for a given subDomain
   const getDomainEndpoint = (subDomain) => {
+    console.log("🔧 DEBUG: getDomainEndpoint called with:", subDomain);
     const domain = subDomain.toLowerCase().trim();
+    console.log("🔧 DEBUG: Normalized domain:", domain);
 
     // Commercial/Market domain items
     const marketItems = [
@@ -209,16 +211,21 @@ const Report = () => {
     ];
 
     if (marketItems.includes(domain)) {
+      console.log("🔧 DEBUG: Matched market domain");
       return { endpoint: "crat_market", domain: "market" };
     } else if (financialItems.includes(domain)) {
+      console.log("🔧 DEBUG: Matched financial domain");
       return { endpoint: "crat_financial", domain: "financial" };
     } else if (operationsItems.includes(domain)) {
+      console.log("🔧 DEBUG: Matched operations domain");
       return { endpoint: "crat_operation", domain: "operations" };
     } else if (legalItems.includes(domain)) {
+      console.log("🔧 DEBUG: Matched legal domain");
       return { endpoint: "crat_legal", domain: "legal" };
     }
 
     // Default fallback
+    console.log("🔧 DEBUG: No domain match found, using fallback");
     return { endpoint: "crat_general", domain: "general" };
   };
 
@@ -666,8 +673,15 @@ const Report = () => {
   };
 
   const handleCustomerCommentBlur = async (uuid, comment, subDomain) => {
+    console.log("🔧 DEBUG: handleCustomerCommentBlur called");
+    console.log("🔧 DEBUG: User role:", userDetails?.role);
+    console.log("🔧 DEBUG: UUID:", uuid);
+    console.log("🔧 DEBUG: Comment:", comment);
+    console.log("🔧 DEBUG: SubDomain:", subDomain);
+
     // Check if user is Entrepreneur - only they can edit customer comments
     if (userDetails?.role !== "Enterprenuer") {
+      console.log("🔧 DEBUG: Permission denied - user is not Entrepreneur");
       toast.warning(
         t(
           "report.noPermissionCustomer",
@@ -679,6 +693,12 @@ const Report = () => {
 
     try {
       const { endpoint } = getDomainEndpoint(subDomain);
+      console.log("🔧 DEBUG: Determined endpoint:", endpoint);
+      console.log(
+        "🔧 DEBUG: Making PATCH request to:",
+        `${server_url}/${endpoint}/${uuid}`
+      );
+
       const response = await axios.patch(
         `${server_url}/${endpoint}/${uuid}`,
         {
@@ -687,28 +707,40 @@ const Report = () => {
         { headers }
       );
 
+      console.log("🔧 DEBUG: API Response:", response.data);
+
       if (response.data.status) {
+        console.log("🔧 DEBUG: Comment saved successfully");
         toast.success(
           t("report.commentSavedAutomatically", "Comment saved automatically")
         );
         // Update the local data to reflect the change
         updateLocalComment(uuid, "customerComment", comment);
       } else {
+        console.log("🔧 DEBUG: API returned error status:", response.data);
         toast.error(t("report.errorSavingComment", "Error saving comment"));
       }
     } catch (error) {
+      console.log("🔧 DEBUG: Exception occurred:", error);
       toast.error(t("report.errorSavingComment", "Error saving comment"));
       console.error("Error saving customer comment:", error);
     }
   };
 
   const handleReviewerCommentBlur = async (uuid, comment, subDomain) => {
-    // Check if user is Staff - only they can edit reviewer comments
-    if (userDetails?.role !== "Staff") {
+    console.log("🔧 DEBUG: handleReviewerCommentBlur called");
+    console.log("🔧 DEBUG: User role:", userDetails?.role);
+    console.log("🔧 DEBUG: UUID:", uuid);
+    console.log("🔧 DEBUG: Comment:", comment);
+    console.log("🔧 DEBUG: SubDomain:", subDomain);
+
+    // Check if user is Admin - only they can edit reviewer comments
+    if (userDetails?.role !== "Admin") {
+      console.log("🔧 DEBUG: Permission denied - user is not Admin");
       toast.warning(
         t(
           "report.noPermissionReviewer",
-          "Only staff members can edit reviewer comments"
+          "Only admin users can edit reviewer comments"
         )
       );
       return;
@@ -716,6 +748,12 @@ const Report = () => {
 
     try {
       const { endpoint } = getDomainEndpoint(subDomain);
+      console.log("🔧 DEBUG: Determined endpoint:", endpoint);
+      console.log(
+        "🔧 DEBUG: Making PATCH request to:",
+        `${server_url}/${endpoint}/${uuid}`
+      );
+
       const response = await axios.patch(
         `${server_url}/${endpoint}/${uuid}`,
         {
@@ -724,23 +762,34 @@ const Report = () => {
         { headers }
       );
 
+      console.log("🔧 DEBUG: API Response:", response.data);
+
       if (response.data.status) {
+        console.log("🔧 DEBUG: Reviewer comment saved successfully");
         toast.success(
           t("report.reviewerCommentSaved", "Reviewer comment saved")
         );
         // Update the local data to reflect the change
         updateLocalComment(uuid, "reviewerComment", comment);
       } else {
+        console.log("🔧 DEBUG: API returned error status:", response.data);
         toast.error(t("report.errorSavingComment", "Error saving comment"));
       }
     } catch (error) {
+      console.log("🔧 DEBUG: Exception occurred:", error);
       toast.error(t("report.errorSavingComment", "Error saving comment"));
       console.error("Error saving reviewer comment:", error);
     }
   };
 
   const updateLocalComment = (uuid, commentType, comment) => {
+    console.log("🔧 DEBUG: updateLocalComment called");
+    console.log("🔧 DEBUG: UUID:", uuid);
+    console.log("🔧 DEBUG: Comment Type:", commentType);
+    console.log("🔧 DEBUG: Comment:", comment);
+
     setData((prevData) => {
+      console.log("🔧 DEBUG: Previous data structure:", Object.keys(prevData));
       const newData = { ...prevData };
 
       // Update the comment in the nested data structure
@@ -760,7 +809,12 @@ const Report = () => {
             if (Array.isArray(newData[sectionKey][subKey])) {
               newData[sectionKey][subKey].forEach((item) => {
                 if (item.uuid === uuid) {
+                  console.log(
+                    "🔧 DEBUG: Found matching item, updating comment"
+                  );
+                  console.log("🔧 DEBUG: Before update:", item[commentType]);
                   item[commentType] = comment;
+                  console.log("🔧 DEBUG: After update:", item[commentType]);
                 }
               });
             }
@@ -768,6 +822,7 @@ const Report = () => {
         }
       });
 
+      console.log("🔧 DEBUG: Local data update completed");
       return newData;
     });
   };
@@ -813,17 +868,44 @@ const Report = () => {
     }
   };
 
-  const renderTableHeaders = () => (
-    <div className="grid grid-cols-5 border-b border-stroke py-4 px-4 dark:border-strokedark">
-      {tableHeaders.map((header, index) => (
-        <div key={index} className="flex items-center px-2">
+  const renderTableHeaders = () => {
+    // Show reviewer comment column only to Admin role
+    const showReviewerComment = userDetails?.role === "Admin";
+
+    return (
+      <div className="grid grid-cols-5 border-b border-stroke py-4 px-4 dark:border-strokedark">
+        <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white font-semibold">
-            {header}
+            {tableHeaders[0]}
           </p>
         </div>
-      ))}
-    </div>
-  );
+        <div className="flex items-center px-2">
+          <p className="text-sm text-black dark:text-white font-semibold">
+            {tableHeaders[1]}
+          </p>
+        </div>
+        <div className="flex items-center px-2">
+          <p className="text-sm text-black dark:text-white font-semibold">
+            {tableHeaders[2]}
+          </p>
+        </div>
+        <div className="flex items-center px-2">
+          <p className="text-sm text-black dark:text-white font-semibold">
+            {tableHeaders[3]}
+          </p>
+        </div>
+        {showReviewerComment && (
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white font-semibold">
+              {tableHeaders[4]}
+            </p>
+          </div>
+        )}
+        {!showReviewerComment && <div></div>}{" "}
+        {/* Empty div to maintain grid structure */}
+      </div>
+    );
+  };
 
   const renderTableRows = (sectionData) => {
     return sectionData.map((item, index) => {
@@ -833,7 +915,8 @@ const Report = () => {
 
       // Check user permissions
       const canEditCustomerComment = userDetails?.role === "Enterprenuer";
-      const canEditReviewerComment = userDetails?.role === "Staff";
+      const canEditReviewerComment = userDetails?.role === "Admin"; // Only Admin can edit reviewer comments
+      const showReviewerComment = userDetails?.role === "Admin"; // Only show reviewer comment column to Admin
 
       return (
         <div
@@ -852,55 +935,44 @@ const Report = () => {
             <p className="text-sm text-black dark:text-white">{narrative}</p>
           </div>
           <div className="flex items-center px-2">
-            {canEditCustomerComment ? (
-              <textarea
-                defaultValue={item.customerComment || ""}
-                onBlur={(e) =>
-                  handleCustomerCommentBlur(
-                    item.uuid,
-                    e.target.value,
-                    item.subDomain
-                  )
-                }
-                placeholder={t(
-                  "crat.enterYourComment",
-                  "Enter your comment..."
-                )}
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                rows={2}
-              />
-            ) : (
-              <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
-                {item.customerComment ||
-                  t("crat.noCustomerComment", "No customer comment")}
-              </p>
-            )}
+            <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
+              {item.customerComment ||
+                t("crat.noCustomerComment", "No customer comment")}
+            </p>
           </div>
-          <div className="flex items-center px-2">
-            {canEditReviewerComment ? (
-              <textarea
-                defaultValue={item.reviewerComment || ""}
-                onBlur={(e) =>
-                  handleReviewerCommentBlur(
-                    item.uuid,
-                    e.target.value,
-                    item.subDomain
-                  )
-                }
-                placeholder={t(
-                  "crat.enterReviewerComment",
-                  "Enter reviewer comment..."
-                )}
-                className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                rows={2}
-              />
-            ) : (
-              <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
-                {item.reviewerComment ||
-                  t("crat.noReviewerComment", "No reviewer comment")}
+          {showReviewerComment ? (
+            <div className="flex items-center px-2">
+              {canEditReviewerComment ? (
+                <textarea
+                  defaultValue={item.reviewerComment || ""}
+                  onBlur={(e) =>
+                    handleReviewerCommentBlur(
+                      item.uuid,
+                      e.target.value,
+                      item.subDomain
+                    )
+                  }
+                  placeholder={t(
+                    "crat.enterReviewerComment",
+                    "Enter reviewer comment..."
+                  )}
+                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  rows={2}
+                />
+              ) : (
+                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
+                  {item.reviewerComment ||
+                    t("crat.noReviewerComment", "No reviewer comment")}
+                </p>
+              )}
+            </div>
+          ) : (
+            <div className="flex items-center px-2">
+              <p className="text-sm text-gray-400 italic">
+                {/* Hidden for this role */}
               </p>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       );
     });

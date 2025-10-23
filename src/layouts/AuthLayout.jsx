@@ -62,14 +62,26 @@ const AuthLayout = ({ children, title, subtitle }) => {
     <div className="min-h-screen flex">
       <Toaster position="top-right" />
 
-      {/* Left Panel - Blue Welcome Section */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#424daf] fixed h-screen text-white flex-col justify-between p-12 text-center items-center">
-        <div>
+      {/* Left Panel - Background Image with Overlay */}
+      <div
+        className="hidden lg:flex lg:w-1/2 fixed h-screen text-white flex-col justify-between py-24 p-12 text-center items-center"
+        style={{
+          backgroundImage: "url('/authbg.jpg')",
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }}
+      >
+        {/* Bluish Overlay */}
+        <div className="absolute inset-0 bg-[#424daf] bg-opacity-75"></div>
+
+        {/* Content on top of overlay */}
+        <div className="relative z-10">
           {/* Logo */}
 
           {/* Welcome Content */}
           <div>
-            <h1 className="text-2xl lg:text-4xl font-bold mb-6">
+            <h1 className="text-2xl lg:text-4xl font-bold mb-2 ">
               {t("auth.welcome", "Welcome to Anza Connect")}
             </h1>
             <p className="text-lg text-blue-100 mb-12 leading-relaxed">
@@ -80,9 +92,9 @@ const AuthLayout = ({ children, title, subtitle }) => {
             </p>
           </div>
         </div>
-        <img className=" h-100" src="/signup-photo.png" />
+
         {/* Feature Carousel Section */}
-        <div className="space-y-1">
+        <div className="relative z-10 space-y-1">
           <div className="min-h-[160px] flex flex-col justify-center">
             <div className="transition-all duration-500 ease-in-out">
               <h2 className="text-2xl font-bold mb-2">

@@ -236,11 +236,11 @@ const SignUp = () => {
         }}
         className=" w-11/12 md:w-8/12 2xl:w-6/12 mx-auto "
       >
-        <h1 className="text-4xl font-bold text-center mb-5">
+        <h1 className="text-4xl font-bold text-center mb-5 text-primary">
           {t("auth.createAnAccount", "Create an account")}
         </h1>
-        <div className="flex bg-black/20 rounded-lg w-full">
-          <div className=" text-center py-2 w-1/2 rounded-lg">
+        <div className="flex bg-black/10 rounded-lg w-full">
+          <div className=" text-center py-2 w-1/2 rounded-lg text-primary font-semibold">
             <Link
               href="/auth/signin"
               className=" py-2 px-6   hover:text-gray-900"
@@ -248,7 +248,7 @@ const SignUp = () => {
               {t("common.login", "Login")}
             </Link>
           </div>
-          <div className="flex-1 text-center text-white bg-primary rounded-lg py-2">
+          <div className="flex-1 text-center text-white bg-primary font-semibold rounded-lg py-2">
             <Link
               href="/auth/signup"
               className="text-gray-700 hover:text-gray-900"
