@@ -351,7 +351,9 @@ const FinancialDomain = () => {
   };
 
   const handleCustomerCommentBlur = async (domain, index, comment) => {
-    console.log("🔧 DEBUG: handleCustomerCommentBlur called in FinancialDomain");
+    console.log(
+      "🔧 DEBUG: handleCustomerCommentBlur called in FinancialDomain"
+    );
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
     console.log("🔧 DEBUG: Comment:", comment);
@@ -376,8 +378,11 @@ const FinancialDomain = () => {
     }
 
     try {
-      console.log("🔧 DEBUG: Making PATCH request to:", `${server_url}/crat_financial/${item.uuid}`);
-      
+      console.log(
+        "🔧 DEBUG: Making PATCH request to:",
+        `${server_url}/crat_financial/${item.uuid}`
+      );
+
       const response = await axios.patch(
         `${server_url}/crat_financial/${item.uuid}`,
         {
@@ -409,7 +414,9 @@ const FinancialDomain = () => {
   };
 
   const handleReviewerCommentBlur = async (domain, index, comment) => {
-    console.log("🔧 DEBUG: handleReviewerCommentBlur called in FinancialDomain");
+    console.log(
+      "🔧 DEBUG: handleReviewerCommentBlur called in FinancialDomain"
+    );
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
     console.log("🔧 DEBUG: Comment:", comment);
@@ -431,8 +438,11 @@ const FinancialDomain = () => {
     }
 
     try {
-      console.log("🔧 DEBUG: Making PATCH request to:", `${server_url}/crat_financial/${item.uuid}`);
-      
+      console.log(
+        "🔧 DEBUG: Making PATCH request to:",
+        `${server_url}/crat_financial/${item.uuid}`
+      );
+
       const response = await axios.patch(
         `${server_url}/crat_financial/${item.uuid}`,
         {
@@ -454,11 +464,15 @@ const FinancialDomain = () => {
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
-        toast.error(t("crat.errorSavingReviewerComment", "Error saving reviewer comment"));
+        toast.error(
+          t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+        );
       }
     } catch (error) {
       console.log("🔧 DEBUG: Exception occurred:", error);
-      toast.error(t("crat.errorSavingReviewerComment", "Error saving reviewer comment"));
+      toast.error(
+        t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+      );
       console.error("Error saving reviewer comment:", error);
     }
   };
@@ -542,30 +556,6 @@ const FinancialDomain = () => {
           )}
         </div>
 
-        {/* Reviewer Comment Column */}
-        <div className="flex items-center px-2">
-          {userDetails?.role === "Admin" ? (
-            <textarea
-              defaultValue={item.reviewerComment || ""}
-              onBlur={(e) =>
-                handleReviewerCommentBlur(domain, index, e.target.value)
-              }
-              placeholder={t("crat.enterReviewerComment", "Enter reviewer comment...")}
-              className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              rows={2}
-            />
-          ) : userDetails?.role === "Enterprenuer" ? (
-            <p className="text-sm text-gray-500 italic">
-              {t("crat.hiddenFromEntrepreneur", "Hidden")}
-            </p>
-          ) : (
-            <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
-              {item.reviewerComment ||
-                t("crat.noReviewerComment", "No reviewer comment")}
-            </p>
-          )}
-        </div>
-
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
             onAdd={(file) =>
@@ -606,7 +596,6 @@ const FinancialDomain = () => {
           t("crat.tableHeaders.score", "Score"),
           t("crat.tableHeaders.attachment", "Attachment"),
           t("crat.tableHeaders.customerComment", "Customer Comment"),
-          t("crat.tableHeaders.reviewerComment", "Reviewer Comment"),
           t("crat.tableHeaders.actions", "Actions"),
         ].map((header, index) => (
           <div key={index} className="flex items-center px-2">

@@ -22,7 +22,11 @@ import {
   FaWpforms,
   FaRegLightbulb,
 } from "react-icons/fa";
-import { RiTeamLine, RiMoneyDollarCircleLine } from "react-icons/ri";
+import {
+  RiTeamLine,
+  RiMoneyDollarCircleLine,
+  RiPhoneLine,
+} from "react-icons/ri";
 import { BsCalendar3, BsCardChecklist } from "react-icons/bs";
 import { BiMessageDetail } from "react-icons/bi";
 import { IoDocumentTextOutline, IoChevronDownOutline } from "react-icons/io5";
@@ -305,19 +309,14 @@ const Sidebar = ({
 
     if (["Admin", "Enterprenuer"].includes(role)) {
       investmentItems.push({
-        name: t("navigation.fundingOpportunities", "Funding Opportunities"),
-        path: "/dashboard/opportunities",
+        name: t("navigation.investorConnection", "Investor Connection"),
+        path: "/dashboard/investors",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
-        submenu: [
-          {
-            name: t("navigation.investorConnection", "Investor Connection"),
-            path: "/dashboard/investors",
-          },
-          {
-            name: t("navigation.openCallsForFunding", "Open calls for funding"),
-            path: "/dashboard/opportunities",
-          },
-        ],
+      });
+      investmentItems.push({
+        name: t("navigation.openCallsForFunding", "Open calls for funding"),
+        path: "/dashboard/opportunities",
+        icon: <RiPhoneLine className="text-xl" />,
       });
     }
 

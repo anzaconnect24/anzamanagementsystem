@@ -36,6 +36,7 @@ const Page = () => {
   const [cratData, setCratData] = useState(null);
   // CRAT documents state
   const [cratDocs, setCratDocs] = useState([]);
+
   const getData = async () => {
     try {
       const data = await getBusiness(uuid);
@@ -1121,7 +1122,21 @@ const Page = () => {
                   </div>
                 </div>
               )}
-
+              {userDetails.role === "Admin" && business?.User?.uuid && (
+                <div className="mt-3">
+                  <button
+                    onClick={() =>
+                      router.push(`/dashboard/logs/${business.User.uuid}`)
+                    }
+                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
+                  >
+                    <span className="text-2xl">�</span>
+                    <span>
+                      {t("logs.viewActivityLogs", "View User Activity Logs")}
+                    </span>
+                  </button>
+                </div>
+              )}
               {/* CRAT Documents Folder - visible to Admin and Staff only */}
               {["Admin", "Staff"].includes(userDetails.role) && (
                 <div className="mt-2">
@@ -1293,6 +1308,8 @@ const Page = () => {
                   )}
               </div>
             </div>
+
+            {/* View User Activity Logs Button - Admin Only */}
           </div>
         </div>
 

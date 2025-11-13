@@ -266,8 +266,11 @@ const LegalDomainPage = () => {
     }
 
     try {
-      console.log("🔧 DEBUG: Making PATCH request to:", `${server_url}/crat_legal/${item.uuid}`);
-      
+      console.log(
+        "🔧 DEBUG: Making PATCH request to:",
+        `${server_url}/crat_legal/${item.uuid}`
+      );
+
       const response = await axios.patch(
         `${server_url}/crat_legal/${item.uuid}`,
         {
@@ -289,11 +292,15 @@ const LegalDomainPage = () => {
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
-        toast.error(t("crat.errorSavingReviewerComment", "Error saving reviewer comment"));
+        toast.error(
+          t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+        );
       }
     } catch (error) {
       console.log("🔧 DEBUG: Exception occurred:", error);
-      toast.error(t("crat.errorSavingReviewerComment", "Error saving reviewer comment"));
+      toast.error(
+        t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+      );
       console.error("Error saving reviewer comment:", error);
     }
   };
@@ -510,7 +517,7 @@ const LegalDomainPage = () => {
             )}
           </p>
         </div>
-        
+
         {/* Customer Comment Column */}
         <div className="flex items-center px-2">
           {userDetails?.role === "Enterprenuer" ? (
@@ -531,34 +538,6 @@ const LegalDomainPage = () => {
           ) : (
             <p className="text-sm text-gray-600 dark:text-gray-300">
               {item.customerComment || t("crat.noComment", "No comment")}
-            </p>
-          )}
-        </div>
-
-        {/* Reviewer Comment Column */}
-        <div className="flex items-center px-2">
-          {userDetails?.role === "Admin" ? (
-            <textarea
-              className="w-full p-2 text-sm border border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none"
-              placeholder={t("crat.enterReviewerComment", "Enter reviewer comment...")}
-              value={item.reviewerComment || ""}
-              onChange={(e) => {
-                const newData = { ...data };
-                newData[domain][index].reviewerComment = e.target.value;
-                setData(newData);
-              }}
-              onBlur={(e) =>
-                handleReviewerCommentBlur(domain, index, e.target.value)
-              }
-              rows={2}
-            />
-          ) : userDetails?.role === "Enterprenuer" ? (
-            <p className="text-sm text-gray-500 italic">
-              {t("crat.hiddenFromEntrepreneur", "Hidden")}
-            </p>
-          ) : (
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {item.reviewerComment || t("crat.noComment", "No comment")}
             </p>
           )}
         </div>
@@ -603,7 +582,6 @@ const LegalDomainPage = () => {
           t("crat.tableHeaders.score", "Score"),
           t("crat.tableHeaders.attachment", "Attachment"),
           t("crat.tableHeaders.yourComment", "Your Comment"),
-          t("crat.tableHeaders.reviewerComment", "Reviewer Comment"),
           t("crat.tableHeaders.actions", "Actions"),
         ].map((header, index) => (
           <div key={index} className="flex items-center px-2">

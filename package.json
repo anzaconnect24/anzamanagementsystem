@@ -7,7 +7,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext js,jsx,ts,tsx",
-    "push": "npm run build && ssh anza 'mkdir -p /var/www/anzatestweb' && scp -C -r dist/* anza:/var/www/anzatestweb/"
+    "push-test": "npm run build && ssh anza 'mkdir -p /var/www/anzatestweb' && scp -C -r dist/* anza:/var/www/anzatestweb/",
+    "push-live": "npm run build && ssh anza 'mkdir -p /var/www/anzaweb' && scp -C -r dist/* anza:/var/www/anzaweb/"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

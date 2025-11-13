@@ -74,6 +74,7 @@ const MarketDomainPage = () => {
               return fetchedItem
                 ? {
                     ...item,
+                    uuid: fetchedItem.uuid,
                     rating: fetchedItem.rating,
                     score: fetchedItem.score,
                     userId: fetchedItem.userId,
@@ -113,6 +114,7 @@ const MarketDomainPage = () => {
             return fetchedItem
               ? {
                   ...item,
+                  uuid: fetchedItem.uuid,
                   rating: fetchedItem.rating,
                   score: fetchedItem.score,
                   userId: fetchedItem.userId,
@@ -248,6 +250,7 @@ const MarketDomainPage = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
@@ -300,6 +303,7 @@ const MarketDomainPage = () => {
           return fetchedItem
             ? {
                 ...item,
+                uuid: fetchedItem.uuid,
                 rating: fetchedItem.rating,
                 userId: fetchedItem.userId,
                 score: fetchedItem.score,
@@ -487,7 +491,7 @@ const MarketDomainPage = () => {
   const renderTableRows = (domain) => {
     return data[domain].map((item, index) => (
       <div
-        className="grid grid-cols-8 border-t border-stroke py-4 px-4 dark:border-strokedark"
+        className="grid grid-cols-7 border-t border-stroke py-4 px-4 dark:border-strokedark"
         key={index}
       >
         <div className="flex items-center px-2">
@@ -555,37 +559,6 @@ const MarketDomainPage = () => {
           )}
         </div>
 
-        {/* Reviewer Comment Column */}
-        <div className="flex items-center px-2">
-          {userDetails?.role === "Admin" ? (
-            <textarea
-              className="w-full p-2 text-sm border border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none"
-              placeholder={t(
-                "crat.enterReviewerComment",
-                "Enter reviewer comment..."
-              )}
-              value={item.reviewerComment || ""}
-              onChange={(e) => {
-                const newData = { ...data };
-                newData[domain][index].reviewerComment = e.target.value;
-                setData(newData);
-              }}
-              onBlur={(e) =>
-                handleReviewerCommentBlur(domain, index, e.target.value)
-              }
-              rows={2}
-            />
-          ) : userDetails?.role === "Enterprenuer" ? (
-            <p className="text-sm text-gray-500 italic">
-              {t("crat.hiddenFromEntrepreneur", "Hidden")}
-            </p>
-          ) : (
-            <p className="text-sm text-gray-600 dark:text-gray-300">
-              {item.reviewerComment || t("crat.noComment", "No comment")}
-            </p>
-          )}
-        </div>
-
         <div className="flex items-center px-2 space-x-2">
           <ReactIcons
             onAdd={(file) => handleAddFile(item.subDomain, file, item.userId)}
@@ -615,15 +588,14 @@ const MarketDomainPage = () => {
           {title}
         </h4>
       </div>
-      <div className="grid grid-cols-8 border-b border-stroke py-4 px-4 dark:border-strokedark">
+      <div className="grid grid-cols-7 border-b border-stroke py-4 px-4 dark:border-strokedark">
         {[
           t("crat.tableHeaders.subDomain", "Sub Domain"),
           t("crat.tableHeaders.question", "Question"),
           t("crat.tableHeaders.rating", "Rating"),
           t("crat.tableHeaders.score", "Score"),
           t("crat.tableHeaders.attachment", "Attachment"),
-          t("crat.tableHeaders.yourComment", "Your Comment"),
-          t("crat.tableHeaders.reviewerComment", "Reviewer Comment"),
+          t("crat.tableHeaders.customerComment", "Your Comment"),
           t("crat.tableHeaders.actions", "Actions"),
         ].map((header, index) => (
           <div key={index} className="flex items-center px-2">

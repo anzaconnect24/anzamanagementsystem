@@ -152,6 +152,7 @@ import EditSlide from "./pages/learnandgrow/slides/edit/EditSlide";
 
 // Additional Missing Imports - Log Components
 // import Logs from "./pages/log/Logs";
+import UserActivityLogs from "./pages/logs/UserActivityLogs";
 
 // Additional Missing Imports - Mentor Components
 import AddEntreprenuerReportWithUuid from "./pages/mentor/addEntreprenuerReport/AddEntreprenuerReportWithUuid";
@@ -433,6 +434,7 @@ function App() {
 
             {/* Log Routes */}
             {/* <Route path="logs" element={<Logs />} /> */}
+            <Route path="logs/:uuid" element={<UserActivityLogs />} />
 
             {/* Mentor Routes - Additional */}
             <Route

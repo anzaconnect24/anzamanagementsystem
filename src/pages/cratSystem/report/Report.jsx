@@ -873,7 +873,7 @@ const Report = () => {
     const showReviewerComment = userDetails?.role === "Admin";
 
     return (
-      <div className="grid grid-cols-5 border-b border-stroke py-4 px-4 dark:border-strokedark">
+      <div className="grid grid-cols-4 border-b border-stroke py-4 px-4 dark:border-strokedark">
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white font-semibold">
             {tableHeaders[0]}
@@ -920,7 +920,7 @@ const Report = () => {
 
       return (
         <div
-          className="grid grid-cols-5 border-t border-stroke py-4 px-4 dark:border-strokedark"
+          className="grid grid-cols-4 border-t border-stroke py-4 px-4 dark:border-strokedark"
           key={index}
         >
           <div className="flex items-center px-2">
@@ -935,7 +935,7 @@ const Report = () => {
             <p className="text-sm text-black dark:text-white">{narrative}</p>
           </div>
           <div className="flex items-center px-2">
-            <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
+            <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md  dark:border-gray-600 min-h-[2rem] flex items-center">
               {item.customerComment ||
                 t("crat.noCustomerComment", "No customer comment")}
             </p>

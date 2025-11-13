@@ -38,3 +38,22 @@ export const createLog = async (data) => {
     return error.response;
   }
 };
+
+export const getUserLogs = async (userUuid, page = 1, limit = 50) => {
+  try {
+    const user = getUser();
+    const response = await axios.get(
+      `${server_url}/log/user/${userUuid}?page=${page}&limit=${limit}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      }
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    return error.response;
+  }
+};
