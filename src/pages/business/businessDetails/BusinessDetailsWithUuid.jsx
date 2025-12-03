@@ -617,7 +617,7 @@ const Page = () => {
           pageName={`${business?.name}`}
         />
         {/* Stats Section - Full Width */}
-        <div className="bg-primary/5 rounded-2xl border border-primary/10 border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark">
+        <div className="bg-primary/5 rounded-2xl border border-primary/10 border-opacity-40 dark:bg-boxdark backdrop-blur-sm border-y border-black/10 dark:border-strokedark">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             {/* Business Profile Header */}
 
@@ -1397,7 +1397,7 @@ const Page = () => {
                   return (
                     <div
                       key={index}
-                      className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-gray-200 dark:border-gray-700"
+                      className="bg-white dark:bg-gray-800 rounded-xl p-4 shadow-sm border border-black/10 dark:border-gray-700"
                     >
                       <div className="flex items-center justify-between mb-2">
                         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
@@ -1422,7 +1422,7 @@ const Page = () => {
             </div>
 
             {/* AI Analysis Panel */}
-            <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xl border border-gray-200 dark:border-strokedark overflow-hidden">
+            <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xl border border-black/10 dark:border-strokedark overflow-hidden">
               <AIAnalysisPanel
                 reportData={cratData.reportData}
                 scoreData={cratData.scoreData}

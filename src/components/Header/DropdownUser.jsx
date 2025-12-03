@@ -40,7 +40,7 @@ const DropdownUser = () => {
   });
 
   const { t } = useTranslation();
-
+  console.log("User Details in DropdownUser:", userDetails);
   return (
     <div className="relative">
       <button
@@ -51,7 +51,9 @@ const DropdownUser = () => {
       >
         <span className="hidden text-right lg:block">
           <span className="block text-sm font-medium text-black dark:text-white">
-            {userDetails?.name || "Loading..."}
+            {userDetails?.role === "Enterprenuer"
+              ? userDetails?.Business?.name || userDetails?.name || "Loading..."
+              : userDetails?.name || "Loading..."}
           </span>
           {/* <span className="block text-xs">
             {t("users.role", "Role")}: {userDetails?.role || "Loading..."}
@@ -67,7 +69,6 @@ const DropdownUser = () => {
             alt="User"
           />
         </span>
-
         <svg
           className="hidden fill-current sm:block"
           width="12"
@@ -97,7 +98,7 @@ const DropdownUser = () => {
         <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
           <li>
             <Link
-              href="/accountDetails"
+              href="/dashboard/edit-profile"
               className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
             >
               <svg
@@ -123,7 +124,6 @@ const DropdownUser = () => {
         </ul>
         <button
           onClick={() => {
-            // alert("hello there")
             logout();
             router.push("/signin");
           }}

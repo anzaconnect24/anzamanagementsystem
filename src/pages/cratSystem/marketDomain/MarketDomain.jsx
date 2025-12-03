@@ -539,7 +539,7 @@ const MarketDomainPage = () => {
         <div className="flex items-center px-2">
           {userDetails?.role === "Enterprenuer" ? (
             <textarea
-              className="w-full p-2 text-sm border border-gray-300 rounded dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none"
+              className="w-full p-2 text-sm border border-black/20 rounded dark:border-gray-600 dark:bg-gray-700 dark:text-white resize-none"
               placeholder={t("crat.enterYourComment", "Enter your comment...")}
               value={item.customerComment || ""}
               onChange={(e) => {

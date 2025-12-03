@@ -346,7 +346,7 @@ const Page = () => {
               </button>
 
               {openDropdown === key && (
-                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700">
+                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
                   {value.options.map((option) => (
                     <button
                       key={option}
@@ -393,7 +393,7 @@ const Page = () => {
             </button>
 
             {openDropdown === "sort" && (
-              <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-gray-200 dark:border-gray-700">
+              <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
                 {sortOptions.map((option) => (
                   <button
                     key={option.value}

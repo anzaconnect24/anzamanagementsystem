@@ -86,7 +86,7 @@ const SignInForm = () => {
                 name="email"
                 onChange={handleChange}
                 placeholder={t("auth.enterEmail", "Enter your email")}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full px-4 py-3 border border-black/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
               />
             </div>
             {errors.email && (
@@ -110,7 +110,7 @@ const SignInForm = () => {
                   "auth.passwordHint",
                   "6+ Characters, 1 Capital letter"
                 )}
-                className="w-full px-4 py-3 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
+                className="w-full px-4 py-3 pr-12 border border-black/20 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-colors"
               />
               <button
                 type="button"

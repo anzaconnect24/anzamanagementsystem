@@ -190,7 +190,7 @@ const NewInvestmentOpportunity = () => {
         if (formData.image && formData.image.startsWith("blob:")) {
           URL.revokeObjectURL(formData.image);
         }
-        navigate("/opportunities");
+        navigate("/dashboard/opportunities");
       } else {
         alert(
           t(

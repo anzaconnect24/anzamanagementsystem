@@ -150,6 +150,14 @@ import SlideWithUuid from "./pages/learnandgrow/slides/SlideWithUuid";
 import AddSlide from "./pages/learnandgrow/slides/add/AddSlide";
 import EditSlide from "./pages/learnandgrow/slides/edit/EditSlide";
 
+// Quiz Components
+import ModuleQuizzes from "./pages/learnandgrow/quizzes/ModuleQuizzes";
+import CreateEditQuiz from "./pages/learnandgrow/quizzes/CreateEditQuiz";
+import TakeQuiz from "./pages/learnandgrow/quizzes/TakeQuiz";
+import QuizResult from "./pages/learnandgrow/quizzes/QuizResult";
+import UserAttempts from "./pages/learnandgrow/quizzes/UserAttempts";
+import AdminAttempts from "./pages/learnandgrow/quizzes/AdminAttempts";
+
 // Additional Missing Imports - Log Components
 // import Logs from "./pages/log/Logs";
 import UserActivityLogs from "./pages/logs/UserActivityLogs";
@@ -200,6 +208,8 @@ import InvestorWithUuid from "./pages/users/investors/InvestorWithUuid";
 import MentorEntreprenuerWithUuid from "./pages/users/mentorEntreprenuers/MentorEntreprenuerWithUuid";
 import MentorWithUuid from "./pages/users/mentors/MentorWithUuid";
 import { TranslationProvider } from "./locales";
+import EditAccountDetails from "./pages/account/editAccount/editAccountDetails";
+import EntrepreneurProfile from "./pages/account/entreprenuerProfile";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -305,8 +315,11 @@ function App() {
             />
 
             {/* Account Routes */}
-            <Route path="accountDetails" element={<InvestorProfile />} />
-            <Route path="accountInformation" element={<InvestorProfile />} />
+            <Route path="edit-profile" element={<EditAccountDetails />} />
+            <Route
+              path="entreprenuer-profile"
+              element={<EntrepreneurProfile />}
+            />
             <Route path="investorProfile" element={<InvestorProfile />} />
 
             {/* Application Routes - Additional */}
@@ -580,6 +593,37 @@ function App() {
               element={<CategoryWithParam />}
             />
             <Route path="modules/:course" element={<ModuleWithCourse />} />
+
+            {/* Quiz Routes */}
+            <Route
+              path="learn-and-grow/quizzes/:moduleId"
+              element={<ModuleQuizzes />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/:moduleId/new"
+              element={<CreateEditQuiz />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/:moduleId/edit/:quizId"
+              element={<CreateEditQuiz />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/:moduleId/take/:quizId"
+              element={<TakeQuiz />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/:moduleId/result/:attemptId"
+              element={<QuizResult />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/:moduleId/my-attempts/:quizId"
+              element={<UserAttempts />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/:moduleId/attempts/:quizId"
+              element={<AdminAttempts />}
+            />
+
             <Route path="messages/:uuid" element={<MessagesWithUuid />} />
             <Route path="report" element={<Report />} />
           </Route>

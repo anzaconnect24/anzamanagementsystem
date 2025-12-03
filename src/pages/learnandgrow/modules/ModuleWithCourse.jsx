@@ -127,65 +127,76 @@ const Page = ({ params }) => {
                   <p className="mb-3 line-clamp-3">{item.description}</p>
                 </div>
               </div>
-              <div className="flex space-x-2  items-center mt-auto">
-                {["Admin"].includes(userDetails.role) ? (
-                  <Link
-                    href={`/dashboard/slides/${item.uuid}`}
-                    className="bg-primary px-4 py-2 rounded-lg text-white "
-                  >
-                    {t("learnAndGrow.manageSlides", "Manage Slides")}
-                  </Link>
-                ) : isLocked ? (
-                  <button
-                    className="bg-gray-200 text-gray-400 px-4 py-2 rounded-lg flex items-center cursor-not-allowed"
-                    disabled
-                    title={t(
-                      "learnAndGrow.completePrevious",
-                      "Complete previous module to unlock"
-                    )}
-                  >
-                    <BsLock className="mr-2" />{" "}
-                    {t("learnAndGrow.locked", "Locked")}
-                  </button>
-                ) : percentage > 0 ? (
-                  <Link
-                    href={`/dashboard/slides/${item.uuid}`}
-                    className="bg-primary px-4 py-2 rounded-lg text-white "
-                  >
-                    {percentage == 100
-                      ? t("learnAndGrow.completed", "Completed")
-                      : t("learnAndGrow.resume", "Resume")}
-                  </Link>
-                ) : (
-                  <Link
-                    href={`/dashboard/slides/${item.uuid}`}
-                    className="bg-primary px-4 py-2 rounded-lg text-white "
-                  >
-                    {t("learnAndGrow.startLearning", "Start Learning")}
-                  </Link>
-                )}
-                {["Admin"].includes(userDetails.role) && (
-                  <button
-                    className="bg-red-100 text-red-500 py-2 px-4 rounded-lg"
-                    onClick={() => {
-                      deleteModule(item.uuid).then((res) => {
-                        loadData();
-                      });
-                    }}
-                  >
-                    {t("common.delete", "Delete")}
-                  </button>
-                )}
-                {["Admin"].includes(userDetails.role) && (
-                  <button
-                    className="bg-green-100 text-green-500 py-2 px-4 rounded-lg"
-                    onClick={() => {
-                      router.push(`/dashboard/modules/edit/?uuid=${item.uuid}`);
-                    }}
-                  >
-                    {t("common.edit", "Edit")}
-                  </button>
-                )}
+              <div className="flex flex-col space-y-2 mt-auto">
+                <div className="flex space-x-2 items-center">
+                  {["Admin"].includes(userDetails.role) ? (
+                    <Link
+                      href={`/dashboard/slides/${item.uuid}`}
+                      className="bg-primary px-4 py-2 rounded-lg text-white flex-1 text-center"
+                    >
+                      {t("learnAndGrow.manageSlides", "Manage Slides")}
+                    </Link>
+                  ) : isLocked ? (
+                    <button
+                      className="bg-gray-200 text-gray-400 px-4 py-2 rounded-lg flex items-center justify-center cursor-not-allowed flex-1"
+                      disabled
+                      title={t(
+                        "learnAndGrow.completePrevious",
+                        "Complete previous module to unlock"
+                      )}
+                    >
+                      <BsLock className="mr-2" />{" "}
+                      {t("learnAndGrow.locked", "Locked")}
+                    </button>
+                  ) : percentage > 0 ? (
+                    <Link
+                      href={`/dashboard/slides/${item.uuid}`}
+                      className="bg-primary px-4 py-2 rounded-lg text-white flex-1 text-center"
+                    >
+                      {percentage == 100
+                        ? t("learnAndGrow.completed", "Completed")
+                        : t("learnAndGrow.resume", "Resume")}
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/dashboard/slides/${item.uuid}`}
+                      className="bg-primary px-4 py-2 rounded-lg text-white flex-1 text-center"
+                    >
+                      {t("learnAndGrow.startLearning", "Start Learning")}
+                    </Link>
+                  )}
+                  {["Admin"].includes(userDetails.role) && (
+                    <button
+                      className="bg-green-100 text-green-500 py-2 px-4 rounded-lg"
+                      onClick={() => {
+                        router.push(
+                          `/dashboard/modules/edit/?uuid=${item.uuid}`
+                        );
+                      }}
+                    >
+                      {t("common.edit", "Edit")}
+                    </button>
+                  )}
+                  {["Admin"].includes(userDetails.role) && (
+                    <button
+                      className="bg-red-100 text-red-500 py-2 px-4 rounded-lg"
+                      onClick={() => {
+                        deleteModule(item.uuid).then((res) => {
+                          loadData();
+                        });
+                      }}
+                    >
+                      {t("common.delete", "Delete")}
+                    </button>
+                  )}
+                </div>
+                {/* Quizzes Button */}
+                <Link
+                  href={`/dashboard/learn-and-grow/quizzes/${item.uuid}`}
+                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-center w-full"
+                >
+                  📝 {t("learnAndGrow.quizzes", "Quizzess")}
+                </Link>
               </div>
             </div>
           );

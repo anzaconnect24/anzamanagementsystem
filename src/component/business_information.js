@@ -1,15 +1,17 @@
 import { useContext, useEffect, useState } from "react";
-import { getSectors } from "@/app/controllers/sector_controller";
+import { getSectors } from "../controllers/sector_controller";
 import {
   getBusiness,
   updateBusiness,
-} from "@/app/controllers/business_controller";
-import { UserContext } from "../(dashboard)/layout";
+} from "../controllers/business_controller";
+import { UserContext } from "@/layouts/DashboardLayout";
 import Loader from "@/components/common/Loader";
-import Spinner from "../../components/spinner";
+import Spinner from "../components/spinner";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "../locales";
 
 const BusinessInformation = () => {
+  const { t } = useTranslation();
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(false);
@@ -82,11 +84,17 @@ const BusinessInformation = () => {
             setloading(true);
             const data = await updateBusiness(businessData, business.uuid);
             setRefresh((r) => r + 1);
-            toast.success("User details are updated successfully!");
+            toast.success(
+              t(
+                "business.updateSuccess",
+                "Business details are updated successfully!"
+              )
+            );
           } catch (error) {
             console.error("Error updating business details:", error);
             toast.error(
-              "Failed to update details: " + (error?.message || "Unknown error")
+              t("errors.updateFailed", "Failed to update details: ") +
+                (error?.message || t("errors.unknown", "Unknown error"))
             );
           } finally {
             setloading(false);
@@ -96,49 +104,55 @@ const BusinessInformation = () => {
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5">
             <h4 className="text-xl font-semibold text-black dark:text-white pb-6">
-              Business Informations
+              {t("business.businessInformation", "Business Information")}
             </h4>
             <div className="space-y-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-2 gap-y-2">
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Business name
+                    {t("business.businessName", "Business name")}
                   </label>
                   <input
                     defaultValue={business.name}
                     name="businessName"
                     className="form-style"
-                    placeholder="Company name"
+                    placeholder={t("business.companyName", "Company name")}
                     type="text"
                   />
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Business email address
+                    {t("business.businessEmail", "Business email address")}
                   </label>
                   <input
                     defaultValue={business.email}
                     name="businessEmail"
                     className="form-style"
-                    placeholder="Company email address"
+                    placeholder={t(
+                      "business.companyEmail",
+                      "Company email address"
+                    )}
                     type="text"
                   />
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Business phone number
+                    {t("business.businessPhone", "Business phone number")}
                   </label>
                   <input
                     defaultValue={business.phone}
                     name="businessPhone"
                     className="form-style"
-                    placeholder="Company phone number"
+                    placeholder={t(
+                      "business.companyPhone",
+                      "Company phone number"
+                    )}
                     type="text"
                   />
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Facebook link
+                    {t("business.facebookLink", "Facebook link")}
                   </label>
                   <input
                     defaultValue={business.facebook}
@@ -149,7 +163,7 @@ const BusinessInformation = () => {
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Instagram link
+                    {t("business.instagramLink", "Instagram Link")}
                   </label>
                   <input
                     defaultValue={business.instagram}
@@ -160,7 +174,7 @@ const BusinessInformation = () => {
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Twitter link
+                    {t("business.twitterLink", "Twitter link")}
                   </label>
                   <input
                     defaultValue={business.twitter}
@@ -171,7 +185,7 @@ const BusinessInformation = () => {
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Linkedin link
+                    {t("business.linkedinLink", "LinkedIn link")}
                   </label>
                   <input
                     defaultValue={business.linkedin}
@@ -182,47 +196,69 @@ const BusinessInformation = () => {
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Number of people in your team
+                    {t(
+                      "business.numberOfTeamMembers",
+                      "Number of people in your team"
+                    )}
                   </label>
                   <input
                     defaultValue={business.team}
                     name="team"
                     className="form-style"
-                    placeholder="Enter number of team members"
+                    placeholder={t(
+                      "business.enterNumberOfTeamMembers",
+                      "Enter number of team members"
+                    )}
                     type="text"
                   />
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Registration status
+                    {t("business.registrationStatus", "Registration status")}
                   </label>
                   <select
                     defaultValue={business.registration}
                     name="registration"
                     className="form-style"
                   >
-                    <option>Registration status</option>
+                    <option>
+                      {t(
+                        "business.selectRegistrationStatus",
+                        "Registration status"
+                      )}
+                    </option>
                     <option value="Registered with BRELA">
-                      Registered with BRELA
+                      {t(
+                        "business.registeredWithBRELA",
+                        "Registered with BRELA"
+                      )}
                     </option>
                     <option value="Registered with TIN only">
-                      Registered with TIN only
+                      {t(
+                        "business.registeredWithTINOnly",
+                        "Registered with TIN only"
+                      )}
                     </option>
                     <option value="Have BRELA and TIN">
-                      Have BRELA and TIN
+                      {t("business.haveBRELAAndTIN", "Have BRELA and TIN")}
                     </option>
                   </select>
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Business sector
+                    {t("business.businessSector", "Business sector")}
                   </label>
                   <select
                     defaultValue={business.BusinessSector.uuid}
                     name="business_sector_uuid"
                     className="form-style"
                   >
-                    <option>Select business sector</option>
+                    <option>
+                      {t(
+                        "business.selectBusinessSector",
+                        "Select business sector"
+                      )}
+                    </option>
                     {sectors.map((item) => (
                       <option key={item.id} value={item.uuid}>
                         {item.name}
@@ -232,30 +268,46 @@ const BusinessInformation = () => {
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Business stage
+                    {t("business.businessStage", "Business stage")}
                   </label>
                   <select
                     defaultValue={business.stage}
                     name="stage"
                     className="form-style"
                   >
-                    <option>Select business stage</option>
-                    <option value="Startup">Startup</option>
-                    <option value="Growth stage">Growth stage</option>
-                    <option value="Expansion stage">Expansion stage</option>
-                    <option value="Maturity stage">Maturity stage</option>
+                    <option>
+                      {t(
+                        "business.selectBusinessStage",
+                        "Select business stage"
+                      )}
+                    </option>
+                    <option value="Startup">
+                      {t("business.startup", "Startup")}
+                    </option>
+                    <option value="Growth stage">
+                      {t("business.growthStage", "Growth stage")}
+                    </option>
+                    <option value="Expansion stage">
+                      {t("business.expansionStage", "Expansion stage")}
+                    </option>
+                    <option value="Maturity stage">
+                      {t("business.maturityStage", "Maturity stage")}
+                    </option>
                   </select>
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Select Sustainable Development Goals
+                    {t(
+                      "business.sustainableDevelopmentGoals",
+                      "Select Sustainable Development Goals"
+                    )}
                   </label>
                   <select
                     defaultValue={business.sdg}
                     name="sdg"
                     className="form-style"
                   >
-                    <option>Select SDG</option>
+                    <option>{t("business.selectSDG", "Select SDG")}</option>
                     {[
                       "No Poverty",
                       "Zero Hunger",
@@ -283,67 +335,115 @@ const BusinessInformation = () => {
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Are you an Anza alumni?
+                    {t("business.areYouAnAlumni", "Are you an Anza alumni?")}
                   </label>
                   <select
                     defaultValue={business.isAlumni.toString()}
                     name="isAlumni"
                     className="form-style"
                   >
-                    <option value="false">No</option>
-                    <option value="true">Yes</option>
+                    <option value="false">{t("common.no", "No")}</option>
+                    <option value="true">{t("common.yes", "Yes")}</option>
                   </select>
                 </div>
                 {business.isAlumni && (
                   <div>
                     <label className="mb-2.5 block font-medium text-black dark:text-white">
-                      What program did you complete?
+                      {t(
+                        "business.whatProgramDidYouComplete",
+                        "What program did you complete?"
+                      )}
                     </label>
                     <select
                       defaultValue={business.completedProgram}
                       name="completedProgram"
                       className="form-style"
                     >
-                      <option>Select program</option>
-                      <option value="BFA">BFA</option>
-                      <option value="IR program">IR program</option>
+                      <option>
+                        {t("business.selectProgram", "Select program")}
+                      </option>
+                      <option value="Climate Launchpad">
+                        Climate Launchpad
+                      </option>
+                      <option value="Generation Food">Generation Food</option>
+                      <option value="Capacity Building to Kilwa Entrepreneurs">
+                        Capacity Building to Kilwa Entrepreneurs
+                      </option>
+                      <option value="Female Entrepreneurs Growing Greener Economies">
+                        Female Entrepreneurs Growing Greener Economies
+                      </option>
+                      <option value="Rapid Banana">Rapid Banana</option>
+                      <option value="Restoration Factory Tanzania">
+                        Restoration Factory Tanzania
+                      </option>
+                      <option value="Capacity Building to Entrepreneurs Focusing on Clean and Renewable Energy in Arusha">
+                        Capacity Building to Entrepreneurs Focusing on Clean and
+                        Renewable Energy in Arusha
+                      </option>
+                      <option value="Capacity Building for Entrepreneurship and Aquaculture Practices">
+                        Capacity Building for Entrepreneurship and Aquaculture
+                        Practices
+                      </option>
+                      <option value="Youth Entrepreneurship & Innovation Program">
+                        Youth Entrepreneurship & Innovation Program
+                      </option>
+                      <option value="Regenerative Economy Accelerator Tanzania">
+                        Regenerative Economy Accelerator Tanzania
+                      </option>
+                      <option value="Pesatech Accelerator Two">
+                        Pesatech Accelerator Two
+                      </option>
+                      <option value="Funguo Investment Accelerator">
+                        Funguo Investment Accelerator
+                      </option>
+                      <option value="AWCE Investment Accelerator">
+                        AWCE Investment Accelerator
+                      </option>
                     </select>
                   </div>
                 )}
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Number of Customers
+                    {t("business.numberOfCustomers", "Number of Customers")}
                   </label>
                   <input
                     defaultValue={business.numberOfCustomers}
                     name="customerCount"
                     className="form-style"
-                    placeholder="Enter number of customers"
+                    placeholder={t(
+                      "business.enterNumberOfCustomers",
+                      "Enter number of customers"
+                    )}
                     type="number"
                   />
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Annual Revenue
+                    {t("business.annualRevenue", "Annual Revenue")}
                   </label>
                   <input
                     defaultValue={business.revenue}
                     name="revenue"
                     className="form-style"
-                    placeholder="Enter annual revenue"
+                    placeholder={t(
+                      "business.enterAnnualRevenue",
+                      "Enter annual revenue"
+                    )}
                     type="number"
                   />
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    Business Location
+                    {t("business.businessLocation", "Business Location")}
                   </label>
                   <select
                     defaultValue={business.location}
                     name="businessLocation"
                     className="form-style"
                   >
-                    <option value="">Select Region</option>
+                    <option value="">
+                      {t("business.selectRegion", "Select Region")}
+                    </option>
                     <option value="Arusha">Arusha</option>
                     <option value="Dar es Salaam">Dar es Salaam</option>
                     <option value="Dodoma">Dodoma</option>
@@ -380,94 +480,130 @@ const BusinessInformation = () => {
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Short Business Bio/Profile
+                  {t("business.businessBio", "Short Business Bio/Profile")}
                 </label>
                 <textarea
                   defaultValue={business.description}
                   name="businessBio"
                   className="form-style"
-                  placeholder="Brief description of your business"
+                  placeholder={t(
+                    "business.briefDescription",
+                    "Brief description of your business"
+                  )}
                   rows="3"
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  What problems does your business solve?
+                  {t(
+                    "business.whatProblemsDoesYourBusinessSolve",
+                    "What problems does your business solve?"
+                  )}
                 </label>
                 <textarea
                   defaultValue={business.problem}
                   name="problem"
                   className="form-style"
-                  placeholder="What problem does your business solve?"
+                  placeholder={t(
+                    "business.whatProblemsDoesYourBusinessSolve",
+                    "What problems does your business solve?"
+                  )}
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  What solution does your business provide?
+                  {t(
+                    "business.whatSolutionDoesYourBusinessProvide",
+                    "What solution does your business provide?"
+                  )}
                 </label>
                 <textarea
                   defaultValue={business.solution}
                   name="solution"
                   className="form-style"
-                  placeholder="What solution does your business provide?"
+                  placeholder={t(
+                    "business.whatSolutionDoesYourBusinessProvide",
+                    "What solution does your business provide?"
+                  )}
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  What is your traction?
+                  {t("business.whatIsYourTraction", "What is your traction?")}
                 </label>
                 <textarea
                   defaultValue={business.traction}
                   name="traction"
                   className="form-style"
-                  placeholder="What is your commercial traction?"
+                  placeholder={t(
+                    "business.tractionPlaceholder",
+                    "What is your commercial traction?"
+                  )}
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  What is your target market?
+                  {t("business.targetMarket", "Target Market")}
                 </label>
                 <textarea
                   defaultValue={business.market}
                   name="targetMarket"
                   className="form-style"
-                  placeholder="Describe your target market and audience"
+                  placeholder={t(
+                    "business.describeYourTargetMarket",
+                    "Describe your target market and audience"
+                  )}
                   rows="3"
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Current Business Impact
+                  {t("business.businessImpact", "Current Business Impact")}
                 </label>
                 <textarea
                   defaultValue={business.impact}
                   name="businessImpact"
                   className="form-style"
-                  placeholder="Describe your current business impact"
+                  placeholder={t(
+                    "business.describeYourCurrentBusinessImpact",
+                    "Describe your current business impact"
+                  )}
                   rows="3"
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Future Milestones & Growth Plans
+                  {t(
+                    "business.futureMilestonesAndGrowthPlans",
+                    "Future Milestones & Growth Plans"
+                  )}
                 </label>
                 <textarea
                   defaultValue={business.growthPlan}
                   name="growthPlans"
                   className="form-style"
-                  placeholder="Describe your future milestones and growth plans"
+                  placeholder={t(
+                    "business.describeYourFutureMilestones",
+                    "Describe your future milestones and growth plans"
+                  )}
                   rows="3"
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  Current Fundraising Needs
+                  {t(
+                    "business.currentFundraisingNeeds",
+                    "Current Fundraising Needs"
+                  )}
                 </label>
                 <textarea
                   defaultValue={business.fundraisingNeeds}
                   name="fundraisingNeeds"
                   className="form-style"
-                  placeholder="Describe your current fundraising needs"
+                  placeholder={t(
+                    "business.describeYourCurrentFundraisingNeeds",
+                    "Describe your current fundraising needs"
+                  )}
                   rows="3"
                 />
               </div>
@@ -477,7 +613,13 @@ const BusinessInformation = () => {
                 type="submit"
                 className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
               >
-                <div>{loading ? <Spinner /> : "Update details"}</div>
+                <div>
+                  {loading ? (
+                    <Spinner />
+                  ) : (
+                    t("common.updateDetails", "Update details")
+                  )}
+                </div>
               </button>
             </div>
           </div>
@@ -486,7 +628,7 @@ const BusinessInformation = () => {
       <div className="rounded-lg border mt-10 border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white pb-6">
-            About Investment
+            {t("business.aboutInvestment", "About Investment")}
           </h4>
           <form
             onSubmit={(e) => {
@@ -500,14 +642,19 @@ const BusinessInformation = () => {
               updateBusiness(data, business.uuid).then((data) => {
                 setRefresh(refresh + 1);
                 setupdatingInvestmentDetails(false);
-                toast.success("Updated successfully!");
+                toast.success(
+                  t("common.updateSuccess", "Updated successfully!")
+                );
               });
             }}
             className="grid grid-cols-4 gap-x-4 items-end"
           >
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Are you looking for an investment?
+                {t(
+                  "business.lookingForInvestment",
+                  "Are you looking for an investment?"
+                )}
               </label>
               <input
                 name="lookingForInvestment"
@@ -518,26 +665,28 @@ const BusinessInformation = () => {
             </div>
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Amount you need?
+                {t("business.investmentAmount", "Amount you need?")}
               </label>
               <input
                 name="investmentAmount"
                 defaultValue={business.investmentAmount}
                 type="number"
                 className="border-stroke w-full rounded"
-                placeholder="Amount"
+                placeholder={t("business.amount", "Amount")}
               />
             </div>
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
-                Select currency
+                {t("business.selectCurrency", "Select currency")}
               </label>
               <select
                 name="investmentCurrency"
                 defaultValue={business.investmentCurrency}
                 className="border-stroke w-full rounded"
               >
-                <option>Select currency</option>
+                <option>
+                  {t("business.selectCurrency", "Select currency")}
+                </option>
                 <option value="TSH">TSH</option>
                 <option value="USD">USD</option>
               </select>
@@ -547,7 +696,13 @@ const BusinessInformation = () => {
                 type="submit"
                 className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
               >
-                <div>{updatingInvestmentDetails ? <Spinner /> : "Update"}</div>
+                <div>
+                  {updatingInvestmentDetails ? (
+                    <Spinner />
+                  ) : (
+                    t("common.update", "Update")
+                  )}
+                </div>
               </button>
             </div>
           </form>

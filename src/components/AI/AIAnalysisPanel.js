@@ -594,7 +594,7 @@ const AIAnalysisPanel = ({
                 </div>
 
                 {/* Analysis Content */}
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-black/10 dark:border-gray-700 overflow-hidden">
                   <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white p-6">
                     <h3 className="text-xl font-semibold flex items-center gap-2">
                       <svg
@@ -789,7 +789,7 @@ const AIAnalysisPanel = ({
                 (domain) => (
                   <div
                     key={domain}
-                    className="border border-gray-200 dark:border-gray-700 rounded-lg p-4"
+                    className="border border-black/10 dark:border-gray-700 rounded-lg p-4"
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-semibold text-gray-800 dark:text-gray-200 capitalize">
@@ -914,7 +914,7 @@ const AIAnalysisPanel = ({
                     (risk, index) => (
                       <div
                         key={index}
-                        className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700 shadow-sm"
+                        className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-black/10 dark:border-gray-700 shadow-sm"
                       >
                         <div className="flex items-start justify-between mb-3">
                           <div className="flex items-center gap-2">
@@ -1037,14 +1037,14 @@ const AIAnalysisPanel = ({
                 </div>
 
                 {/* Revenue Projections */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-black/10 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                     {t("ai.revenueProjections", "Revenue Projections (USD)")}
                   </h4>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
-                        <tr className="border-b border-gray-200 dark:border-gray-700">
+                        <tr className="border-b border-black/10 dark:border-gray-700">
                           <th className="text-left py-2 text-gray-600 dark:text-gray-400">
                             {t("ai.timeframe", "Timeframe")}
                           </th>
@@ -1093,7 +1093,7 @@ const AIAnalysisPanel = ({
                 </div>
 
                 {/* Market Analysis */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-black/10 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                     {t(
                       "ai.marketExpansionAnalysis",
@@ -1256,7 +1256,7 @@ const AIAnalysisPanel = ({
                 </div>
 
                 {/* Investment Amounts */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-black/10 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                     {t("ai.investmentFramework", "Investment Framework")}
                   </h4>
@@ -1367,7 +1367,7 @@ const AIAnalysisPanel = ({
                 </div>
 
                 {/* Investment Conditions */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-black/10 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                     {t("ai.investmentConditions", "Investment Conditions")}
                   </h4>
@@ -1610,7 +1610,7 @@ const AIAnalysisPanel = ({
                 </div>
 
                 {/* Key Metrics Dashboard */}
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-gray-200 dark:border-gray-700">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-black/10 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                     {t("ai.keyPerformanceMetrics", "Key Performance Metrics")}
                   </h4>

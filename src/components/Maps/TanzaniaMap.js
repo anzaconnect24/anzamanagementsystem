@@ -637,7 +637,7 @@ const TanzaniaMap = () => {
 
           {selectedRegion &&
             mapData[selectedRegion]?.entrepreneurs.length > 0 && (
-              <div className="mt-6 border-t border-gray-200 dark:border-gray-700 pt-4">
+              <div className="mt-6 border-t border-black/10 dark:border-gray-700 pt-4">
                 <h4 className="font-semibold mb-3">
                   {t(
                     "dashboard.entrepreneursInRegion",

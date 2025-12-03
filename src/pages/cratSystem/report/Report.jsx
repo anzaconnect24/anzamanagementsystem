@@ -956,11 +956,11 @@ const Report = () => {
                     "crat.enterReviewerComment",
                     "Enter reviewer comment..."
                   )}
-                  className="w-full px-2 py-1 text-sm border border-gray-300 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-2 py-1 text-sm border border-black/20 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   rows={2}
                 />
               ) : (
-                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-gray-200 dark:border-gray-600 min-h-[2rem] flex items-center">
+                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-black/10 dark:border-gray-600 min-h-[2rem] flex items-center">
                   {item.reviewerComment ||
                     t("crat.noReviewerComment", "No reviewer comment")}
                 </p>

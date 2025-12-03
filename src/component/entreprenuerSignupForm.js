@@ -117,8 +117,41 @@ dark:text-white"
               </label>
               <select required name="completedProgram" className="form-style">
                 <option>{t("business.selectProgram", "Select program")}</option>
-                <option value="BFA">BFA</option>
-                <option value="IR program">IR program</option>
+                <option value="Climate Launchpad">Climate Launchpad</option>
+                <option value="Generation Food">Generation Food</option>
+                <option value="Capacity Building to Kilwa Entrepreneurs">
+                  Capacity Building to Kilwa Entrepreneurs
+                </option>
+                <option value="Female Entrepreneurs Growing Greener Economies">
+                  Female Entrepreneurs Growing Greener Economies
+                </option>
+                <option value="Rapid Banana">Rapid Banana</option>
+                <option value="Restoration Factory Tanzania">
+                  Restoration Factory Tanzania
+                </option>
+                <option value="Capacity Building to Entrepreneurs Focusing on Clean and Renewable Energy in Arusha">
+                  Capacity Building to Entrepreneurs Focusing on Clean and
+                  Renewable Energy in Arusha
+                </option>
+                <option value="Capacity Building for Entrepreneurship and Aquaculture Practices">
+                  Capacity Building for Entrepreneurship and Aquaculture
+                  Practices
+                </option>
+                <option value="Youth Entrepreneurship & Innovation Program">
+                  Youth Entrepreneurship & Innovation Program
+                </option>
+                <option value="Regenerative Economy Accelerator Tanzania">
+                  Regenerative Economy Accelerator Tanzania
+                </option>
+                <option value="Pesatech Accelerator Two">
+                  Pesatech Accelerator Two
+                </option>
+                <option value="Funguo Investment Accelerator">
+                  Funguo Investment Accelerator
+                </option>
+                <option value="AWCE Investment Accelerator">
+                  AWCE Investment Accelerator
+                </option>
               </select>
             </div>
           )}

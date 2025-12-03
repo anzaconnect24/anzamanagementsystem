@@ -209,7 +209,7 @@ const StoryDetails = () => {
           )}
 
           {/* Metadata */}
-          <div className="border-t border-gray-200 pt-6">
+          <div className="border-t border-black/10 pt-6">
             <h2 className="text-xl font-semibold text-gray-900 mb-3">
               Story Information
             </h2>

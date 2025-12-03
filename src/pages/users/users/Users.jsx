@@ -248,7 +248,7 @@ const Page = () => {
                             <img
                               src={user.image}
                               alt={user.name}
-                              className="h-10 w-10 rounded-full object-cover border-2 border-gray-200 dark:border-boxdark"
+                              className="h-10 w-10 rounded-full object-cover border-2 border-black/10 dark:border-boxdark"
                               onError={(e) => {
                                 e.target.src =
                                   "https://ui-avatars.com/api/?name=" +

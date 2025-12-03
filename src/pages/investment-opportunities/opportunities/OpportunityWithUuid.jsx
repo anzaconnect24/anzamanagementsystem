@@ -152,7 +152,7 @@ const ViewInvestmentOpportunity = () => {
       </div>
 
       {/* Content */}
-      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+      <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-black/10 dark:border-gray-700 overflow-hidden">
         {/* Image */}
         {opportunity.image && (
           <div className="w-full h-64 md:h-80">
@@ -196,7 +196,7 @@ const ViewInvestmentOpportunity = () => {
           )}
 
           {/* Metadata */}
-          <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+          <div className="border-t border-black/10 dark:border-gray-700 pt-6">
             <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-3">
               Details
             </h2>

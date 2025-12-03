@@ -46,7 +46,7 @@ const Page = () => {
       />
       <p>{user?.MentorProfile?.position}</p>
       {/* Stats Section - Full Width */}
-      <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary/5 dark:bg-boxdark backdrop-blur-sm border-y border-gray-200 dark:border-strokedark mt-6">
+      <div className="bg-primary bg-opacity-10 rounded-2xl border border-primary/5 dark:bg-boxdark backdrop-blur-sm border-y border-black/10 dark:border-strokedark mt-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 ">
             <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
