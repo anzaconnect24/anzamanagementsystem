@@ -28,6 +28,7 @@ const UserAttemptsPage = () => {
         getUserAttempts(quizId),
         getQuizById(quizId),
       ]);
+      console.log("attemptsResult", attemptsResult);
       setAttempts(attemptsResult.data || []);
       setQuiz(quizResult.data);
       setLoading(false);
@@ -46,7 +47,7 @@ const UserAttemptsPage = () => {
   );
 
   const passedAttempts = attempts.filter((a) => a.isPassed).length;
-
+  console.log(attemptsResult);
   return (
     <div>
       <Breadcrumb

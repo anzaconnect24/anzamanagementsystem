@@ -97,12 +97,20 @@ const TakeQuizPage = () => {
 
       const result = await submitQuiz(attemptUuid, formattedAnswers);
 
-      toast.success("Quiz submitted successfully!");
+      const gradingStatus = result.data.gradingStatus;
 
-      // Navigate to results page
-      router.push(
-        `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${attemptUuid}`
-      );
+      if (gradingStatus === "pending_grading") {
+        toast.success(
+          "Quiz submitted successfully! Your answers will be reviewed by an instructor."
+        );
+        router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`);
+      } else {
+        toast.success("Quiz submitted successfully!");
+        // Navigate to results page
+        router.push(
+          `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${attemptUuid}`
+        );
+      }
     } catch (error) {
       console.error("Error submitting quiz:", error);
       toast.error("Failed to submit quiz");

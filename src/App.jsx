@@ -143,6 +143,9 @@ import InvestorSectorBusinesses from "./pages/investor/investorSectorBusinesses/
 // Additional Missing Imports - Learn and Grow Components
 import AddModule from "./pages/learnandgrow/modules/add/AddModule";
 import EditModule from "./pages/learnandgrow/modules/edit/EditModule";
+import Programs from "./pages/learnandgrow/programs/Programs";
+import AddProgram from "./pages/learnandgrow/programs/add/AddProgram";
+import EditProgram from "./pages/learnandgrow/programs/edit/EditProgram";
 import NewProgramsApplication from "./pages/learnandgrow/programsApplications/NewProgramsApplication";
 import ProgramsApplicationsWithUuid from "./pages/learnandgrow/programsApplications/ProgramsApplicationsWithUuid";
 import EditProgramsApplicationsWithUuid from "./pages/learnandgrow/programsApplications/EditProgramsApplicationsWithUuid";
@@ -157,6 +160,8 @@ import TakeQuiz from "./pages/learnandgrow/quizzes/TakeQuiz";
 import QuizResult from "./pages/learnandgrow/quizzes/QuizResult";
 import UserAttempts from "./pages/learnandgrow/quizzes/UserAttempts";
 import AdminAttempts from "./pages/learnandgrow/quizzes/AdminAttempts";
+import PendingQuizzes from "./pages/learnandgrow/quizzes/PendingQuizzes";
+import GradeQuiz from "./pages/learnandgrow/quizzes/GradeQuiz";
 
 // Additional Missing Imports - Log Components
 // import Logs from "./pages/log/Logs";
@@ -427,6 +432,9 @@ function App() {
             />
 
             {/* Learn and Grow Routes - Additional */}
+            <Route path="programs/:course" element={<Programs />} />
+            <Route path="programs/add" element={<AddProgram />} />
+            <Route path="programs/edit" element={<EditProgram />} />
             <Route path="modules/add" element={<AddModule />} />
             <Route path="modules/edit" element={<EditModule />} />
             <Route
@@ -592,7 +600,13 @@ function App() {
               path="generalResources/category/:category"
               element={<CategoryWithParam />}
             />
-            <Route path="modules/:course" element={<ModuleWithCourse />} />
+            <Route path="modules/:programId" element={<ModuleWithCourse />} />
+
+            {/* Legacy redirect for old module route */}
+            <Route
+              path="learn-and-grow/modules/:moduleId"
+              element={<Navigate to="/dashboard/modules/:moduleId" replace />}
+            />
 
             {/* Quiz Routes */}
             <Route
@@ -622,6 +636,14 @@ function App() {
             <Route
               path="learn-and-grow/quizzes/:moduleId/attempts/:quizId"
               element={<AdminAttempts />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/pending"
+              element={<PendingQuizzes />}
+            />
+            <Route
+              path="learn-and-grow/quizzes/grade/:attemptUuid"
+              element={<GradeQuiz />}
             />
 
             <Route path="messages/:uuid" element={<MessagesWithUuid />} />

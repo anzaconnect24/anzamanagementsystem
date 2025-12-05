@@ -35,6 +35,7 @@ const AdminAttemptsPage = () => {
         getAllAttempts({ quizUuid: quizId, submittedOnly: "true" }),
         getQuizById(quizId),
       ]);
+      console.log("attemptsResult", attemptsResult);
       setAttempts(attemptsResult.data || []);
       setQuiz(quizResult.data);
       setLoading(false);
@@ -176,7 +177,7 @@ const AdminAttemptsPage = () => {
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h3 className="font-bold text-lg">
-                              {attempt.user?.firstname} {attempt.user?.lastname}
+                              {attempt.user?.name}
                             </h3>
 
                             {attempt.isPassed ? (
@@ -201,9 +202,15 @@ const AdminAttemptsPage = () => {
 
                           <div className="grid grid-cols-4 gap-4 text-sm mb-2">
                             <div>
-                              <span className="text-gray-600">Email:</span>
+                              <span className="text-gray-600">Business:</span>
                               <span className="font-medium ml-2">
-                                {attempt.user?.email}
+                                {attempt.user?.Business?.name || "N/A"}
+                              </span>
+                            </div>
+                            <div>
+                              <span className="text-gray-600">Module:</span>
+                              <span className="font-medium ml-2">
+                                {attempt.quiz?.module?.title || "N/A"}
                               </span>
                             </div>
                             <div>
@@ -218,6 +225,14 @@ const AdminAttemptsPage = () => {
                                 {attempt.earnedPoints} / {attempt.totalPoints}
                               </span>
                             </div>
+                          </div>
+                          <div className="grid grid-cols-4 gap-4 text-sm">
+                            <div>
+                              <span className="text-gray-600">Email:</span>
+                              <span className="font-medium ml-2">
+                                {attempt.user?.email}
+                              </span>
+                            </div>
                             <div>
                               <span className="text-gray-600">Submitted:</span>
                               <span className="font-bold ml-2">
@@ -230,7 +245,11 @@ const AdminAttemptsPage = () => {
                         </div>
 
                         <button
-                          onClick={() => loadAttemptDetails(attempt.uuid)}
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/learn-and-grow/quizzes/grade/${attempt.uuid}`
+                            )
+                          }
                           className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                         >
                           <BsEye />

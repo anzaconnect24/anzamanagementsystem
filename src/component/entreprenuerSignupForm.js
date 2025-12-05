@@ -1,4 +1,6 @@
 import { useTranslation } from "../locales";
+import { useState, useEffect } from "react";
+import { getPrograms } from "../controllers/program_controller";
 
 const EntrepreneurSignupForm = ({
   sectors = [],
@@ -6,6 +8,28 @@ const EntrepreneurSignupForm = ({
   setisAlumni,
 }) => {
   const { t } = useTranslation();
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [programs, setPrograms] = useState([]);
+  const [loadingPrograms, setLoadingPrograms] = useState(false);
+
+  const programCategories = [
+    "Ideation",
+    "Business Foundation",
+    "Investment readiness",
+  ];
+
+  useEffect(() => {
+    if (selectedCategory) {
+      setLoadingPrograms(true);
+      getPrograms(1, 100, selectedCategory).then((res) => {
+        setPrograms(res.data || []);
+        setLoadingPrograms(false);
+      });
+    } else {
+      setPrograms([]);
+    }
+  }, [selectedCategory]);
+
   return (
     <div>
       {/* <div className=" text-2xl text-black pt-8 pb-4">Company
@@ -105,55 +129,60 @@ dark:text-white"
             </select>
           </div>
           {isAlumni && (
-            <div>
-              <label
-                className="mb-2.5 block font-medium text-black
-dark:text-white"
-              >
-                {t(
-                  "business.whatProgramDidYouComplete",
-                  "What program did you complete?"
-                )}
-              </label>
-              <select required name="completedProgram" className="form-style">
-                <option>{t("business.selectProgram", "Select program")}</option>
-                <option value="Climate Launchpad">Climate Launchpad</option>
-                <option value="Generation Food">Generation Food</option>
-                <option value="Capacity Building to Kilwa Entrepreneurs">
-                  Capacity Building to Kilwa Entrepreneurs
-                </option>
-                <option value="Female Entrepreneurs Growing Greener Economies">
-                  Female Entrepreneurs Growing Greener Economies
-                </option>
-                <option value="Rapid Banana">Rapid Banana</option>
-                <option value="Restoration Factory Tanzania">
-                  Restoration Factory Tanzania
-                </option>
-                <option value="Capacity Building to Entrepreneurs Focusing on Clean and Renewable Energy in Arusha">
-                  Capacity Building to Entrepreneurs Focusing on Clean and
-                  Renewable Energy in Arusha
-                </option>
-                <option value="Capacity Building for Entrepreneurship and Aquaculture Practices">
-                  Capacity Building for Entrepreneurship and Aquaculture
-                  Practices
-                </option>
-                <option value="Youth Entrepreneurship & Innovation Program">
-                  Youth Entrepreneurship & Innovation Program
-                </option>
-                <option value="Regenerative Economy Accelerator Tanzania">
-                  Regenerative Economy Accelerator Tanzania
-                </option>
-                <option value="Pesatech Accelerator Two">
-                  Pesatech Accelerator Two
-                </option>
-                <option value="Funguo Investment Accelerator">
-                  Funguo Investment Accelerator
-                </option>
-                <option value="AWCE Investment Accelerator">
-                  AWCE Investment Accelerator
-                </option>
-              </select>
-            </div>
+            <>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  {t(
+                    "business.selectProgramCategory",
+                    "Select Program Category"
+                  )}
+                </label>
+                <select
+                  required
+                  name="programCategory"
+                  className="form-style"
+                  value={selectedCategory}
+                  onChange={(e) => setSelectedCategory(e.target.value)}
+                >
+                  <option value="">
+                    {t("business.selectCategory", "Select category")}
+                  </option>
+                  {programCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedCategory && (
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t(
+                      "business.whatProgramDidYouComplete",
+                      "What program did you complete?"
+                    )}
+                  </label>
+                  <select
+                    required
+                    name="completedProgram"
+                    className="form-style"
+                    disabled={loadingPrograms}
+                  >
+                    <option value="">
+                      {loadingPrograms
+                        ? t("common.loading", "Loading...")
+                        : t("business.selectProgram", "Select program")}
+                    </option>
+                    {programs.map((program) => (
+                      <option key={program.uuid} value={program.uuid}>
+                        {program.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+            </>
           )}
           <div>
             <label

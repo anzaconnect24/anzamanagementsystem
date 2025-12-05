@@ -14,7 +14,7 @@ export const UserContext = createContext();
 export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userDetails, setUserDetails] = useState(null);
-  const [hideSidebar, setHideSidebar] = useState(true);
+  const [hideSidebar, setHideSidebar] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const [data, setData] = useState(null);
@@ -58,17 +58,6 @@ export default function DashboardLayout() {
       setTimeout(() => setLoading(false), 2000);
     }
   }, []); // Empty dependency array - only run on mount
-
-  useEffect(() => {
-    if (
-      location.pathname.includes("/slides/") &&
-      !location.pathname.includes("add")
-    ) {
-      setHideSidebar(true);
-    } else {
-      setHideSidebar(false);
-    }
-  }, [location.pathname]);
 
   return (
     <div>

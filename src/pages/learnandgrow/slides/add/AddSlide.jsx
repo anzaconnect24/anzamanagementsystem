@@ -14,7 +14,8 @@ const Page = () => {
   const router = useRouter();
   const [loading, setloading] = useState(false);
   const params = useSearchParams();
-  const uuid = useParams().uuid;
+  const [searchParams] = useSearchParams();
+  const uuid = searchParams.get("uuid");
   const [isFile, setIsFile] = useState(false);
 
   return (

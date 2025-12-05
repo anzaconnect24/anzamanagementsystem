@@ -6,27 +6,30 @@ import Spinner from "../../../../components/spinner";
 import { useTranslation } from "../../../../locales";
 import { useState } from "react";
 import { uploadFile } from "../../../../controllers/file_upload_controller";
-import { createModule } from "../../../../controllers/modules_controller";
+import { addProgram } from "../../../../controllers/program_controller";
 import { useRouter } from "../../../../utils/navigation";
-import { useParams, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
-const Page = () => {
+const AddProgramPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
   const [loading, setloading] = useState(false);
   const [searchParams] = useSearchParams();
-  const programId = searchParams.get("programId");
+  const course = searchParams.get("course");
+
   return (
     <div>
       <Breadcrumb
-        prevLink={`/dashboard/modules/${programId}`}
+        prevLink={`/dashboard/programs/${course}`}
         prevPage={t("common.back", "Back")}
-        pageName={t("modules.newModule", "New module")}
+        pageName={t("programs.newProgram", "New Program")}
       />
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4 ">
+        <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            {t("modules.addNewModule", "Add new module")}
+            {t("programs.addNewProgram", "Add new program for {{course}}", {
+              course: decodeURIComponent(course),
+            })}
           </h4>
           <form
             onSubmit={(e) => {
@@ -37,13 +40,16 @@ const Page = () => {
               uploadFile(formData).then((url) => {
                 const payload = {
                   image: url,
-                  program_uuid: programId,
                   title: e.target.title.value,
                   description: e.target.description.value,
+                  programCategory: decodeURIComponent(course),
                 };
                 console.log("payload", payload);
-                createModule(payload).then((res) => {
-                  router.push(`/dashboard/modules/${programId}`);
+                addProgram(payload).then((res) => {
+                  toast.success(
+                    t("programs.programAdded", "Program added successfully")
+                  );
+                  router.push(`/dashboard/programs/${course}`);
                   setloading(false);
                 });
               });
@@ -52,37 +58,40 @@ const Page = () => {
             <div className="grid grid-cols-2 gap-x-3">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  {t("modules.title", "Title")}
+                  {t("programs.title", "Title")}
                 </label>
                 <input
                   name="title"
+                  required
                   className="w-full rounded border-stroke"
                   placeholder={t(
-                    "modules.enterModuleTitle",
-                    "Enter module title"
+                    "programs.enterProgramTitle",
+                    "Enter program title"
                   )}
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  {t("modules.moduleCoverImage", "Module Cover image")}
+                  {t("programs.programCoverImage", "Program Cover Image")}
                 </label>
                 <input
                   name="image"
                   type="file"
+                  required
                   className="w-full rounded border-stroke"
                 />
               </div>
-              <div className=" col-span-2">
+              <div className="col-span-2">
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  {t("modules.description", "Description")}
+                  {t("programs.description", "Description")}
                 </label>
                 <textarea
                   name="description"
+                  required
                   className="w-full rounded border-stroke"
                   placeholder={t(
-                    "modules.enterModuleDescription",
-                    "Enter module description"
+                    "programs.enterProgramDescription",
+                    "Enter program description"
                   )}
                 />
               </div>
@@ -93,7 +102,11 @@ const Page = () => {
               className="py-3 px-4 mt-4 hover:opacity-95 rounded flex justify-center bg-primary text-white"
             >
               <div>
-                {loading ? <Spinner /> : t("modules.addModule", "Add module")}
+                {loading ? (
+                  <Spinner />
+                ) : (
+                  t("programs.addProgram", "Add Program")
+                )}
               </div>
             </button>
           </form>
@@ -103,4 +116,4 @@ const Page = () => {
   );
 };
 
-export default Page;
+export default AddProgramPage;

@@ -10,11 +10,13 @@ import {
   BsTrash,
   BsEye,
   BsCheckCircle,
+  BsArrowClockwise,
 } from "react-icons/bs";
 import {
   getQuizzesByModule,
   deleteQuiz,
   togglePublishQuiz,
+  getUserAttempts,
 } from "@/controllers/quiz_controller";
 import { getModule } from "@/controllers/modules_controller";
 import { useParams } from "react-router-dom";
@@ -27,10 +29,24 @@ const ModuleQuizzesPage = () => {
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
+  const [userAttempts, setUserAttempts] = useState([]);
   const router = useRouter();
+
+  const isAdmin = ["Admin", "Staff"].includes(userDetails?.role);
 
   useEffect(() => {
     loadData();
+  }, [moduleId, activeTab]);
+
+  // Reload data when component comes back into focus (e.g., after navigating back)
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log("Window focused, reloading data...");
+      loadData();
+    };
+
+    window.addEventListener("focus", handleFocus);
+    return () => window.removeEventListener("focus", handleFocus);
   }, [moduleId]);
 
   const loadData = async () => {
@@ -42,6 +58,18 @@ const ModuleQuizzesPage = () => {
       ]);
       setModule(moduleData);
       setQuizzes(quizzesData.data || []);
+
+      // Load user attempts if not admin
+      if (!isAdmin) {
+        try {
+          const attemptsData = await getUserAttempts();
+          console.log("Loaded user attempts:", attemptsData.data);
+          setUserAttempts(attemptsData.data || []);
+        } catch (error) {
+          console.error("Error loading user attempts:", error);
+          setUserAttempts([]);
+        }
+      }
     } catch (error) {
       console.error("Error loading data:", error);
       toast.error("Failed to load quizzes");
@@ -74,12 +102,35 @@ const ModuleQuizzesPage = () => {
     }
   };
 
-  const isAdmin = ["Admin", "Staff"].includes(userDetails?.role);
+  // Check if user has completed a quiz
+  const getUserLastAttempt = (quizUuid) => {
+    const attempts = userAttempts.filter(
+      (attempt) => attempt.quiz?.uuid === quizUuid && attempt.submittedAt
+    );
+    if (attempts.length === 0) return null;
+    // Return the most recent attempt
+    const lastAttempt = attempts.sort(
+      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+    )[0];
+    console.log(
+      `Quiz ${quizUuid} - Last attempt status:`,
+      lastAttempt.gradingStatus
+    );
+    return lastAttempt;
+  };
 
   const filteredQuizzes = quizzes.filter((quiz) => {
-    if (activeTab === "published") return quiz.isPublished;
-    if (activeTab === "draft") return !quiz.isPublished;
-    return true;
+    if (isAdmin) {
+      if (activeTab === "published") return quiz.isPublished;
+      if (activeTab === "draft") return !quiz.isPublished;
+      return true;
+    } else {
+      // For entrepreneurs
+      if (activeTab === "attempted") {
+        return getUserLastAttempt(quiz.uuid) !== null;
+      }
+      return quiz.isPublished; // Show only published quizzes in "all" tab
+    }
   });
 
   return loading ? (
@@ -87,58 +138,105 @@ const ModuleQuizzesPage = () => {
   ) : (
     <div>
       <Breadcrumb
-        prevLink={`/learn-and-grow/modules/${module?.course}`}
+        prevLink={``}
         pageName={`${module?.title || "Module"} - Quizzes`}
         prevPage="Back to Module"
       />
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Module Quizzes</h1>
-        {isAdmin && (
-          <button
-            onClick={() =>
-              router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}/new`)
-            }
-            className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
-          >
-            <BsPlus size={20} />
-            Create New Quiz
-          </button>
-        )}
+        <div className="flex gap-2">
+          {!isAdmin && (
+            <button
+              onClick={() => {
+                toast.success("Refreshing quiz list...");
+                loadData();
+              }}
+              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
+            >
+              <BsArrowClockwise size={16} />
+              Refresh
+            </button>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() =>
+                router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}/new`)
+              }
+              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
+            >
+              <BsPlus size={20} />
+              Create New Quiz
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Tabs */}
       <div className="flex gap-4 border-b border-black/10 mb-6">
-        <button
-          onClick={() => setActiveTab("all")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "all"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          All Quizzes ({quizzes.length})
-        </button>
-        <button
-          onClick={() => setActiveTab("published")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "published"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Published ({quizzes.filter((q) => q.isPublished).length})
-        </button>
-        <button
-          onClick={() => setActiveTab("draft")}
-          className={`px-4 py-2 font-medium transition-colors ${
-            activeTab === "draft"
-              ? "border-b-2 border-primary text-primary"
-              : "text-gray-500 hover:text-gray-700"
-          }`}
-        >
-          Draft ({quizzes.filter((q) => !q.isPublished).length})
-        </button>
+        {isAdmin ? (
+          <>
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "all"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              All Quizzes ({quizzes.length})
+            </button>
+            <button
+              onClick={() => setActiveTab("published")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "published"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Published ({quizzes.filter((q) => q.isPublished).length})
+            </button>
+            <button
+              onClick={() => setActiveTab("draft")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "draft"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Draft ({quizzes.filter((q) => !q.isPublished).length})
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setActiveTab("all")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "all"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              All Quizzes ({quizzes.filter((q) => q.isPublished).length})
+            </button>
+            <button
+              onClick={() => setActiveTab("attempted")}
+              className={`px-4 py-2 font-medium transition-colors ${
+                activeTab === "attempted"
+                  ? "border-b-2 border-primary text-primary"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Attempted (
+              {
+                quizzes.filter(
+                  (q) => q.isPublished && getUserLastAttempt(q.uuid) !== null
+                ).length
+              }
+              )
+            </button>
+          </>
+        )}
       </div>
 
       {/* Quizzes List */}
@@ -234,25 +332,61 @@ const ModuleQuizzesPage = () => {
                 </div>
               ) : (
                 <div className="flex gap-2">
-                  {quiz.isPublished && (
-                    <button
-                      onClick={() =>
-                        router.push(
-                          `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`
-                        )
+                  {quiz.isPublished &&
+                    (() => {
+                      const lastAttempt = getUserLastAttempt(quiz.uuid);
+
+                      if (lastAttempt) {
+                        // Check if quiz is pending grading
+                        if (lastAttempt.gradingStatus === "pending_grading") {
+                          return (
+                            <button
+                              disabled
+                              className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg cursor-not-allowed"
+                            >
+                              <BsCheckCircle size={16} />
+                              Pending Review
+                            </button>
+                          );
+                        }
+
+                        // Show view results for graded quizzes
+                        return (
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${lastAttempt.uuid}`
+                              )
+                            }
+                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+                          >
+                            <BsCheckCircle size={16} />
+                            View Results
+                          </button>
+                        );
                       }
-                      className="flex-1 bg-primary text-white px-4 py-2 rounded hover:bg-primary/90"
-                    >
-                      Take Quiz
-                    </button>
-                  )}
+
+                      // Show take quiz if no attempts
+                      return (
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`
+                            )
+                          }
+                          className="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                        >
+                          Take Quiz
+                        </button>
+                      );
+                    })()}
                   <button
                     onClick={() =>
                       router.push(
                         `/dashboard/learn-and-grow/quizzes/${moduleId}/my-attempts/${quiz.uuid}`
                       )
                     }
-                    className="flex-1 flex items-center justify-center gap-2 bg-gray-500 text-white px-3 py-2 rounded hover:bg-gray-600"
+                    className="flex-1 flex items-center justify-center gap-2 bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                   >
                     <BsEye size={14} />
                     My Attempts

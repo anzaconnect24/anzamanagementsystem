@@ -17,13 +17,12 @@ import toast from "react-hot-toast";
 import moment from "moment";
 import Image from "@/utils/image";
 import { useTranslation } from "../../../locales";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 
 const Page = ({ params }) => {
   const { t } = useTranslation();
-  const { uuid } = useParams();
   const [modules, setModules] = useState([]);
-  const { userDetails, hideSidebar } = useContext(UserContext);
+  const { userDetails } = useContext(UserContext);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loading, setLoading] = useState(true);
   const [module, setModule] = useState(null);
@@ -31,6 +30,7 @@ const Page = ({ params }) => {
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState("");
   const [progress, setProgress] = useState(0);
+  const { uuid } = useParams();
 
   useEffect(() => {
     loadData();
@@ -38,6 +38,7 @@ const Page = ({ params }) => {
   }, []);
 
   let loadData = () => {
+    console.log("uuid", uuid);
     getSlides({ module_uuid: uuid }).then((res) => {
       console.log(res);
       setModules(res.data);
@@ -79,9 +80,7 @@ const Page = ({ params }) => {
     <div>
       {/* Update breadcrumb to go back to modules page for this course */}
       <Breadcrumb
-        prevLink={`/dashboard/modules/${encodeURIComponent(
-          module?.course || ""
-        )}`}
+        prevLink={``}
         pageName={module.title}
         prevPage={t("learnAndGrow.modules", "Modules")}
       />

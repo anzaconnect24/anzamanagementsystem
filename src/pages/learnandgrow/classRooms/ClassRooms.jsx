@@ -71,7 +71,6 @@ const Page = ({ params }) => {
           return (
             <Link
               key={item.englishKey}
-              href={item.path}
               className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-center  "
             >
               <img className="h-48" src={item.icon} />
@@ -79,12 +78,12 @@ const Page = ({ params }) => {
                 <h1 className="font-bold text-lg">{item.label}</h1>
                 <p className="mb-4">{item.description}</p>
                 <Link
-                  href={`/dashboard/modules/${encodeURIComponent(
+                  href={`/dashboard/programs/${encodeURIComponent(
                     item.englishKey
                   )}`}
                   className="bg-primary px-4 py-2 rounded-lg text-white mt-2"
                 >
-                  {t("learnAndGrow.accessClasses", "Access Classes")}
+                  {t("learnAndGrow.accessPrograms", "Access Programs")}
                 </Link>
               </div>
             </Link>

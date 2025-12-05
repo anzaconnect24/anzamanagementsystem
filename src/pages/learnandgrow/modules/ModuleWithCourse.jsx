@@ -19,7 +19,7 @@ import Pagination from "../../../component/pagination";
 import { useParams } from "react-router-dom";
 
 const Page = ({ params }) => {
-  const { course } = useParams();
+  const { programId } = useParams();
   const [modules, setModules] = useState([]);
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
@@ -32,25 +32,20 @@ const Page = ({ params }) => {
     loadData();
   }, []);
   const loadData = () => {
-    getModules({ course: decodeURIComponent(course), page, limit }).then(
-      (res) => {
-        console.log(res);
-        setModules(res.data);
-        setCount(res.count);
-        setLoading(false);
-      }
-    );
+    getModules({ program_uuid: programId, page, limit }).then((res) => {
+      console.log(res);
+      setModules(res.data);
+      setCount(res.count);
+      setLoading(false);
+    });
   };
   return loading ? (
     <Loader />
   ) : (
     <div>
       <Breadcrumb
-        prevLink={""}
-        pageName={`${decodeURIComponent(course)} ${t(
-          "learnAndGrow.modules",
-          "Modules"
-        )}`}
+        prevLink={"/dashboard/classRooms"}
+        pageName={`${t("learnAndGrow.modules", "Modules")}`}
         prevPage={t("common.back", "Back")}
       />
 
@@ -132,7 +127,7 @@ const Page = ({ params }) => {
                   {["Admin"].includes(userDetails.role) ? (
                     <Link
                       href={`/dashboard/slides/${item.uuid}`}
-                      className="bg-primary px-4 py-2 rounded-lg text-white flex-1 text-center"
+                      className="bg-primary px-4 py-2 whitespace-nowrap rounded-lg text-white flex-1 text-center"
                     >
                       {t("learnAndGrow.manageSlides", "Manage Slides")}
                     </Link>
@@ -189,21 +184,24 @@ const Page = ({ params }) => {
                       {t("common.delete", "Delete")}
                     </button>
                   )}
+
+                  {(percentage === 100 || userDetails.role === "Admin") && (
+                    <Link
+                      href={`/dashboard/learn-and-grow/quizzes/${item.uuid}`}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-2 rounded-lg text-center w-full"
+                    >
+                      {t("learnAndGrow.quizzes", "Quizzes")}
+                    </Link>
+                  )}
                 </div>
                 {/* Quizzes Button */}
-                <Link
-                  href={`/dashboard/learn-and-grow/quizzes/${item.uuid}`}
-                  className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-center w-full"
-                >
-                  📝 {t("learnAndGrow.quizzes", "Quizzess")}
-                </Link>
               </div>
             </div>
           );
         })}
         {["Admin"].includes(userDetails.role) && (
           <Link
-            href={`/dashboard/modules/add/?course=${course}`}
+            href={`/dashboard/modules/add/?programId=${programId}`}
             className="bg-white hover:bg-primary/5 transition-all duration-200 rounded-lg p-5 flex flex-col justify-center items-center border border-black/10 "
           >
             <BsPlus className="text-4xl" />

@@ -2,13 +2,13 @@ import axios from "axios";
 import { server_url } from "../utils/endpoint";
 import { getUser } from "../utils/local_storage";
 
-export const getModules = async ({ course, page, limit, keyword }) => {
+export const getModules = async ({ program_uuid, page, limit, keyword }) => {
   try {
     const user = getUser();
     const response = await axios.get(
-      `${server_url}/modules/?course=${course}&page=${page || 1}&limit=${
-        limit || 8
-      }&keyword=${keyword || ""}`,
+      `${server_url}/modules/?program_uuid=${program_uuid}&page=${
+        page || 1
+      }&limit=${limit || 8}&keyword=${keyword || ""}`,
       {
         headers: {
           "Content-Type": "application/json",
