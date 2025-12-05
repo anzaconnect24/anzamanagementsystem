@@ -144,11 +144,7 @@ const GradeQuiz = () => {
 
   return (
     <div>
-      <Breadcrumb
-        prevLink=""
-        pageName="Grade Quiz Attempt"
-        prevPage="Back"
-      />
+      <Breadcrumb prevLink="" pageName="Grade Quiz Attempt" prevPage="Back" />
 
       {/* Student Info Card */}
       <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6 mb-6">
@@ -231,7 +227,9 @@ const GradeQuiz = () => {
               </div>
 
               {/* Question Text */}
-              <p className="text-gray-700 mb-4">{answer.question.questionText}</p>
+              <p className="text-gray-700 mb-4">
+                {answer.question.questionText}
+              </p>
 
               {/* Answer Section */}
               {isDescription ? (
@@ -349,9 +347,7 @@ const GradeQuiz = () => {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {isSelected && (
-                            <span className="font-bold">→</span>
-                          )}
+                          {isSelected && <span className="font-bold">→</span>}
                           {isCorrectOption && (
                             <BsCheckCircle className="text-green-600" />
                           )}
