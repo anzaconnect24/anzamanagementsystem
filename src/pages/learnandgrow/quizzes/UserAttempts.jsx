@@ -8,8 +8,10 @@ import { getUserAttempts } from "@/controllers/quiz_controller";
 import { getQuizById } from "@/controllers/quiz_controller";
 import { toast } from "react-hot-toast";
 import { BsCheckCircle, BsXCircle, BsClock, BsEye } from "react-icons/bs";
+import { useTranslation } from "@/locales";
 
 const UserAttemptsPage = () => {
+  const { t } = useTranslation();
   const { moduleId, quizId } = useParams();
   const router = useRouter();
 
@@ -34,7 +36,7 @@ const UserAttemptsPage = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error loading attempts:", error);
-      toast.error("Failed to load attempts");
+      toast.error(t("quizzes.failedToLoadQuizzes"));
     }
   };
 
@@ -52,8 +54,8 @@ const UserAttemptsPage = () => {
     <div>
       <Breadcrumb
         prevLink={`/dashboard/learn-and-grow/quizzes/${moduleId}`}
-        pageName="My Quiz Attempts"
-        prevPage="Back to Quizzes"
+        pageName={t("quizzes.myQuizAttempts")}
+        prevPage={t("quizzes.backToQuizzes")}
       />
 
       {/* Summary */}
@@ -62,25 +64,31 @@ const UserAttemptsPage = () => {
 
         <div className="grid grid-cols-4 gap-4">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Total Attempts</p>
+            <p className="text-sm text-gray-600 mb-1">
+              {t("quizzes.totalAttempts")}
+            </p>
             <p className="text-3xl font-bold text-blue-600">
               {attempts.length}
             </p>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Passed</p>
+            <p className="text-sm text-gray-600 mb-1">{t("quizzes.passed")}</p>
             <p className="text-3xl font-bold text-green-600">
               {passedAttempts}
             </p>
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Best Score</p>
+            <p className="text-sm text-gray-600 mb-1">
+              {t("quizzes.bestScore")}
+            </p>
             <p className="text-3xl font-bold text-purple-600">
               {bestScore.toFixed(1)}%
             </p>
           </div>
           <div className="text-center p-4 bg-orange-50 rounded-lg">
-            <p className="text-sm text-gray-600 mb-1">Passing Score</p>
+            <p className="text-sm text-gray-600 mb-1">
+              {t("quizzes.passingScore")}
+            </p>
             <p className="text-3xl font-bold text-orange-600">
               {quiz.passingScore}%
             </p>
@@ -90,13 +98,13 @@ const UserAttemptsPage = () => {
 
       {/* Attempts List */}
       <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-xl font-bold mb-4">Attempt History</h2>
+        <h2 className="text-xl font-bold mb-4">
+          {t("quizzes.attemptHistory")}
+        </h2>
 
         {attempts.length === 0 ? (
           <div className="text-center py-12 border border-black/10 rounded-lg bg-gray-50">
-            <p className="text-gray-500 mb-4">
-              You haven't attempted this quiz yet
-            </p>
+            <p className="text-gray-500 mb-4">{t("quizzes.noAttempts")}</p>
             <button
               onClick={() =>
                 router.push(
@@ -105,7 +113,7 @@ const UserAttemptsPage = () => {
               }
               className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90"
             >
-              Take Quiz Now
+              {t("quizzes.takeQuizNow")}
             </button>
           </div>
         ) : (
@@ -132,47 +140,53 @@ const UserAttemptsPage = () => {
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="font-bold text-lg">
-                          Attempt #{attempts.length - index}
+                          {t("quizzes.attemptNumber", "", {
+                            number: attempts.length - index,
+                          })}
                         </h3>
 
                         {attempt.submittedAt ? (
                           attempt.isPassed ? (
                             <span className="flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
                               <BsCheckCircle />
-                              Passed
+                              {t("quizzes.passed")}
                             </span>
                           ) : (
                             <span className="flex items-center gap-1 bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
                               <BsXCircle />
-                              Not Passed
+                              {t("quizzes.failed")}
                             </span>
                           )
                         ) : (
                           <span className="flex items-center gap-1 bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
                             <BsClock />
-                            In Progress
+                            {t("quizzes.inProgress")}
                           </span>
                         )}
 
                         {hasUngraded && (
                           <span className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
                             <BsClock />
-                            Under Review
+                            {t("quizzes.underReview")}
                           </span>
                         )}
                       </div>
 
                       <div className="grid grid-cols-3 gap-4 text-sm mb-3">
                         <div>
-                          <span className="text-gray-600">Score:</span>
+                          <span className="text-gray-600">
+                            {t("quizzes.score")}
+                          </span>
                           <span className="font-bold ml-2">
                             {attempt.submittedAt
                               ? `${attempt.score?.toFixed(1)}%`
-                              : "Not submitted"}
+                              : t("quizzes.notSubmitted")}
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Points:</span>
+                          <span className="text-gray-600">
+                            {t("quizzes.points")}
+                          </span>
                           <span className="font-bold ml-2">
                             {attempt.earnedPoints || 0} /{" "}
                             {attempt.totalPoints ||
@@ -183,7 +197,9 @@ const UserAttemptsPage = () => {
                           </span>
                         </div>
                         <div>
-                          <span className="text-gray-600">Started:</span>
+                          <span className="text-gray-600">
+                            {t("quizzes.started")}
+                          </span>
                           <span className="font-bold ml-2">
                             {new Date(attempt.startedAt).toLocaleDateString()}
                           </span>
@@ -192,7 +208,7 @@ const UserAttemptsPage = () => {
 
                       {attempt.submittedAt && (
                         <div className="text-sm text-gray-600">
-                          Submitted:{" "}
+                          {t("quizzes.submitted")}{" "}
                           {new Date(attempt.submittedAt).toLocaleString()}
                         </div>
                       )}
@@ -209,7 +225,7 @@ const UserAttemptsPage = () => {
                           className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
                         >
                           <BsEye />
-                          View Results
+                          {t("quizzes.viewResults")}
                         </button>
                       )}
                     </div>

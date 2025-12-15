@@ -10,8 +10,10 @@ import {
 } from "@/controllers/quiz_controller";
 import { toast } from "react-hot-toast";
 import { BsCheckCircle, BsXCircle, BsClock, BsDownload } from "react-icons/bs";
+import { useTranslation } from "@/locales";
 
 const QuizResultPage = () => {
+  const { t } = useTranslation();
   const { moduleId, attemptId } = useParams();
   const router = useRouter();
 
@@ -31,7 +33,7 @@ const QuizResultPage = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error loading attempt:", error);
-      toast.error("Failed to load quiz results");
+      toast.error(t("quizzes.failedToLoadQuiz"));
       router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`);
     }
   };
@@ -40,10 +42,10 @@ const QuizResultPage = () => {
     try {
       setDownloading(true);
       await downloadCertificate(attemptId);
-      toast.success("Certificate downloaded successfully!");
+      toast.success(t("quizzes.downloadCertificate"));
     } catch (error) {
       console.error("Error downloading certificate:", error);
-      toast.error("Failed to download certificate");
+      toast.error(t("quizzes.failedToDownloadCertificate"));
     } finally {
       setDownloading(false);
     }
@@ -60,8 +62,8 @@ const QuizResultPage = () => {
     <div>
       <Breadcrumb
         prevLink={`/dashboard/learn-and-grow/quizzes/${moduleId}`}
-        pageName="Quiz Results"
-        prevPage="Back to Quizzes"
+        pageName={t("quizzes.quizResults")}
+        prevPage={t("quizzes.backToQuizzes")}
       />
 
       {/* Results Header */}
@@ -79,11 +81,13 @@ const QuizResultPage = () => {
           </div>
 
           <h1 className="text-3xl font-bold mb-2">
-            {attempt.isPassed ? "Congratulations! 🎉" : "Quiz Completed"}
+            {attempt.isPassed
+              ? t("quizzes.congratulations")
+              : t("quizzes.tryAgain")}
           </h1>
 
           <p className="text-xl text-gray-600 mb-4">
-            You scored{" "}
+            {t("quizzes.yourScore")}{" "}
             <span className="font-bold text-primary">
               {Number(attempt.score || 0).toFixed(1)}%
             </span>
@@ -92,11 +96,12 @@ const QuizResultPage = () => {
           <div className="inline-block">
             {attempt.isPassed ? (
               <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium">
-                ✓ Passed
+                ✓ {t("quizzes.passed")}
               </span>
             ) : (
               <span className="bg-red-100 text-red-800 px-4 py-2 rounded-full font-medium">
-                ✗ Not Passed (Required: {attempt.quiz.passingScore}%)
+                ✗ {t("quizzes.failed")} ({t("common.required")}:{" "}
+                {attempt.quiz.passingScore}%)
               </span>
             )}
           </div>
@@ -104,17 +109,17 @@ const QuizResultPage = () => {
 
         <div className="grid grid-cols-3 gap-4 pt-6 border-t">
           <div className="text-center">
-            <p className="text-gray-500 text-sm">Total Points</p>
+            <p className="text-gray-500 text-sm">{t("quizzes.totalPoints")}</p>
             <p className="text-2xl font-bold">{attempt.totalPoints}</p>
           </div>
           <div className="text-center">
-            <p className="text-gray-500 text-sm">Points Earned</p>
+            <p className="text-gray-500 text-sm">{t("quizzes.pointsEarned")}</p>
             <p className="text-2xl font-bold text-green-600">
               {attempt.earnedPoints}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-gray-500 text-sm">Questions</p>
+            <p className="text-gray-500 text-sm">{t("common.questions")}</p>
             <p className="text-2xl font-bold">{attempt.answers.length}</p>
           </div>
         </div>
@@ -123,8 +128,7 @@ const QuizResultPage = () => {
           <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
             <p className="text-yellow-800 text-sm">
               <BsClock className="inline mr-2" />
-              Some of your answers are being reviewed by the instructor. Your
-              final score may change.
+              {t("quizzes.answersUnderReview")}
             </p>
           </div>
         )}
@@ -137,7 +141,9 @@ const QuizResultPage = () => {
               className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 disabled:opacity-50"
             >
               <BsDownload />
-              {downloading ? "Downloading..." : "Download Certificate"}
+              {downloading
+                ? t("quizzes.downloading")
+                : t("quizzes.downloadCertificate")}
             </button>
           </div>
         )}
@@ -148,13 +154,13 @@ const QuizResultPage = () => {
         <h2 className="text-xl font-bold mb-4">{attempt.quiz.title}</h2>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div>
-            <span className="text-gray-500">Module:</span>
+            <span className="text-gray-500">{t("quizzes.module")}</span>
             <span className="font-medium ml-2">
               {attempt.quiz.module.title}
             </span>
           </div>
           <div>
-            <span className="text-gray-500">Submitted:</span>
+            <span className="text-gray-500">{t("quizzes.submitted")}</span>
             <span className="font-medium ml-2">
               {new Date(attempt.submittedAt).toLocaleString()}
             </span>

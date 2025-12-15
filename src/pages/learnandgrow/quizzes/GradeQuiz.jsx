@@ -11,8 +11,10 @@ import { getUser } from "../../../utils/local_storage";
 import { useParams } from "react-router-dom";
 import { useRouter } from "../../../utils/navigation";
 import { BsCheckCircle, BsXCircle, BsClock } from "react-icons/bs";
+import { useTranslation } from "@/locales";
 
 const GradeQuiz = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { attemptUuid } = useParams();
   const { userDetails } = useContext(UserContext);
@@ -24,7 +26,7 @@ const GradeQuiz = () => {
   useEffect(() => {
     // Check if user is admin/instructor
     if (userDetails?.role !== "Admin" && userDetails?.role !== "Staff") {
-      toast.error("You don't have permission to access this page");
+      toast.error(t("common.noPermission"));
       router.push("/dashboard");
       return;
     }
@@ -67,7 +69,7 @@ const GradeQuiz = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error loading attempt details:", error);
-      toast.error("Failed to load quiz attempt");
+      toast.error(t("quizzes.failedToLoadQuiz"));
       setLoading(false);
     }
   };
@@ -105,7 +107,7 @@ const GradeQuiz = () => {
       );
 
       if (missingGrades.length > 0) {
-        toast.error("Please grade all description questions before submitting");
+        toast.error(t("quizzes.pleaseAddQuestions"));
         setSubmitting(false);
         return;
       }
@@ -126,13 +128,12 @@ const GradeQuiz = () => {
         { headers: authHeaders() }
       );
 
-      toast.success("Quiz graded successfully! Status updated to 'Graded'");
+      toast.success(t("quizzes.gradingSubmitted"));
       router.back();
     } catch (error) {
       console.error("Error grading quiz:", error);
       toast.error(
-        error.response?.data?.message ||
-          "Failed to grade quiz. Please try again."
+        error.response?.data?.message || t("quizzes.failedToSubmitGrading")
       );
     } finally {
       setSubmitting(false);
@@ -144,7 +145,11 @@ const GradeQuiz = () => {
 
   return (
     <div>
-      <Breadcrumb prevLink="" pageName="Grade Quiz Attempt" prevPage="Back" />
+      <Breadcrumb
+        prevLink=""
+        pageName={t("quizzes.gradeAttempt")}
+        prevPage={t("common.back")}
+      />
 
       {/* Student Info Card */}
       <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6 mb-6">
@@ -152,14 +157,18 @@ const GradeQuiz = () => {
           <div>
             <h1 className="text-2xl font-bold mb-2">{attempt.quiz.title}</h1>
             <p className="text-gray-600 mb-1">
-              <span className="font-medium">Student:</span> {attempt.user.name}
+              <span className="font-medium">{t("quizzes.student")}</span>{" "}
+              {attempt.user.name}
             </p>
             <p className="text-gray-600">
-              <span className="font-medium">Email:</span> {attempt.user.email}
+              <span className="font-medium">{t("quizzes.email")}</span>{" "}
+              {attempt.user.email}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-sm text-gray-500 mb-1">Submitted</p>
+            <p className="text-sm text-gray-500 mb-1">
+              {t("quizzes.submitted")}
+            </p>
             <p className="font-medium">
               {moment(attempt.submittedAt).format("MMM DD, YYYY")}
             </p>
@@ -172,25 +181,27 @@ const GradeQuiz = () => {
         {/* Current Score */}
         <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-200">
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Current Score</p>
+            <p className="text-sm text-gray-600 mb-1">
+              {t("quizzes.currentScore")}
+            </p>
             <p className="text-2xl font-bold text-blue-600">
               {Number(attempt.score || 0).toFixed(1)}%
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Points</p>
+            <p className="text-sm text-gray-600 mb-1">{t("quizzes.points")}</p>
             <p className="text-2xl font-bold">
               {attempt.earnedPoints} / {attempt.totalPoints}
             </p>
           </div>
           <div className="text-center">
-            <p className="text-sm text-gray-600 mb-1">Status</p>
+            <p className="text-sm text-gray-600 mb-1">{t("common.status")}</p>
             <p
               className={`text-lg font-bold ${
                 attempt.isPassed ? "text-green-600" : "text-red-600"
               }`}
             >
-              {attempt.isPassed ? "Passed" : "Not Passed"}
+              {attempt.isPassed ? t("quizzes.passed") : t("quizzes.failed")}
             </p>
           </div>
         </div>
@@ -210,7 +221,7 @@ const GradeQuiz = () => {
               {/* Question Header */}
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-bold text-lg flex items-center gap-2">
-                  Question {index + 1}
+                  {t("quizzes.questionNumber", "", { number: index + 1 })}
                   {answer.isCorrect === true && (
                     <BsCheckCircle className="text-green-600" />
                   )}
@@ -222,7 +233,7 @@ const GradeQuiz = () => {
                   )}
                 </h3>
                 <span className="text-sm font-medium">
-                  {answer.pointsEarned || 0} / {maxPoints} pts
+                  {answer.pointsEarned || 0} / {maxPoints} {t("quizzes.pts")}
                 </span>
               </div>
 
@@ -237,7 +248,7 @@ const GradeQuiz = () => {
                 <div>
                   <div className="bg-gray-50 border rounded-lg p-4 mb-4">
                     <p className="text-sm font-medium text-gray-600 mb-2">
-                      Student's Answer:
+                      {t("quizzes.studentAnswer")}
                     </p>
                     <p className="text-gray-800">{answer.answerText}</p>
                   </div>
@@ -245,7 +256,7 @@ const GradeQuiz = () => {
                   {/* Grading Interface */}
                   <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                     <p className="font-medium mb-3 text-gray-800">
-                      Grade This Answer:
+                      {t("quizzes.gradeThisAnswer")}
                     </p>
 
                     <div className="space-y-3">
@@ -261,7 +272,7 @@ const GradeQuiz = () => {
                             className="w-4 h-4"
                           />
                           <span className="text-green-600 font-medium">
-                            ✓ Correct
+                            ✓ {t("quizzes.correct")}
                           </span>
                         </label>
                         <label className="flex items-center gap-2 cursor-pointer">
@@ -274,7 +285,7 @@ const GradeQuiz = () => {
                             className="w-4 h-4"
                           />
                           <span className="text-red-600 font-medium">
-                            ✗ Incorrect
+                            ✗ {t("quizzes.incorrect")}
                           </span>
                         </label>
                       </div>
@@ -282,7 +293,8 @@ const GradeQuiz = () => {
                       {/* Points Input */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
-                          Points Earned (Max: {maxPoints})
+                          {t("quizzes.pointsEarned")} ({t("common.max")}:{" "}
+                          {maxPoints})
                         </label>
                         <input
                           type="number"
@@ -307,7 +319,7 @@ const GradeQuiz = () => {
                       {/* Feedback Textarea */}
                       <div>
                         <label className="block text-sm font-medium mb-1">
-                          Feedback (Optional)
+                          {t("quizzes.feedbackOptional")}
                         </label>
                         <textarea
                           value={grades[answer.uuid]?.feedback || ""}
@@ -320,7 +332,7 @@ const GradeQuiz = () => {
                           }
                           className="w-full border border-gray-300 rounded-lg px-3 py-2"
                           rows="3"
-                          placeholder="Provide feedback to the student..."
+                          placeholder={t("quizzes.provideFeedback")}
                         />
                       </div>
                     </div>
@@ -354,7 +366,7 @@ const GradeQuiz = () => {
                           <span>{opt.optionText}</span>
                           {isCorrectOption && (
                             <span className="text-xs text-green-600 ml-auto">
-                              (Correct Answer)
+                              ({t("quizzes.correctAnswer")})
                             </span>
                           )}
                         </div>
@@ -368,7 +380,7 @@ const GradeQuiz = () => {
               {!isDescription && answer.feedback && (
                 <div className="mt-4 bg-blue-50 border border-blue-200 rounded-lg p-3">
                   <p className="text-sm font-medium text-blue-900 mb-1">
-                    Feedback:
+                    {t("quizzes.feedback")}
                   </p>
                   <p className="text-sm text-blue-800">{answer.feedback}</p>
                 </div>
@@ -381,11 +393,11 @@ const GradeQuiz = () => {
       {/* Finish Grading Section */}
       <div className="mt-8 bg-white rounded-lg shadow-sm border border-black/10 p-6">
         <div className="mb-4">
-          <h3 className="text-lg font-bold mb-2">Complete Grading</h3>
+          <h3 className="text-lg font-bold mb-2">
+            {t("quizzes.completeGrading")}
+          </h3>
           <p className="text-gray-600 text-sm">
-            Review all your grades above. Once you click "Finish Grading", the
-            quiz status will be updated to "Graded" and the student will be able
-            to view their results with your feedback.
+            {t("quizzes.reviewAllGrades")}
           </p>
         </div>
 
@@ -394,7 +406,7 @@ const GradeQuiz = () => {
             onClick={() => router.back()}
             className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
           >
-            Cancel
+            {t("common.cancel")}
           </button>
           <button
             onClick={handleSubmitGrades}
@@ -423,10 +435,10 @@ const GradeQuiz = () => {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Submitting Grades...
+                {t("quizzes.submittingGrades")}
               </>
             ) : (
-              "Finish Grading"
+              t("quizzes.finishGrading")
             )}
           </button>
         </div>

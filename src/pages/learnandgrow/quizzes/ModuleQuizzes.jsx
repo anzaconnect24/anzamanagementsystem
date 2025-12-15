@@ -21,8 +21,10 @@ import {
 import { getModule } from "@/controllers/modules_controller";
 import { useParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "@/locales";
 
 const ModuleQuizzesPage = () => {
+  const { t } = useTranslation();
   const { moduleId } = useParams();
   const [quizzes, setQuizzes] = useState([]);
   const [module, setModule] = useState(null);
@@ -72,22 +74,22 @@ const ModuleQuizzesPage = () => {
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      toast.error("Failed to load quizzes");
+      toast.error(t("quizzes.failedToLoadQuizzes"));
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (uuid) => {
-    if (!confirm("Are you sure you want to delete this quiz?")) return;
+    if (!confirm(t("quizzes.deleteQuizConfirm"))) return;
 
     try {
       await deleteQuiz(uuid);
-      toast.success("Quiz deleted successfully");
+      toast.success(t("quizzes.quizDeleted"));
       loadData();
     } catch (error) {
       console.error("Error deleting quiz:", error);
-      toast.error("Failed to delete quiz");
+      toast.error(t("quizzes.failedToDeleteQuiz"));
     }
   };
 
@@ -98,7 +100,7 @@ const ModuleQuizzesPage = () => {
       loadData();
     } catch (error) {
       console.error("Error toggling publish:", error);
-      toast.error("Failed to update quiz");
+      toast.error(t("quizzes.failedToUpdateQuiz"));
     }
   };
 
@@ -139,23 +141,25 @@ const ModuleQuizzesPage = () => {
     <div>
       <Breadcrumb
         prevLink={``}
-        pageName={`${module?.title || "Module"} - Quizzes`}
-        prevPage="Back to Module"
+        pageName={`${module?.title || "Module"} - ${t(
+          "quizzes.moduleQuizzes"
+        )}`}
+        prevPage={t("quizzes.backToModule")}
       />
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Module Quizzes</h1>
+        <h1 className="text-2xl font-bold">{t("quizzes.moduleQuizzes")}</h1>
         <div className="flex gap-2">
           {!isAdmin && (
             <button
               onClick={() => {
-                toast.success("Refreshing quiz list...");
+                toast.success(t("common.refresh") + "...");
                 loadData();
               }}
               className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
             >
               <BsArrowClockwise size={16} />
-              Refresh
+              {t("common.refresh")}
             </button>
           )}
           {isAdmin && (
@@ -166,7 +170,7 @@ const ModuleQuizzesPage = () => {
               className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
             >
               <BsPlus size={20} />
-              Create New Quiz
+              {t("quizzes.createQuiz")}
             </button>
           )}
         </div>
@@ -184,7 +188,7 @@ const ModuleQuizzesPage = () => {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              All Quizzes ({quizzes.length})
+              {t("quizzes.allQuizzes")} ({quizzes.length})
             </button>
             <button
               onClick={() => setActiveTab("published")}
@@ -194,7 +198,8 @@ const ModuleQuizzesPage = () => {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Published ({quizzes.filter((q) => q.isPublished).length})
+              {t("quizzes.published")} (
+              {quizzes.filter((q) => q.isPublished).length})
             </button>
             <button
               onClick={() => setActiveTab("draft")}
@@ -204,7 +209,8 @@ const ModuleQuizzesPage = () => {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Draft ({quizzes.filter((q) => !q.isPublished).length})
+              {t("quizzes.draft")} (
+              {quizzes.filter((q) => !q.isPublished).length})
             </button>
           </>
         ) : (
@@ -217,7 +223,8 @@ const ModuleQuizzesPage = () => {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              All Quizzes ({quizzes.filter((q) => q.isPublished).length})
+              {t("quizzes.allQuizzes")} (
+              {quizzes.filter((q) => q.isPublished).length})
             </button>
             <button
               onClick={() => setActiveTab("attempted")}
@@ -227,7 +234,7 @@ const ModuleQuizzesPage = () => {
                   : "text-gray-500 hover:text-gray-700"
               }`}
             >
-              Attempted (
+              {t("quizzes.attempted")} (
               {
                 quizzes.filter(
                   (q) => q.isPublished && getUserLastAttempt(q.uuid) !== null
@@ -242,7 +249,7 @@ const ModuleQuizzesPage = () => {
       {/* Quizzes List */}
       {filteredQuizzes.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border border-black/10 shadow-sm">
-          <p className="text-gray-500 mb-4">No quizzes found</p>
+          <p className="text-gray-500 mb-4">{t("quizzes.noQuizzesFound")}</p>
           {isAdmin && (
             <button
               onClick={() =>
@@ -250,7 +257,7 @@ const ModuleQuizzesPage = () => {
               }
               className="text-primary hover:underline"
             >
-              Create your first quiz
+              {t("quizzes.createFirstQuiz")}
             </button>
           )}
         </div>
@@ -278,23 +285,29 @@ const ModuleQuizzesPage = () => {
 
               <div className="space-y-2 mb-4 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Questions:</span>
+                  <span className="text-gray-500">
+                    {t("quizzes.questions")}:
+                  </span>
                   <span className="font-medium">
                     {quiz.questions?.length || 0}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Passing Score:</span>
+                  <span className="text-gray-500">
+                    {t("quizzes.passingScore")}:
+                  </span>
                   <span className="font-medium">{quiz.passingScore}%</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">Status:</span>
+                  <span className="text-gray-500">{t("common.status")}:</span>
                   <span
                     className={`font-medium ${
                       quiz.isPublished ? "text-green-600" : "text-orange-600"
                     }`}
                   >
-                    {quiz.isPublished ? "Published" : "Draft"}
+                    {quiz.isPublished
+                      ? t("quizzes.published")
+                      : t("quizzes.draft")}
                   </span>
                 </div>
               </div>
@@ -310,7 +323,7 @@ const ModuleQuizzesPage = () => {
                     className="flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 text-sm transition-colors"
                   >
                     <BsPencil size={14} />
-                    Edit
+                    {t("common.edit")}
                   </button>
                   <button
                     onClick={() =>
@@ -321,7 +334,7 @@ const ModuleQuizzesPage = () => {
                     className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 text-sm transition-colors"
                   >
                     <BsEye size={14} />
-                    Attempts
+                    {t("quizzes.viewAttempts")}
                   </button>
                   <button
                     onClick={() => handleDelete(quiz.uuid)}
@@ -345,7 +358,7 @@ const ModuleQuizzesPage = () => {
                               className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg cursor-not-allowed"
                             >
                               <BsCheckCircle size={16} />
-                              Pending Review
+                              {t("quizzes.pendingGrading")}
                             </button>
                           );
                         }
@@ -361,7 +374,7 @@ const ModuleQuizzesPage = () => {
                             className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
                           >
                             <BsCheckCircle size={16} />
-                            View Results
+                            {t("quizzes.viewResult")}
                           </button>
                         );
                       }
@@ -376,7 +389,7 @@ const ModuleQuizzesPage = () => {
                           }
                           className="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
                         >
-                          Take Quiz
+                          {t("quizzes.startQuiz")}
                         </button>
                       );
                     })()}
@@ -389,7 +402,7 @@ const ModuleQuizzesPage = () => {
                     className="flex-1 flex items-center justify-center gap-2 bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors"
                   >
                     <BsEye size={14} />
-                    My Attempts
+                    {t("quizzes.myQuizAttempts")}
                   </button>
                 </div>
               )}

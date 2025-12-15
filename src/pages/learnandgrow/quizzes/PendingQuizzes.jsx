@@ -8,8 +8,11 @@ import { toast } from "react-hot-toast";
 import moment from "moment";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import { server_url } from "../../../utils/endpoint";
+import { getUser } from "../../../utils/local_storage";
+import { useTranslation } from "@/locales";
 
 const PendingQuizzes = () => {
+  const { t } = useTranslation();
   const router = useRouter();
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
@@ -20,7 +23,7 @@ const PendingQuizzes = () => {
   useEffect(() => {
     // Check if user is admin/instructor
     if (userDetails?.role !== "Admin" && userDetails?.role !== "Instructor") {
-      toast.error("You don't have permission to access this page");
+      toast.error(t("common.noPermission"));
       router.push("/dashboard");
       return;
     }
@@ -46,7 +49,7 @@ const PendingQuizzes = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error loading pending quizzes:", error);
-      toast.error("Failed to load pending quizzes");
+      toast.error(t("quizzes.failedToLoadQuizzes"));
       setLoading(false);
     }
   };
@@ -61,21 +64,21 @@ const PendingQuizzes = () => {
     <div>
       <Breadcrumb
         prevLink="/dashboard"
-        pageName="Pending Quiz Grading"
-        prevPage="Dashboard"
+        pageName={t("quizzes.pendingGrading")}
+        prevPage={t("common.dashboard")}
       />
 
       <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold">
-            Quizzes Pending Grading ({pendingAttempts.length})
+            {t("quizzes.quizzesAwaitingGrading")} ({pendingAttempts.length})
           </h2>
         </div>
 
         {pendingAttempts.length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">
-              No quizzes pending grading at the moment.
+              {t("quizzes.noPendingQuizzes")}
             </p>
           </div>
         ) : (
@@ -83,11 +86,17 @@ const PendingQuizzes = () => {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
-                  <th className="text-left py-3 px-4">Student</th>
-                  <th className="text-left py-3 px-4">Quiz</th>
-                  <th className="text-left py-3 px-4">Module</th>
-                  <th className="text-left py-3 px-4">Submitted</th>
-                  <th className="text-center py-3 px-4">Action</th>
+                  <th className="text-left py-3 px-4">
+                    {t("quizzes.student")}
+                  </th>
+                  <th className="text-left py-3 px-4">{t("quizzes.quiz")}</th>
+                  <th className="text-left py-3 px-4">{t("quizzes.module")}</th>
+                  <th className="text-left py-3 px-4">
+                    {t("quizzes.submittedOn")}
+                  </th>
+                  <th className="text-center py-3 px-4">
+                    {t("common.action")}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -113,7 +122,7 @@ const PendingQuizzes = () => {
                       )}
                     </td>
                     <td className="py-4 px-4">
-                      <p>{attempt.quiz.module?.title || "N/A"}</p>
+                      <p>{attempt.quiz.module?.title || t("common.na")}</p>
                     </td>
                     <td className="py-4 px-4">
                       <p className="text-sm">
@@ -130,7 +139,7 @@ const PendingQuizzes = () => {
                         onClick={() => handleGrade(attempt.uuid)}
                         className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                       >
-                        Grade Quiz
+                        {t("quizzes.grade")}
                       </button>
                     </td>
                   </tr>
@@ -148,17 +157,17 @@ const PendingQuizzes = () => {
               disabled={page === 1}
               className="px-4 py-2 border rounded disabled:opacity-50"
             >
-              Previous
+              {t("common.previous")}
             </button>
             <span className="px-4 py-2">
-              Page {page} of {totalPages}
+              {t("common.page")} {page} {t("common.of")} {totalPages}
             </span>
             <button
               onClick={() => setPage(page + 1)}
               disabled={page === totalPages}
               className="px-4 py-2 border rounded disabled:opacity-50"
             >
-              Next
+              {t("common.next")}
             </button>
           </div>
         )}

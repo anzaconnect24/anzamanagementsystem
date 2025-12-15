@@ -49,11 +49,12 @@ const ProgramsPage = () => {
         prevPage={t("common.back", "Back")}
       />
 
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">
+      <div className="flex justify-end items-center mb-4">
+        {/* <h1 className="text-2xl font-bold">
           {t("learnAndGrow.programs", "Programs")}
-        </h1>
-        {["Admin"].includes(userDetails.role) && (
+        </h1> */}
+
+        {/* {["Admin"].includes(userDetails.role) && (
           <Link
             href={`/dashboard/programs/add/?course=${course}`}
             className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2"
@@ -61,7 +62,7 @@ const ProgramsPage = () => {
             <BsPlus className="text-xl" />
             {t("learnAndGrow.addProgram", "Add Program")}
           </Link>
-        )}
+        )} */}
       </div>
 
       <div className="grid grid-cols-3 gap-6 pt-4">

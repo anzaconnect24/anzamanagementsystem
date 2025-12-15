@@ -12,8 +12,10 @@ import {
 } from "@/controllers/quiz_controller";
 import { toast } from "react-hot-toast";
 import { BsCheckCircle, BsXCircle, BsClock, BsEye } from "react-icons/bs";
+import { useTranslation } from "@/locales";
 
 const AdminAttemptsPage = () => {
+  const { t } = useTranslation();
   const { moduleId, quizId } = useParams();
   const router = useRouter();
 
@@ -41,7 +43,7 @@ const AdminAttemptsPage = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error loading attempts:", error);
-      toast.error("Failed to load attempts");
+      toast.error(t("quizzes.failedToLoadQuizzes"));
     }
   };
 
@@ -64,7 +66,7 @@ const AdminAttemptsPage = () => {
       setMarkingAnswers(markingState);
     } catch (error) {
       console.error("Error loading attempt details:", error);
-      toast.error("Failed to load attempt details");
+      toast.error(t("quizzes.failedToLoadQuiz"));
     }
   };
 
@@ -74,13 +76,13 @@ const AdminAttemptsPage = () => {
     try {
       setSaving(true);
       await markDescriptionAnswer(answerUuid, marking);
-      toast.success("Answer marked successfully");
+      toast.success(t("quizzes.gradingSubmitted"));
 
       // Reload attempt details
       await loadAttemptDetails(selectedAttempt.uuid);
     } catch (error) {
       console.error("Error marking answer:", error);
-      toast.error("Failed to mark answer");
+      toast.error(t("quizzes.failedToSubmitGrading"));
     } finally {
       setSaving(false);
     }
@@ -110,8 +112,8 @@ const AdminAttemptsPage = () => {
     <div>
       <Breadcrumb
         prevLink={`/dashboard/learn-and-grow/quizzes/${moduleId}`}
-        pageName="Quiz Submissions"
-        prevPage="Back to Quizzes"
+        pageName={t("quizzes.allQuizAttempts")}
+        prevPage={t("quizzes.backToQuizzes")}
       />
 
       {!selectedAttempt ? (
@@ -119,18 +121,22 @@ const AdminAttemptsPage = () => {
           {/* Summary */}
           <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6 mb-6">
             <h1 className="text-2xl font-bold mb-4">
-              {quiz.title} - All Submissions
+              {quiz.title} - {t("quizzes.allQuizAttempts")}
             </h1>
 
             <div className="grid grid-cols-3 gap-4">
               <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Total Submissions</p>
+                <p className="text-sm text-gray-600 mb-1">
+                  {t("quizzes.allQuizAttempts")}
+                </p>
                 <p className="text-3xl font-bold text-blue-600">
                   {attempts.length}
                 </p>
               </div>
               <div className="text-center p-4 bg-yellow-50 rounded-lg">
-                <p className="text-sm text-gray-600 mb-1">Needs Grading</p>
+                <p className="text-sm text-gray-600 mb-1">
+                  {t("quizzes.pendingGrading")}
+                </p>
                 <p className="text-3xl font-bold text-yellow-600">
                   {ungradedCount}
                 </p>
@@ -153,11 +159,13 @@ const AdminAttemptsPage = () => {
 
           {/* Submissions List */}
           <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6">
-            <h2 className="text-xl font-bold mb-4">Student Submissions</h2>
+            <h2 className="text-xl font-bold mb-4">
+              {t("quizzes.allQuizAttempts")}
+            </h2>
 
             {attempts.length === 0 ? (
               <div className="text-center py-12">
-                <p className="text-gray-500">No submissions yet</p>
+                <p className="text-gray-500">{t("quizzes.noAttemptsFound")}</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -183,44 +191,52 @@ const AdminAttemptsPage = () => {
                             {attempt.isPassed ? (
                               <span className="flex items-center gap-1 bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm">
                                 <BsCheckCircle />
-                                Passed
+                                {t("quizzes.passed")}
                               </span>
                             ) : (
                               <span className="flex items-center gap-1 bg-red-100 text-red-800 px-3 py-1 rounded-full text-sm">
                                 <BsXCircle />
-                                Not Passed
+                                {t("quizzes.failed")}
                               </span>
                             )}
 
                             {hasUngraded && (
                               <span className="flex items-center gap-1 bg-yellow-100 text-yellow-800 px-3 py-1 rounded-full text-sm">
                                 <BsClock />
-                                Needs Grading
+                                {t("quizzes.pendingGrading")}
                               </span>
                             )}
                           </div>
 
                           <div className="grid grid-cols-4 gap-4 text-sm mb-2">
                             <div>
-                              <span className="text-gray-600">Business:</span>
+                              <span className="text-gray-600">
+                                {t("quizzes.business")}:
+                              </span>
                               <span className="font-medium ml-2">
-                                {attempt.user?.Business?.name || "N/A"}
+                                {attempt.user?.Business?.name || t("common.na")}
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-600">Module:</span>
+                              <span className="text-gray-600">
+                                {t("quizzes.module")}:
+                              </span>
                               <span className="font-medium ml-2">
-                                {attempt.quiz?.module?.title || "N/A"}
+                                {attempt.quiz?.module?.title || t("common.na")}
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-600">Score:</span>
+                              <span className="text-gray-600">
+                                {t("quizzes.score")}:
+                              </span>
                               <span className="font-bold ml-2">
                                 {Number(attempt.score || 0).toFixed(1)}%
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-600">Points:</span>
+                              <span className="text-gray-600">
+                                {t("quizzes.points")}:
+                              </span>
                               <span className="font-bold ml-2">
                                 {attempt.earnedPoints} / {attempt.totalPoints}
                               </span>
@@ -228,13 +244,17 @@ const AdminAttemptsPage = () => {
                           </div>
                           <div className="grid grid-cols-4 gap-4 text-sm">
                             <div>
-                              <span className="text-gray-600">Email:</span>
+                              <span className="text-gray-600">
+                                {t("common.email")}:
+                              </span>
                               <span className="font-medium ml-2">
                                 {attempt.user?.email}
                               </span>
                             </div>
                             <div>
-                              <span className="text-gray-600">Submitted:</span>
+                              <span className="text-gray-600">
+                                {t("quizzes.submittedOn")}:
+                              </span>
                               <span className="font-bold ml-2">
                                 {new Date(
                                   attempt.submittedAt
@@ -253,7 +273,7 @@ const AdminAttemptsPage = () => {
                           className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
                         >
                           <BsEye />
-                          Review & Grade
+                          {t("quizzes.grade")}
                         </button>
                       </div>
                     </div>
@@ -271,18 +291,18 @@ const AdminAttemptsPage = () => {
               <div>
                 <h1 className="text-2xl font-bold mb-2">
                   {selectedAttempt.user?.firstname}{" "}
-                  {selectedAttempt.user?.lastname}'s Submission
+                  {selectedAttempt.user?.lastname}'s {t("quizzes.quiz")}
                 </h1>
                 <p className="text-gray-600">
-                  Score:{" "}
+                  {t("quizzes.score")}:{" "}
                   <span className="font-bold">
                     {Number(selectedAttempt.score || 0).toFixed(1)}%
                   </span>{" "}
-                  | Points:{" "}
+                  | {t("quizzes.points")}:{" "}
                   <span className="font-bold">
                     {selectedAttempt.earnedPoints}/{selectedAttempt.totalPoints}
                   </span>{" "}
-                  | Status:{" "}
+                  | {t("common.status")}:{" "}
                   <span
                     className={`font-bold ${
                       selectedAttempt.isPassed
@@ -290,7 +310,9 @@ const AdminAttemptsPage = () => {
                         : "text-red-600"
                     }`}
                   >
-                    {selectedAttempt.isPassed ? "Passed" : "Not Passed"}
+                    {selectedAttempt.isPassed
+                      ? t("quizzes.passed")
+                      : t("quizzes.failed")}
                   </span>
                 </p>
               </div>
@@ -298,7 +320,7 @@ const AdminAttemptsPage = () => {
                 onClick={() => setSelectedAttempt(null)}
                 className="bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
               >
-                Back to List
+                {t("common.back")}
               </button>
             </div>
           </div>
@@ -309,7 +331,7 @@ const AdminAttemptsPage = () => {
               <div key={answer.uuid} className="bg-white rounded-lg shadow p-6">
                 <div className="flex justify-between items-start mb-4">
                   <h3 className="font-bold text-lg">
-                    Question {index + 1}
+                    {t("quizzes.question")} {index + 1}
                     {answer.isCorrect === true && (
                       <BsCheckCircle className="inline ml-2 text-green-600" />
                     )}
@@ -321,7 +343,8 @@ const AdminAttemptsPage = () => {
                     )}
                   </h3>
                   <span className="text-sm font-medium">
-                    {answer.pointsEarned} / {answer.question.points} pts
+                    {answer.pointsEarned} / {answer.question.points}{" "}
+                    {t("quizzes.points")}
                   </span>
                 </div>
 
@@ -333,14 +356,16 @@ const AdminAttemptsPage = () => {
                   <div>
                     <div className="bg-gray-50 border rounded p-4 mb-4">
                       <p className="text-sm font-medium text-gray-600 mb-2">
-                        Student's Answer:
+                        {t("quizzes.yourAnswer")}:
                       </p>
                       <p className="text-gray-800">{answer.answerText}</p>
                     </div>
 
                     {answer.isCorrect === null ? (
                       <div className="bg-yellow-50 border border-yellow-200 rounded p-4">
-                        <p className="font-medium mb-3">Grade This Answer:</p>
+                        <p className="font-medium mb-3">
+                          {t("quizzes.grade")}:
+                        </p>
 
                         <div className="space-y-3">
                           <div className="flex items-center gap-4">
@@ -357,7 +382,7 @@ const AdminAttemptsPage = () => {
                                 className="w-4 h-4"
                               />
                               <span className="text-green-600 font-medium">
-                                Correct
+                                {t("quizzes.correct")}
                               </span>
                             </label>
                             <label className="flex items-center gap-2">
@@ -373,14 +398,15 @@ const AdminAttemptsPage = () => {
                                 className="w-4 h-4"
                               />
                               <span className="text-red-600 font-medium">
-                                Incorrect
+                                {t("quizzes.incorrect")}
                               </span>
                             </label>
                           </div>
 
                           <div>
                             <label className="block text-sm font-medium mb-1">
-                              Points (Max: {answer.question.points})
+                              {t("quizzes.points")} ({t("common.max")}:{" "}
+                              {answer.question.points})
                             </label>
                             <input
                               type="number"
@@ -402,7 +428,7 @@ const AdminAttemptsPage = () => {
 
                           <div>
                             <label className="block text-sm font-medium mb-1">
-                              Feedback (Optional)
+                              {t("quizzes.feedback")}
                             </label>
                             <textarea
                               value={
@@ -417,7 +443,7 @@ const AdminAttemptsPage = () => {
                               }
                               className="w-full border rounded px-3 py-2"
                               rows="3"
-                              placeholder="Provide feedback to the student..."
+                              placeholder={t("quizzes.provideFeedback")}
                             />
                           </div>
 
@@ -426,7 +452,9 @@ const AdminAttemptsPage = () => {
                             disabled={saving}
                             className="bg-primary text-white px-6 py-2 rounded hover:bg-primary/90 disabled:opacity-50"
                           >
-                            {saving ? "Saving..." : "Save Grade"}
+                            {saving
+                              ? t("common.saving")
+                              : t("quizzes.submitGrading")}
                           </button>
                         </div>
                       </div>
@@ -439,13 +467,15 @@ const AdminAttemptsPage = () => {
                         } border rounded p-4`}
                       >
                         <p className="font-medium mb-2">
-                          Graded:{" "}
-                          {answer.isCorrect ? "✓ Correct" : "✗ Incorrect"}
+                          {t("quizzes.autoGraded")}:{" "}
+                          {answer.isCorrect
+                            ? `✓ ${t("quizzes.correct")}`
+                            : `✗ ${t("quizzes.incorrect")}`}
                         </p>
                         {answer.feedback && (
                           <div>
                             <p className="text-sm font-medium mb-1">
-                              Feedback:
+                              {t("quizzes.feedback")}:
                             </p>
                             <p className="text-sm">{answer.feedback}</p>
                           </div>
@@ -474,7 +504,7 @@ const AdminAttemptsPage = () => {
                           {opt.optionText}
                           {opt.isCorrect && (
                             <span className="text-xs text-green-600 ml-2">
-                              (Correct)
+                              ({t("quizzes.correctAnswer")})
                             </span>
                           )}
                         </div>

@@ -7,6 +7,7 @@ import { headers } from "../../../utils/headers";
 import { BsArrowLeft, BsUpload } from "react-icons/bs";
 import Spinner from "../../../components/spinner";
 import { useTranslation } from "../../../locales";
+import { createProgramApplication } from "../../../controllers/programApplication_controller";
 
 const NewProgramsApplication = () => {
   const navigate = useNavigate();
@@ -153,32 +154,31 @@ const NewProgramsApplication = () => {
 
       console.log("Submitting form data:", finalFormData);
 
-      const response = await axios.post(
-        `${server_url}/programs`,
-        finalFormData,
-        {
-          headers: headers,
-        }
-      );
+      const response = await createProgramApplication(finalFormData);
 
-      if (response.data.status) {
+      if (response.success) {
         // Clean up the preview URL
         if (formData.image && formData.image.startsWith("blob:")) {
           URL.revokeObjectURL(formData.image);
         }
-        navigate("/programsApplications");
+        alert(
+          t(
+            "programs.programCreatedSuccessfully",
+            "Program application created successfully!"
+          )
+        );
+        navigate("/dashboard/programsApplications");
       } else {
         alert(
           t("programs.failedToCreateProgram", "Failed to create program: ") +
-            (response.data.message ||
-              t("programs.unknownError", "Unknown error"))
+            (response.message || t("programs.unknownError", "Unknown error"))
         );
       }
     } catch (error) {
       console.error("Error creating program:", error);
       alert(
         t("programs.errorCreatingProgram", "Error creating program: ") +
-          error.message
+          (error.message || error)
       );
     } finally {
       setLoading(false);

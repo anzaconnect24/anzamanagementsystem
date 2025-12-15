@@ -10,8 +10,10 @@ import {
   submitQuiz,
 } from "@/controllers/quiz_controller";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "@/locales";
 
 const TakeQuizPage = () => {
+  const { t } = useTranslation();
   const { moduleId, quizId } = useParams();
   const router = useRouter();
 
@@ -40,7 +42,7 @@ const TakeQuizPage = () => {
       setLoading(false);
     } catch (error) {
       console.error("Error loading quiz:", error);
-      toast.error("Failed to load quiz");
+      toast.error(t("quizzes.failedToLoadQuiz"));
       router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`);
     }
   };
@@ -62,16 +64,14 @@ const TakeQuizPage = () => {
 
     if (unansweredQuestions.length > 0) {
       toast.error(
-        `Please answer all questions (${unansweredQuestions.length} remaining)`
+        t("quizzes.answerAllQuestions", "", {
+          count: unansweredQuestions.length,
+        })
       );
       return;
     }
 
-    if (
-      !confirm(
-        "Are you sure you want to submit? You cannot change your answers after submission."
-      )
-    ) {
+    if (!confirm(t("quizzes.submitConfirm"))) {
       return;
     }
 
@@ -100,12 +100,10 @@ const TakeQuizPage = () => {
       const gradingStatus = result.data.gradingStatus;
 
       if (gradingStatus === "pending_grading") {
-        toast.success(
-          "Quiz submitted successfully! Your answers will be reviewed by an instructor."
-        );
+        toast.success(t("quizzes.quizSubmittedForReview"));
         router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`);
       } else {
-        toast.success("Quiz submitted successfully!");
+        toast.success(t("quizzes.quizSubmittedSuccess"));
         // Navigate to results page
         router.push(
           `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${attemptUuid}`
@@ -113,7 +111,7 @@ const TakeQuizPage = () => {
       }
     } catch (error) {
       console.error("Error submitting quiz:", error);
-      toast.error("Failed to submit quiz");
+      toast.error(t("quizzes.failedToSubmitQuiz"));
     } finally {
       setSubmitting(false);
     }
@@ -143,7 +141,7 @@ const TakeQuizPage = () => {
       <Breadcrumb
         prevLink={`/dashboard/learn-and-grow/quizzes/${moduleId}`}
         pageName={quiz.title}
-        prevPage="Back to Quizzes"
+        prevPage={t("quizzes.backToQuizzes")}
       />
 
       {/* Quiz Header */}
@@ -155,17 +153,19 @@ const TakeQuizPage = () => {
 
         <div className="flex gap-6 text-sm">
           <div>
-            <span className="text-gray-500">Total Questions:</span>
+            <span className="text-gray-500">
+              {t("quizzes.totalQuestions")}:
+            </span>
             <span className="font-medium ml-2">{quiz.questions.length}</span>
           </div>
           <div>
-            <span className="text-gray-500">Passing Score:</span>
+            <span className="text-gray-500">{t("quizzes.passingScore")}:</span>
             <span className="font-medium ml-2">{quiz.passingScore}%</span>
           </div>
           <div>
-            <span className="text-gray-500">Progress:</span>
+            <span className="text-gray-500">{t("quizzes.progress")}:</span>
             <span className="font-medium ml-2">
-              {answeredCount} / {quiz.questions.length} answered
+              {answeredCount} / {quiz.questions.length} {t("quizzes.answered")}
             </span>
           </div>
         </div>
@@ -177,13 +177,16 @@ const TakeQuizPage = () => {
           <div key={question.uuid} className="bg-white rounded-lg shadow p-6">
             <div className="flex justify-between items-start mb-4">
               <h3 className="font-bold text-lg">
-                Question {index + 1}
+                {t("quizzes.question")} {index + 1}
                 {answers[question.uuid] && (
                   <span className="ml-2 text-green-500 text-sm">✓</span>
                 )}
               </h3>
               <span className="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded">
-                {question.points} {question.points === 1 ? "point" : "points"}
+                {question.points}{" "}
+                {question.points === 1
+                  ? t("quizzes.point")
+                  : t("quizzes.points")}
               </span>
             </div>
 
@@ -251,7 +254,7 @@ const TakeQuizPage = () => {
                 }
                 className="w-full border rounded-lg px-4 py-3"
                 rows="5"
-                placeholder="Type your answer here..."
+                placeholder={t("quizzes.yourAnswer")}
               />
             )}
           </div>
@@ -263,13 +266,15 @@ const TakeQuizPage = () => {
         <div className="flex justify-between items-center">
           <div className="text-sm text-gray-600">
             <p>
-              <span className="font-medium">{answeredCount}</span> of{" "}
+              <span className="font-medium">{answeredCount}</span>{" "}
+              {t("common.of")}{" "}
               <span className="font-medium">{quiz.questions.length}</span>{" "}
-              questions answered
+              {t("quizzes.questions")} {t("quizzes.answered")}
             </p>
             {answeredCount < quiz.questions.length && (
               <p className="text-orange-600">
-                {quiz.questions.length - answeredCount} question(s) remaining
+                {quiz.questions.length - answeredCount} {t("quizzes.question")}
+                (s) {t("common.remaining")}
               </p>
             )}
           </div>
@@ -279,7 +284,7 @@ const TakeQuizPage = () => {
             disabled={submitting || answeredCount < quiz.questions.length}
             className="bg-primary text-white px-8 py-3 rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
           >
-            {submitting ? "Submitting..." : "Submit Quiz"}
+            {submitting ? t("quizzes.submitting") : t("quizzes.submitQuiz")}
           </button>
         </div>
       </div>

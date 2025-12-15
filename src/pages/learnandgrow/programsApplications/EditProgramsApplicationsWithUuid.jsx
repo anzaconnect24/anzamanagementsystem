@@ -8,6 +8,10 @@ import { BsArrowLeft, BsUpload } from "react-icons/bs";
 import Spinner from "@/components/spinner";
 import { useRouter } from "../../../utils/navigation";
 import { useParams } from "react-router-dom";
+import {
+  getProgramApplicationByUuid,
+  updateProgramApplication,
+} from "../../../controllers/programApplication_controller";
 
 const EditProgram = () => {
   const router = useRouter();
@@ -27,28 +31,26 @@ const EditProgram = () => {
   useEffect(() => {
     const fetchProgram = async () => {
       try {
-        const response = await axios.get(`${server_url}/programs/${uuid}`, {
-          headers: headers,
-        });
+        const response = await getProgramApplicationByUuid(uuid);
 
-        if (response.data.status) {
+        if (response.success) {
           setFormData({
-            title: response.data.body.title || "",
-            description: response.data.body.description || "",
-            url: response.data.body.url || "",
-            image: response.data.body.image || "",
-            expireDate: response.data.body.expireDate
-              ? response.data.body.expireDate.split("T")[0]
+            title: response.data.title || "",
+            description: response.data.description || "",
+            url: response.data.url || "",
+            image: response.data.image || "",
+            expireDate: response.data.expireDate
+              ? response.data.expireDate.split("T")[0]
               : "",
           });
         } else {
           alert("Failed to fetch program details");
-          router.push("/programsApplications");
+          router.push("/dashboard/programsApplications");
         }
       } catch (error) {
         console.error("Error fetching program:", error);
         alert("Error fetching program details");
-        router.push("/programsApplications");
+        router.push("/dashboard/programsApplications");
       } finally {
         setFetching(false);
       }
@@ -158,20 +160,17 @@ const EditProgram = () => {
 
     try {
       setLoading(true);
-      const response = await axios.patch(
-        `${server_url}/programs/${uuid}`,
-        formData,
-        { headers: headers }
-      );
+      const response = await updateProgramApplication(uuid, formData);
 
-      if (response.data.status) {
+      if (response.success) {
+        alert("Program application updated successfully!");
         router.push("/programsApplications");
       } else {
-        alert("Failed to update program");
+        alert("Failed to update program application");
       }
     } catch (error) {
       console.error("Error updating program:", error);
-      alert("Error updating program");
+      alert("Error updating program application: " + (error.message || error));
     } finally {
       setLoading(false);
     }
@@ -190,7 +189,7 @@ const EditProgram = () => {
       {/* Header */}
       <div className="mb-8">
         <Link
-          href="/programsApplications"
+          href="/dashboard/programsApplications"
           className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-800 mb-4"
         >
           <BsArrowLeft />

@@ -272,3 +272,48 @@ export const bulkMarkAnswers = async (answers) => {
     throw error.response?.data || error;
   }
 };
+
+// Program Completion and Certificates
+export const checkProgramCompletion = async (programUuid) => {
+  try {
+    const response = await axios.get(
+      `${server_url}/quiz/programs/${programUuid}/completion`,
+      {
+        headers: authHeaders(),
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error.response?.data || error;
+  }
+};
+
+export const downloadProgramCertificate = async (programUuid, programTitle) => {
+  try {
+    const response = await axios.get(
+      `${server_url}/quiz/programs/${programUuid}/certificate`,
+      {
+        headers: authHeaders(),
+        responseType: "blob",
+      }
+    );
+
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute(
+      "download",
+      `${programTitle || "Program"}_Certificate.pdf`
+    );
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    throw error.response?.data || error;
+  }
+};

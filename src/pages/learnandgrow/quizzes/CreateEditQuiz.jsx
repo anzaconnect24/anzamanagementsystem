@@ -15,8 +15,10 @@ import {
 } from "@/controllers/quiz_controller";
 import { getModule } from "@/controllers/modules_controller";
 import { toast } from "react-hot-toast";
+import { useTranslation } from "@/locales";
 
 const CreateEditQuizPage = () => {
+  const { t } = useTranslation();
   const { moduleId, quizId } = useParams();
   const router = useRouter();
   const isEdit = !!quizId;
@@ -68,13 +70,13 @@ const CreateEditQuizPage = () => {
       }
     } catch (error) {
       console.error("Error loading data:", error);
-      toast.error("Failed to load data");
+      toast.error(t("quizzes.failedToLoadQuiz"));
     }
   };
 
   const handleQuizSubmit = async () => {
     if (!quizData.title.trim()) {
-      toast.error("Please enter a quiz title");
+      toast.error(t("quizzes.pleaseAddTitle"));
       return;
     }
 
@@ -82,17 +84,21 @@ const CreateEditQuizPage = () => {
       setSaving(true);
       if (isEdit) {
         await updateQuiz(quizId, quizData);
-        toast.success("Quiz updated successfully");
+        toast.success(t("quizzes.quizUpdated"));
       } else {
         const result = await createQuiz({ ...quizData, moduleId });
-        toast.success("Quiz created successfully");
+        toast.success(t("quizzes.quizCreated"));
         router.push(
           `/dashboard/learn-and-grow/quizzes/${moduleId}/edit/${result.data.uuid}`
         );
       }
     } catch (error) {
       console.error("Error saving quiz:", error);
-      toast.error("Failed to save quiz");
+      toast.error(
+        isEdit
+          ? t("quizzes.failedToUpdateQuiz")
+          : t("quizzes.failedToCreateQuiz")
+      );
     } finally {
       setSaving(false);
     }
@@ -148,28 +154,28 @@ const CreateEditQuizPage = () => {
 
   const handleSaveQuestion = async () => {
     if (!currentQuestion.questionText.trim()) {
-      toast.error("Please enter a question");
+      toast.error(t("quizzes.enterQuestionText"));
       return;
     }
 
     if (currentQuestion.questionType !== "description") {
       if (currentQuestion.options.length < 2) {
-        toast.error("Please add at least 2 options");
+        toast.error(t("quizzes.pleaseAddQuestions"));
         return;
       }
       if (!currentQuestion.options.some((opt) => opt.isCorrect)) {
-        toast.error("Please mark at least one correct answer");
+        toast.error(t("quizzes.pleaseAddQuestions"));
         return;
       }
       if (currentQuestion.options.some((opt) => !opt.optionText.trim())) {
-        toast.error("Please fill in all option texts");
+        toast.error(t("quizzes.pleaseAddQuestions"));
         return;
       }
     }
 
     try {
       if (!isEdit) {
-        toast.error("Please save the quiz first before adding questions");
+        toast.error(t("quizzes.pleaseAddTitle"));
         return;
       }
 
@@ -179,11 +185,11 @@ const CreateEditQuizPage = () => {
         // Update existing question
         const question = questions[editingQuestionIndex];
         await updateQuestion(question.uuid, currentQuestion);
-        toast.success("Question updated successfully");
+        toast.success(t("quizzes.quizUpdated"));
       } else {
         // Add new question
         await addQuestion(quizId, currentQuestion);
-        toast.success("Question added successfully");
+        toast.success(t("quizzes.quizCreated"));
       }
 
       // Reload quiz data
@@ -203,7 +209,7 @@ const CreateEditQuizPage = () => {
       setEditingQuestionIndex(null);
     } catch (error) {
       console.error("Error saving question:", error);
-      toast.error("Failed to save question");
+      toast.error(t("quizzes.failedToCreateQuiz"));
     } finally {
       setSaving(false);
     }
@@ -241,13 +247,13 @@ const CreateEditQuizPage = () => {
     <div>
       <Breadcrumb
         prevLink={`/dashboard/learn-and-grow/quizzes/${moduleId}`}
-        pageName={isEdit ? "Edit Quiz" : "Create New Quiz"}
-        prevPage="Back to Quizzes"
+        pageName={isEdit ? t("quizzes.editQuiz") : t("quizzes.createNewQuiz")}
+        prevPage={t("quizzes.backToQuizzes")}
       />
 
       <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Quiz Details</h2>
+          <h2 className="text-xl font-bold">{t("quizzes.quizTitle")}</h2>
           {isEdit && (
             <button
               onClick={async () => {
@@ -257,7 +263,7 @@ const CreateEditQuizPage = () => {
                   setIsPublished(!isPublished);
                 } catch (error) {
                   console.error("Error toggling publish:", error);
-                  toast.error("Failed to update quiz status");
+                  toast.error(t("quizzes.failedToUpdateQuiz"));
                 }
               }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
@@ -269,10 +275,10 @@ const CreateEditQuizPage = () => {
               {isPublished ? (
                 <>
                   <BsCheckCircle size={16} />
-                  Published
+                  {t("quizzes.published")}
                 </>
               ) : (
-                "📤 Publish Quiz"
+                `📤 ${t("quizzes.publishQuiz")}`
               )}
             </button>
           )}
@@ -281,7 +287,7 @@ const CreateEditQuizPage = () => {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-2">
-              Quiz Title <span className="text-red-500">*</span>
+              {t("quizzes.quizTitle")} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -290,13 +296,13 @@ const CreateEditQuizPage = () => {
                 setQuizData({ ...quizData, title: e.target.value })
               }
               className="w-full border border-black/20 rounded-lg px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-              placeholder="Enter quiz title"
+              placeholder={t("quizzes.enterQuizTitle")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Description
+              {t("quizzes.quizDescription")}
             </label>
             <textarea
               value={quizData.description}
@@ -305,13 +311,13 @@ const CreateEditQuizPage = () => {
               }
               className="w-full border border-black/20 rounded-lg px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
               rows="3"
-              placeholder="Enter quiz description"
+              placeholder={t("quizzes.enterQuizDescription")}
             />
           </div>
 
           <div>
             <label className="block text-sm font-medium mb-2">
-              Passing Score (%)
+              {t("quizzes.passingScorePercent")}
             </label>
             <input
               type="number"
@@ -333,7 +339,11 @@ const CreateEditQuizPage = () => {
             disabled={saving}
             className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 disabled:opacity-50"
           >
-            {saving ? "Saving..." : isEdit ? "Update Quiz" : "Create Quiz"}
+            {saving
+              ? t("common.saving")
+              : isEdit
+              ? t("common.update")
+              : t("common.create")}
           </button>
         </div>
       </div>
@@ -342,7 +352,7 @@ const CreateEditQuizPage = () => {
         <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">
-              Questions ({questions.length})
+              {t("quizzes.questions")} ({questions.length})
             </h2>
             {!showQuestionForm && (
               <button
@@ -350,7 +360,7 @@ const CreateEditQuizPage = () => {
                 className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
               >
                 <BsPlus size={20} />
-                Add Question
+                {t("quizzes.addQuestion")}
               </button>
             )}
           </div>
@@ -359,14 +369,15 @@ const CreateEditQuizPage = () => {
             <div className="border border-black/20 rounded-lg p-4 mb-6 bg-gray-50">
               <h3 className="font-bold mb-4">
                 {editingQuestionIndex !== null
-                  ? "Edit Question"
-                  : "New Question"}
+                  ? t("quizzes.editQuiz")
+                  : t("quizzes.addQuestion")}
               </h3>
 
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium mb-2">
-                    Question Text <span className="text-red-500">*</span>
+                    {t("quizzes.questionText")}{" "}
+                    <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     value={currentQuestion.questionText}
@@ -378,29 +389,33 @@ const CreateEditQuizPage = () => {
                     }
                     className="w-full border border-black/20 rounded-lg px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                     rows="2"
-                    placeholder="Enter your question"
+                    placeholder={t("quizzes.enterQuestionText")}
                   />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Question Type
+                      {t("quizzes.questionType")}
                     </label>
                     <select
                       value={currentQuestion.questionType}
                       onChange={(e) => handleQuestionTypeChange(e.target.value)}
                       className="w-full border border-black/20 rounded-lg px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
                     >
-                      <option value="multiple_choice">Multiple Choice</option>
+                      <option value="multiple_choice">
+                        {t("quizzes.multipleChoice")}
+                      </option>
                       <option value="true_false">True/False</option>
-                      <option value="description">Description</option>
+                      <option value="description">
+                        {t("quizzes.description")}
+                      </option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Points
+                      {t("quizzes.points")}
                     </label>
                     <input
                       type="number"
@@ -420,7 +435,7 @@ const CreateEditQuizPage = () => {
                 {currentQuestion.questionType !== "description" && (
                   <div>
                     <label className="block text-sm font-medium mb-2">
-                      Options
+                      {t("quizzes.options")}
                     </label>
                     <div className="space-y-2">
                       {currentQuestion.options.map((option, index) => (
@@ -436,7 +451,7 @@ const CreateEditQuizPage = () => {
                               )
                             }
                             className="w-5 h-5"
-                            title="Mark as correct answer"
+                            title={t("quizzes.correctAnswer")}
                           />
                           <input
                             type="text"
@@ -449,7 +464,9 @@ const CreateEditQuizPage = () => {
                               )
                             }
                             className="flex-1 border border-black/20 rounded-lg px-4 py-2 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-colors"
-                            placeholder={`Option ${index + 1}`}
+                            placeholder={`${t("quizzes.optionText")} ${
+                              index + 1
+                            }`}
                             disabled={
                               currentQuestion.questionType === "true_false"
                             }
@@ -471,7 +488,7 @@ const CreateEditQuizPage = () => {
                         onClick={handleAddOption}
                         className="mt-2 text-primary hover:underline text-sm"
                       >
-                        + Add Option
+                        + {t("quizzes.addOption")}
                       </button>
                     )}
                   </div>
@@ -484,17 +501,17 @@ const CreateEditQuizPage = () => {
                     className="bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 disabled:opacity-50"
                   >
                     {saving
-                      ? "Saving..."
+                      ? t("common.saving")
                       : editingQuestionIndex !== null
-                      ? "Update"
-                      : "Add"}{" "}
-                    Question
+                      ? t("common.update")
+                      : t("common.add")}{" "}
+                    {t("quizzes.question")}
                   </button>
                   <button
                     onClick={handleCancelQuestion}
                     className="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
                   >
-                    Cancel
+                    {t("common.cancel")}
                   </button>
                 </div>
               </div>
@@ -505,7 +522,7 @@ const CreateEditQuizPage = () => {
           <div className="space-y-4">
             {questions.length === 0 ? (
               <p className="text-gray-500 text-center py-8">
-                No questions yet. Add your first question above.
+                {t("quizzes.noQuestionsYet")}
               </p>
             ) : (
               questions.map((question, index) => (
@@ -516,7 +533,7 @@ const CreateEditQuizPage = () => {
                   <div className="flex justify-between items-start mb-2">
                     <div className="flex-1">
                       <span className="text-sm text-gray-500">
-                        Question {index + 1}
+                        {t("quizzes.question")} {index + 1}
                       </span>
                       <h4 className="font-medium">{question.questionText}</h4>
                     </div>
@@ -525,13 +542,13 @@ const CreateEditQuizPage = () => {
                         {question.questionType.replace("_", " ")}
                       </span>
                       <span className="text-sm bg-green-100 text-green-800 px-2 py-1 rounded">
-                        {question.points} pts
+                        {question.points} {t("quizzes.points")}
                       </span>
                       <button
                         onClick={() => handleEditQuestion(index)}
                         className="text-blue-500 hover:text-blue-700 text-sm"
                       >
-                        Edit
+                        {t("common.edit")}
                       </button>
                     </div>
                   </div>
@@ -565,7 +582,7 @@ const CreateEditQuizPage = () => {
               className="flex items-center gap-2 bg-gray-500 text-white px-6 py-2 rounded-lg hover:bg-gray-600"
             >
               <BsArrowLeft />
-              Back to Quizzes
+              {t("quizzes.backToQuizzes")}
             </button>
           </div>
         </div>

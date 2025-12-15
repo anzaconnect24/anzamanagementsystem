@@ -7,8 +7,11 @@ import { headers } from "@/utils/headers";
 import { BsPlus, BsSearch, BsTrash, BsPencil } from "react-icons/bs";
 import Spinner from "@/components/spinner";
 import { UserContext } from "../../../layouts/DashboardLayout";
-
 import { useTranslation } from "@/locales";
+import {
+  getAllProgramApplications,
+  deleteProgramApplication,
+} from "../../../controllers/programApplication_controller";
 
 const ProgramsApplications = () => {
   const [programs, setPrograms] = useState([]);
@@ -32,24 +35,32 @@ const ProgramsApplications = () => {
         setLoading(true);
       }
 
-      const response = await axios.get(`${server_url}/programs`, {
-        params: {
-          page: page,
-          limit: 8,
-          keyword: keyword,
-        },
-        headers: headers,
+      const response = await getAllProgramApplications({
+        page: page,
+        limit: 8,
+        includeExpired: false,
       });
 
-      if (response.data.status) {
-        console.log("Programs:", response.data);
-        setPrograms(response.data.body.data);
-        setTotalCount(response.data.body.count);
-        setTotalPages(Math.ceil(response.data.body.count / 8));
-        setCurrentPage(response.data.body.page);
+      if (response.success) {
+        console.log("Program Applications:", response);
+
+        // Filter by search term on frontend if needed
+        let filteredData = response.data;
+        if (keyword) {
+          filteredData = response.data.filter(
+            (prog) =>
+              prog.title.toLowerCase().includes(keyword.toLowerCase()) ||
+              prog.description?.toLowerCase().includes(keyword.toLowerCase())
+          );
+        }
+
+        setPrograms(filteredData);
+        setTotalCount(response.pagination.total);
+        setTotalPages(response.pagination.pages);
+        setCurrentPage(response.pagination.page);
       }
     } catch (error) {
-      console.error("Error fetching programs:", error);
+      console.error("Error fetching program applications:", error);
     } finally {
       if (isSearch) {
         setSearchLoading(false);
@@ -95,7 +106,7 @@ const ProgramsApplications = () => {
       !confirm(
         t(
           "learnAndGrow.deleteProgramConfirm",
-          "Are you sure you want to delete this program?"
+          "Are you sure you want to delete this program application?"
         )
       )
     ) {
@@ -104,21 +115,33 @@ const ProgramsApplications = () => {
 
     try {
       setDeleting(uuid);
-      const response = await axios.delete(`${server_url}/programs/${uuid}`, {
-        headers: headers,
-      });
+      const response = await deleteProgramApplication(uuid);
 
-      if (response.status === 200 || response.status === 204) {
+      if (response.success) {
         // Refresh the list
         fetchPrograms(currentPage, searchTerm, false);
+        alert(
+          t(
+            "learnAndGrow.programDeletedSuccessfully",
+            "Program application deleted successfully"
+          )
+        );
       } else {
         alert(
-          t("learnAndGrow.failedToDeleteProgram", "Failed to delete program")
+          t(
+            "learnAndGrow.failedToDeleteProgram",
+            "Failed to delete program application"
+          )
         );
       }
     } catch (error) {
-      console.error("Error deleting program:", error);
-      alert(t("learnAndGrow.errorDeletingProgram", "Error deleting program"));
+      console.error("Error deleting program application:", error);
+      alert(
+        t(
+          "learnAndGrow.errorDeletingProgram",
+          "Error deleting program application"
+        )
+      );
     } finally {
       setDeleting(null);
     }
@@ -220,7 +243,7 @@ const ProgramsApplications = () => {
           {userDetails?.role === "Admin" && (
             <div className="mt-6">
               <Link
-                href="/programsApplications/new"
+                href="/dashboard/programsApplications/new"
                 className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
               >
                 <BsPlus className="text-lg" />
