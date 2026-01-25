@@ -2491,6 +2491,7 @@ export const sw = {
     noDocumentsFound: "Hakuna nyaraka katika kundi hili",
     uploadDocument: "Pakia Nyaraka",
     documentTitle: "Kichwa cha Nyaraka",
+    quizzes: "Majaribio",
     selectCategory: "Chagua Kategoria",
     chooseFile: "Chagua Faili",
     uploadResource: "Pakia Rasilimali",
@@ -2516,6 +2517,7 @@ export const sw = {
     availableInCategory: "Rasilimali Zinazopatikana",
     noMaterialsAvailable: "Hakuna nyenzo zinazopatikana katika kategoria hii",
     viewResources: "Tazama Rasilimali",
+    viewModules: "Ona Moduli",
     deleteResourceConfirm:
       "Futa rasilimali hii? Hatua hii haiwezi kubatilishwa.",
     resourceDeleted: "Rasilimali imefutwa",
@@ -2573,6 +2575,7 @@ export const sw = {
     noComments: "Hakuna Maoni, Kuwa wa kwanza kushiriki mawazo yako.",
     addComment: "Ongeza maoni...",
     postComment: "Chapisha Maoni",
+    accessPrograms: "Ona Programu",
   },
 
   // Modules
@@ -2963,7 +2966,7 @@ export const sw = {
   // Mitihani (Quizzes)
   quizzes: {
     // Ukurasa wa Mitihani ya Moduli
-    moduleQuizzes: "Mitihani ya Moduli",
+    moduleQuizzes: "Majaribio ya Moduli",
     backToModule: "Rudi kwenye Moduli",
     createQuiz: "Tengeneza Mtihani",
     viewAttempts: "Tazama Majaribio",

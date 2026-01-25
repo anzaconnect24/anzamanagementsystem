@@ -47,7 +47,7 @@ const FinancialDomain = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const responseData = await getFinancialData(userDetails.id);
+        const responseData = await getFinancialData();
         if (responseData == null || responseData.length == 0) {
           await createFinancialData(initialDataTemplate);
           fetchData(); // Fetch again after creating market data
@@ -89,7 +89,7 @@ const FinancialDomain = () => {
     const reload = async () => {
       setLoading(true);
       try {
-        const responseData = await getFinancialData(userDetails.id);
+        const responseData = await getFinancialData();
         const updatedData = { ...translatedTemplate };
         Object.keys(updatedData).forEach((section) => {
           updatedData[section] = updatedData[section].map((item) => {
@@ -229,13 +229,18 @@ const FinancialDomain = () => {
       await attachDocument(fileData);
 
       // Fetch updated data
-      const responseData = await getFinancialData(userDetails.id);
+      const responseData = await getFinancialData();
       const updatedData = { ...translatedTemplate };
+      console.log("Financial upload response:", responseData);
+      console.log("Looking for domain:", domain);
 
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
             (dataItem) => dataItem.subDomain === item.subDomain
+          );
+          console.log(
+            `Mapping ${item.subDomain}: found=${!!fetchedItem}, attachment=${fetchedItem?.attachment}`
           );
           return fetchedItem
             ? {
@@ -293,7 +298,7 @@ const FinancialDomain = () => {
       submitChanges();
 
       // Fetch the updated data after the rating is changed
-      const responseData = await getFinancialData(userDetails.id);
+      const responseData = await getFinancialData();
       const updatedData = { ...translatedTemplate };
 
       // Map over sections to apply updates
@@ -498,7 +503,7 @@ const FinancialDomain = () => {
         key={index}
       >
         <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.subDomain}</p>
+          <p className="text-sm text-black dark:text-white">{item.label || item.subDomain}</p>
         </div>
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white">{item.question}</p>

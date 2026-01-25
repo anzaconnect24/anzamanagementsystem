@@ -123,7 +123,8 @@ export const updateSingleFinancialItem = async (uuid, payload) => {
 export const getInitialDataTemplate = (t) => ({
   profitability: [
     {
-      subDomain: t("crat.financial.assessments.revenueSubDomain", "Revenue"),
+      subDomain: "Revenue", // canonical key stored in DB
+      label: t("crat.financial.assessments.revenueSubDomain", "Revenue"),
       question: t(
         "crat.financial.assessments.revenueQuestion",
         "Is revenue growing?"
@@ -137,7 +138,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Cost management",
+      label: t(
         "crat.financial.assessments.costManagementSubDomain",
         "Cost management"
       ),
@@ -156,7 +158,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   balanceSheet: [
     {
-      subDomain: t(
+      subDomain: "Working capital management",
+      label: t(
         "crat.financial.assessments.workingCapitalManagementSubDomain",
         "Working capital management"
       ),
@@ -173,7 +176,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Assets management",
+      label: t(
         "crat.financial.assessments.assetsManagementSubDomain",
         "Assets management"
       ),
@@ -190,7 +194,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Debt manageability",
+      label: t(
         "crat.financial.assessments.debtManageabilitySubDomain",
         "Debt manageability"
       ),
@@ -207,7 +212,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t("crat.financial.assessments.obsItemsSubDomain", "OBS Items"),
+      subDomain: "OBS Items",
+      label: t("crat.financial.assessments.obsItemsSubDomain", "OBS Items"),
       question: t(
         "crat.financial.assessments.obsItemsQuestion",
         "Are OBS items in favor of the company?"
@@ -223,7 +229,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   cashFlows: [
     {
-      subDomain: t(
+      subDomain: "Operating cash flow",
+      label: t(
         "crat.financial.assessments.operatingCashFlowSubDomain",
         "Operating cash flow"
       ),
@@ -240,7 +247,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Capital expenses",
+      label: t(
         "crat.financial.assessments.capitalExpensesSubDomain",
         "Capital expenses"
       ),
@@ -259,7 +267,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   projections: [
     {
-      subDomain: t(
+      subDomain: "Assumptions",
+      label: t(
         "crat.financial.assessments.assumptionsSubDomain",
         "Assumptions"
       ),
@@ -278,7 +287,8 @@ export const getInitialDataTemplate = (t) => ({
   ],
   financialManagement: [
     {
-      subDomain: t(
+      subDomain: "Quality of financial records",
+      label: t(
         "crat.financial.assessments.qualityOfFinancialRecordsSubDomain",
         "Quality of financial records"
       ),
@@ -295,7 +305,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Financial reporting",
+      label: t(
         "crat.financial.assessments.financialReportingSubDomain",
         "Financial reporting"
       ),
@@ -312,7 +323,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Internal controls",
+      label: t(
         "crat.financial.assessments.internalControlsSubDomain",
         "Internal controls"
       ),
@@ -329,7 +341,8 @@ export const getInitialDataTemplate = (t) => ({
       comments: "",
     },
     {
-      subDomain: t(
+      subDomain: "Tax liability",
+      label: t(
         "crat.financial.assessments.taxLiabilitySubDomain",
         "Tax liability"
       ),

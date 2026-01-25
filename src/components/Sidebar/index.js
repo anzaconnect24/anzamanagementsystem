@@ -134,7 +134,7 @@ const Sidebar = ({
         icon: <SlPeople className="text-xl" />,
         submenu: [
           {
-            name: t("navigation.allUsers", "All Users"),
+            name: t("navigation.users", "Users"),
             path: "/dashboard/users",
           },
           {

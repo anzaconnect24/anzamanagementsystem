@@ -3,7 +3,7 @@ export const en = {
   // Common words
   common: {
     dashboard: "Dashboard",
-    users: "Community Hub",
+    users: "Users",
     entrepreneurs: "Entrepreneurs",
     investors: "Investors",
     mentors: "Mentors",

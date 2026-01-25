@@ -107,16 +107,16 @@ const ModuleQuizzesPage = () => {
   // Check if user has completed a quiz
   const getUserLastAttempt = (quizUuid) => {
     const attempts = userAttempts.filter(
-      (attempt) => attempt.quiz?.uuid === quizUuid && attempt.submittedAt
+      (attempt) => attempt.quiz?.uuid === quizUuid && attempt.submittedAt,
     );
     if (attempts.length === 0) return null;
     // Return the most recent attempt
     const lastAttempt = attempts.sort(
-      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
     )[0];
     console.log(
       `Quiz ${quizUuid} - Last attempt status:`,
-      lastAttempt.gradingStatus
+      lastAttempt.gradingStatus,
     );
     return lastAttempt;
   };
@@ -141,14 +141,12 @@ const ModuleQuizzesPage = () => {
     <div>
       <Breadcrumb
         prevLink={``}
-        pageName={`${module?.title || "Module"} - ${t(
-          "quizzes.moduleQuizzes"
-        )}`}
+        pageName={`${t("quizzes.moduleQuizzes")}`}
         prevPage={t("quizzes.backToModule")}
       />
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">{t("quizzes.moduleQuizzes")}</h1>
+        {/* <h1 className="text-2xl font-bold">{t("quizzes.moduleQuizzes")}</h1> */}
         <div className="flex gap-2">
           {!isAdmin && (
             <button
@@ -237,7 +235,7 @@ const ModuleQuizzesPage = () => {
               {t("quizzes.attempted")} (
               {
                 quizzes.filter(
-                  (q) => q.isPublished && getUserLastAttempt(q.uuid) !== null
+                  (q) => q.isPublished && getUserLastAttempt(q.uuid) !== null,
                 ).length
               }
               )
@@ -317,7 +315,7 @@ const ModuleQuizzesPage = () => {
                   <button
                     onClick={() =>
                       router.push(
-                        `/dashboard/learn-and-grow/quizzes/${moduleId}/edit/${quiz.uuid}`
+                        `/dashboard/learn-and-grow/quizzes/${moduleId}/edit/${quiz.uuid}`,
                       )
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 text-sm transition-colors"
@@ -328,7 +326,7 @@ const ModuleQuizzesPage = () => {
                   <button
                     onClick={() =>
                       router.push(
-                        `/dashboard/learn-and-grow/quizzes/${moduleId}/attempts/${quiz.uuid}`
+                        `/dashboard/learn-and-grow/quizzes/${moduleId}/attempts/${quiz.uuid}`,
                       )
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 text-sm transition-colors"
@@ -368,7 +366,7 @@ const ModuleQuizzesPage = () => {
                           <button
                             onClick={() =>
                               router.push(
-                                `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${lastAttempt.uuid}`
+                                `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${lastAttempt.uuid}`,
                               )
                             }
                             className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
@@ -384,7 +382,7 @@ const ModuleQuizzesPage = () => {
                         <button
                           onClick={() =>
                             router.push(
-                              `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`,
                             )
                           }
                           className="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
@@ -396,7 +394,7 @@ const ModuleQuizzesPage = () => {
                   <button
                     onClick={() =>
                       router.push(
-                        `/dashboard/learn-and-grow/quizzes/${moduleId}/my-attempts/${quiz.uuid}`
+                        `/dashboard/learn-and-grow/quizzes/${moduleId}/my-attempts/${quiz.uuid}`,
                       )
                     }
                     className="flex-1 flex items-center justify-center gap-2 bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors"

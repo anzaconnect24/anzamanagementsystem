@@ -14,11 +14,11 @@ import Loader from "@/components/common/Loader";
 import dynamic from "@/utils/dynamic";
 const BusinessDomainScores = dynamic(
   () => import("@/components/Charts/BusinessDomainScores"),
-  { ssr: false, loading: () => <Loader /> }
+  { ssr: false, loading: () => <Loader /> },
 );
 const PerformanceDistribution = dynamic(
   () => import("@/components/Charts/PerformanceDistribution"),
-  { ssr: false, loading: () => <Loader /> }
+  { ssr: false, loading: () => <Loader /> },
 );
 // import { useSearchParams } from "@/utils/navigation";
 import Breadcrumb from "@/component/Breadcrumb";
@@ -358,11 +358,11 @@ const Report = () => {
       // Translate the section title (like "marketDemandShare" -> "Mahitaji ya Soko na Mgao")
       const translatedSubsectionTitle = t(
         `crat.${localeDomainKey}.sections.${subsectionKeyForLocale}`,
-        subsectionKey
+        subsectionKey,
       );
 
       console.log(
-        `Translating section: ${sectionKey}.sections.${subsectionKey} -> ${translatedSubsectionTitle}`
+        `Translating section: ${sectionKey}.sections.${subsectionKey} -> ${translatedSubsectionTitle}`,
       );
 
       translatedSection[translatedSubsectionTitle] = sectionData[
@@ -371,13 +371,13 @@ const Report = () => {
         // Prefer domain-specific subdomain key mapping when available
         const subdomainKeyFromMap = getSubdomainLocaleKey(
           localeDomainKey,
-          item.key
+          item.key,
         );
         const translatedSubDomain = subdomainKeyFromMap
           ? t(subdomainKeyFromMap, item.subDomain)
           : item.key
-          ? t(`crat.${localeDomainKey}.${item.key}.title`, item.subDomain)
-          : item.subDomain;
+            ? t(`crat.${localeDomainKey}.${item.key}.title`, item.subDomain)
+            : item.subDomain;
 
         return {
           ...item,
@@ -420,10 +420,35 @@ const Report = () => {
 
     // Apply incoming scores and comments (if any) by matching backend labels to item keys
     if (Array.isArray(incomingScores) && incomingScores.length > 0) {
+      // First, deduplicate incoming scores - prefer records with higher scores or most recent updates
+      const deduplicatedScores = {};
+      incomingScores.forEach((record) => {
+        const key = labelToKey(record.subDomain);
+        if (!key) return;
+
+        const existing = deduplicatedScores[key];
+        if (!existing) {
+          deduplicatedScores[key] = record;
+        } else {
+          // Prefer higher score, or if equal, prefer one with attachment or more recent update
+          const shouldReplace =
+            record.score > existing.score ||
+            (record.score === existing.score &&
+              record.attachment &&
+              !existing.attachment) ||
+            (record.score === existing.score &&
+              new Date(record.updatedAt) > new Date(existing.updatedAt));
+
+          if (shouldReplace) {
+            deduplicatedScores[key] = record;
+          }
+        }
+      });
+
       const applyScoresAndComments = (draft) => {
         const domains = ["commercial", "financial", "operations", "legal"];
         const next = { ...draft };
-        incomingScores.forEach(
+        Object.values(deduplicatedScores).forEach(
           ({ subDomain, score, uuid, customerComment, reviewerComment }) => {
             const key = labelToKey(subDomain);
             if (!key) {
@@ -445,11 +470,11 @@ const Report = () => {
                         customerComment,
                         reviewerComment,
                       }
-                    : item
+                    : item,
                 );
               });
             });
-          }
+          },
         );
         return next;
       };
@@ -462,7 +487,7 @@ const Report = () => {
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
   const [generalStatus, setGeneralStatus] = useState(
-    t("report.notReady", "Not Ready")
+    t("report.notReady", "Not Ready"),
   ); // Add this
   const { userDetails, setUserDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
@@ -492,7 +517,7 @@ const Report = () => {
         setScoreData(calculatedScoreData);
         setGeneralStatus(
           calculatedScoreData?.general_status ||
-            t("report.notReady", "Not Ready")
+            t("report.notReady", "Not Ready"),
         );
         console.log("Calculated score data from report:", calculatedScoreData);
       } else {
@@ -571,7 +596,7 @@ const Report = () => {
             }
           });
           const percentage = Math.round(
-            totalQuestions > 0 ? (totalScore / (totalQuestions * 2)) * 100 : 0
+            totalQuestions > 0 ? (totalScore / (totalQuestions * 2)) * 100 : 0,
           );
           calculatedScores[domain] = {
             percentage,
@@ -583,7 +608,7 @@ const Report = () => {
         }
       });
       const percentages = Object.values(calculatedScores).map(
-        (item) => item.percentage
+        (item) => item.percentage,
       );
       const overall =
         percentages.length > 0
@@ -641,7 +666,7 @@ const Report = () => {
       await publishReport(
         userDetails.id,
         userDetails.versionCount,
-        userDetails.publishStatus
+        userDetails.publishStatus,
       );
 
       setUserDetails((prevDetails) => ({
@@ -651,7 +676,7 @@ const Report = () => {
 
       publishModalOpen(false);
       toast.success(
-        t("report.publishedSuccessfully", "Published Successfully")
+        t("report.publishedSuccessfully", "Published Successfully"),
       );
       console.log("Changes successfully submitted");
     } catch (error) {
@@ -667,8 +692,8 @@ const Report = () => {
     publishModalMessage(
       t(
         "report.confirmPublishReport",
-        "Are you sure you want to publish this report for review?"
-      )
+        "Are you sure you want to publish this report for review?",
+      ),
     );
   };
 
@@ -685,8 +710,8 @@ const Report = () => {
       toast.warning(
         t(
           "report.noPermissionCustomer",
-          "Only entrepreneurs can edit customer comments"
-        )
+          "Only entrepreneurs can edit customer comments",
+        ),
       );
       return;
     }
@@ -696,7 +721,7 @@ const Report = () => {
       console.log("🔧 DEBUG: Determined endpoint:", endpoint);
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/${endpoint}/${uuid}`
+        `${server_url}/${endpoint}/${uuid}`,
       );
 
       const response = await axios.patch(
@@ -704,7 +729,7 @@ const Report = () => {
         {
           customerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -712,7 +737,7 @@ const Report = () => {
       if (response.data.status) {
         console.log("🔧 DEBUG: Comment saved successfully");
         toast.success(
-          t("report.commentSavedAutomatically", "Comment saved automatically")
+          t("report.commentSavedAutomatically", "Comment saved automatically"),
         );
         // Update the local data to reflect the change
         updateLocalComment(uuid, "customerComment", comment);
@@ -740,8 +765,8 @@ const Report = () => {
       toast.warning(
         t(
           "report.noPermissionReviewer",
-          "Only admin users can edit reviewer comments"
-        )
+          "Only admin users can edit reviewer comments",
+        ),
       );
       return;
     }
@@ -751,7 +776,7 @@ const Report = () => {
       console.log("🔧 DEBUG: Determined endpoint:", endpoint);
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/${endpoint}/${uuid}`
+        `${server_url}/${endpoint}/${uuid}`,
       );
 
       const response = await axios.patch(
@@ -759,7 +784,7 @@ const Report = () => {
         {
           reviewerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -767,7 +792,7 @@ const Report = () => {
       if (response.data.status) {
         console.log("🔧 DEBUG: Reviewer comment saved successfully");
         toast.success(
-          t("report.reviewerCommentSaved", "Reviewer comment saved")
+          t("report.reviewerCommentSaved", "Reviewer comment saved"),
         );
         // Update the local data to reflect the change
         updateLocalComment(uuid, "reviewerComment", comment);
@@ -810,7 +835,7 @@ const Report = () => {
               newData[sectionKey][subKey].forEach((item) => {
                 if (item.uuid === uuid) {
                   console.log(
-                    "🔧 DEBUG: Found matching item, updating comment"
+                    "🔧 DEBUG: Found matching item, updating comment",
                   );
                   console.log("🔧 DEBUG: Before update:", item[commentType]);
                   item[commentType] = comment;
@@ -845,7 +870,7 @@ const Report = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -949,12 +974,12 @@ const Report = () => {
                     handleReviewerCommentBlur(
                       item.uuid,
                       e.target.value,
-                      item.subDomain
+                      item.subDomain,
                     )
                   }
                   placeholder={t(
                     "crat.enterReviewerComment",
-                    "Enter reviewer comment..."
+                    "Enter reviewer comment...",
                   )}
                   className="w-full px-2 py-1 text-sm border border-black/20 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                   rows={2}
@@ -1048,7 +1073,7 @@ const Report = () => {
       <Breadcrumb
         pageName={t(
           "report.capitalReadinessAssessmentReport",
-          "Capital Readiness Assessment Report"
+          "Capital Readiness Assessment Report",
         )}
         prevPage={t("common.back", "Back")}
         prevLink={""}

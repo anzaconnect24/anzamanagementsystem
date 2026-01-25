@@ -91,7 +91,7 @@ const Page = () => {
           "Clean Energy": t("users.cleanEnergy", "Clean Energy"),
           "Water Sanitation and Hygiene": t(
             "users.waterSanitationHygiene",
-            "Water Sanitation and Hygiene"
+            "Water Sanitation and Hygiene",
           ),
           Fintech: t("users.fintech", "Fintech"),
         };
@@ -115,7 +115,7 @@ const Page = () => {
       }
       return value;
     },
-    [t]
+    [t],
   );
   // Fetch investors
   const fetchData = async () => {
@@ -134,19 +134,19 @@ const Page = () => {
       if (isFiltering) {
         if (filters.sector !== "All Sectors") {
           processedData = processedData.filter(
-            (item) => item.sector === filters.sector
+            (item) => item.sector === filters.sector,
           );
         }
 
         if (filters.ticketSize !== "All Ticket Sizes") {
           processedData = processedData.filter(
-            (item) => item.ticketSize === filters.ticketSize
+            (item) => item.ticketSize === filters.ticketSize,
           );
         }
 
         if (filters.structure !== "All Structures") {
           processedData = processedData.filter(
-            (item) => item.structure === filters.structure
+            (item) => item.structure === filters.structure,
           );
         }
       }
@@ -433,7 +433,7 @@ const Page = () => {
                       onClick={() =>
                         handleFilterChange(
                           key,
-                          `All ${filterOptions[key].label}`
+                          `All ${filterOptions[key].label}`,
                         )
                       }
                       className="hover:text-primary-dark"
@@ -441,7 +441,7 @@ const Page = () => {
                       ×
                     </button>
                   </span>
-                )
+                ),
             )}
             {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
@@ -531,7 +531,7 @@ const Page = () => {
                           {investor?.InvestorProfile?.investmentSize ||
                             t(
                               "users.ticketSizeNotSpecified",
-                              "Ticket size not specified"
+                              "Ticket size not specified",
                             )}
                         </span>
                       </div>
@@ -554,15 +554,15 @@ const Page = () => {
                         <span className="line-clamp-1">
                           {t(
                             `investor.type.${Object.values(
-                              investor?.InvestorProfile?.investmentType || {}
+                              investor?.InvestorProfile?.investmentType || {},
                             ).join(", ")}`,
                             Object.values(
-                              investor?.InvestorProfile?.investmentType || {}
-                            ).join(", ")
+                              investor?.InvestorProfile?.investmentType || {},
+                            ).join(", "),
                           ) ||
                             t(
                               "users.structureNotSpecified",
-                              "Structure not specified"
+                              "Structure not specified",
                             )}
                         </span>
                       </div>
