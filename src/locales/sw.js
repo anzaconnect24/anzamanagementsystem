@@ -1343,6 +1343,7 @@ export const sw = {
       attachment: "Kiambatisho",
       customerComment: "Maoni Yako",
       reviewerComment: "Maoni ya Mkaguzi",
+      entrepreneurComment: "Maoni ya Mfanyabiashara",
       actions: "Vitendo",
     },
     attached: "Imeambatishwa",

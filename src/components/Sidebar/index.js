@@ -164,6 +164,11 @@ const Sidebar = ({
         path: "/dashboard/mentorEntreprenuers",
         icon: <SlPeople className="text-xl" />,
       });
+      peopleItems.push({
+        name: t("navigation.mentorshipRequests", "Mentorship Requests"),
+        path: "/dashboard/mentorshipRequests",
+        icon: <FaHandshake className="text-xl" />,
+      });
     }
 
     if (["Enterprenuer"].includes(role)) {
@@ -197,7 +202,7 @@ const Sidebar = ({
       peopleItems.push({
         name: t(
           "navigation.interestedEntrepreneurs",
-          "Interested Entrepreneurs"
+          "Interested Entrepreneurs",
         ),
         path: "/dashboard/interestedEnterprenuers",
         icon: <FaHandshake className="text-xl" />,
@@ -263,12 +268,10 @@ const Sidebar = ({
           },
         ],
       });
+    }
 
-      businessItems.push({
-        name: t("navigation.mentorshipRequests", "Mentorship Requests"),
-        path: "/dashboard/mentorshipRequests",
-        icon: <FaQuestion className="text-lg" />,
-      });
+    if (["Mentor"].includes(role)) {
+      // Mentor-specific business items can be added here if needed
     }
 
     if (["Staff"].includes(role)) {
@@ -280,7 +283,7 @@ const Sidebar = ({
           {
             name: t(
               "navigation.investmentRequestsAssignments",
-              "Investment Requests"
+              "Investment Requests",
             ),
             path: "/dashboard/reviewerAssignedInvestmentRequests",
           },
@@ -411,7 +414,7 @@ const Sidebar = ({
       programsItems.push({
         name: t(
           "navigation.cratReviewApplications",
-          "CRAT Review Applications"
+          "CRAT Review Applications",
         ),
         path: "/dashboard/cratReviewApplications",
         icon: <MdAssignment className="text-xl" />,
@@ -581,7 +584,7 @@ const Sidebar = ({
                                   <SidebarLinkGroup
                                     key={subItem.name}
                                     activeCondition={pathname.includes(
-                                      subItem.path
+                                      subItem.path,
                                     )}
                                   >
                                     {(handleSubClick, subOpen) => (
@@ -642,7 +645,7 @@ const Sidebar = ({
                                                       </span>
                                                     </Link>
                                                   </li>
-                                                )
+                                                ),
                                               )}
                                             </ul>
                                           )}
@@ -664,7 +667,7 @@ const Sidebar = ({
                                       )}
                                     </Link>
                                   </li>
-                                )
+                                ),
                               )}
                             </ul>
                           </div>
@@ -683,7 +686,7 @@ const Sidebar = ({
                         {isVisuallyExpanded && <span>{item.name}</span>}
                       </Link>
                     </li>
-                  )
+                  ),
                 )}
               </ul>
             </div>

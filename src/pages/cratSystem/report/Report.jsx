@@ -34,7 +34,7 @@ const Report = () => {
     t("report.subDomain", "Sub Domain"),
     t("report.score", "Score"),
     t("report.reportNarrative", "Report Narrative"),
-    t("crat.tableHeaders.customerComment", "Customer Comment"),
+    t("crat.tableHeaders.entrepreneurComment", "Entrepreneur Comment"),
     t("crat.tableHeaders.reviewerComment", "Reviewer Comment"),
   ];
   const [data, setData] = useState({});
@@ -147,29 +147,41 @@ const Report = () => {
       "sales strategy",
       "product development",
       "product distribution",
+      "product pricing",
       "product pricing basis",
       "level of competition",
       "competitive advantage",
       "marketing strategy",
+      "branding",
+      "branding and packaging",
       "packaging & branding",
       "product promotion",
+      "promotion strategy",
     ];
 
     // Financial domain items
     const financialItems = [
       "revenue",
+      "revenue growth",
+      "cost",
       "cost management",
+      "working capital",
       "working capital management",
       "assets management",
       "operating cash flow",
+      "operating cash flows",
       "capital expenses",
+      "capex",
       "obs items",
+      "debt management",
       "debt manageability",
       "assumptions",
       "quality of financial records",
+      "financial records",
       "financial reporting",
       "internal controls",
       "tax liability",
+      "tax liabilities",
     ];
 
     // Operations domain items
@@ -198,11 +210,13 @@ const Report = () => {
       "tax identification",
       "tax compliance",
       "business licence",
+      "business license",
       "sector specific compliance",
       "lease agreements",
       "customer contracts",
       "supplier contracts",
       "employees contracts",
+      "employee contracts",
       "ip ownership",
       "entrepreneurial character",
       "personal legal liability",
@@ -455,6 +469,10 @@ const Report = () => {
               console.warn("No key mapping for backend subDomain:", subDomain);
               return;
             }
+            // Determine the endpoint for this subdomain
+            const { endpoint, domain: domainType } =
+              getDomainEndpoint(subDomain);
+
             domains.forEach((domain) => {
               const sectionObj = next[domain];
               if (!sectionObj || typeof sectionObj !== "object") return;
@@ -469,6 +487,8 @@ const Report = () => {
                         uuid,
                         customerComment,
                         reviewerComment,
+                        originalSubDomain: subDomain, // Store original subdomain from backend
+                        endpoint, // Store the correct endpoint
                       }
                     : item,
                 );
@@ -697,12 +717,12 @@ const Report = () => {
     );
   };
 
-  const handleCustomerCommentBlur = async (uuid, comment, subDomain) => {
+  const handleCustomerCommentBlur = async (uuid, comment, item) => {
     console.log("🔧 DEBUG: handleCustomerCommentBlur called");
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: UUID:", uuid);
     console.log("🔧 DEBUG: Comment:", comment);
-    console.log("🔧 DEBUG: SubDomain:", subDomain);
+    console.log("🔧 DEBUG: Item:", item);
 
     // Check if user is Entrepreneur - only they can edit customer comments
     if (userDetails?.role !== "Enterprenuer") {
@@ -717,8 +737,12 @@ const Report = () => {
     }
 
     try {
-      const { endpoint } = getDomainEndpoint(subDomain);
-      console.log("🔧 DEBUG: Determined endpoint:", endpoint);
+      // Use the stored endpoint from the item, fallback to getDomainEndpoint
+      const endpoint =
+        item.endpoint ||
+        getDomainEndpoint(item.originalSubDomain || item.subDomain).endpoint;
+      console.log("🔧 DEBUG: Using endpoint:", endpoint);
+      console.log("🔧 DEBUG: Original subdomain:", item.originalSubDomain);
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
         `${server_url}/${endpoint}/${uuid}`,
@@ -752,28 +776,32 @@ const Report = () => {
     }
   };
 
-  const handleReviewerCommentBlur = async (uuid, comment, subDomain) => {
+  const handleReviewerCommentBlur = async (uuid, comment, item) => {
     console.log("🔧 DEBUG: handleReviewerCommentBlur called");
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: UUID:", uuid);
     console.log("🔧 DEBUG: Comment:", comment);
-    console.log("🔧 DEBUG: SubDomain:", subDomain);
+    console.log("🔧 DEBUG: Item:", item);
 
-    // Check if user is Admin - only they can edit reviewer comments
-    if (userDetails?.role !== "Admin") {
-      console.log("🔧 DEBUG: Permission denied - user is not Admin");
+    // Check if user is Staff - only they can edit reviewer comments
+    if (userDetails?.role !== "Staff") {
+      console.log("🔧 DEBUG: Permission denied - user is not Staff");
       toast.warning(
         t(
           "report.noPermissionReviewer",
-          "Only admin users can edit reviewer comments",
+          "Only reviewers can edit reviewer comments",
         ),
       );
       return;
     }
 
     try {
-      const { endpoint } = getDomainEndpoint(subDomain);
-      console.log("🔧 DEBUG: Determined endpoint:", endpoint);
+      // Use the stored endpoint from the item, fallback to getDomainEndpoint
+      const endpoint =
+        item.endpoint ||
+        getDomainEndpoint(item.originalSubDomain || item.subDomain).endpoint;
+      console.log("🔧 DEBUG: Using endpoint:", endpoint);
+      console.log("🔧 DEBUG: Original subdomain:", item.originalSubDomain);
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
         `${server_url}/${endpoint}/${uuid}`,
@@ -894,11 +922,15 @@ const Report = () => {
   };
 
   const renderTableHeaders = () => {
-    // Show reviewer comment column only to Admin role
-    const showReviewerComment = userDetails?.role === "Admin";
+    // Show reviewer comment column to Admin and Staff roles
+    const showReviewerComment = ["Admin", "Staff"].includes(userDetails?.role);
 
     return (
-      <div className="grid grid-cols-4 border-b border-stroke py-4 px-4 dark:border-strokedark">
+      <div
+        className={`grid ${
+          showReviewerComment ? "grid-cols-5" : "grid-cols-4"
+        } border-b border-stroke py-4 px-4 dark:border-strokedark`}
+      >
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white font-semibold">
             {tableHeaders[0]}
@@ -926,8 +958,6 @@ const Report = () => {
             </p>
           </div>
         )}
-        {!showReviewerComment && <div></div>}{" "}
-        {/* Empty div to maintain grid structure */}
       </div>
     );
   };
@@ -940,12 +970,16 @@ const Report = () => {
 
       // Check user permissions
       const canEditCustomerComment = userDetails?.role === "Enterprenuer";
-      const canEditReviewerComment = userDetails?.role === "Admin"; // Only Admin can edit reviewer comments
-      const showReviewerComment = userDetails?.role === "Admin"; // Only show reviewer comment column to Admin
+      const canEditReviewerComment = userDetails?.role === "Staff"; // Only Staff/Reviewers can edit reviewer comments
+      const showReviewerComment = ["Admin", "Staff"].includes(
+        userDetails?.role,
+      ); // Show reviewer comment column to Admin and Staff
 
       return (
         <div
-          className="grid grid-cols-4 border-t border-stroke py-4 px-4 dark:border-strokedark"
+          className={`grid ${
+            showReviewerComment ? "grid-cols-5" : "grid-cols-4"
+          } border-t border-stroke py-4 px-4 dark:border-strokedark`}
           key={index}
         >
           <div className="flex items-center px-2">
@@ -962,20 +996,16 @@ const Report = () => {
           <div className="flex items-center px-2">
             <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md  dark:border-gray-600 min-h-[2rem] flex items-center">
               {item.customerComment ||
-                t("crat.noCustomerComment", "No customer comment")}
+                t("crat.noEntrepreneurComment", "No entrepreneur comment")}
             </p>
           </div>
-          {showReviewerComment ? (
+          {showReviewerComment && (
             <div className="flex items-center px-2">
               {canEditReviewerComment ? (
                 <textarea
                   defaultValue={item.reviewerComment || ""}
                   onBlur={(e) =>
-                    handleReviewerCommentBlur(
-                      item.uuid,
-                      e.target.value,
-                      item.subDomain,
-                    )
+                    handleReviewerCommentBlur(item.uuid, e.target.value, item)
                   }
                   placeholder={t(
                     "crat.enterReviewerComment",
@@ -985,17 +1015,11 @@ const Report = () => {
                   rows={2}
                 />
               ) : (
-                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md border border-black/10 dark:border-gray-600 min-h-[2rem] flex items-center">
+                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400  dark:bg-gray-700 rounded-md  min-h-[2rem] flex items-center">
                   {item.reviewerComment ||
                     t("crat.noReviewerComment", "No reviewer comment")}
                 </p>
               )}
-            </div>
-          ) : (
-            <div className="flex items-center px-2">
-              <p className="text-sm text-gray-400 italic">
-                {/* Hidden for this role */}
-              </p>
             </div>
           )}
         </div>
