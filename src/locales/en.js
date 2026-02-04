@@ -206,6 +206,7 @@ export const en = {
     mentees: "Mentees",
     myMentor: "My Mentor",
     allMentors: "All Mentors",
+    mentorshipApplications: "Mentorship Applications",
     interestedEntrepreneurs: "Interested Entrepreneurs",
     myInvestmentRequests: "My Investment Requests",
     investmentRequests: "Investment Requests",

@@ -45,7 +45,7 @@ const GradeQuiz = () => {
             "Content-Type": "application/json",
             Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
           },
-        }
+        },
       );
 
       setAttempt(response.data.data);
@@ -98,12 +98,12 @@ const GradeQuiz = () => {
 
       // Get only description answers that need grading
       const descriptionAnswers = attempt.answers.filter(
-        (answer) => answer.question.questionType === "description"
+        (answer) => answer.question.questionType === "description",
       );
 
       // Validate that all description answers have been graded
       const missingGrades = descriptionAnswers.filter(
-        (answer) => !grades[answer.uuid]
+        (answer) => !grades[answer.uuid],
       );
 
       if (missingGrades.length > 0) {
@@ -125,7 +125,7 @@ const GradeQuiz = () => {
       await axios.post(
         `${server_url}/quiz/admin/attempts/${attemptUuid}/grade`,
         { answers: formattedGrades },
-        { headers: authHeaders() }
+        { headers: authHeaders() },
       );
 
       toast.success(t("quizzes.gradingSubmitted"));
@@ -133,7 +133,7 @@ const GradeQuiz = () => {
     } catch (error) {
       console.error("Error grading quiz:", error);
       toast.error(
-        error.response?.data?.message || t("quizzes.failedToSubmitGrading")
+        error.response?.data?.message || t("quizzes.failedToSubmitGrading"),
       );
     } finally {
       setSubmitting(false);
@@ -308,11 +308,11 @@ const GradeQuiz = () => {
                               "pointsEarned",
                               Math.min(
                                 parseFloat(e.target.value) || 0,
-                                maxPoints
-                              )
+                                maxPoints,
+                              ),
                             )
                           }
-                          className="w-32 border border-gray-300 rounded-lg px-3 py-2"
+                          className="w-32 border border-black/10 rounded-lg px-3 py-2"
                         />
                       </div>
 
@@ -327,10 +327,10 @@ const GradeQuiz = () => {
                             handleGradeChange(
                               answer.uuid,
                               "feedback",
-                              e.target.value
+                              e.target.value,
                             )
                           }
-                          className="w-full border border-gray-300 rounded-lg px-3 py-2"
+                          className="w-full border border-black/10 rounded-lg px-3 py-2"
                           rows="3"
                           placeholder={t("quizzes.provideFeedback")}
                         />
@@ -352,10 +352,10 @@ const GradeQuiz = () => {
                           isSelected && answer.isCorrect
                             ? "bg-green-100 border-green-300"
                             : isSelected && !answer.isCorrect
-                            ? "bg-red-100 border-red-300"
-                            : isCorrectOption
-                            ? "bg-green-50 border-green-200"
-                            : "bg-white border-gray-200"
+                              ? "bg-red-100 border-red-300"
+                              : isCorrectOption
+                                ? "bg-green-50 border-green-200"
+                                : "bg-white border-gray-200"
                         }`}
                       >
                         <div className="flex items-center gap-2">
@@ -404,7 +404,7 @@ const GradeQuiz = () => {
         <div className="flex justify-end items-center gap-4">
           <button
             onClick={() => router.back()}
-            className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            className="px-6 py-3 border border-black/10 rounded-lg hover:bg-gray-50 transition-colors"
           >
             {t("common.cancel")}
           </button>

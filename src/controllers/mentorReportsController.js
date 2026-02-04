@@ -34,51 +34,58 @@ export const getMentorReport = async (uuid) => {
     return error.response;
   }
 };
-export const getSpecificMentorReports = async (uuid) => {
+export const getSpecificMentorReports = async (uuid, page = 1, limit = 10) => {
   try {
     const user = getUser();
     const response = await axios.get(
-      `${server_url}/mentor-reports/mentor/${uuid}`,
+      `${server_url}/mentor-reports/mentor/${uuid}?page=${page}&limit=${limit}`,
       {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
-    );
-    return response.data.body;
-  } catch (error) {
-    console.log(error);
-    return error.response;
-  }
-};
-export const getSpecificEntreprenuerReports = async (uuid) => {
-  try {
-    const user = getUser();
-    const response = await axios.get(
-      `${server_url}/mentor-reports/entreprenuer/${uuid}`,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
-        },
-      }
-    );
-    return response.data.body;
-  } catch (error) {
-    console.log(error);
-    return error.response;
-  }
-};
-export const getAllReports = async (uuid) => {
-  try {
-    const user = getUser();
-    const response = await axios.get(`${server_url}/mentor-reports/`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
       },
-    });
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    return error.response;
+  }
+};
+export const getSpecificEntreprenuerReports = async (
+  uuid,
+  page = 1,
+  limit = 10,
+) => {
+  try {
+    const user = getUser();
+    const response = await axios.get(
+      `${server_url}/mentor-reports/entreprenuer/${uuid}?page=${page}&limit=${limit}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    return error.response;
+  }
+};
+export const getAllReports = async (page = 1, limit = 10) => {
+  try {
+    const user = getUser();
+    const response = await axios.get(
+      `${server_url}/mentor-reports/?page=${page}&limit=${limit}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
     return response.data.body;
   } catch (error) {
     console.log(error);
@@ -110,7 +117,7 @@ export const deleteMentorReport = async (uuid) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {

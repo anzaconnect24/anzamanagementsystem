@@ -108,7 +108,7 @@ const Page = () => {
                       {[
                         {
                           title: t("investment.viewRequest", "View request"),
-                          path: `/viewInvestmentRequest/${item.uuid}`,
+                          path: `/dashboard/viewInvestmentRequest/${item.uuid}`,
                         },
                         //   {title:"Assign reviewers",path:`/assignInvestmentRequestReviewers/${item.uuid}`}
                       ].map((item) => {

@@ -184,6 +184,13 @@ const Sidebar = ({
             name: t("navigation.allMentors", "All Mentors"),
             path: "/dashboard/mentors",
           },
+          {
+            name: t(
+              "navigation.mentorshipApplications",
+              "Mentorship Applications",
+            ),
+            path: "/dashboard/mentorshipApplications",
+          },
         ],
       });
     }
@@ -204,7 +211,7 @@ const Sidebar = ({
           "navigation.interestedEntrepreneurs",
           "Interested Entrepreneurs",
         ),
-        path: "/dashboard/interestedEnterprenuers",
+        path: "/dashboard/interestedEntrepreneursApplications",
         icon: <FaHandshake className="text-xl" />,
       });
     }
@@ -225,6 +232,13 @@ const Sidebar = ({
         name: t("navigation.myInvestmentRequests", "My Investment Requests"),
         path: "/dashboard/myInvestmentRequests",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
+      });
+
+      // Add Investment Applications management for Investors
+      businessItems.push({
+        name: t("navigation.investmentApplications", "Investment Applications"),
+        path: "/dashboard/investmentApplications",
+        icon: <BsCardChecklist className="text-xl" />,
       });
     }
 
@@ -316,6 +330,25 @@ const Sidebar = ({
         path: "/dashboard/investors",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
+
+      // Add Investment Applications for Entrepreneurs
+      if (["Enterprenuer"].includes(role)) {
+        investmentItems.push({
+          name: t(
+            "navigation.investmentApplications",
+            "Investment Applications",
+          ),
+          path: "/dashboard/investmentApplications",
+          icon: <BsCardChecklist className="text-xl" />,
+        });
+
+        investmentItems.push({
+          name: t("navigation.interestedInvestors", "Interested Investors"),
+          path: "/dashboard/interestedInvestors",
+          icon: <FaHandshake className="text-xl" />,
+        });
+      }
+
       investmentItems.push({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),
         path: "/dashboard/opportunities",

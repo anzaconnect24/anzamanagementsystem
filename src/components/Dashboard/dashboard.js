@@ -90,7 +90,7 @@ const Dashboard = () => {
               data.percentage
             }%`,
             10,
-            y
+            y,
           );
           y += 7;
           if (data.status) {
@@ -117,7 +117,7 @@ const Dashboard = () => {
                 <h1 className="text-lg">
                   {t(
                     "dashboard.completeProfile",
-                    "Please complete your profile"
+                    "Please complete your profile",
                   )}{" "}
                 </h1>
                 <Link
@@ -132,7 +132,7 @@ const Dashboard = () => {
 
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5 mb-8">
             <CardDataStats
-              link="/enterprenuers"
+              link="/dashboard/enterprenuers"
               title={t("dashboard.totalEntrepreneurs", "Total Entrepreneurs")}
               total={data.enterprenuers || 0}
               rate="0.95%"
@@ -155,7 +155,7 @@ const Dashboard = () => {
             </CardDataStats>
 
             <CardDataStats
-              link="/investors"
+              link="/dashboard/investors"
               title={t("dashboard.totalInvestors", "Total Investors")}
               total={data.investors || 0}
               rate="0.43%"
@@ -178,7 +178,7 @@ const Dashboard = () => {
             </CardDataStats>
 
             <CardDataStats
-              link="/interested-investors"
+              link="/dashboard/interestedInvestors"
               title={t("dashboard.interestedInvestors", "Interested Investors")}
               total={data.investorsInterested || 0}
               rate="2.59%"
@@ -201,7 +201,7 @@ const Dashboard = () => {
             </CardDataStats>
 
             <CardDataStats
-              link="/investments"
+              link="/dashboard/myInvestmentRequests"
               title={t("dashboard.investmentsMade", "Investments Made")}
               total={data.investmentsMade || 0}
               rate="4.35%"
@@ -246,7 +246,7 @@ const Dashboard = () => {
         <div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 xl:grid-cols-5 2xl:gap-7.5">
             <CardDataStats
-              link="/mentor-entreprenuers"
+              link="/dashboard/mentorEntreprenuers"
               title={t("dashboard.activeMentees", "Active Mentees")}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
@@ -259,7 +259,7 @@ const Dashboard = () => {
               link="/"
               title={t(
                 "dashboard.pendingMentorshipRequest",
-                "Pending Mentorship Request"
+                "Pending Mentorship Request",
               )}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
@@ -271,7 +271,7 @@ const Dashboard = () => {
               link="/"
               title={t(
                 "dashboard.totalEntrepreneursShort",
-                "Total Entrepreneurs"
+                "Total Entrepreneurs",
               )}
               total={data.enterprenuers}
               rate="0.43%"
@@ -283,7 +283,7 @@ const Dashboard = () => {
               link="/"
               title={t(
                 "dashboard.entrepreneursSupported",
-                "Entrepreneurs Supported"
+                "Entrepreneurs Supported",
               )}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
@@ -308,10 +308,10 @@ const Dashboard = () => {
         <div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5">
             <CardDataStats
-              link="/pendingApplications"
+              link="/dashboard/pendingApplications"
               title={t(
                 "dashboard.pendingBusinessApplications",
-                "Pending business applications"
+                "Pending business applications",
               )}
               total={data.pendingBusiness}
               rate="0.43%"
@@ -333,10 +333,10 @@ const Dashboard = () => {
               </svg>
             </CardDataStats>
             <CardDataStats
-              link="/users"
+              link="/dashboard/users"
               title={t(
                 "dashboard.pendingUserApplications",
-                "Pending users applications"
+                "Pending users applications",
               )}
               total={data.pendingUser}
               rate="4.35%"
@@ -358,10 +358,10 @@ const Dashboard = () => {
               </svg>
             </CardDataStats>
             <CardDataStats
-              link="pendingRequests"
+              link="/dashboard/pendingRequests"
               title={t(
                 "dashboard.pendingProgramApplications",
-                "Pending program applications"
+                "Pending program applications",
               )}
               total={data.pendingProgramApplication || 0}
               rate="2.59%"
@@ -383,10 +383,10 @@ const Dashboard = () => {
               </svg>
             </CardDataStats>
             <CardDataStats
-              link="/users"
+              link="/dashboard/users"
               title={t(
                 "dashboard.totalUsersRegistered",
-                "Total users registered on system"
+                "Total users registered on system",
               )}
               total={data.totalUsers}
               rate="0.95%"
@@ -421,7 +421,7 @@ const Dashboard = () => {
         <div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 xl:grid-cols-5 2xl:gap-7.5">
             <CardDataStats
-              link="/myInvestmentRequests"
+              link="/dashboard/myInvestmentRequests"
               title={t("dashboard.requestsInProgress", "Requests in progress")}
               total={data.investorWaitingBusinessInvestmentRequests}
               rate="0.43%"
@@ -443,7 +443,7 @@ const Dashboard = () => {
               </svg>
             </CardDataStats>
             <CardDataStats
-              link="/myInvestmentRequests"
+              link="/dashboard/myInvestmentRequests"
               title={t("dashboard.investmentsMade", "Investments made")}
               total={data.investorClosedBusinessInvestmentRequests}
               rate="4.35%"
@@ -465,7 +465,7 @@ const Dashboard = () => {
               </svg>
             </CardDataStats>
             <CardDataStats
-              link="/myInvestmentRequests"
+              link="/dashboard/myInvestmentRequests"
               title={t("dashboard.droppedInvestments", "Dropped Investments")}
               total={data.investorClosedBusinessInvestmentRequests}
               rate="4.35%"
@@ -490,7 +490,7 @@ const Dashboard = () => {
               link=""
               title={t(
                 "dashboard.interestedEntrepreneurs",
-                "Interested Entrepreneurs"
+                "Interested Entrepreneurs",
               )}
               total={data.enterprenuersInterested}
               rate="2.59%"
@@ -512,7 +512,7 @@ const Dashboard = () => {
               </svg>
             </CardDataStats>
             <CardDataStats
-              link="/investorSectorBusinesses"
+              link="/dashboard/investorSectorBusinesses"
               title={t("dashboard.totalEntrepreneurs", "Total Entrepreneurs")}
               total={data.enterprenuers}
               rate="0.95%"

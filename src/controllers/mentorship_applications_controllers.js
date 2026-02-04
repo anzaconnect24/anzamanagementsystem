@@ -14,7 +14,7 @@ export const sendMentorshipApplication = async (data) => {
         headers: {
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -32,7 +32,7 @@ export const getMentorReport = async (uuid) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -44,13 +44,38 @@ export const getEntreprenuerMentors = async (uuid, page, limit, keyword) => {
   try {
     const user = getUser();
     const response = await axios.get(
-      `${server_url}/mentorship-applications/entreprenuer/${uuid}?page=${page}&limit=${limit}&keyword=${keyword}`,
+      `${server_url}/mentor-entreprenuers/entreprenuer/${uuid}`,
       {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    return error.response;
+  }
+};
+
+export const getEntreprenuerMentorshipApplications = async (
+  uuid,
+  page = 1,
+  limit = 10,
+  keyword = "",
+) => {
+  try {
+    const user = getUser();
+    const response = await axios.get(
+      `${server_url}/mentorship-applications/entreprenuer/${uuid}`,
+      {
+        params: { page, limit, keyword },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -69,7 +94,7 @@ export const deleteMentorReport = async (uuid) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {

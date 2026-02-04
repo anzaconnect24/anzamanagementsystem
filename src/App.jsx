@@ -47,10 +47,17 @@ import InterestedEnterprenuers from "./pages/users/interestedEnterprenuers/Inter
 import MentorEntreprenuer from "./pages/mentor/mentorEntreprenuers/MentorEntrepreneurs";
 import MyMentors from "./pages/mentor/myMentors/MyMentors";
 import MentorshipRequests from "./pages/mentor/mentorshipRequests/MentorshipRequests";
+import MentorshipApplications from "./pages/mentor/mentorshipApplications/MentorshipApplications";
 import MentorReports from "./pages/mentor/mentorReports/MentorReports";
 
 // Investment Pages
 import MyInvestmentRequests from "./pages/investment/myInvestmentRequests/MyInvestmentRequests";
+import InvestmentApplications from "./pages/investment/InvestmentApplications";
+import InvestmentApplicationDetail from "./pages/investment/InvestmentApplicationDetail";
+import InvestmentApplicationDetailWithActions from "./pages/investment/InvestmentApplicationDetailWithActions";
+import InterestedEntrepreneursApplications from "./pages/investment/InterestedEntrepreneursApplications";
+import InterestedInvestors from "./pages/investment/interestedInvestors/InterestedInvestors";
+import ViewInvestmentRequest from "./pages/investment/ViewInvestmentRequest";
 
 // Business Application Pages
 import PendingApplications from "./pages/business/PendingApplications";
@@ -295,13 +302,41 @@ function App() {
               path="mentorEntreprenuers"
               element={<MentorEntreprenuer />}
             />
+            <Route
+              path="mentorEntreprenuers/businessDetailsByMentor/:uuid"
+              element={<BusinessDetailsByMentorWithUuid />}
+            />
             <Route path="mentorshipRequests" element={<MentorshipRequests />} />
+            <Route
+              path="mentorshipApplications"
+              element={<MentorshipApplications />}
+            />
             <Route path="mentorReports" element={<MentorReports />} />
 
             {/* Investment Routes */}
             <Route
               path="myInvestmentRequests"
               element={<MyInvestmentRequests />}
+            />
+            <Route
+              path="viewInvestmentRequest/:uuid"
+              element={<ViewInvestmentRequest />}
+            />
+            <Route
+              path="investmentApplications"
+              element={<InvestmentApplications />}
+            />
+            <Route
+              path="investmentApplications/:uuid"
+              element={<InvestmentApplicationDetailWithActions />}
+            />
+            <Route
+              path="interestedInvestors"
+              element={<InterestedInvestors />}
+            />
+            <Route
+              path="interestedEntrepreneursApplications"
+              element={<InterestedEntrepreneursApplications />}
             />
             <Route path="opportunities" element={<Opportunities />} />
 

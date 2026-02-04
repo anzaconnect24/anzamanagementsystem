@@ -158,6 +158,25 @@ export const getMyInvestmentRequests = async (page, limit) => {
   }
 };
 
+export const getInvestmentRequestDetails = async (uuid) => {
+  try {
+    const user = getUser();
+    const response = await axios.get(
+      `${server_url}/business_investment_request/${uuid}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    return error.response;
+  }
+};
+
 export const getPendingInvestmentRequest = async (page, limit) => {
   try {
     const user = getUser();

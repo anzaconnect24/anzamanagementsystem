@@ -15,7 +15,7 @@ export const assignEntreprenuerToMentor = async (data) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -33,7 +33,7 @@ export const getMentorAssignedEntreprenuers = async (uuid) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -51,7 +51,7 @@ export const getUnapprovedMentorEntreprenuers = async () => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -70,12 +70,31 @@ export const updateMentorEntreprenuer = async (uuid, data) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
     console.log(error);
     return error.response;
+  }
+};
+export const updateMentorshipApplication = async (uuid, data) => {
+  try {
+    const user = getUser();
+    const response = await axios.patch(
+      `${server_url}/mentorship-applications/${uuid}`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 };
 export const getEntreprenuerMentors = async (uuid, data) => {
@@ -88,7 +107,7 @@ export const getEntreprenuerMentors = async (uuid, data) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -106,11 +125,88 @@ export const unassignEntreprenuerToMentor = async (uuid) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
     console.log(error);
     return error.response;
+  }
+};
+
+export const setupMeeting = async (uuid, data) => {
+  try {
+    const user = getUser();
+    const response = await axios.post(
+      `${server_url}/mentorship-applications/${uuid}/setup-meeting`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+export const setupMentorEntreprenuerMeeting = async (uuid, data) => {
+  try {
+    const user = getUser();
+    const response = await axios.post(
+      `${server_url}/mentor-entreprenuers/${uuid}/setup-meeting`,
+      data,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+export const acceptAppointment = async (uuid) => {
+  try {
+    const user = getUser();
+    const response = await axios.post(
+      `${server_url}/mentorship-applications/${uuid}/accept-appointment`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    throw error;
+  }
+};
+export const acceptMentorEntreprenuerAppointment = async (uuid) => {
+  try {
+    const user = getUser();
+    const response = await axios.post(
+      `${server_url}/mentor-entreprenuers/${uuid}/accept-appointment`,
+      {},
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    throw error;
   }
 };
