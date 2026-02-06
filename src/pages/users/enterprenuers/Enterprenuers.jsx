@@ -27,7 +27,7 @@ const Enterprenuers = () => {
   });
   const [currentPage, setcurrentPage] = useState(1);
   const [totalPages, settotalPages] = useState(1);
-  const [limit, setLimit] = useState(20);
+  const [limit, setLimit] = useState(8);
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
   // Add states for dropdown visibility
@@ -157,7 +157,7 @@ const Enterprenuers = () => {
     if (isFiltering) {
       if (filters.sector !== "All Sectors") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.BusinessSector?.name === filters.sector
+          (item) => item.Business?.BusinessSector?.name === filters.sector,
         );
       }
 
@@ -165,13 +165,13 @@ const Enterprenuers = () => {
         filteredData = filteredData.filter(
           (item) =>
             new Date(item.Business?.createdAt).getFullYear().toString() ===
-            filters.year
+            filters.year,
         );
       }
 
       if (filters.program !== "All Programs") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.program === filters.program
+          (item) => item.Business?.program === filters.program,
         );
       }
 
@@ -191,7 +191,7 @@ const Enterprenuers = () => {
           return (
             direction *
             (a.Business?.BusinessSector?.name?.localeCompare(
-              b.Business?.BusinessSector?.name
+              b.Business?.BusinessSector?.name,
             ) || 0)
           );
         case "date":
@@ -266,7 +266,7 @@ const Enterprenuers = () => {
       case "Water Sanitation and Hygiene":
         return t(
           "users.waterSanitationHygiene",
-          "Water Sanitation and Hygiene"
+          "Water Sanitation and Hygiene",
         );
       case "Fintech":
         return t("users.fintech", "Fintech");
@@ -322,7 +322,7 @@ const Enterprenuers = () => {
               type="text"
               placeholder={t(
                 "users.searchEntrepreneurs",
-                "Search entrepreneurs..."
+                "Search entrepreneurs...",
               )}
               value={keyword}
               onChange={(e) => setKeyword(e.target.value)}
@@ -450,7 +450,7 @@ const Enterprenuers = () => {
                       onClick={() =>
                         handleFilterChange(
                           key,
-                          `All ${filterOptions[key].label}s`
+                          `All ${filterOptions[key].label}s`,
                         )
                       }
                       className="hover:text-primary-dark"
@@ -458,7 +458,7 @@ const Enterprenuers = () => {
                       ×
                     </button>
                   </span>
-                )
+                ),
             )}
             {keyword && (
               <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">

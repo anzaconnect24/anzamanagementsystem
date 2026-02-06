@@ -39,6 +39,7 @@ const InvestmentApplications = () => {
     setLoading(true);
     try {
       const data = await getMyInvestmentApplications(currentPage, itemsPerPage);
+      console.log("Fetched applications:", data);
       setApplications(data?.data || []);
       setTotalCount(data?.count || 0);
     } catch (error) {
@@ -62,7 +63,7 @@ const InvestmentApplications = () => {
         return (
           app.amount?.toString().includes(searchLower) ||
           app.purposeOfInvestment?.toLowerCase().includes(searchLower) ||
-          app.Investor?.name?.toLowerCase().includes(searchLower)
+          app.Entrepreneur?.name?.toLowerCase().includes(searchLower)
         );
       });
     }
@@ -246,7 +247,7 @@ const InvestmentApplications = () => {
                 type="text"
                 placeholder={t(
                   "investment.searchPlaceholder",
-                  "Search by investor name, amount, or purpose...",
+                  "Search by entrepreneur name, amount, or purpose...",
                 )}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -273,7 +274,7 @@ const InvestmentApplications = () => {
               </div>
               <div className="col-span-3">
                 <p className="text-sm font-semibold text-black dark:text-white">
-                  {t("investment.investor", "Investor")}
+                  {t("investment.entrepreneur", "Entrepreneur")}
                 </p>
               </div>
               <div className="col-span-2">
@@ -310,15 +311,18 @@ const InvestmentApplications = () => {
                     {getStatusBadge(application.status)}
                   </div>
 
-                  {/* Investor */}
+                  {/* Entrepreneur */}
                   <div className="col-span-1 md:col-span-3 flex items-center">
                     <div>
                       <p className="text-sm font-medium text-black dark:text-white">
-                        {application.Investor?.name ||
-                          t("investment.unknownInvestor", "Unknown Investor")}
+                        {application.Entrepreneur?.name ||
+                          t(
+                            "investment.unknownEntrepreneur",
+                            "Unknown Entrepreneur",
+                          )}
                       </p>
                       <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {application.Investor?.email || ""}
+                        {application.Entrepreneur?.email || ""}
                       </p>
                     </div>
                   </div>

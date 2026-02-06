@@ -323,31 +323,39 @@ const Sidebar = ({
 
     // Funding Opportunities
     const investmentItems = [];
-
-    if (["Admin", "Enterprenuer"].includes(role)) {
+    if (["Admin"].includes(role)) {
       investmentItems.push({
         name: t("navigation.investorConnection", "Investor Connection"),
         path: "/dashboard/investors",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
+    }
+
+    if (["Enterprenuer"].includes(role)) {
+      investmentItems.push({
+        name: t("navigation.investorConnection", "Investor Connection"),
+        path: "/dashboard/investors",
+        icon: <RiMoneyDollarCircleLine className="text-xl" />,
+        submenu: [
+          {
+            name: t("navigation.investors", "Investors"),
+            path: "/dashboard/investors",
+          },
+          {
+            name: t(
+              "navigation.investmentApplications",
+              "Investment Applications",
+            ),
+            path: "/dashboard/investmentApplications",
+          },
+          {
+            name: t("navigation.interestedInvestors", "Interested Investors"),
+            path: "/dashboard/interestedInvestors",
+          },
+        ],
+      });
 
       // Add Investment Applications for Entrepreneurs
-      if (["Enterprenuer"].includes(role)) {
-        investmentItems.push({
-          name: t(
-            "navigation.investmentApplications",
-            "Investment Applications",
-          ),
-          path: "/dashboard/investmentApplications",
-          icon: <BsCardChecklist className="text-xl" />,
-        });
-
-        investmentItems.push({
-          name: t("navigation.interestedInvestors", "Interested Investors"),
-          path: "/dashboard/interestedInvestors",
-          icon: <FaHandshake className="text-xl" />,
-        });
-      }
 
       investmentItems.push({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),

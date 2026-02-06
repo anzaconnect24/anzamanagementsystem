@@ -70,7 +70,7 @@ const CratReviewApplicationsPage = () => {
     } catch (error) {
       console.error("Error fetching CRAT reviews:", error);
       toast.error(
-        t("cratReviews.errors.fetchReviews", "Failed to fetch CRAT reviews")
+        t("cratReviews.errors.fetchReviews", "Failed to fetch CRAT reviews"),
       );
     } finally {
       setLoading(false);
@@ -95,7 +95,7 @@ const CratReviewApplicationsPage = () => {
   const handleAssignReviewer = async () => {
     if (!selectedReviewer) {
       toast.error(
-        t("cratReviews.validation.selectReviewer", "Please select a reviewer")
+        t("cratReviews.validation.selectReviewer", "Please select a reviewer"),
       );
       return;
     }
@@ -105,12 +105,12 @@ const CratReviewApplicationsPage = () => {
       const response = await axios.put(
         `${server_url}/crat_reviews/${selectedReview.uuid}/assign`,
         { reviewer_id: selectedReviewer },
-        { headers }
+        { headers },
       );
 
       if (response.data.status) {
         toast.success(
-          t("cratReviews.success.assigned", "Reviewer assigned successfully!")
+          t("cratReviews.success.assigned", "Reviewer assigned successfully!"),
         );
         setShowAssignModal(false);
         setSelectedReview(null);
@@ -119,13 +119,13 @@ const CratReviewApplicationsPage = () => {
       } else {
         toast.error(
           response.data.message ||
-            t("cratReviews.errors.assignReviewer", "Failed to assign reviewer")
+            t("cratReviews.errors.assignReviewer", "Failed to assign reviewer"),
         );
       }
     } catch (error) {
       console.error("Error assigning reviewer:", error);
       toast.error(
-        t("cratReviews.errors.assigningReviewer", "Error assigning reviewer")
+        t("cratReviews.errors.assigningReviewer", "Error assigning reviewer"),
       );
     } finally {
       setAssigningReviewer(false);
@@ -137,8 +137,8 @@ const CratReviewApplicationsPage = () => {
       toast.error(
         t(
           "cratReviews.validation.finalStatusAndComments",
-          "Please provide final status and comments"
-        )
+          "Please provide final status and comments",
+        ),
       );
       return;
     }
@@ -151,12 +151,12 @@ const CratReviewApplicationsPage = () => {
           final_status: finalStatus,
           admin_comments: adminComments.trim(),
         },
-        { headers }
+        { headers },
       );
 
       if (response.data.status) {
         toast.success(
-          t("cratReviews.success.finalized", "Review finalized successfully!")
+          t("cratReviews.success.finalized", "Review finalized successfully!"),
         );
         setShowFinalizeModal(false);
         setSelectedReview(null);
@@ -168,14 +168,14 @@ const CratReviewApplicationsPage = () => {
           response.data.message ||
             t(
               "cratReviews.errors.finalizeReviewer",
-              "Failed to finalize review"
-            )
+              "Failed to finalize review",
+            ),
         );
       }
     } catch (error) {
       console.error("Error finalizing review:", error);
       toast.error(
-        t("cratReviews.errors.finalizingReviewer", "Error finalizing review")
+        t("cratReviews.errors.finalizingReviewer", "Error finalizing review"),
       );
     } finally {
       setFinalizing(false);
@@ -237,7 +237,7 @@ const CratReviewApplicationsPage = () => {
           <p className="mt-2 text-bodydark2">
             {t(
               "cratReviews.subtitle",
-              "Manage CRAT review applications from entrepreneurs. Assign reviewers and finalize decisions."
+              "Manage CRAT review applications from entrepreneurs. Assign reviewers and finalize decisions.",
             )}
           </p>
         </div>
@@ -251,7 +251,7 @@ const CratReviewApplicationsPage = () => {
                 type="text"
                 placeholder={t(
                   "cratReviews.searchPlaceholder",
-                  "Search by business name or email..."
+                  "Search by business name or email...",
                 )}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -296,13 +296,13 @@ const CratReviewApplicationsPage = () => {
               <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
                 {t(
                   "cratReviews.empty.title",
-                  "No CRAT review applications found"
+                  "No CRAT review applications found",
                 )}
               </h3>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t(
                   "cratReviews.empty.description",
-                  "CRAT review applications will appear here when entrepreneurs submit them."
+                  "CRAT review applications will appear here when entrepreneurs submit them.",
                 )}
               </p>
             </div>
@@ -319,12 +319,12 @@ const CratReviewApplicationsPage = () => {
                       {getStatusIcon(review.status)}
                       <span
                         className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          review.status
+                          review.status,
                         )}`}
                       >
                         {t(
                           `cratReviews.status.${review.status}`,
-                          review.status.replace("_", " ")
+                          review.status.replace("_", " "),
                         )}
                       </span>
                     </div>
@@ -420,14 +420,14 @@ const CratReviewApplicationsPage = () => {
                       <button
                         onClick={() => {
                           router.push(
-                            `/dashboard/report?user_uuid=${review.entrepreneur?.uuid}`
+                            `/dashboard/report?user_uuid=${review.entrepreneur?.uuid}`,
                           );
                         }}
                         className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"
                       >
                         {t(
                           "cratReviews.actions.viewCratReport",
-                          "View CRAT Report"
+                          "View CRAT Report",
                         )}
                       </button>
                     </div>
@@ -462,7 +462,7 @@ const CratReviewApplicationsPage = () => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button
@@ -490,7 +490,7 @@ const CratReviewApplicationsPage = () => {
             <p className="text-bodydark2 mb-4">
               {t(
                 "cratReviews.modals.assignReviewer.description",
-                "Select a staff member to review this CRAT application for"
+                "Select a staff member to review this CRAT application for",
               )}{" "}
               <strong>
                 {selectedReview?.entrepreneur.Business?.name ||
@@ -502,7 +502,7 @@ const CratReviewApplicationsPage = () => {
               <label className="block font-medium text-black dark:text-white mb-2">
                 {t(
                   "cratReviews.modals.assignReviewer.selectReviewer",
-                  "Select Reviewer"
+                  "Select Reviewer",
                 )}
               </label>
               <select
@@ -513,7 +513,7 @@ const CratReviewApplicationsPage = () => {
                 <option value="">
                   {t(
                     "cratReviews.modals.assignReviewer.chooseReviewer",
-                    "Choose a reviewer..."
+                    "Choose a reviewer...",
                   )}
                 </option>
                 {staffMembers.map((staff) => (
@@ -567,7 +567,7 @@ const CratReviewApplicationsPage = () => {
             <p className="text-bodydark2 mb-4">
               {t(
                 "cratReviews.modals.finalizeReview.description",
-                "Make the final decision on the CRAT review for"
+                "Make the final decision on the CRAT review for",
               )}{" "}
               <strong>
                 {selectedReview?.entrepreneur.Business?.name ||
@@ -581,7 +581,7 @@ const CratReviewApplicationsPage = () => {
                 <h6 className="font-medium text-black dark:text-white mb-2">
                   {t(
                     "cratReviews.modals.finalizeReview.reviewerComments",
-                    "Reviewer Comments:"
+                    "Reviewer Comments:",
                   )}
                 </h6>
                 <p className="text-sm text-bodydark2">
@@ -594,7 +594,7 @@ const CratReviewApplicationsPage = () => {
               <label className="block font-medium text-black dark:text-white mb-2">
                 {t(
                   "cratReviews.modals.finalizeReview.finalDecision",
-                  "Final Decision"
+                  "Final Decision",
                 )}
               </label>
               <select
@@ -605,7 +605,7 @@ const CratReviewApplicationsPage = () => {
                 <option value="">
                   {t(
                     "cratReviews.modals.finalizeReview.chooseDecision",
-                    "Choose decision..."
+                    "Choose decision...",
                   )}
                 </option>
                 <option value="accepted">
@@ -621,7 +621,7 @@ const CratReviewApplicationsPage = () => {
               <label className="block font-medium text-black dark:text-white mb-2">
                 {t(
                   "cratReviews.modals.finalizeReview.adminComments",
-                  "Admin Comments"
+                  "Admin Comments",
                 )}
               </label>
               <textarea
@@ -630,7 +630,7 @@ const CratReviewApplicationsPage = () => {
                 onChange={(e) => setAdminComments(e.target.value)}
                 placeholder={t(
                   "cratReviews.modals.finalizeReview.adminCommentsPlaceholder",
-                  "Provide feedback and final decision reasoning..."
+                  "Provide feedback and final decision reasoning...",
                 )}
                 className="w-full px-4 py-2 border border-black/20 rounded-lg focus:ring-primary focus:border-primary dark:border-strokedark dark:bg-form-input dark:text-white"
               />
@@ -652,7 +652,7 @@ const CratReviewApplicationsPage = () => {
                     <MdCheckCircle />
                     {t(
                       "cratReviews.actions.finalizeDecision",
-                      "Finalize Decision"
+                      "Finalize Decision",
                     )}
                   </>
                 )}

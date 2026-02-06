@@ -42,7 +42,7 @@ const CratReviewsPage = () => {
             limit,
             search: searchTerm || undefined,
           },
-        }
+        },
       );
 
       if (response.data.status) {
@@ -71,7 +71,7 @@ const CratReviewsPage = () => {
       const response = await axios.put(
         `${server_url}/crat_reviews/${review.uuid}`,
         { status: "in_review" },
-        { headers }
+        { headers },
       );
 
       if (response.data.status) {
@@ -97,7 +97,7 @@ const CratReviewsPage = () => {
         {
           reviewer_comments: reviewComments.trim(),
         },
-        { headers }
+        { headers },
       );
 
       if (response.data.status) {
@@ -275,10 +275,10 @@ const CratReviewsPage = () => {
                     <button
                       onClick={() => {
                         router.push(
-                          `/dashboard/report?user_uuid=${review.entrepreneur.uuid}`
+                          `/dashboard/report?user_uuid=${review.entrepreneur.uuid}`,
                         );
                       }}
-                      className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"
+                      className="flex-1 px-3 py-2 bg-primary/10  w-full text-primary font-bold rounded-lg hover:bg-sky-700 text-sm mt-1"
                     >
                       View CRAT Report
                     </button>
@@ -357,7 +357,7 @@ const CratReviewsPage = () => {
                     >
                       {page}
                     </button>
-                  )
+                  ),
                 )}
 
                 <button

@@ -36,6 +36,7 @@ const Report = () => {
     t("report.reportNarrative", "Report Narrative"),
     t("crat.tableHeaders.entrepreneurComment", "Entrepreneur Comment"),
     t("crat.tableHeaders.reviewerComment", "Reviewer Comment"),
+    t("crat.tableHeaders.attachment", "Attachment"),
   ];
   const [data, setData] = useState({});
   // Store incoming scores from backend so we can merge them once translations are ready
@@ -463,7 +464,14 @@ const Report = () => {
         const domains = ["commercial", "financial", "operations", "legal"];
         const next = { ...draft };
         Object.values(deduplicatedScores).forEach(
-          ({ subDomain, score, uuid, customerComment, reviewerComment }) => {
+          ({
+            subDomain,
+            score,
+            uuid,
+            customerComment,
+            reviewerComment,
+            attachment,
+          }) => {
             const key = labelToKey(subDomain);
             if (!key) {
               console.warn("No key mapping for backend subDomain:", subDomain);
@@ -487,6 +495,7 @@ const Report = () => {
                         uuid,
                         customerComment,
                         reviewerComment,
+                        attachment,
                         originalSubDomain: subDomain, // Store original subdomain from backend
                         endpoint, // Store the correct endpoint
                       }
@@ -928,7 +937,7 @@ const Report = () => {
     return (
       <div
         className={`grid ${
-          showReviewerComment ? "grid-cols-5" : "grid-cols-4"
+          showReviewerComment ? "grid-cols-6" : "grid-cols-4"
         } border-b border-stroke py-4 px-4 dark:border-strokedark`}
       >
         <div className="flex items-center px-2">
@@ -952,11 +961,18 @@ const Report = () => {
           </p>
         </div>
         {showReviewerComment && (
-          <div className="flex items-center px-2">
-            <p className="text-sm text-black dark:text-white font-semibold">
-              {tableHeaders[4]}
-            </p>
-          </div>
+          <>
+            <div className="flex items-center px-2">
+              <p className="text-sm text-black dark:text-white font-semibold">
+                {tableHeaders[4]}
+              </p>
+            </div>
+            <div className="flex items-center px-2">
+              <p className="text-sm text-black dark:text-white font-semibold">
+                {tableHeaders[5]}
+              </p>
+            </div>
+          </>
         )}
       </div>
     );
@@ -978,7 +994,7 @@ const Report = () => {
       return (
         <div
           className={`grid ${
-            showReviewerComment ? "grid-cols-5" : "grid-cols-4"
+            showReviewerComment ? "grid-cols-6" : "grid-cols-4"
           } border-t border-stroke py-4 px-4 dark:border-strokedark`}
           key={index}
         >
@@ -1000,27 +1016,45 @@ const Report = () => {
             </p>
           </div>
           {showReviewerComment && (
-            <div className="flex items-center px-2">
-              {canEditReviewerComment ? (
-                <textarea
-                  defaultValue={item.reviewerComment || ""}
-                  onBlur={(e) =>
-                    handleReviewerCommentBlur(item.uuid, e.target.value, item)
-                  }
-                  placeholder={t(
-                    "crat.enterReviewerComment",
-                    "Enter reviewer comment...",
-                  )}
-                  className="w-full px-2 py-1 text-sm border border-black/20 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                  rows={2}
-                />
-              ) : (
-                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400  dark:bg-gray-700 rounded-md  min-h-[2rem] flex items-center">
-                  {item.reviewerComment ||
-                    t("crat.noReviewerComment", "No reviewer comment")}
-                </p>
-              )}
-            </div>
+            <>
+              <div className="flex items-center px-2">
+                {canEditReviewerComment ? (
+                  <textarea
+                    defaultValue={item.reviewerComment || ""}
+                    onBlur={(e) =>
+                      handleReviewerCommentBlur(item.uuid, e.target.value, item)
+                    }
+                    placeholder={t(
+                      "crat.enterReviewerComment",
+                      "Enter reviewer comment...",
+                    )}
+                    className="w-full px-2 py-1 text-sm border border-black/20 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    rows={2}
+                  />
+                ) : (
+                  <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400  dark:bg-gray-700 rounded-md  min-h-[2rem] flex items-center">
+                    {item.reviewerComment ||
+                      t("crat.noReviewerComment", "No reviewer comment")}
+                  </p>
+                )}
+              </div>
+              <div className="flex items-center px-2">
+                {item.attachment ? (
+                  <a
+                    href={item.attachment}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline"
+                  >
+                    {t("crat.viewAttachment", "View Attachment")}
+                  </a>
+                ) : (
+                  <p className="text-sm text-gray-400 dark:text-gray-500">
+                    {t("crat.noAttachment", "No attachment")}
+                  </p>
+                )}
+              </div>
+            </>
           )}
         </div>
       );
@@ -1102,6 +1136,7 @@ const Report = () => {
         prevPage={t("common.back", "Back")}
         prevLink={""}
       />
+
       {/* {userDetails.role} */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className=" border-b border-black/0">

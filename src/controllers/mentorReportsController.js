@@ -107,6 +107,30 @@ export const getSpecificReport = async (uuid) => {
     return error.response;
   }
 };
+export const getMentorEntrepreneurReports = async (
+  mentorUuid,
+  entrepreneurUuid,
+  page = 1,
+  limit = 10,
+) => {
+  try {
+    const user = getUser();
+    const response = await axios.get(
+      `${server_url}/mentor-reports/mentor/${mentorUuid}/entrepreneur/${entrepreneurUuid}?page=${page}&limit=${limit}`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+    return error.response;
+  }
+};
+
 export const deleteMentorReport = async (uuid) => {
   try {
     const user = getUser();

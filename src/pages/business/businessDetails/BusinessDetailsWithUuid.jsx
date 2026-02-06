@@ -52,7 +52,7 @@ const Page = () => {
   const loadCRATForAI = async () => {
     if (!business) {
       toast.error(
-        t("business.errors.dataNotLoaded", "Business data not loaded yet")
+        t("business.errors.dataNotLoaded", "Business data not loaded yet"),
       );
       return;
     }
@@ -115,13 +115,13 @@ const Page = () => {
         });
       } catch (cratError) {
         console.log(
-          "ℹ️ No CRAT assessment found, using business profile analysis"
+          "ℹ️ No CRAT assessment found, using business profile analysis",
         );
         toast.success(
           t("ai.profilePrepared", "Business profile analysis prepared"),
           {
             id: "ai-loading",
-          }
+          },
         );
       }
 
@@ -133,8 +133,8 @@ const Page = () => {
             calculateIntelligentScore("commercial") >= 70
               ? t("ai.status.good", "Good")
               : calculateIntelligentScore("commercial") >= 50
-              ? t("ai.status.fair", "Fair")
-              : t("ai.status.needsImprovement", "Needs Improvement"),
+                ? t("ai.status.fair", "Fair")
+                : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         financial: {
           percentage: calculateIntelligentScore("financial"),
@@ -142,8 +142,8 @@ const Page = () => {
             calculateIntelligentScore("financial") >= 70
               ? t("ai.status.good", "Good")
               : calculateIntelligentScore("financial") >= 50
-              ? t("ai.status.fair", "Fair")
-              : t("ai.status.needsImprovement", "Needs Improvement"),
+                ? t("ai.status.fair", "Fair")
+                : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         operations: {
           percentage: calculateIntelligentScore("operations"),
@@ -151,8 +151,8 @@ const Page = () => {
             calculateIntelligentScore("operations") >= 70
               ? t("ai.status.good", "Good")
               : calculateIntelligentScore("operations") >= 50
-              ? t("ai.status.fair", "Fair")
-              : t("ai.status.needsImprovement", "Needs Improvement"),
+                ? t("ai.status.fair", "Fair")
+                : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         legal: {
           percentage: calculateIntelligentScore("legal"),
@@ -160,8 +160,8 @@ const Page = () => {
             calculateIntelligentScore("legal") >= 70
               ? t("ai.status.good", "Good")
               : calculateIntelligentScore("legal") >= 50
-              ? t("ai.status.fair", "Fair")
-              : t("ai.status.needsImprovement", "Needs Improvement"),
+                ? t("ai.status.fair", "Fair")
+                : t("ai.status.needsImprovement", "Needs Improvement"),
         },
         general_status: actualCRATData
           ? t("ai.generalStatus.cratAssessment", "CRAT Assessment")
@@ -177,58 +177,58 @@ const Page = () => {
           responses: [
             `${t(
               "business.labels.businessDescription",
-              "Business Description"
+              "Business Description",
             )}: ${
               business.description ||
               t(
                 "business.placeholders.overviewMissing",
-                "Comprehensive business overview needed"
+                "Comprehensive business overview needed",
               )
             }`,
             `${t("business.labels.targetMarket", "Target Market")}: ${
               business.market ||
               t(
                 "business.placeholders.marketMissing",
-                "Market analysis required"
+                "Market analysis required",
               )
             }`,
             `${t("business.labels.customerBase", "Customer Base")}: ${
               business.numberOfCustomers
                 ? `${business.numberOfCustomers} ${t(
                     "business.customers",
-                    "customers"
+                    "customers",
                   )}`
                 : t(
                     "business.placeholders.customerMetricsMissing",
-                    "Customer metrics needed"
+                    "Customer metrics needed",
                   )
             }`,
             `${t("business.labels.marketImpact", "Market Impact")}: ${
               business.impact ||
               t(
                 "business.placeholders.impactMissing",
-                "Impact assessment required"
+                "Impact assessment required",
               )
             }`,
             `${t("business.labels.currentTraction", "Current Traction")}: ${
               business.traction ||
               t(
                 "business.placeholders.tractionMissing",
-                "Traction metrics needed"
+                "Traction metrics needed",
               )
             }`,
             `${t("business.labels.problemStatement", "Problem Statement")}: ${
               business.problem ||
               t(
                 "business.placeholders.problemMissing",
-                "Problem definition required"
+                "Problem definition required",
               )
             }`,
             `${t("business.labels.solutionOffered", "Solution Offered")}: ${
               business.solution ||
               t(
                 "business.placeholders.solutionMissing",
-                "Solution description required"
+                "Solution description required",
               )
             }`,
           ],
@@ -240,57 +240,57 @@ const Page = () => {
               business.stage ||
               t(
                 "business.placeholders.stageMissing",
-                "Stage classification needed"
+                "Stage classification needed",
               )
             }`,
             `${t("business.labels.fundraisingNeeds", "Fundraising Needs")}: ${
               business.fundraisingNeeds ||
               t(
                 "business.placeholders.fundraisingMissing",
-                "Funding requirements not specified"
+                "Funding requirements not specified",
               )
             }`,
             `${t("business.labels.investmentSeeking", "Investment Seeking")}: ${
               business.lookingForInvestment
                 ? t(
                     "business.seekingInvestmentYes",
-                    "Actively seeking investment"
+                    "Actively seeking investment",
                   )
                 : t(
                     "business.seekingInvestmentNo",
-                    "Not currently seeking investment"
+                    "Not currently seeking investment",
                   )
             }`,
             `${t("business.labels.revenueModel", "Revenue Model")}: ${
               business.businessPlan
                 ? t(
                     "business.placeholders.businessPlanAvailable",
-                    "Business plan available"
+                    "Business plan available",
                   )
                 : t(
                     "business.placeholders.revenueModelMissing",
-                    "Revenue model documentation needed"
+                    "Revenue model documentation needed",
                   )
             }`,
             `${t(
               "business.labels.financialDocumentation",
-              "Financial Documentation"
+              "Financial Documentation",
             )}: ${
               business.companyProfile
                 ? t(
                     "business.placeholders.companyProfileAvailable",
-                    "Company profile available"
+                    "Company profile available",
                   )
                 : t(
                     "business.placeholders.financialDocsMissing",
-                    "Financial documents needed"
+                    "Financial documents needed",
                   )
             }`,
             `${t("business.labels.growthPlans", "Growth Plans")}: ${
               business.growthPlan ||
               t(
                 "business.placeholders.growthStrategyMissing",
-                "Growth strategy required"
+                "Growth strategy required",
               )
             }`,
           ],
@@ -303,28 +303,28 @@ const Page = () => {
                 ? `${t("business.teamSize", "Team Size")} ${business.team}`
                 : t(
                     "business.placeholders.teamSizeMissing",
-                    "Team size not specified"
+                    "Team size not specified",
                   )
             }`,
             `${t("business.labels.businessLocation", "Business Location")}: ${
               business.location ||
               t(
                 "business.placeholders.locationMissing",
-                "Location not specified"
+                "Location not specified",
               )
             }`,
             `${t("business.labels.growthStrategy", "Growth Strategy")}: ${
               business.growthPlan ||
               t(
                 "business.placeholders.strategyMissing",
-                "Strategic planning required"
+                "Strategic planning required",
               )
             }`,
             `${t("business.labels.operationalStatus", "Operational Status")}: ${
               business.status === "accepted"
                 ? t(
                     "business.placeholders.approvedOperations",
-                    "Approved operations"
+                    "Approved operations",
                   )
                 : t("business.placeholders.pendingApproval", "Pending approval")
             }`,
@@ -332,14 +332,14 @@ const Page = () => {
               business.BusinessSector?.name ||
               t(
                 "business.placeholders.sectorMissing",
-                "Sector classification needed"
+                "Sector classification needed",
               )
             }`,
             `${t("business.labels.programCompletion", "Program Completion")}: ${
               business.completedProgram ||
               t(
                 "business.placeholders.noProgramCompletion",
-                "No program completion recorded"
+                "No program completion recorded",
               )
             }`,
             `${t("business.labels.alumniStatus", "Alumni Status")}: ${
@@ -354,62 +354,62 @@ const Page = () => {
           responses: [
             `${t(
               "business.labels.businessRegistration",
-              "Business Registration"
+              "Business Registration",
             )}: ${
               business.registration ||
               t(
                 "business.placeholders.registrationMissing",
-                "Registration documentation needed"
+                "Registration documentation needed",
               )
             }`,
             `${t("business.labels.legalStructure", "Legal Structure")}: ${
               business.BusinessSector?.name ||
               t(
                 "business.placeholders.legalStructureMissing",
-                "Legal structure classification required"
+                "Legal structure classification required",
               )
             }`,
             `${t("business.labels.complianceStatus", "Compliance Status")}: ${
               business.status === "accepted"
                 ? t(
                     "business.placeholders.compliantApproved",
-                    "Compliant and approved"
+                    "Compliant and approved",
                   )
                 : t(
                     "business.placeholders.pendingCompliance",
-                    "Pending compliance review"
+                    "Pending compliance review",
                   )
             }`,
             `${t("business.labels.sdgAlignment", "SDG Alignment")}: ${
               business.sdg ||
               t(
                 "business.placeholders.sdgMissing",
-                "SDG alignment assessment needed"
+                "SDG alignment assessment needed",
               )
             }`,
             `${t("business.labels.documentation", "Documentation")}: ${
               business.companyProfile
                 ? t(
                     "business.placeholders.legalDocsAvailable",
-                    "Legal documents available"
+                    "Legal documents available",
                   )
                 : t(
                     "business.placeholders.legalDocsMissing",
-                    "Legal documentation required"
+                    "Legal documentation required",
                   )
             }`,
             `${t(
               "business.labels.industryCompliance",
-              "Industry Compliance"
+              "Industry Compliance",
             )}: ${
               business.BusinessSector?.name
                 ? t(
                     "business.placeholders.industryComplianceAddressed",
-                    "Industry-specific compliance addressed"
+                    "Industry-specific compliance addressed",
                   )
                 : t(
                     "business.placeholders.industryComplianceMissing",
-                    "Industry compliance assessment needed"
+                    "Industry compliance assessment needed",
                   )
             }`,
           ],
@@ -461,7 +461,7 @@ const Page = () => {
           scoreData.financial.percentage +
           scoreData.operations.percentage +
           scoreData.legal.percentage) /
-          4
+          4,
       );
 
       // Determine score category for better messaging
@@ -470,7 +470,7 @@ const Page = () => {
       if (avgScore < 50) {
         scoreCategory = t(
           "ai.scoreCategories.needsImprovement",
-          "Needs Improvement"
+          "Needs Improvement",
         );
         scoreEmoji = "📈";
       } else if (avgScore < 70) {
@@ -479,7 +479,7 @@ const Page = () => {
       } else if (avgScore < 85) {
         scoreCategory = t(
           "ai.scoreCategories.strongPerformance",
-          "Strong Performance"
+          "Strong Performance",
         );
         scoreEmoji = "🚀";
       }
@@ -487,12 +487,12 @@ const Page = () => {
       toast.success(
         `${scoreEmoji} ${t(
           "ai.analysisComplete",
-          "AI analysis complete!"
+          "AI analysis complete!",
         )} ${scoreCategory} - ${avgScore}%`,
         {
           id: "ai-loading",
           duration: 4000,
-        }
+        },
       );
 
       // Smooth scroll to AI section with slight delay for better UX
@@ -507,11 +507,11 @@ const Page = () => {
       toast.error(
         t(
           "ai.errors.prepareFailed",
-          "Failed to prepare AI analysis. Please try again."
+          "Failed to prepare AI analysis. Please try again.",
         ),
         {
           id: "ai-loading",
-        }
+        },
       );
     } finally {
       setLoadingCRAT(false);
@@ -530,7 +530,7 @@ const Page = () => {
         business.User?.name || t("common.notProvided", "N/A")
       }`,
       10,
-      y
+      y,
     );
     y += 8;
     doc.text(
@@ -538,13 +538,13 @@ const Page = () => {
         business.name || t("common.notProvided", "N/A")
       }`,
       10,
-      y
+      y,
     );
     y += 8;
     doc.text(
       `${t("ai.pdf.date", "Date")}: ${new Date().toLocaleDateString()}`,
       10,
-      y
+      y,
     );
     y += 12;
     Object.entries(scoreData).forEach(([domain, data]) => {
@@ -554,7 +554,7 @@ const Page = () => {
             data.percentage
           }%`,
           10,
-          y
+          y,
         );
         y += 7;
         if (data.status) {
@@ -570,8 +570,8 @@ const Page = () => {
     toast.success(
       t(
         "ai.pdf.generated",
-        "AI analysis report generated! (Email sending is disabled)"
-      )
+        "AI analysis report generated! (Email sending is disabled)",
+      ),
     );
   };
 
@@ -693,7 +693,7 @@ const Page = () => {
                     {business?.description ||
                       t(
                         "business.placeholders.descriptionMissing",
-                        "Description not available"
+                        "Description not available",
                       )}
                   </p>
                 </div>
@@ -706,7 +706,7 @@ const Page = () => {
                     {business?.problem ||
                       t(
                         "business.placeholders.problemDescriptionMissing",
-                        "No problem description available"
+                        "No problem description available",
                       )}
                   </p>
                 </div>
@@ -718,7 +718,7 @@ const Page = () => {
                     {business?.solution ||
                       t(
                         "business.placeholders.solutionDescriptionMissing",
-                        "No solution description available"
+                        "No solution description available",
                       )}
                   </p>
                 </div>
@@ -730,7 +730,7 @@ const Page = () => {
                     {business?.traction ||
                       t(
                         "business.placeholders.tractionInfoMissing",
-                        "No traction information available"
+                        "No traction information available",
                       )}
                   </p>
                 </div>
@@ -752,7 +752,7 @@ const Page = () => {
                     {business?.market ||
                       t(
                         "business.placeholders.targetMarketMissing",
-                        "No target market description available"
+                        "No target market description available",
                       )}{" "}
                     {/* Updated to use market */}
                   </p>
@@ -765,7 +765,7 @@ const Page = () => {
                     {business?.impact ||
                       t(
                         "business.placeholders.impactDescriptionMissing",
-                        "No impact description available"
+                        "No impact description available",
                       )}{" "}
                     {/* Updated to use impact */}
                   </p>
@@ -788,7 +788,7 @@ const Page = () => {
                     {business?.growthPlan ||
                       t(
                         "business.placeholders.growthPlansMissing",
-                        "No growth plans available"
+                        "No growth plans available",
                       )}{" "}
                     {/* Updated to use growthPlan */}
                   </p>
@@ -801,13 +801,15 @@ const Page = () => {
                     {business?.fundraisingNeeds ||
                       t(
                         "business.placeholders.fundraisingNeedsMissing",
-                        "No fundraising needs specified"
+                        "No fundraising needs specified",
                       )}
                   </p>
                 </div>
               </div>
             </div>
-            {["Admin", "Mentor", "Investor"].includes(userDetails.role) && (
+            {["Admin", "Mentor", "Investor", "Staff"].includes(
+              userDetails.role,
+            ) && (
               <div className="grid grid-cols-12 gap-6 items-stretch">
                 <div className=" col-span-7">
                   <BusinessDomainScores
@@ -846,7 +848,7 @@ const Page = () => {
                           {
                             title: t(
                               "business.businessPlanDoc",
-                              "Business Plan"
+                              "Business Plan",
                             ),
                             url: business.businessPlan,
                             icon: <FaFilePdf className="text-red-600" />,
@@ -858,7 +860,7 @@ const Page = () => {
                           {
                             title: t(
                               "business.marketResearchDoc",
-                              "Market Research"
+                              "Market Research",
                             ),
                             url: business.marketResearch,
                             icon: <FaFilePdf className="text-red-600" />,
@@ -896,14 +898,14 @@ const Page = () => {
                           toast.success(
                             t(
                               "business.success.approved",
-                              "Approved successfully"
-                            )
+                              "Approved successfully",
+                            ),
                           );
                           setApproving(false);
                           router.back();
-                        }
+                        },
                       );
-                    }
+                    },
                   );
                 }}
                 className="inline-flex items-center w-64 justify-center px-6 py-4 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 font-semibold text-lg shadow-sm hover:shadow-md"
@@ -913,7 +915,7 @@ const Page = () => {
                 ) : (
                   t(
                     "business.actions.approveEntrepreneur",
-                    "Approve Entrepreneur"
+                    "Approve Entrepreneur",
                   )
                 )}
               </button>
@@ -989,7 +991,7 @@ const Page = () => {
                   {
                     label: t(
                       "business.seekingInvestment",
-                      "Seeking Investment"
+                      "Seeking Investment",
                     ),
                     value: business?.lookingForInvestment
                       ? t("common.yes", "Yes")
@@ -1144,7 +1146,7 @@ const Page = () => {
                     <button
                       onClick={() =>
                         router.push(
-                          `/dashboard/businessDetails/${business.uuid}/crat-documents`
+                          `/dashboard/businessDetails/${business.uuid}/crat-documents`,
                         )
                       }
                       className="w-full flex justify-center text-center font-bold p-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white border border-black/10 rounded-xl hover:shadow-md transition-all duration-200"
@@ -1223,11 +1225,11 @@ const Page = () => {
                       {showAIAnalysis
                         ? t(
                             "ai.tooltip.update",
-                            "Update analysis with latest data"
+                            "Update analysis with latest data",
                           )
                         : t(
                             "ai.tooltip.generate",
-                            "Generate comprehensive AI investment analysis"
+                            "Generate comprehensive AI investment analysis",
                           )}
                     </div>
                   </div>
@@ -1243,15 +1245,15 @@ const Page = () => {
                     toast.success(
                       t(
                         "chat.enablingEncryptionWait",
-                        "Enabling end-to-end encryption. Please wait..."
-                      )
+                        "Enabling end-to-end encryption. Please wait...",
+                      ),
                     );
                     createNotification({
                       user_uuid: business.User.uuid,
                       to: "User",
                       message: `${t(
                         "notifications.newMessage",
-                        "You have a new message"
+                        "You have a new message",
                       )}`,
                     });
                     createConversation(data).then((data) => {
@@ -1288,8 +1290,8 @@ const Page = () => {
                           toast.success(
                             t(
                               "mentorship.requestSent",
-                              "Request sent successfully"
-                            )
+                              "Request sent successfully",
+                            ),
                           );
                           setRequesting(false);
                         });
@@ -1302,7 +1304,7 @@ const Page = () => {
                         ? t("mentorship.requesting", "Requesting...")
                         : t(
                             "mentorship.requestToBeMentor",
-                            "Request to be a mentor"
+                            "Request to be a mentor",
                           )}
                     </button>
                   )}
@@ -1314,7 +1316,7 @@ const Page = () => {
         </div>
 
         {/* AI Analysis Section - Admin Only */}
-        {userDetails.role === "Admin" && showAIAnalysis && cratData && (
+        {["Admin"].includes(userDetails.role) && showAIAnalysis && cratData && (
           <div id="ai-analysis-section" className="mt-12 animate-fadeIn">
             {/* Analysis Header */}
             <div className="bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 dark:from-purple-900/20 dark:via-indigo-900/20 dark:to-blue-900/20 p-8 rounded-2xl border-2 border-purple-200 dark:border-purple-700 mb-8 shadow-xl">
@@ -1332,7 +1334,7 @@ const Page = () => {
                       <span className="font-semibold">{business?.name}</span>{" "}
                       {t(
                         "ai.headerSubtitleSuffix",
-                        "using advanced AI analysis"
+                        "using advanced AI analysis",
                       )}
                     </p>
                   </div>
@@ -1354,7 +1356,7 @@ const Page = () => {
                             cratData.scoreData.financial.percentage +
                             cratData.scoreData.operations.percentage +
                             cratData.scoreData.legal.percentage) /
-                            4
+                            4,
                         )}
                         %
                       </span>
@@ -1410,7 +1412,7 @@ const Page = () => {
                       <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div
                           className={`${getScoreColor(
-                            item.score
+                            item.score,
                           )} h-2 rounded-full transition-all duration-500`}
                           style={{ width: `${item.score}%` }}
                         ></div>

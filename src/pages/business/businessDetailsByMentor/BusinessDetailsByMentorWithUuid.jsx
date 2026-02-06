@@ -181,7 +181,7 @@ const Page = () => {
           {
             icon: "/report.png",
             label: "View Reports",
-            path: `/dashboard/mentorReports`,
+            path: `/dashboard/entrepreneurReports/${business?.User?.uuid}`,
           },
         ].map((item) => {
           return (

@@ -256,7 +256,7 @@ const Dashboard = () => {
             </CardDataStats>
 
             <CardDataStats
-              link="/"
+              link="/dashboard/mentorshipApplications"
               title={t(
                 "dashboard.pendingMentorshipRequest",
                 "Pending Mentorship Request",
@@ -268,7 +268,7 @@ const Dashboard = () => {
               <SlPeople className="text-primary dark:text-white text-lg" />
             </CardDataStats>
             <CardDataStats
-              link="/"
+              link="/dashboard/enterprenuers"
               title={t(
                 "dashboard.totalEntrepreneursShort",
                 "Total Entrepreneurs",
@@ -280,7 +280,7 @@ const Dashboard = () => {
               <SlPeople className="text-primary dark:text-white text-lg" />
             </CardDataStats>
             <CardDataStats
-              link="/"
+              link="/dashboard/mentorEntreprenuers"
               title={t(
                 "dashboard.entrepreneursSupported",
                 "Entrepreneurs Supported",
@@ -292,7 +292,7 @@ const Dashboard = () => {
               <SlPeople className="text-primary dark:text-white text-lg" />
             </CardDataStats>
             <CardDataStats
-              link="/"
+              link="/dashboard/mentorReports"
               title={t("dashboard.reportsSubmitted", "Reports Submitted")}
               total={mentorStats.mentorReports}
               rate="0.43%"

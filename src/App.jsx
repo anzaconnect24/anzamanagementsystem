@@ -177,6 +177,7 @@ import UserActivityLogs from "./pages/logs/UserActivityLogs";
 // Additional Missing Imports - Mentor Components
 import AddEntreprenuerReportWithUuid from "./pages/mentor/addEntreprenuerReport/AddEntreprenuerReportWithUuid";
 import MentorReportWithUuid from "./pages/mentor/mentorReport/MentorReportWithUuid";
+import EntrepreneurReportsWithUuid from "./pages/mentor/entrepreneurReports/EntrepreneurReportsWithUuid";
 
 // Additional Missing Imports - Mentorship Components
 import MentorshipApplicationFormWithUuid from "./pages/mentorship/mentorshipApplicationForm/MentorshipApplicationFormWithUuid";
@@ -500,6 +501,10 @@ function App() {
             <Route
               path="mentorReport/:uuid"
               element={<MentorReportWithUuid />}
+            />
+            <Route
+              path="entrepreneurReports/:uuid"
+              element={<EntrepreneurReportsWithUuid />}
             />
 
             {/* Mentorship Routes */}

@@ -37,7 +37,7 @@ const ProfileImage = ({ user }) => {
           className="object-cover w-full h-full rounded-xl"
           onError={(e) => {
             e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              user.name
+              user.name,
             )}&background=6366f1&color=fff`;
           }}
         />
@@ -93,7 +93,7 @@ const Page = () => {
           <p className="text-gray-500 dark:text-gray-500">
             {t(
               "users.investorNotFoundDescription",
-              "The investor profile you're looking for doesn't exist or has been removed."
+              "The investor profile you're looking for doesn't exist or has been removed.",
             )}
           </p>
         </div>
@@ -187,7 +187,7 @@ const Page = () => {
           label: "Investment Types",
           value:
             Object.values(user.InvestorProfile?.investmentType || {}).join(
-              ", "
+              ", ",
             ) || "Not specified",
         },
         {
@@ -195,7 +195,7 @@ const Page = () => {
           label: "Investment Focus",
           value:
             Object.values(user.InvestorProfile?.investmentFocus || {}).join(
-              ", "
+              ", ",
             ) || "Not specified",
         },
         {
@@ -259,7 +259,7 @@ const Page = () => {
               <div className="text-4xl mb-3">👥</div>
               <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
                 {Object.values(user?.InvestorProfile?.investmentType).join(
-                  ", "
+                  ", ",
                 ) || t("mentorHub.notAvailable", "N/A")}{" "}
                 {/* Updated to use numberOfCustomers */}
               </h3>
@@ -356,7 +356,7 @@ const Page = () => {
         <p className="text-gray-500 dark:text-gray-500">
           {t(
             "users.investorNotFoundDescription",
-            "The investor profile you're looking for doesn't exist or has been removed."
+            "The investor profile you're looking for doesn't exist or has been removed.",
           )}
         </p>
       </div>

@@ -123,35 +123,13 @@ const MentorEntreprenuer = () => {
                     <td className="py-3 px-3">{item.entrepreneur?.email}</td>
                     <td className="py-3 px-3">{item.entrepreneur?.phone}</td>
                     <td className="py-3 px-3">
-                      <div className="flex gap-2 flex-wrap">
-                        <Link
-                          href={`/dashboard/mentorEntreprenuers/businessDetailsByMentor/${item.entrepreneur?.Business?.uuid}`}
+                      <div className="flex gap-2 flex-wrap items-center">
+                        <button
+                          onClick={() => setSelectedRequest(item)}
                           className="py-2 px-3 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 rounded"
                         >
                           {t("common.viewDetails", "View Details")}
-                        </Link>
-                        {item.status === "PENDING" && (
-                          <>
-                            <button
-                              onClick={() => handleApprove(item.uuid)}
-                              disabled={isProcessing}
-                              className="py-2 px-3 text-sm bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-400 transition-all duration-300 rounded"
-                            >
-                              {isProcessing
-                                ? t("mentorship.approving", "Approving...")
-                                : t("mentorship.approve", "Approve")}
-                            </button>
-                            <button
-                              onClick={() => handleReject(item.uuid)}
-                              disabled={isProcessing}
-                              className="py-2 px-3 text-sm bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-400 transition-all duration-300 rounded"
-                            >
-                              {isProcessing
-                                ? t("mentorship.rejecting", "Rejecting...")
-                                : t("mentorship.reject", "Reject")}
-                            </button>
-                          </>
-                        )}
+                        </button>
                         {item.status === "ACCEPTED" && (
                           <span className="py-2 px-3 text-sm bg-green-100 text-green-800 rounded">
                             {t("mentorship.accepted", "Accepted")}
@@ -225,6 +203,20 @@ const MentorEntreprenuer = () => {
                       {selectedRequest.entrepreneur?.Business?.name}
                     </p>
                   </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Business Sector</p>
+                    <p className="font-medium">
+                      {selectedRequest.entrepreneur?.Business?.BusinessSector
+                        ?.name || t("common.notProvided", "Not provided")}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-600">Location</p>
+                    <p className="font-medium">
+                      {selectedRequest.entrepreneur?.Business?.location ||
+                        t("common.notProvided", "Not provided")}
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -232,7 +224,7 @@ const MentorEntreprenuer = () => {
                 <h3 className="font-semibold text-lg mb-2">
                   {t("mentorship.challenges", "Challenges")}
                 </h3>
-                <p className="bg-gray-50 p-4 rounded">
+                <p className="bg-gray-50 p-4 rounded whitespace-pre-wrap">
                   {selectedRequest.challenges ||
                     t("common.notProvided", "Not provided")}
                 </p>
@@ -258,29 +250,51 @@ const MentorEntreprenuer = () => {
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {t("mentorship.availability", "Availability")}
-                </h3>
-                <p className="bg-gray-50 p-4 rounded">
-                  {selectedRequest.availability ||
-                    t("common.notProvided", "Not provided")}
-                </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {t("mentorship.availability", "Availability")}
+                  </h3>
+                  <p className="bg-gray-50 p-4 rounded">
+                    {selectedRequest.availability ||
+                      t("common.notProvided", "Not provided")}
+                  </p>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold text-lg mb-2">
+                    {t("mentorship.mentorshipMode", "Mentorship Mode")}
+                  </h3>
+                  <p className="bg-gray-50 p-4 rounded">
+                    {selectedRequest.mentorshipMode ||
+                      t("common.notProvided", "Not provided")}
+                  </p>
+                </div>
               </div>
 
               <div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {t("mentorship.mentorshipMode", "Mentorship Mode")}
-                </h3>
-                <p className="bg-gray-50 p-4 rounded">
-                  {selectedRequest.mentorshipMode ||
-                    t("common.notProvided", "Not provided")}
-                </p>
+                <h3 className="font-semibold text-lg mb-2">Request Status</h3>
+                <div className="bg-gray-50 p-4 rounded">
+                  <span
+                    className={`py-2 px-4 rounded font-medium ${
+                      selectedRequest.status === "PENDING"
+                        ? "bg-yellow-100 text-yellow-800"
+                        : selectedRequest.status === "ACCEPTED"
+                          ? "bg-green-100 text-green-800"
+                          : "bg-red-100 text-red-800"
+                    }`}
+                  >
+                    {selectedRequest.status}
+                  </span>
+                  <p className="text-sm text-gray-600 mt-2">
+                    Requested {timeAgo(selectedRequest.createdAt)}
+                  </p>
+                </div>
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-4 border-t">
                 <Link
-                  href={`/dashboard/enterprenuers/businessDetails/${selectedRequest.entrepreneur?.Business?.uuid}`}
+                  href={`/dashboard/mentorEntreprenuers/businessDetailsByMentor/${selectedRequest.entrepreneur?.Business?.uuid}`}
                   className="py-2 px-4 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 rounded"
                 >
                   {t("mentorship.viewBusinessProfile", "View Business Profile")}
@@ -295,7 +309,9 @@ const MentorEntreprenuer = () => {
                       disabled={processing === selectedRequest.uuid}
                       className="py-2 px-4 bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-400 transition-all duration-300 rounded"
                     >
-                      {t("mentorship.approve", "Approve")}
+                      {processing === selectedRequest.uuid
+                        ? t("mentorship.approving", "Approving...")
+                        : t("mentorship.approve", "Approve")}
                     </button>
                     <button
                       onClick={() => {
@@ -305,7 +321,9 @@ const MentorEntreprenuer = () => {
                       disabled={processing === selectedRequest.uuid}
                       className="py-2 px-4 bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-400 transition-all duration-300 rounded"
                     >
-                      {t("mentorship.reject", "Reject")}
+                      {processing === selectedRequest.uuid
+                        ? t("mentorship.rejecting", "Rejecting...")
+                        : t("mentorship.reject", "Reject")}
                     </button>
                   </>
                 )}
