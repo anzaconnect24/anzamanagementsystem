@@ -36,7 +36,8 @@ const EditBusinessTool = () => {
     setInitialLoading(true);
     try {
       const response = await getBusinessTool(uuid);
-      setToolData(response.data);
+      console.log("Edit page response:", response);
+      setToolData(response.body || response.data);
     } catch (error) {
       console.error(error);
       toast.error(

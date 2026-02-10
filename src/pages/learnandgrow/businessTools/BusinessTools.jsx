@@ -139,8 +139,8 @@ const BusinessTools = () => {
       {tools.length === 0 ? (
         <div className="text-center py-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-black/10">
           <div className="flex flex-col items-center justify-center">
-            <FaFilePdf className="text-6xl text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
+            <FaFilePdf className="text-6xl text-black/30 mb-4" />
+            <h3 className="text-xl font-semibold text-black/70 mb-2">
               {t("businessTools.noTools", "No business tools available yet")}
             </h3>
             <p className="text-gray-500 mb-6 max-w-md">
