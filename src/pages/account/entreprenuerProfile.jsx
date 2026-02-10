@@ -5,17 +5,11 @@ import Loader from "@/components/common/Loader";
 
 // import AccountDetails from "@/app/(dashboard)/(account)/accountDetails"
 import { UserContext } from "@/layouts/DashboardLayout";
-import CompanyProfile from "../../component/company_profile";
 import BusinessInformation from "../../component/business_information";
-import BusinessPlan from "../../component/business_plan";
-import FinancialInformation from "../../component/financial_information";
-import Services from "../../component/services";
-import MarketResearch from "../../component/market_research";
-import LegalDocumentation from "../../component/legal_documentation";
 import EditAccountDetails from "./editAccount/editAccountDetails";
 import Breadcrumb from "../../component/Breadcrumb";
 
-const EntrepreneurProfile = () => {
+const StartupProfile = () => {
   const [refresh, setRefresh] = useState(0);
   const { userDetails } = useContext(UserContext);
   const [loadingData, setloadingData] = useState(false);
@@ -23,20 +17,14 @@ const EntrepreneurProfile = () => {
 
   const tabs = [
     <EditAccountDetails key={1} />,
-    <CompanyProfile key={9} />,
     <BusinessInformation key={2} />,
-    <BusinessPlan key={5} business={userDetails.Business} />,
-    <FinancialInformation key={4} />,
-    <Services key={6} />,
-    <MarketResearch key={7} business={userDetails.Business} />,
-    <LegalDocumentation key={8} />,
   ];
   return loadingData ? (
     <Loader />
   ) : (
     <div>
       <Breadcrumb
-        pageName={"Entrepreneur Profile"}
+        pageName={"Startup Profile"}
         prevLink={""}
         prevPage={"Back"}
       />
@@ -45,38 +33,11 @@ const EntrepreneurProfile = () => {
           {[
             { title: "Account details", checked: true },
             {
-              title: "Company profile",
-              checked: userDetails.Business.companyProfile ? true : false,
-            },
-            { title: "Business informations", checked: true },
-            {
-              title: "Business plan",
-              checked: userDetails.Business.businessPlan ? true : false,
-            },
-            {
-              title: "Financial information",
+              title: "Business informations",
               checked:
-                userDetails.Business.BusinessDocuments.filter(
-                  (item) => item.type == "financialInformation"
-                ).length > 0,
-            },
-            {
-              title: "Product/service details",
-              checked:
-                userDetails.Business.BusinessDocuments.filter(
-                  (item) => item.type == "service"
-                ).length > 0,
-            },
-            {
-              title: "Market Information",
-              checked: userDetails.Business.marketResearch ? true : false,
-            },
-            {
-              title: "Legal and Compliance Documents",
-              checked:
-                userDetails.Business.BusinessDocuments.filter(
-                  (item) => item.type == "legalDocumentation"
-                ).length > 0,
+                userDetails.Business && userDetails.Business.name
+                  ? true
+                  : false,
             },
           ].map((item, index) => {
             return (
@@ -118,4 +79,4 @@ const EntrepreneurProfile = () => {
   );
 };
 
-export default EntrepreneurProfile;
+export default StartupProfile;

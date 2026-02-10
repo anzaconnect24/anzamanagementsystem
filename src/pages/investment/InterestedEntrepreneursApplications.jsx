@@ -16,7 +16,7 @@ import { BiUser } from "react-icons/bi";
 import { timeAgo } from "@/utils/time_ago";
 import { useTranslation } from "@/locales";
 
-const InterestedEntrepreneursApplications = () => {
+const InterestedStartupsApplications = () => {
   const { t } = useTranslation();
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
@@ -155,7 +155,7 @@ const InterestedEntrepreneursApplications = () => {
               <div>
                 <h4 className="text-xl font-semibold text-black dark:text-white flex items-center gap-3 mb-2">
                   {t(
-                    "investment.interestedEntrepreneurs",
+                    "investment.interestedStartups",
                     "Interested Entrepreneurs",
                   )}
                   <span className="px-3 py-1 text-sm bg-primary/10 text-primary rounded-full font-medium">
@@ -342,4 +342,4 @@ const InterestedEntrepreneursApplications = () => {
   );
 };
 
-export default InterestedEntrepreneursApplications;
+export default InterestedStartupsApplications;

@@ -71,6 +71,9 @@ import Opportunities from "./pages/investment-opportunities/opportunities/Opport
 import ProgramsApplications from "./pages/learnandgrow/programsApplications/ProgramsApplications";
 import ClassRooms from "./pages/learnandgrow/classRooms/ClassRooms";
 import GeneralResources from "./pages/learnandgrow/generalResources/GeneralResources";
+import BusinessTools from "./pages/learnandgrow/businessTools/BusinessTools";
+import UploadBusinessTool from "./pages/learnandgrow/businessTools/UploadBusinessTool";
+import EditBusinessTool from "./pages/learnandgrow/businessTools/EditBusinessTool";
 
 // CRAT System Pages
 import Introduction from "./pages/cratSystem/Introduction";
@@ -586,6 +589,12 @@ function App() {
             />
             <Route path="classRooms" element={<ClassRooms />} />
             <Route path="generalResources" element={<GeneralResources />} />
+            <Route path="businessTools" element={<BusinessTools />} />
+            <Route path="uploadBusinessTool" element={<UploadBusinessTool />} />
+            <Route
+              path="editBusinessTool/:uuid"
+              element={<EditBusinessTool />}
+            />
 
             {/* CRAT System Routes */}
             <Route path="introduction" element={<Introduction />} />

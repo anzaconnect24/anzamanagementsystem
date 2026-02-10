@@ -16,6 +16,7 @@ import {
   MdRateReview,
   MdSearch,
   MdPersonAdd,
+  MdRemoveRedEye,
 } from "react-icons/md";
 import { useTranslation } from "@/locales";
 
@@ -23,12 +24,12 @@ const CratReviewApplicationsPage = () => {
   const { t } = useTranslation();
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [reviews, setReviews] = useState([]);
   const [staffMembers, setStaffMembers] = useState([]);
   const [total, setTotal] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-  const [limit] = useState(10);
+  const [limit] = useState(6);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [selectedReview, setSelectedReview] = useState(null);
@@ -51,7 +52,6 @@ const CratReviewApplicationsPage = () => {
 
   const fetchReviews = async () => {
     try {
-      setLoading(true);
       const response = await axios.get(`${server_url}/crat_reviews`, {
         headers,
         params: {
@@ -64,7 +64,30 @@ const CratReviewApplicationsPage = () => {
 
       if (response.data.status) {
         console.log("CRAT reviews:", response.data.body.data);
-        setReviews(response.data.body.data || []);
+        const data = response.data.body.data || [];
+
+        // Validate data structure - check if it's CRAT reviews or user data
+        if (
+          data.length > 0 &&
+          !data[0].hasOwnProperty("entrepreneur") &&
+          !data[0].hasOwnProperty("submitted_at")
+        ) {
+          console.error(
+            "Invalid data structure received - expected CRAT reviews but got:",
+            data,
+          );
+          toast.error(
+            t(
+              "cratReviews.errors.invalidData",
+              "Received invalid data structure. Please contact support.",
+            ),
+          );
+          setReviews([]);
+          setTotal(0);
+          return;
+        }
+
+        setReviews(data);
         setTotal(response.data.body.count || 0);
       }
     } catch (error) {
@@ -73,7 +96,7 @@ const CratReviewApplicationsPage = () => {
         t("cratReviews.errors.fetchReviews", "Failed to fetch CRAT reviews"),
       );
     } finally {
-      setLoading(false);
+      setInitialLoading(false);
     }
   };
 
@@ -222,7 +245,7 @@ const CratReviewApplicationsPage = () => {
 
   const totalPages = Math.ceil(total / limit);
 
-  if (loading) {
+  if (initialLoading) {
     return <Loader />;
   }
 
@@ -237,7 +260,7 @@ const CratReviewApplicationsPage = () => {
           <p className="mt-2 text-bodydark2">
             {t(
               "cratReviews.subtitle",
-              "Manage CRAT review applications from entrepreneurs. Assign reviewers and finalize decisions.",
+              "Manage CRAT review applications from startups. Assign reviewers and finalize decisions.",
             )}
           </p>
         </div>
@@ -302,7 +325,7 @@ const CratReviewApplicationsPage = () => {
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 {t(
                   "cratReviews.empty.description",
-                  "CRAT review applications will appear here when entrepreneurs submit them.",
+                  "CRAT review applications will appear here when startups submit them.",
                 )}
               </p>
             </div>
@@ -311,28 +334,11 @@ const CratReviewApplicationsPage = () => {
               {reviews.map((review) => (
                 <div
                   key={review.uuid}
-                  className="bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-xl p-6 shadow-sm hover:shadow-md transition-all duration-300"
+                  className="bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-2xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                 >
-                  {/* Card Header */}
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(review.status)}
-                      <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
-                          review.status,
-                        )}`}
-                      >
-                        {t(
-                          `cratReviews.status.${review.status}`,
-                          review.status.replace("_", " "),
-                        )}
-                      </span>
-                    </div>
-                  </div>
-
                   {/* Business Image */}
-                  <div className="mb-4">
-                    <div className="w-full h-48 overflow-hidden bg-gray-200 rounded-lg">
+                  <div className="relative">
+                    <div className="w-full h-52 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
                       <img
                         src={review.entrepreneur?.image || "/user.png"}
                         alt={
@@ -343,29 +349,60 @@ const CratReviewApplicationsPage = () => {
                         onError={(e) => (e.target.src = "/user.png")}
                       />
                     </div>
+                    {/* Status Badge Overlay */}
+                    <div className="absolute top-3 left-3">
+                      <span
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm bg-opacity-90 flex items-center gap-1.5 ${getStatusColor(
+                          review.status,
+                        )}`}
+                      >
+                        {getStatusIcon(review.status)}
+                        {t(
+                          `cratReviews.status.${review.status}`,
+                          review.status.replace("_", " "),
+                        )}
+                      </span>
+                    </div>
                   </div>
 
-                  {/* Business Details */}
-                  <div className="mb-1">
-                    <h6 className="font-semibold text-black dark:text-white truncate mb-1">
-                      {review.entrepreneur?.Business?.name || "N/A"}
-                    </h6>
-                    <p className="text-sm text-bodydark2 truncate">
-                      {review.entrepreneur?.Business?.email ||
-                        review.entrepreneur?.email}
-                    </p>
-                  </div>
+                  {/* Card Content */}
+                  <div className="p-5">
+                    {/* Business Details */}
+                    <div className="mb-4">
+                      <h6 className="font-bold text-lg text-black dark:text-white truncate mb-2">
+                        {review.entrepreneur?.Business?.name ||
+                          review.entrepreneur?.name ||
+                          "N/A"}
+                      </h6>
+                      <p className="text-sm text-gray-600 dark:text-gray-400 truncate mb-3">
+                        {review.entrepreneur?.Business?.email ||
+                          review.entrepreneur?.email}
+                      </p>
+                      <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                          />
+                        </svg>
+                        <span>
+                          {new Date(review.submitted_at).toLocaleDateString(
+                            "en-US",
+                            { month: "short", day: "numeric", year: "numeric" },
+                          )}
+                        </span>
+                      </div>
+                    </div>
 
-                  {/* Submitted Date */}
-                  <div className="mb-4">
-                    <p className="text-xs text-bodydark2">
-                      {t("cratReviews.submittedOn", "Submitted on")}{" "}
-                      {new Date(review.submitted_at).toLocaleDateString()}
-                    </p>
-                  </div>
-
-                  {/* Reviewer Comments (visible when reviewed) */}
-                  {/* {review.status === "reviewed" && review.reviewer_comments && (
+                    {/* Reviewer Comments (visible when reviewed) */}
+                    {/* {review.status === "reviewed" && review.reviewer_comments && (
                     <div className="mb-4">
                       <h6 className="font-medium text-black dark:text-white mb-2 text-sm">
                         Reviewer Comments:
@@ -378,53 +415,43 @@ const CratReviewApplicationsPage = () => {
                     </div>
                   )} */}
 
-                  {/* Actions */}
-                  <div className="space-y-2 w-full">
-                    <div className="flex flex-col gap-2 w-full">
-                      <div className="flex gap-2 w-full">
-                        {review.status === "pending" && (
-                          <button
-                            onClick={() => {
-                              setSelectedReview(review);
-                              setShowAssignModal(true);
-                            }}
-                            className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
-                          >
-                            <MdPersonAdd />
-                            {t("cratReviews.actions.assign", "Assign")}
-                          </button>
-                        )}
-
-                        {review.status === "reviewed" && (
-                          <button
-                            onClick={() => {
-                              setSelectedReview(review);
-                              setShowFinalizeModal(true);
-                            }}
-                            className="flex-1 flex items-center w-full justify-center gap-1 px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
-                          >
-                            <MdCheckCircle />
-                            {t("cratReviews.actions.finalize", "Finalize")}
-                          </button>
-                        )}
-
+                    {/* Actions */}
+                    <div className="space-y-2.5 w-full pt-2 border-t border-black/10 dark:border-gray-700">
+                      {review.status === "pending" && (
                         <button
                           onClick={() => {
-                            // View details functionality can be added here
+                            setSelectedReview(review);
+                            setShowAssignModal(true);
                           }}
-                          className="flex-1 px-3 py-2 bg-gray-600 w-full text-white rounded-lg hover:bg-gray-700 text-sm"
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-black/70 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg"
                         >
-                          {t("cratReviews.actions.view", "View")}
+                          <MdPersonAdd className="text-lg" />
+                          {t("cratReviews.actions.assign", "Assign Reviewer")}
                         </button>
-                      </div>
+                      )}
+
+                      {review.status === "reviewed" && (
+                        <button
+                          onClick={() => {
+                            setSelectedReview(review);
+                            setShowFinalizeModal(true);
+                          }}
+                          className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg"
+                        >
+                          <MdCheckCircle className="text-lg" />
+                          {t("cratReviews.actions.finalize", "Finalize Review")}
+                        </button>
+                      )}
+
                       <button
                         onClick={() => {
                           router.push(
                             `/dashboard/report?user_uuid=${review.entrepreneur?.uuid}`,
                           );
                         }}
-                        className="flex-1 px-3 py-2 bg-primary w-full text-white rounded-lg hover:bg-sky-700 text-sm mt-1"
+                        className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 text-white rounded-lg hover:from-blue-700 hover:to-blue-800 transition-all duration-200 text-sm font-medium shadow-md hover:shadow-lg"
                       >
+                        <MdRemoveRedEye className="text-lg" />
                         {t(
                           "cratReviews.actions.viewCratReport",
                           "View CRAT Report",

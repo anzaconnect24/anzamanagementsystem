@@ -12,7 +12,7 @@ import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
 import toast from "react-hot-toast";
 
-const InterestedEntrepreneurs = () => {
+const InterestedStartups = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedRequest, setSelectedRequest] = useState(null);
@@ -393,4 +393,4 @@ const InterestedEntrepreneurs = () => {
   );
 };
 
-export default InterestedEntrepreneurs;
+export default InterestedStartups;

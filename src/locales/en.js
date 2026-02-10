@@ -4,7 +4,7 @@ export const en = {
   common: {
     dashboard: "Dashboard",
     users: "Users",
-    entrepreneurs: "Entrepreneurs",
+    startups: "Startups",
     investors: "Investors",
     mentors: "Mentors",
     staff: "Staff",
@@ -156,9 +156,9 @@ export const en = {
       inPerson: "In-Person Mentorship",
     },
     experienceLabel:
-      "Tell Us About Your Experience and How You Can Support Entrepreneurs",
+      "Tell Us About Your Experience and How You Can Support Startups",
     experiencePlaceholder:
-      "Share your experience and how you can help entrepreneurs",
+      "Share your experience and how you can help startups",
     selectTop3FocusAreas: "Select Your Top 3 Mentorship Focus Areas",
     focus: {
       businessStrategyAndPlanning: "Business Strategy & Planning",
@@ -182,10 +182,10 @@ export const en = {
     // Mentor Report translations
     reports: "Reports",
     mentorReports: "Mentors reports",
-    entrepreneurReport: "Entrepreneur report",
-    viewEntrepreneurReport: "View entrepreneur report",
+    startupReport: "Startup report",
+    viewStartupReport: "View startup report",
     mentorName: "Mentor name",
-    entrepreneurName: "Entrepreneur name",
+    startupName: "Startup name",
     reportTitle: "Report title",
     reportDescription: "Report description",
     openReport: "Open Report",
@@ -198,7 +198,7 @@ export const en = {
     programsAndResources: "Programs & Resources",
     communication: "Communication",
     allUsers: "Community Hub",
-    entrepreneurs: "Entrepreneurs",
+    startups: "Startups",
     investors: "Investors",
     mentors: "Mentors",
     staff: "Staff",
@@ -207,7 +207,7 @@ export const en = {
     myMentor: "My Mentor",
     allMentors: "All Mentors",
     mentorshipApplications: "Mentorship Applications",
-    interestedEntrepreneurs: "Interested Entrepreneurs",
+    interestedStartups: "Interested Startups",
     myInvestmentRequests: "My Investment Requests",
     investmentRequests: "Investment Requests",
     requestsInProgress: "Requests in Progress",
@@ -255,7 +255,7 @@ export const en = {
     cratSystem: "CRAT System",
     introduction: "Introduction",
     readiness: "Readiness",
-    commercialDomain: "Commercial Domain",
+    commercialDomain: "Market Domain",
     financialDomain: "Financial Domain",
     operationDomain: "Operation Domain",
     legalDomain: "Legal Domain",
@@ -268,6 +268,7 @@ export const en = {
     cratReviewApplications: "CRAT Review Applications",
     learnAndGrow: "Learn & Grow",
     generalResources: "General Resources",
+    businessTools: "Business Tools",
     classRooms: "Class Rooms",
     successStories: "Success Stories",
     chats: "Chats",
@@ -292,7 +293,7 @@ export const en = {
       "Access a rich library of resources, toolkits, and insights designed to help you strengthen your business skills and scale your venture",
     investorsMentors: "Investors & Mentors",
     investorsMentorsDesc:
-      "Build connections with investors and experienced mentors who can guide you on your entrepreneurial journey.",
+      "Build connections with investors and experienced mentors who can guide you on your startupial journey.",
     cratTool: "Capital Readiness Assessment Tool",
     cratToolDesc:
       "Evaluate your Investment Readiness with CRAT and identify the steps you need to take to become investment ready.",
@@ -361,7 +362,7 @@ export const en = {
   // Role labels
   roles: {
     staff: "Staff",
-    entrepreneur: "Entrepreneur",
+    startup: "Startup",
     investor: "Investor",
     mentor: "Mentor",
   },
@@ -587,7 +588,7 @@ export const en = {
     growthPlans: "Growth Plans",
     fundraisingNeeds: "Fundraising Needs",
 
-    entrepreneur: "Entrepreneur",
+    startup: "Startup",
     registration: "Registration",
     sdg: "SDG",
     location: "Location",
@@ -607,7 +608,7 @@ export const en = {
     nonAlumni: "Non-alumni",
 
     actions: {
-      approveEntrepreneur: "Approve Entrepreneur",
+      approveStartup: "Approve Startup",
     },
     success: {
       approved: "Approved successfully",
@@ -968,7 +969,7 @@ export const en = {
     showingRange: "Showing {{start}} - {{end}} of {{total}} {{type}}",
 
     members: "members",
-    searchEntrepreneurs: "Search entrepreneurs...",
+    searchStartups: "Search startups...",
     allPrograms: "All Programs",
     allRevenue: "All Revenue",
     investmentReadiness: "Investment Readiness",
@@ -1179,7 +1180,7 @@ export const en = {
     staff: "Staff",
     investor: "Investor",
     mentor: "Mentor",
-    entrepreneur: "Entrepreneur",
+    startup: "Startup",
     reviewer: "Reviewer",
     inviteUser: "Invite User",
     inviteNewUser: "Invite New User",
@@ -1210,7 +1211,7 @@ export const en = {
     next: "Next",
     usersCount: "users",
     members: "members",
-    searchEntrepreneurs: "Search entrepreneurs...",
+    searchStartups: "Search startups...",
     allSectors: "All Sectors",
     allYears: "All Years",
     allPrograms: "All Programs",
@@ -1226,7 +1227,7 @@ export const en = {
     location: "Location",
     contact: "Contact",
     viewProfile: "View Profile",
-    noEntrepreneursFound: "No entrepreneurs found",
+    noStartupsFound: "No startups found",
     filterCriteria: "Try adjusting your filter criteria",
     clearFilters: "Clear Filters",
     mentors: "Mentors",
@@ -1709,7 +1710,7 @@ export const en = {
         corporateDocumentsAndCompliance: "Corporate Documents Compliance",
         contractsAgreements: "Contracts & Agreements",
         intellectualProperty: "Intellectual Property",
-        entrepreneurFamily: "Entrepreneur & Family",
+        startupFamily: "Startup & Family",
         corporateGovernance: "Corporate Governance",
       },
       narratives: {
@@ -1810,7 +1811,7 @@ export const en = {
         supplierContractsSubDomain: "Supplier contracts",
         employeesContractsSubDomain: "Employees contracts",
         ipOwnershipSubDomain: "IP ownership",
-        entrepreneurialCharacterSubDomain: "Entrepreneurial character",
+        startupialCharacterSubDomain: "Startupial character",
         personalLegalLiabilitySubDomain: "Personal legal liability",
         successionPlanSubDomain: "Succession plan",
         boardOfDirectorsSubDomain: "Board of directors",
@@ -1859,10 +1860,10 @@ export const en = {
         ipOwnershipQuestion:
           "Does the company own copyrights to its source codes/or patent to its solution?",
         ipOwnershipDescription: "Copyrights",
-        entrepreneurialCharacter: "Entrepreneurial character",
-        entrepreneurialCharacterQuestion:
-          "Is the entrepreneur adaptable, resilient, and reliable?",
-        entrepreneurialCharacterDescription:
+        startupialCharacter: "Startupial character",
+        startupialCharacterQuestion:
+          "Is the startup adaptable, resilient, and reliable?",
+        startupialCharacterDescription:
           "Track record, pitch, innovation in business",
         personalLegalLiability: "Personal legal liability",
         personalLegalLiabilityQuestion:
@@ -2086,7 +2087,7 @@ export const en = {
   dashboard: {
     completeProfile: "Please complete your profile",
     completeProfileButton: "Complete profile",
-    totalEntrepreneurs: "Total Entrepreneurs",
+    totalStartups: "Total Startups",
     totalInvestors: "Total Investors",
     totalMentors: "Total Mentors",
     totalBusinesses: "Total Businesses",
@@ -2096,8 +2097,8 @@ export const en = {
     investmentsMade: "Investments Made",
     activeMentees: "Active Mentees",
     pendingMentorshipRequest: "Pending Mentorship Request",
-    totalEntrepreneursShort: "Total Entrepreneurs",
-    entrepreneursSupported: "Entrepreneurs Supported",
+    totalStartupsShort: "Total Startups",
+    startupsSupported: "Startups Supported",
     reportsSubmitted: "Reports Submitted",
     pendingBusinessApplications: "Pending business applications",
     pendingUserApplications: "Pending users applications",
@@ -2105,8 +2106,8 @@ export const en = {
     totalUsersRegistered: "Total users registered on system",
     requestsInProgress: "Requests in progress",
     droppedInvestments: "Dropped Investments",
-    interestedEntrepreneurs: "Interested Entrepreneurs",
-    entrepreneur: "Entrepreneur",
+    interestedStartups: "Interested Startups",
+    startup: "Startup",
     business: "Business",
     date: "Date",
     status: "Status",
@@ -2120,31 +2121,31 @@ export const en = {
     registrationStatistics: "Registration Statistics",
     totalUsers: "Total Users",
     totalInvestorsLabel: "Total Investors",
-    totalEntrepreneursLabel: "Total Entrepreneurs",
+    totalStartupsLabel: "Total Startups",
     numberOfRegistrations: "Number of Registrations",
     registrationsSuffix: "registrations",
     loadingData: "Loading data...",
-    entrepreneurDistribution: "Entrepreneur Distribution",
-    regionalEntrepreneurDistribution:
-      "Regional distribution of entrepreneurs across Tanzania",
-    totalEntrepreneursLabel: "Total Entrepreneurs",
-    loadingEntrepreneurData: "Loading entrepreneur data...",
+    startupDistribution: "Startup Distribution",
+    regionalStartupDistribution:
+      "Regional distribution of startups across Tanzania",
+    totalStartupsLabel: "Total Startups",
+    loadingStartupData: "Loading startup data...",
     errorLoadingData: "Error Loading Data",
     mapComponentsUnavailable: "Map components unavailable",
     tryAgain: "Try Again",
-    noEntrepreneurDataFound: "No Entrepreneur Data Found",
-    noEntrepreneursRegistered:
-      "There are currently no entrepreneurs registered in the system with location data.",
-    viewAllEntrepreneurs: "View All Entrepreneurs",
+    noStartupDataFound: "No Startup Data Found",
+    noStartupsRegistered:
+      "There are currently no startups registered in the system with location data.",
+    viewAllStartups: "View All Startups",
     topSectors: "Top Sectors:",
-    entrepreneursInRegion: "Entrepreneurs in {{region}}",
-    entrepreneursLower: "entrepreneurs",
+    startupsInRegion: "Startups in {{region}}",
+    startupsLower: "startups",
     ofTotal: "of total",
     businessesLower: "businesses",
     unknownBusiness: "Unknown Business",
     otherSector: "Other",
     invalidDataFormat: "Invalid data format received",
-    failedToLoadEntrepreneurData: "Failed to load entrepreneur data",
+    failedToLoadStartupData: "Failed to load startup data",
     loadingMap: "Loading map...",
     errorLoadingMap: "Error loading map",
     reloadPage: "Reload Page",
@@ -2249,7 +2250,7 @@ export const en = {
     growthPlans: "Growth Plans",
     fundraisingNeeds: "Fundraising Needs",
 
-    entrepreneur: "Entrepreneur",
+    startup: "Startup",
     registration: "Registration",
     sdg: "SDG",
     location: "Location",
@@ -2269,7 +2270,7 @@ export const en = {
     nonAlumni: "Non-alumni",
 
     actions: {
-      approveEntrepreneur: "Approve Entrepreneur",
+      approveStartup: "Approve Startup",
     },
     success: {
       approved: "Approved successfully",
@@ -2355,13 +2356,13 @@ export const en = {
     mentorshipRequests: "Mentorship requests",
     searchHere: "Search here",
     assigned: "Assigned",
-    entrepreneur: "Entrepreneur",
+    startup: "Startup",
     business: "Business",
     actions: "Actions",
     approve: "Approve",
     reject: "Reject",
     viewProfile: "View Profile",
-    mentorEntrepreneurs: "Mentor Entrepreneurs",
+    mentorStartups: "Mentor Startups",
     myMentors: "My Mentors",
     mentorReports: "Mentor Reports",
     noRequestsFound: "No mentorship requests found",
@@ -2512,7 +2513,7 @@ export const en = {
   // Stories
   stories: {
     successStories: "Success Stories",
-    subtitle: "Inspiring stories of entrepreneurial success",
+    subtitle: "Inspiring stories of startupial success",
     addStory: "Add Story",
     showingResults: "Showing {{showing}} of {{total}} stories",
     searchPlaceholder: "Search success stories...",
@@ -2583,7 +2584,7 @@ export const en = {
     supportFromAnza: "What sort of support would you like to get from Anza ?",
     writeDescription: "Write description",
     additionalInfo:
-      "What additional information do you want from entrepreneur or business ?",
+      "What additional information do you want from startup or business ?",
     writeAdditionalInfo: "Write additional information here",
     expressInterest: "Express interest",
     investmentOpportunities: "Investment Opportunities",
@@ -2672,6 +2673,7 @@ export const en = {
   // Learn and Grow
   learnAndGrow: {
     generalResources: "General Resources",
+    businessTools: "Business Tools",
     classRooms: "Class Rooms",
     financeAndFundraising: "Finance and Fundraising",
     marketingAndSales: "Marketing & Sales",
@@ -2700,7 +2702,7 @@ export const en = {
     resourceLibrary: "Resource Library",
     welcomeBack: "Welcome back",
     welcomeMessage:
-      "Welcome to your one-stop hub for actionable tools, templates, guides, and learning materials. Whether you're validating an idea, scaling your business, or preparing for investment, these resources are designed to support every stage of your entrepreneurial journey.",
+      "Welcome to your one-stop hub for actionable tools, templates, guides, and learning materials. Whether you're validating an idea, scaling your business, or preparing for investment, these resources are designed to support every stage of your startupial journey.",
     addMaterial: "Add Material",
     availableResources: "Available Resources",
     resource: "resource",
@@ -2720,17 +2722,17 @@ export const en = {
     resourceDeleted: "Resource deleted",
     failedToDelete: "Failed to delete resource",
     classRoomsWelcome:
-      "Track your progress, access curated courses, and grow your business step by step. Whether you're just starting out with an idea or actively scaling your venture, this platform is designed to guide you through every stage of your entrepreneurial journey. Monitor your learning milestones, enroll in tailored classes that match your business stage, and unlock practical tools, expert insights, and mentorship opportunities. With each completed module, you'll build stronger foundations sharpen your strategy, and move closer to achieving your business goals. Let's grow—one step at a time.",
+      "Track your progress, access curated courses, and grow your business step by step. Whether you're just starting out with an idea or actively scaling your venture, this platform is designed to guide you through every stage of your startupial journey. Monitor your learning milestones, enroll in tailored classes that match your business stage, and unlock practical tools, expert insights, and mentorship opportunities. With each completed module, you'll build stronger foundations sharpen your strategy, and move closer to achieving your business goals. Let's grow—one step at a time.",
     availableClasses: "Available classes",
     ideation: "Ideation",
     businessFoundation: "Business Foundation",
     investmentReadiness: "Investment readiness",
     ideationDescription:
-      "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability",
+      "This course equips startups and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability",
     businessFoundationDescription:
-      "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability",
+      "This course equips startups and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability",
     investmentReadinessDescription:
-      "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability",
+      "This course equips startups and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability",
     accessClasses: "Access Classes",
     modules: "Modules",
     slidesCompleted: "slides completed",
@@ -2775,6 +2777,50 @@ export const en = {
     postComment: "Post Comment",
   },
 
+  // Business Tools
+  businessTools: {
+    title: "Business Tools",
+    pageDescription:
+      "Access essential business templates and tools including Word documents, Excel spreadsheets, PowerPoint presentations, and PDF guides to help you manage and grow your startup.",
+    uploadTool: "Upload Business Tool",
+    uploadNewTool: "Upload new business tool",
+    editTool: "Edit Business Tool",
+    fileName: "File Name",
+    enterFileName: "Enter file name",
+    fileType: "File Type",
+    selectFileType: "Select file type",
+    uploadFile: "Upload File",
+    supportedFormats:
+      "Supported formats: Word (.doc, .docx), Excel (.xls, .xlsx), PowerPoint (.ppt, .pptx), PDF (.pdf)",
+    description: "Description",
+    writeDescription: "Write a brief description of this tool",
+    upload: "Upload",
+    update: "Update",
+    noTools: "No business tools available yet",
+    noToolsAdminMessage:
+      "Get started by uploading your first business template or tool to share with your community.",
+    noToolsUserMessage:
+      "Business templates and tools will appear here once they are uploaded by administrators.",
+    uploadFirstTool: "Upload Your First Tool",
+    noDescription: "No description available",
+    fileSize: "Size",
+    openFile: "Open File",
+    download: "Download",
+    edit: "Edit",
+    delete: "Delete",
+    deleteConfirm:
+      "Are you sure you want to delete this business tool? This action cannot be undone.",
+    deleteSuccess: "Business tool deleted successfully",
+    deleteFailed: "Failed to delete business tool",
+    uploadSuccess: "Business tool uploaded successfully",
+    updateSuccess: "Business tool updated successfully",
+    errorUploading: "Error uploading business tool",
+    errorUpdating: "Error updating business tool",
+    failedToLoad: "Failed to load business tools",
+    pleaseSelectFile: "Please select a file",
+    currentFile: "Current file:",
+  },
+
   // Modules
   modules: {
     newModule: "New module",
@@ -2797,7 +2843,7 @@ export const en = {
   cratReviews: {
     title: "CRAT Review Applications",
     subtitle:
-      "Manage CRAT review applications from entrepreneurs. Assign reviewers and finalize decisions.",
+      "Manage CRAT review applications from startups. Assign reviewers and finalize decisions.",
     searchPlaceholder: "Search by business name or email...",
     filters: { allStatuses: "All Statuses" },
     status: {
@@ -2811,7 +2857,7 @@ export const en = {
     empty: {
       title: "No CRAT review applications found",
       description:
-        "CRAT review applications will appear here when entrepreneurs submit them.",
+        "CRAT review applications will appear here when startups submit them.",
     },
     submittedOn: "Submitted on",
     actions: {
@@ -2904,7 +2950,7 @@ export const en = {
     },
     pdf: {
       title: "AI Analysis Report",
-      entrepreneur: "Entrepreneur",
+      startup: "Startup",
       business: "Business",
       date: "Date",
       status: "Status",
@@ -2935,10 +2981,9 @@ export const en = {
     adminAccessRequired: "Admin Access Required",
     aiAnalysisRestricted:
       "AI Analysis for CRAT evaluation is restricted to Administrators only.",
-    evaluatingEntrepreneur: "Evaluating: {{name}}",
-    entrepreneur: "Entrepreneur",
-    featureHelpsAdmins:
-      "This feature helps admins evaluate entrepreneur readiness.",
+    evaluatingStartup: "Evaluating: {{name}}",
+    startup: "Startup",
+    featureHelpsAdmins: "This feature helps admins evaluate startup readiness.",
     aiAnalysisInsights: "AI Analysis & Insights",
     poweredByGemini:
       "Powered by Gemini AI - Expert analysis of your CRAT assessment",
@@ -3050,7 +3095,7 @@ export const en = {
     lastUpdated: "Last updated",
   },
 
-  // CRAT Review (Entrepreneur page)
+  // CRAT Review (Startup page)
   cratReviewPage: {
     title: "CRAT Review System",
     subtitle:
@@ -3072,7 +3117,7 @@ export const en = {
       resubmitError: "Error resubmitting CRAT review",
       failedToFetch: "Failed to fetch CRAT reviews",
       alreadyHasReview:
-        "You already have a CRAT review. Only one review per entrepreneur is allowed.",
+        "You already have a CRAT review. Only one review per startup is allowed.",
       failedToSubmit: "Failed to submit CRAT review",
       submitError: "Error submitting CRAT review",
     },
@@ -3129,7 +3174,7 @@ export const en = {
         "This report provides a comprehensive analysis of your business's investment readiness.",
       domainScoresTitle: "Domain Scores:",
       domains: {
-        commercial: "Commercial Domain",
+        commercial: "Market Domain",
         financial: "Financial Domain",
         operations: "Operations Domain",
         legal: "Legal Domain",
@@ -3279,7 +3324,7 @@ export const en = {
     allStatuses: "All Statuses",
     showingAttempts: "Showing {{current}} of {{total}} attempts",
     noAttemptsFound: "No quiz attempts found",
-    entrepreneur: "Entrepreneur",
+    startup: "Startup",
     business: "Business",
     quiz: "Quiz",
     score: "Score",

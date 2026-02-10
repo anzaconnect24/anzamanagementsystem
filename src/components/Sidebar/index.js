@@ -138,7 +138,7 @@ const Sidebar = ({
             path: "/dashboard/users",
           },
           {
-            name: t("navigation.entrepreneurs", "Entrepreneurs"),
+            name: t("navigation.startups", "Startups"),
             path: "/dashboard/enterprenuers",
           },
           {
@@ -199,7 +199,7 @@ const Sidebar = ({
       ["Investor", "Enterprenuer", "Staff", "Staff", "Mentor"].includes(role)
     ) {
       peopleItems.push({
-        name: t("navigation.entrepreneurs", "Entrepreneurs"),
+        name: t("navigation.startups", "Startups"),
         path: "/dashboard/enterprenuers",
         icon: <RiTeamLine className="text-xl" />,
       });
@@ -207,11 +207,8 @@ const Sidebar = ({
 
     if (["Investor"].includes(role)) {
       peopleItems.push({
-        name: t(
-          "navigation.interestedEntrepreneurs",
-          "Interested Entrepreneurs",
-        ),
-        path: "/dashboard/interestedEntrepreneursApplications",
+        name: t("navigation.interestedStartups", "Interested Startups"),
+        path: "/dashboard/interestedStartupsApplications",
         icon: <FaHandshake className="text-xl" />,
       });
     }
@@ -329,6 +326,11 @@ const Sidebar = ({
         path: "/dashboard/investors",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
+      investmentItems.push({
+        id: "investment",
+        title: t("navigation.fundingOpportunities", "Funding Opportunities"),
+        items: investmentItems,
+      });
     }
 
     if (["Enterprenuer"].includes(role)) {
@@ -355,7 +357,7 @@ const Sidebar = ({
         ],
       });
 
-      // Add Investment Applications for Entrepreneurs
+      // Add Investment Applications for Startups
 
       investmentItems.push({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),
@@ -398,7 +400,7 @@ const Sidebar = ({
             path: "/dashboard/crat-system/scoreReadiness",
           },
           {
-            name: t("navigation.commercialDomain", "Commercial Domain"),
+            name: t("navigation.commercialDomain", "Market Domain"),
             path: "/dashboard/crat-system/marketDomain",
           },
           {
@@ -470,6 +472,10 @@ const Sidebar = ({
           {
             name: t("navigation.generalResources", "General Resources"),
             path: "/dashboard/generalResources",
+          },
+          {
+            name: t("navigation.businessTools", "Business Tools"),
+            path: "/dashboard/businessTools",
           },
           {
             name: t("navigation.classRooms", "Class Rooms"),

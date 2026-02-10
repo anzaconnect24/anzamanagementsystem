@@ -14,11 +14,11 @@ ${t("finalReport.pdf.title", "CAPITAL READINESS ASSESSMENT TOOL (CRAT) REPORT")}
 ${t("finalReport.pdf.execSummaryTitle", "Executive Summary:")}
 ${t(
   "finalReport.pdf.execSummaryText",
-  "This report provides a comprehensive analysis of your business's investment readiness."
+  "This report provides a comprehensive analysis of your business's investment readiness.",
 )}
 
 ${t("finalReport.pdf.domainScoresTitle", "Domain Scores:")}
-- ${t("finalReport.pdf.domains.commercial", "Commercial Domain")}: 75%
+- ${t("finalReport.pdf.domains.commercial", "Market Domain")}: 75%
 - ${t("finalReport.pdf.domains.financial", "Financial Domain")}: 68%
 - ${t("finalReport.pdf.domains.operations", "Operations Domain")}: 72%
 - ${t("finalReport.pdf.domains.legal", "Legal Domain")}: 80%
@@ -28,28 +28,28 @@ ${t("finalReport.pdf.overallScoreTitle", "Overall Score")}: 73.75%
 ${t("finalReport.pdf.recommendationsTitle", "Recommendations:")}
 1. ${t(
       "finalReport.pdf.recommendations.item1",
-      "Strengthen financial planning and cash flow management"
+      "Strengthen financial planning and cash flow management",
     )}
 2. ${t(
       "finalReport.pdf.recommendations.item2",
-      "Enhance operational efficiency and scalability"
+      "Enhance operational efficiency and scalability",
     )}
 3. ${t(
       "finalReport.pdf.recommendations.item3",
-      "Continue building strong legal foundations"
+      "Continue building strong legal foundations",
     )}
 4. ${t(
       "finalReport.pdf.recommendations.item4",
-      "Focus on market expansion and customer acquisition"
+      "Focus on market expansion and customer acquisition",
     )}
 
 ${t("finalReport.pdf.investmentReadinessTitle", "Investment Readiness")}: ${t(
       "finalReport.pdf.investmentReadinessLevel",
-      "MODERATE"
+      "MODERATE",
     )}
 ${t("finalReport.pdf.nextStepsTitle", "Next Steps")}: ${t(
       "finalReport.pdf.nextStepsText",
-      "Implement recommended improvements and reassess in 3-6 months."
+      "Implement recommended improvements and reassess in 3-6 months.",
     )}
 `;
 
@@ -79,7 +79,7 @@ ${t("finalReport.pdf.nextStepsTitle", "Next Steps")}: ${t(
             <p className="text-lg text-gray-600 dark:text-gray-300 mb-8">
               {t(
                 "finalReport.pageSubtitle",
-                "Get your comprehensive Capital Readiness Assessment Tool (CRAT) report in PDF format."
+                "Get your comprehensive Capital Readiness Assessment Tool (CRAT) report in PDF format.",
               )}
             </p>
           </div>
@@ -96,7 +96,7 @@ ${t("finalReport.pdf.nextStepsTitle", "Next Steps")}: ${t(
             <p>
               {t(
                 "finalReport.includes",
-                "Report includes: Executive Summary, Domain Analysis, Recommendations, and Investment Guidance"
+                "Report includes: Executive Summary, Domain Analysis, Recommendations, and Investment Guidance",
               )}
             </p>
           </div>

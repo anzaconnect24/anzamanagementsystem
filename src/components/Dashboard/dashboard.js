@@ -50,7 +50,7 @@ const Dashboard = () => {
       });
       // Fetch AI report from backend
       setLoadingReport(true);
-      fetch(`/api/entrepreneurs/${userDetails.uuid}/ai-report`)
+      fetch(`/api/startups/${userDetails.uuid}/ai-report`)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
           setAiReport(data);
@@ -60,7 +60,7 @@ const Dashboard = () => {
     }
   }, [userDetails.role, userDetails.uuid]);
 
-  // PDF download handler for entrepreneurs
+  // PDF download handler for startups
   const handleDownloadPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
@@ -76,7 +76,7 @@ const Dashboard = () => {
       typeof scoreData.commercial.percentage === "number";
 
     if (hasValidData) {
-      doc.text(`Entrepreneur: ${userDetails.name || "N/A"}`, 10, y);
+      doc.text(`Startup: ${userDetails.name || "N/A"}`, 10, y);
       y += 8;
       doc.text(`Business: ${data?.businessName || "N/A"}`, 10, y);
       y += 8;
@@ -133,7 +133,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6 xl:grid-cols-4 2xl:gap-7.5 mb-8">
             <CardDataStats
               link="/dashboard/enterprenuers"
-              title={t("dashboard.totalEntrepreneurs", "Total Entrepreneurs")}
+              title={t("dashboard.totalStartups", "Total Startups")}
               total={data.enterprenuers || 0}
               rate="0.95%"
               levelUp
@@ -270,8 +270,8 @@ const Dashboard = () => {
             <CardDataStats
               link="/dashboard/enterprenuers"
               title={t(
-                "dashboard.totalEntrepreneursShort",
-                "Total Entrepreneurs",
+                "dashboard.totalStartupsShort",
+                "Total Startups",
               )}
               total={data.enterprenuers}
               rate="0.43%"
@@ -282,8 +282,8 @@ const Dashboard = () => {
             <CardDataStats
               link="/dashboard/mentorEntreprenuers"
               title={t(
-                "dashboard.entrepreneursSupported",
-                "Entrepreneurs Supported",
+                "dashboard.startupsSupported",
+                "Startups Supported",
               )}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
@@ -489,8 +489,8 @@ const Dashboard = () => {
             <CardDataStats
               link=""
               title={t(
-                "dashboard.interestedEntrepreneurs",
-                "Interested Entrepreneurs",
+                "dashboard.interestedStartups",
+                "Interested Startups",
               )}
               total={data.enterprenuersInterested}
               rate="2.59%"
@@ -513,7 +513,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="/dashboard/investorSectorBusinesses"
-              title={t("dashboard.totalEntrepreneurs", "Total Entrepreneurs")}
+              title={t("dashboard.totalStartups", "Total Startups")}
               total={data.enterprenuers}
               rate="0.95%"
               levelDown

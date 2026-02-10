@@ -197,7 +197,7 @@ const TanzaniaMap = () => {
       const response = await getEnterprenuers(1000, 1, "");
 
       if (response?.data && Array.isArray(response.data)) {
-        // Group entrepreneurs by region
+        // Group startups by region
         const regionData = {};
 
         // Initialize all regions with zero count
@@ -205,11 +205,11 @@ const TanzaniaMap = () => {
           regionData[region] = {
             ...REGION_COORDINATES[region],
             count: 0,
-            entrepreneurs: [],
+            startups: [],
           };
         });
 
-        // Process entrepreneurs with better error handling
+        // Process startups with better error handling
         response.data.forEach((user) => {
           try {
             if (
@@ -218,7 +218,7 @@ const TanzaniaMap = () => {
             ) {
               const region = user.Business.location;
               regionData[region].count += 1;
-              regionData[region].entrepreneurs.push({
+              regionData[region].startups.push({
                 Business: {
                   name: user.Business.name || "Unknown Business",
                   BusinessSector: {
@@ -286,9 +286,9 @@ const TanzaniaMap = () => {
   }, [fetchEntrepreneurData]);
 
   // Memoize calculations
-  const { totalEntrepreneurs, maxCount, sortedRegions } = useMemo(() => {
+  const { totalStartups, maxCount, sortedRegions } = useMemo(() => {
     if (!mapData || Object.keys(mapData).length === 0) {
-      return { totalEntrepreneurs: 0, maxCount: 1, sortedRegions: [] };
+      return { totalStartups: 0, maxCount: 1, sortedRegions: [] };
     }
 
     const total = Object.values(mapData).reduce(
@@ -304,7 +304,7 @@ const TanzaniaMap = () => {
     );
 
     return {
-      totalEntrepreneurs: total,
+      totalStartups: total,
       maxCount: max,
       sortedRegions: sorted,
     };
@@ -365,7 +365,7 @@ const TanzaniaMap = () => {
   }
 
   // No data state
-  if (totalEntrepreneurs === 0) {
+  if (totalStartups === 0) {
     return (
       <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
         <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap mb-6">
@@ -379,7 +379,7 @@ const TanzaniaMap = () => {
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {t(
                 "dashboard.regionalEntrepreneurDistribution",
-                "Regional distribution of entrepreneurs across Tanzania"
+                "Regional distribution of startups across Tanzania"
               )}
             </p>
           </div>
@@ -409,15 +409,15 @@ const TanzaniaMap = () => {
           </h3>
           <p className="text-gray-500 dark:text-gray-400 max-w-md mb-6">
             {t(
-              "dashboard.noEntrepreneursRegistered",
-              "There are currently no entrepreneurs registered in the system with location data."
+              "dashboard.noStartupsRegistered",
+              "There are currently no startups registered in the system with location data."
             )}
           </p>
           <Link
             href="/enterprenuers"
             className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 transition-colors"
           >
-            {t("dashboard.viewAllEntrepreneurs", "View All Entrepreneurs")}
+            {t("dashboard.viewAllStartups", "View All Startups")}
           </Link>
         </div>
       </div>
@@ -502,22 +502,22 @@ const TanzaniaMap = () => {
                   </h4>
                   <p className="text-primary font-medium text-base">
                     {data.count}{" "}
-                    {t("dashboard.entrepreneursLower", "entrepreneurs")}
+                    {t("dashboard.startupsLower", "startups")}
                   </p>
                   <p className="text-sm text-gray-600 mb-2">
-                    {totalEntrepreneurs > 0
-                      ? ((data.count / totalEntrepreneurs) * 100).toFixed(1)
+                    {totalStartups > 0
+                      ? ((data.count / totalStartups) * 100).toFixed(1)
                       : 0}
                     % {t("dashboard.ofTotal", "of total")}
                   </p>
-                  {data.entrepreneurs.length > 0 && (
+                  {data.startups.length > 0 && (
                     <>
                       <div className="text-sm font-medium mt-2 text-gray-900">
                         {t("dashboard.topSectors", "Top Sectors:")}
                       </div>
                       <div className="space-y-1">
                         {Object.entries(
-                          data.entrepreneurs.reduce((acc, curr) => {
+                          data.startups.reduce((acc, curr) => {
                             const sector =
                               curr.Business?.BusinessSector?.name ||
                               t("dashboard.otherSector", "Other");
@@ -578,14 +578,14 @@ const TanzaniaMap = () => {
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
             {t(
               "dashboard.regionalEntrepreneurDistribution",
-              "Regional distribution of entrepreneurs across Tanzania"
+              "Regional distribution of startups across Tanzania"
             )}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <div className="text-sm font-medium text-meta-3">
-            {t("dashboard.totalEntrepreneursLabel", "Total Entrepreneurs")}:{" "}
-            {totalEntrepreneurs}
+            {t("dashboard.totalStartupsLabel", "Total Startups")}:{" "}
+            {totalStartups}
           </div>
         </div>
       </div>
@@ -610,7 +610,7 @@ const TanzaniaMap = () => {
                       {region}
                     </div>
                     <div className="text-xs text-gray-500">
-                      {data.entrepreneurs.length}{" "}
+                      {data.startups.length}{" "}
                       {t("dashboard.businessesLower", "businesses")}
                     </div>
                   </div>
@@ -636,16 +636,16 @@ const TanzaniaMap = () => {
           </div>
 
           {selectedRegion &&
-            mapData[selectedRegion]?.entrepreneurs.length > 0 && (
+            mapData[selectedRegion]?.startups.length > 0 && (
               <div className="mt-6 border-t border-black/10 dark:border-gray-700 pt-4">
                 <h4 className="font-semibold mb-3">
                   {t(
-                    "dashboard.entrepreneursInRegion",
-                    "Entrepreneurs in {{region}}"
+                    "dashboard.startupsInRegion",
+                    "Startups in {{region}}"
                   ).replace("{{region}}", selectedRegion)}
                 </h4>
                 <div className="space-y-3 max-h-[200px] overflow-y-auto">
-                  {mapData[selectedRegion].entrepreneurs.map(
+                  {mapData[selectedRegion].startups.map(
                     (entrepreneur, index) => (
                       <Link
                         href={`/businessDetails/${entrepreneur.Business.uuid}`}

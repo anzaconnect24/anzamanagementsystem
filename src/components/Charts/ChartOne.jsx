@@ -141,13 +141,13 @@ const ChartOne = () => {
         const usersResponse = await getAllUsers(1000, 1);
         // Fetch investors data
         const investorsResponse = await getInvestors(1000, 1);
-        // Fetch entrepreneurs data
-        const entrepreneursResponse = await getEnterprenuers(1000, 1);
+        // Fetch startups data
+        const startupsResponse = await getEnterprenuers(1000, 1);
 
         if (
           usersResponse?.data &&
           investorsResponse?.data &&
-          entrepreneursResponse?.data
+          startupsResponse?.data
         ) {
           const userYearlyData = Array(5).fill(0);
           const investorYearlyData = Array(5).fill(0);
@@ -175,8 +175,8 @@ const ChartOne = () => {
             }
           });
 
-          // Process entrepreneurs data
-          entrepreneursResponse.data.forEach((entrepreneur) => {
+          // Process startups data
+          startupsResponse.data.forEach((entrepreneur) => {
             if (entrepreneur.createdAt) {
               const year = new Date(entrepreneur.createdAt).getFullYear();
               const yearIndex = year - 2021;
@@ -193,7 +193,7 @@ const ChartOne = () => {
             totals: {
               users: usersResponse.data.length,
               investors: investorsResponse.data.length,
-              businesses: entrepreneursResponse.data.length,
+              businesses: startupsResponse.data.length,
             },
           });
         }
@@ -218,7 +218,7 @@ const ChartOne = () => {
         data: registrationData.investors,
       },
       {
-        name: t("dashboard.totalEntrepreneursLabel", "Total Entrepreneurs"), // Changed from "Businesses" to "Entrepreneurs"
+        name: t("dashboard.totalStartupsLabel", "Total Startups"), // Changed from "Businesses" to "Startups"
         data: registrationData.businesses,
       },
     ],
@@ -317,7 +317,7 @@ const ChartOne = () => {
             </div>
             <div className="ml-4">
               <h4 className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("dashboard.totalEntrepreneursLabel", "Total Entrepreneurs")}
+                {t("dashboard.totalStartupsLabel", "Total Startups")}
               </h4>
               <p className="mt-1 text-xl font-bold text-black dark:text-white">
                 {registrationData.totals.businesses}
