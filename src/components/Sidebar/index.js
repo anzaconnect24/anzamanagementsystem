@@ -327,9 +327,9 @@ const Sidebar = ({
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
       investmentItems.push({
-        id: "investment",
-        title: t("navigation.fundingOpportunities", "Funding Opportunities"),
-        items: investmentItems,
+        name: t("navigation.openCallsForFunding", "Open calls for funding"),
+        path: "/dashboard/opportunities",
+        icon: <RiPhoneLine className="text-xl" />,
       });
     }
 
