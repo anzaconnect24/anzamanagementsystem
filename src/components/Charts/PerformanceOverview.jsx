@@ -196,6 +196,7 @@ const makeFallback = (t) => ({
 const PerformanceOverview = ({
   userDetails: userDetailsProp,
   user_uuid,
+  refreshKey = 0,
   className = "",
 }) => {
   const { t } = useTranslation();
@@ -221,7 +222,7 @@ const PerformanceOverview = ({
       })
       .catch(() => setScoreData(makeFallback(t)))
       .finally(() => setLoading(false));
-  }, [user_uuid, userDetails?.uuid]);
+  }, [user_uuid, userDetails?.uuid, refreshKey]);
 
   const initialScoreData =
     !loading && Object.keys(scoreData).length > 0 ? scoreData : null;

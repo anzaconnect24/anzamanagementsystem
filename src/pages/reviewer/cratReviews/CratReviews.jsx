@@ -215,8 +215,8 @@ const CratReviewsPage = () => {
                   <div className="mb-4">
                     <div className="w-full h-48 overflow-hidden bg-gray-200 rounded-lg">
                       <img
-                        src={review.entrepreneur.image || "/user.png"}
-                        alt={review.entrepreneur.name}
+                        src={review.entrepreneur?.image || "/user.png"}
+                        alt={review.entrepreneur?.name || "Entrepreneur"}
                         className="w-full h-full object-cover"
                         onError={(e) => {
                           e.target.src = "/user.png";
@@ -228,10 +228,10 @@ const CratReviewsPage = () => {
                   {/* Entrepreneur Details */}
                   <div className="mb-1">
                     <h6 className="font-semibold text-black dark:text-white truncate mb-1">
-                      {review.entrepreneur.Business?.name || "N/A"}
+                      {review.entrepreneur?.Business?.name || "N/A"}
                     </h6>
                     <p className="text-sm text-bodydark2 truncate">
-                      {review.entrepreneur.email}
+                      {review.entrepreneur?.email || "N/A"}
                     </p>
                   </div>
 
@@ -275,7 +275,7 @@ const CratReviewsPage = () => {
                     <button
                       onClick={() => {
                         router.push(
-                          `/dashboard/report?user_uuid=${review.entrepreneur.uuid}`,
+                          `/dashboard/report?user_uuid=${review.entrepreneur?.uuid}`,
                         );
                       }}
                       className="flex-1 px-3 py-2 bg-primary/10  w-full text-primary font-bold rounded-lg hover:bg-sky-700 text-sm mt-1"
@@ -388,10 +388,11 @@ const CratReviewsPage = () => {
               <div className="flex items-center gap-4 mb-3">
                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-200 flex-shrink-0">
                   <img
-                    src={selectedReview.entrepreneur.image || "/user.png"}
+                    src={selectedReview.entrepreneur?.image || "/user.png"}
                     alt={
-                      selectedReview.entrepreneur.Business?.name ||
-                      selectedReview.entrepreneur.name
+                      selectedReview.entrepreneur?.Business?.name ||
+                      selectedReview.entrepreneur?.name ||
+                      "Entrepreneur"
                     }
                     className="w-full h-full object-cover"
                     onError={(e) => {
@@ -401,11 +402,12 @@ const CratReviewsPage = () => {
                 </div>
                 <div>
                   <h6 className="font-medium text-black dark:text-white">
-                    {selectedReview.entrepreneur.Business?.name ||
-                      selectedReview.entrepreneur.name}
+                    {selectedReview.entrepreneur?.Business?.name ||
+                      selectedReview.entrepreneur?.name ||
+                      "N/A"}
                   </h6>
                   <p className="text-sm text-bodydark2">
-                    Email: {selectedReview.entrepreneur.email}
+                    Email: {selectedReview.entrepreneur?.email || "N/A"}
                   </p>
                 </div>
               </div>

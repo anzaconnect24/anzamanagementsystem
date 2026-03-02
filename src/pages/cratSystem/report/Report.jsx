@@ -23,6 +23,55 @@ import { useRouter } from "../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "../../../locales";
 import { generateCapitalReadinessPDF } from "../../../services/capitalReadinessPDF";
+import DropdownTwo from "@/components/Dropdowns/DropdownTwo";
+
+// Score ↔ rating helpers
+const scoreToRating = (score) =>
+  score === 2 ? "Yes" : score === 1 ? "Maybe" : "No";
+const ratingToScore = (rating) =>
+  rating === "Yes" ? 2 : rating === "Maybe" ? 1 : 0;
+
+/**
+ * Standalone cell so it can hold its own local state without being
+ * re-mounted every time the parent re-renders.
+ */
+const ReviewerRatingCell = ({ item, onSave }) => {
+  const [rating, setRating] = useState(
+    item.rating || scoreToRating(item.score ?? 0),
+  );
+  const [saving, setSaving] = useState(false);
+
+  // Sync when parent data loads / changes (initial mount has score=undefined)
+  useEffect(() => {
+    if (!saving) {
+      setRating(item.rating || scoreToRating(item.score ?? 0));
+    }
+  }, [item.score, item.rating]);
+
+  const handleChange = async (e) => {
+    const newRating = e.target.value;
+    if (newRating === "Yes" && !item.attachment) {
+      toast.error(
+        "An attachment is required before setting the rating to Yes.",
+      );
+      return;
+    }
+    setRating(newRating);
+    setSaving(true);
+    await onSave(item.uuid, newRating, item);
+    setSaving(false);
+  };
+
+  return (
+    <div className={saving ? "opacity-60 pointer-events-none" : ""}>
+      <DropdownTwo
+        value={rating}
+        onChange={handleChange}
+        disabledOptions={!item.attachment ? ["Yes"] : []}
+      />
+    </div>
+  );
+};
 
 // Define the table headers
 const Report = () => {
@@ -510,6 +559,7 @@ const Report = () => {
     setData(translatedData);
   }, [language, t, incomingScores]);
   const [scoreData, setScoreData] = useState({}); // State to hold the score data
+  const [chartRefreshKey, setChartRefreshKey] = useState(0); // Increment to re-fetch charts
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
   const [isPdfLoading, setIsPdfLoading] = useState(false);
@@ -811,6 +861,65 @@ const Report = () => {
     }
   };
 
+  const handleReviewerRatingChange = async (uuid, newRating, item) => {
+    if (userDetails?.role !== "Staff") {
+      toast.warning(
+        t(
+          "report.noPermissionReviewer",
+          "Only reviewers can edit reviewer comments",
+        ),
+      );
+      return;
+    }
+
+    const newScore = ratingToScore(newRating);
+
+    try {
+      const endpoint =
+        item.endpoint ||
+        getDomainEndpoint(item.originalSubDomain || item.subDomain).endpoint;
+
+      const response = await axios.patch(
+        `${server_url}/${endpoint}/${uuid}`,
+        { score: newScore, rating: newRating },
+        { headers },
+      );
+
+      if (response.data.status) {
+        toast.success(t("report.ratingSaved", "Rating saved"));
+        // Trigger chart re-fetch
+        setChartRefreshKey((k) => k + 1);
+        // Update local data so narrative & score column stay in sync
+        setData((prevData) => {
+          const newData = { ...prevData };
+          Object.keys(newData).forEach((sectionKey) => {
+            if (
+              typeof newData[sectionKey] === "object" &&
+              !Array.isArray(newData[sectionKey])
+            ) {
+              Object.keys(newData[sectionKey]).forEach((subKey) => {
+                if (Array.isArray(newData[sectionKey][subKey])) {
+                  newData[sectionKey][subKey] = newData[sectionKey][subKey].map(
+                    (it) =>
+                      it.uuid === uuid
+                        ? { ...it, score: newScore, rating: newRating }
+                        : it,
+                  );
+                }
+              });
+            }
+          });
+          return newData;
+        });
+      } else {
+        toast.error(t("report.errorSavingComment", "Error saving rating"));
+      }
+    } catch (error) {
+      toast.error(t("report.errorSavingComment", "Error saving rating"));
+      console.error("Error saving reviewer rating:", error);
+    }
+  };
+
   const handleReviewerCommentBlur = async (uuid, comment, item) => {
     console.log("🔧 DEBUG: handleReviewerCommentBlur called");
     console.log("🔧 DEBUG: User role:", userDetails?.role);
@@ -1030,7 +1139,14 @@ const Report = () => {
             </p>
           </div>
           <div className="flex items-center px-2">
-            <p className="text-sm text-black dark:text-white">{item.score}</p>
+            {canEditReviewerComment ? (
+              <ReviewerRatingCell
+                item={item}
+                onSave={handleReviewerRatingChange}
+              />
+            ) : (
+              <p className="text-sm text-black dark:text-white">{item.score}</p>
+            )}
           </div>
           <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white">{narrative}</p>
@@ -1273,7 +1389,11 @@ const Report = () => {
         </div>
 
         {/* Charts Section */}
-        <PerformanceOverview userDetails={userDetails} user_uuid={user_uuid} />
+        <PerformanceOverview
+          userDetails={userDetails}
+          user_uuid={user_uuid}
+          refreshKey={chartRefreshKey}
+        />
       </div>
 
       {data.commercial &&
