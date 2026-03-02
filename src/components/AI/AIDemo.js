@@ -1,6 +1,6 @@
 "use client";
-import React, { useState } from 'react';
-import { generateExecutiveSummary } from '@/services/geminiAI';
+import React, { useState } from "react";
+import { generateExecutiveSummary } from "@/services/openAi";
 
 const AIDemo = () => {
   const [analysis, setAnalysis] = useState(null);
@@ -12,16 +12,19 @@ const AIDemo = () => {
     financial: { percentage: 70, status: "Ready" },
     operations: { percentage: 55, status: "Not Ready" },
     legal: { percentage: 60, status: "Not Ready" },
-    general_status: "Not Ready"
+    general_status: "Not Ready",
   };
 
   const testAI = async () => {
     try {
       setLoading(true);
-      const result = await generateExecutiveSummary(sampleScoreData, "Not Ready");
+      const result = await generateExecutiveSummary(
+        sampleScoreData,
+        "Not Ready",
+      );
       setAnalysis(result);
     } catch (error) {
-      console.error('AI Test Error:', error);
+      console.error("AI Test Error:", error);
       setAnalysis({ error: error.message });
     } finally {
       setLoading(false);
@@ -54,7 +57,7 @@ const AIDemo = () => {
         disabled={loading}
         className="mb-4 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 disabled:bg-gray-400 transition-colors"
       >
-        {loading ? 'Testing AI...' : 'Test AI Analysis'}
+        {loading ? "Testing AI..." : "Test AI Analysis"}
       </button>
 
       {analysis && (
@@ -63,7 +66,8 @@ const AIDemo = () => {
             <div className="text-red-600">
               <strong>Error:</strong> {analysis.error}
               <div className="mt-2 text-sm">
-                Make sure you have set the NEXT_PUBLIC_GEMINI_API_KEY environment variable.
+                Make sure you have set the NEXT_PUBLIC_GEMINI_API_KEY
+                environment variable.
               </div>
             </div>
           ) : (
@@ -80,4 +84,4 @@ const AIDemo = () => {
   );
 };
 
-export default AIDemo; 
+export default AIDemo;

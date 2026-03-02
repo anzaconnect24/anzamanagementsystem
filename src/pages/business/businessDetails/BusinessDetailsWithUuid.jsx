@@ -1,6 +1,6 @@
 "use client";
 import { getBusiness, updateBusiness } from "@/controllers/business_controller";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, lazy, Suspense } from "react";
 import { useRouter } from "@/utils/navigation";
 import { useParams } from "react-router-dom";
 import Link from "@/utils/link";
@@ -14,13 +14,19 @@ import { assignEntreprenuerToMentor } from "@/controllers/mentorEntreprenuerCont
 import Spinner from "@/components/spinner";
 import { updateUser } from "@/controllers/user_controller";
 import { getScoreData } from "@/controllers/crat_general_controller";
-import AIAnalysisPanel from "@/components/AI/AIAnalysisPanel";
-import jsPDF from "jspdf";
-import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
-import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 import { FaFilePdf } from "react-icons/fa";
 import { useTranslation } from "@/locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import { generateCapitalReadinessPDF } from "../../../services/capitalReadinessPDF";
+
+// Lazy-load heavy chart and AI components so they don't block initial render
+const BusinessDomainScores = lazy(
+  () => import("@/components/Charts/BusinessDomainScores"),
+);
+const PerformanceDistribution = lazy(
+  () => import("@/components/Charts/PerformanceDistribution"),
+);
+const AIAnalysisPanel = lazy(() => import("@/components/AI/AIAnalysisPanel"));
 
 const Page = () => {
   const { t, isSwahili } = useTranslation();
@@ -34,8 +40,53 @@ const Page = () => {
   const [showAIAnalysis, setShowAIAnalysis] = useState(false);
   const [loadingCRAT, setLoadingCRAT] = useState(false);
   const [cratData, setCratData] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
   // CRAT documents state
   const [cratDocs, setCratDocs] = useState([]);
+
+  // Calculate intelligent scores based on business data completeness
+  const calculateIntelligentScore = (category) => {
+    if (!business) return 50;
+
+    let score = 50; // Base score
+
+    switch (category) {
+      case "commercial": {
+        if (business.market) score += 15;
+        if (business.numberOfCustomers && business.numberOfCustomers > 0)
+          score += 15;
+        if (business.impact) score += 10;
+        if (business.traction) score += 10;
+        break;
+      }
+      case "financial": {
+        if (business.fundraisingNeeds) score += 15;
+        if (business.lookingForInvestment) score += 15;
+        if (business.stage && business.stage !== "Idea") score += 10;
+        if (business.companyProfile) score += 10;
+        break;
+      }
+      case "operations": {
+        if (business.team && parseInt(business.team) > 1) score += 15;
+        if (business.growthPlan) score += 15;
+        if (business.location) score += 5;
+        if (business.description) score += 10;
+        if (business.solution) score += 5;
+        break;
+      }
+      case "legal": {
+        if (business.registration) score += 20;
+        if (business.BusinessSector?.name) score += 15;
+        if (business.status === "accepted") score += 10;
+        if (business.sdg) score += 5;
+        break;
+      }
+      default:
+        break;
+    }
+
+    return Math.min(score, 95); // Cap at 95%
+  };
 
   const getData = async () => {
     try {
@@ -59,63 +110,69 @@ const Page = () => {
 
     try {
       setLoadingCRAT(true);
+
+      // Clear existing AI analysis data to force fresh load
+      setCratData(null);
+      setShowAIAnalysis(false);
+
       console.log("🔍 Preparing comprehensive AI analysis for:", business.name);
+      console.log("👤 User UUID:", business.User?.uuid);
 
       // Show immediate feedback
       toast.loading(t("ai.preparing", "Preparing AI analysis..."), {
         id: "ai-loading",
       });
 
-      // Calculate intelligent scores based on business completeness
-      const calculateIntelligentScore = (category) => {
-        let score = 50; // Base score
-
-        switch (category) {
-          case "commercial":
-            if (business.market) score += 15;
-            if (business.numberOfCustomers && business.numberOfCustomers > 0)
-              score += 15;
-            if (business.impact) score += 10;
-            if (business.traction) score += 10;
-            break;
-
-          case "financial":
-            if (business.fundraisingNeeds) score += 15;
-            if (business.lookingForInvestment) score += 15;
-            if (business.stage && business.stage !== "Idea") score += 10;
-            if (business.companyProfile) score += 10;
-            break;
-
-          case "operations":
-            if (business.team && parseInt(business.team) > 1) score += 15;
-            if (business.growthPlan) score += 15;
-            if (business.location) score += 5;
-            if (business.description) score += 10;
-            if (business.solution) score += 5;
-            break;
-
-          case "legal":
-            if (business.registration) score += 20;
-            if (business.BusinessSector?.name) score += 15;
-            if (business.status === "accepted") score += 10;
-            if (business.sdg) score += 5;
-            break;
-        }
-
-        return Math.min(score, 95); // Cap at 95%
-      };
-
       // Try to get actual CRAT data first
       let actualCRATData = null;
+      let hasCRATData = false;
       try {
-        actualCRATData = await getScoreData();
-        console.log("📊 Found CRAT assessment data:", actualCRATData);
-        toast.success(t("ai.cratLoaded", "CRAT assessment data loaded"), {
-          id: "ai-loading",
-        });
+        // Pass the user's uuid to get their CRAT assessment scores
+        actualCRATData = await getScoreData({ uuid: business.User?.uuid });
+        console.log("📊 Raw CRAT data received:", actualCRATData);
+
+        // Check if we have valid CRAT data with actual percentage values
+        if (
+          actualCRATData &&
+          typeof actualCRATData === "object" &&
+          ((actualCRATData.commercial &&
+            typeof actualCRATData.commercial.percentage === "number") ||
+            (actualCRATData.financial &&
+              typeof actualCRATData.financial.percentage === "number") ||
+            (actualCRATData.operations &&
+              typeof actualCRATData.operations.percentage === "number") ||
+            (actualCRATData.legal &&
+              typeof actualCRATData.legal.percentage === "number"))
+        ) {
+          hasCRATData = true;
+          console.log(
+            "✅ Valid CRAT assessment data found - using actual scores:",
+            {
+              commercial: actualCRATData.commercial?.percentage,
+              financial: actualCRATData.financial?.percentage,
+              operations: actualCRATData.operations?.percentage,
+              legal: actualCRATData.legal?.percentage,
+            },
+          );
+          toast.success(t("ai.cratLoaded", "CRAT assessment data loaded"), {
+            id: "ai-loading",
+          });
+        } else {
+          console.log(
+            "⚠️ CRAT data structure invalid or incomplete, using business profile analysis",
+            actualCRATData,
+          );
+          toast.success(
+            t("ai.profilePrepared", "Business profile analysis prepared"),
+            {
+              id: "ai-loading",
+            },
+          );
+        }
       } catch (cratError) {
         console.log(
           "ℹ️ No CRAT assessment found, using business profile analysis",
+          cratError.message,
         );
         toast.success(
           t("ai.profilePrepared", "Business profile analysis prepared"),
@@ -125,51 +182,65 @@ const Page = () => {
         );
       }
 
-      // Create comprehensive score data
-      const scoreData = actualCRATData || {
-        commercial: {
-          percentage: calculateIntelligentScore("commercial"),
-          status:
-            calculateIntelligentScore("commercial") >= 70
-              ? t("ai.status.good", "Good")
-              : calculateIntelligentScore("commercial") >= 50
-                ? t("ai.status.fair", "Fair")
-                : t("ai.status.needsImprovement", "Needs Improvement"),
-        },
-        financial: {
-          percentage: calculateIntelligentScore("financial"),
-          status:
-            calculateIntelligentScore("financial") >= 70
-              ? t("ai.status.good", "Good")
-              : calculateIntelligentScore("financial") >= 50
-                ? t("ai.status.fair", "Fair")
-                : t("ai.status.needsImprovement", "Needs Improvement"),
-        },
-        operations: {
-          percentage: calculateIntelligentScore("operations"),
-          status:
-            calculateIntelligentScore("operations") >= 70
-              ? t("ai.status.good", "Good")
-              : calculateIntelligentScore("operations") >= 50
-                ? t("ai.status.fair", "Fair")
-                : t("ai.status.needsImprovement", "Needs Improvement"),
-        },
-        legal: {
-          percentage: calculateIntelligentScore("legal"),
-          status:
-            calculateIntelligentScore("legal") >= 70
-              ? t("ai.status.good", "Good")
-              : calculateIntelligentScore("legal") >= 50
-                ? t("ai.status.fair", "Fair")
-                : t("ai.status.needsImprovement", "Needs Improvement"),
-        },
-        general_status: actualCRATData
-          ? t("ai.generalStatus.cratAssessment", "CRAT Assessment")
-          : t("ai.generalStatus.profileAnalysis", "Business Profile Analysis"),
-      };
+      // Create comprehensive score data - ALWAYS use actual CRAT data if available, even if scores are 0%
+      const scoreData = hasCRATData
+        ? actualCRATData
+        : {
+            commercial: {
+              percentage: calculateIntelligentScore("commercial"),
+              status:
+                calculateIntelligentScore("commercial") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("commercial") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+            financial: {
+              percentage: calculateIntelligentScore("financial"),
+              status:
+                calculateIntelligentScore("financial") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("financial") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+            operations: {
+              percentage: calculateIntelligentScore("operations"),
+              status:
+                calculateIntelligentScore("operations") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("operations") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+            legal: {
+              percentage: calculateIntelligentScore("legal"),
+              status:
+                calculateIntelligentScore("legal") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("legal") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+            general_status: hasCRATData
+              ? t("ai.generalStatus.cratAssessment", "CRAT Assessment")
+              : t(
+                  "ai.generalStatus.profileAnalysis",
+                  "Business Profile Analysis",
+                ),
+          };
 
-      // Send PDF report to entrepreneur
-      await sendAIReportEmail(business, scoreData);
+      // Log final scoreData to verify what's being used
+      console.log("📈 Final scoreData being used for AI analysis:", {
+        source: hasCRATData
+          ? "CRAT Assessment"
+          : "Business Profile (Generated)",
+        commercial: scoreData.commercial?.percentage,
+        financial: scoreData.financial?.percentage,
+        operations: scoreData.operations?.percentage,
+        legal: scoreData.legal?.percentage,
+        general_status: scoreData.general_status,
+      });
 
       // Create detailed report data with rich context
       const reportData = {
@@ -447,6 +518,15 @@ const Page = () => {
         numberOfCustomers: business.numberOfCustomers,
       };
 
+      // Log the data being passed to AI Analysis to ensure correctness
+      console.log("🔍 AI Analysis Data:", {
+        hasCRATData,
+        scoreData,
+        message: hasCRATData
+          ? "Using actual CRAT assessment scores"
+          : "Using generated business profile scores",
+      });
+
       setCratData({
         scoreData,
         reportData,
@@ -518,61 +598,122 @@ const Page = () => {
     }
   };
 
-  const sendAIReportEmail = async (business, scoreData) => {
-    // Only generate PDF, do not send email
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text(t("ai.pdf.title", "AI Analysis Report"), 10, 15);
-    doc.setFontSize(12);
-    let y = 30;
-    doc.text(
-      `${t("ai.pdf.entrepreneur", "Entrepreneur")}: ${
-        business.User?.name || t("common.notProvided", "N/A")
-      }`,
-      10,
-      y,
-    );
-    y += 8;
-    doc.text(
-      `${t("ai.pdf.business", "Business")}: ${
-        business.name || t("common.notProvided", "N/A")
-      }`,
-      10,
-      y,
-    );
-    y += 8;
-    doc.text(
-      `${t("ai.pdf.date", "Date")}: ${new Date().toLocaleDateString()}`,
-      10,
-      y,
-    );
-    y += 12;
-    Object.entries(scoreData).forEach(([domain, data]) => {
-      if (typeof data === "object" && data !== null && "percentage" in data) {
-        doc.text(
-          `${domain.charAt(0).toUpperCase() + domain.slice(1)}: ${
-            data.percentage
-          }%`,
-          10,
-          y,
-        );
-        y += 7;
-        if (data.status) {
-          doc.text(`${t("ai.pdf.status", "Status")}: ${data.status}`, 14, y);
-          y += 6;
+  const handleDownloadAIReport = async () => {
+    if (pdfLoading) return;
+
+    try {
+      setPdfLoading(true);
+
+      const toastId = toast.loading(
+        t("report.generatingPdf", "Generating AI report — please wait..."),
+      );
+
+      // Reuse existing CRAT/AI data if available, otherwise build fresh score data
+      let scoreDataForPdf = cratData?.scoreData;
+
+      if (!scoreDataForPdf) {
+        let hasCRATData = false;
+        let actualCRATData = null;
+
+        try {
+          actualCRATData = await getScoreData({ uuid: business.User?.uuid });
+
+          if (
+            actualCRATData &&
+            typeof actualCRATData === "object" &&
+            ((actualCRATData.commercial &&
+              typeof actualCRATData.commercial.percentage === "number") ||
+              (actualCRATData.financial &&
+                typeof actualCRATData.financial.percentage === "number") ||
+              (actualCRATData.operations &&
+                typeof actualCRATData.operations.percentage === "number") ||
+              (actualCRATData.legal &&
+                typeof actualCRATData.legal.percentage === "number"))
+          ) {
+            hasCRATData = true;
+          }
+        } catch (err) {
+          console.log("ℹ️ No CRAT assessment found for PDF generation", err);
         }
+
+        scoreDataForPdf = hasCRATData
+          ? actualCRATData
+          : {
+              commercial: {
+                percentage: calculateIntelligentScore("commercial"),
+                status:
+                  calculateIntelligentScore("commercial") >= 70
+                    ? t("ai.status.good", "Good")
+                    : calculateIntelligentScore("commercial") >= 50
+                      ? t("ai.status.fair", "Fair")
+                      : t("ai.status.needsImprovement", "Needs Improvement"),
+              },
+              financial: {
+                percentage: calculateIntelligentScore("financial"),
+                status:
+                  calculateIntelligentScore("financial") >= 70
+                    ? t("ai.status.good", "Good")
+                    : calculateIntelligentScore("financial") >= 50
+                      ? t("ai.status.fair", "Fair")
+                      : t("ai.status.needsImprovement", "Needs Improvement"),
+              },
+              operations: {
+                percentage: calculateIntelligentScore("operations"),
+                status:
+                  calculateIntelligentScore("operations") >= 70
+                    ? t("ai.status.good", "Good")
+                    : calculateIntelligentScore("operations") >= 50
+                      ? t("ai.status.fair", "Fair")
+                      : t("ai.status.needsImprovement", "Needs Improvement"),
+              },
+              legal: {
+                percentage: calculateIntelligentScore("legal"),
+                status:
+                  calculateIntelligentScore("legal") >= 70
+                    ? t("ai.status.good", "Good")
+                    : calculateIntelligentScore("legal") >= 50
+                      ? t("ai.status.fair", "Fair")
+                      : t("ai.status.needsImprovement", "Needs Improvement"),
+              },
+            };
       }
-    });
-    // Fix: Convert ArrayBuffer to Uint8Array for base64 encoding
-    const arrayBuffer = doc.output("arraybuffer");
-    const uint8Array = new Uint8Array(arrayBuffer);
-    const pdfBase64 = btoa(String.fromCharCode(...uint8Array));
-    toast.success(
-      t(
-        "ai.pdf.generated",
-        "AI analysis report generated! (Email sending is disabled)",
-      ),
-    );
+
+      const pdfUserContext = {
+        Business: {
+          businessName: business?.name,
+          name: business?.name,
+          sector: business?.BusinessSector?.name,
+          businessSector: business?.BusinessSector?.name,
+          location: business?.location,
+          businessLocation: business?.location,
+        },
+      };
+
+      const domainDataForPdf = cratData?.reportData || {};
+
+      await generateCapitalReadinessPDF(
+        domainDataForPdf,
+        scoreDataForPdf,
+        pdfUserContext,
+        (msg) => {
+          toast.loading(msg, { id: toastId });
+        },
+      );
+
+      toast.success(t("report.pdfReady", "Report downloaded successfully!"), {
+        id: toastId,
+      });
+    } catch (error) {
+      console.error("❌ Error generating AI PDF:", error);
+      toast.error(
+        t(
+          "ai.failedToDownloadPDF",
+          "Failed to generate AI PDF. Please try again.",
+        ),
+      );
+    } finally {
+      setPdfLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -812,17 +953,29 @@ const Page = () => {
             ) && (
               <div className="grid grid-cols-12 gap-6 items-stretch">
                 <div className=" col-span-7">
-                  <BusinessDomainScores
-                    userDetails={business?.User}
-                    initialScoreData={{}}
-                  />
+                  <Suspense
+                    fallback={
+                      <div className="h-48 bg-gray-100 animate-pulse rounded-xl" />
+                    }
+                  >
+                    <BusinessDomainScores
+                      userDetails={business?.User}
+                      initialScoreData={{}}
+                    />
+                  </Suspense>
                 </div>
                 <div className="col-span-5">
-                  <PerformanceDistribution
-                    userDetails={business?.User}
-                    chartHeight={250}
-                    initialScoreData={{}}
-                  />
+                  <Suspense
+                    fallback={
+                      <div className="h-48 bg-gray-100 animate-pulse rounded-xl" />
+                    }
+                  >
+                    <PerformanceDistribution
+                      userDetails={business?.User}
+                      chartHeight={250}
+                      initialScoreData={{}}
+                    />
+                  </Suspense>
                 </div>
               </div>
             )}
@@ -1124,21 +1277,7 @@ const Page = () => {
                   </div>
                 </div>
               )}
-              {userDetails.role === "Admin" && business?.User?.uuid && (
-                <div className="mt-3">
-                  <button
-                    onClick={() =>
-                      router.push(`/dashboard/logs/${business.User.uuid}`)
-                    }
-                    className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl transform hover:scale-105"
-                  >
-                    <span className="text-2xl">�</span>
-                    <span>
-                      {t("logs.viewActivityLogs", "View User Activity Logs")}
-                    </span>
-                  </button>
-                </div>
-              )}
+
               {/* CRAT Documents Folder - visible to Admin and Staff only */}
               {["Admin", "Staff"].includes(userDetails.role) && (
                 <div className="mt-2">
@@ -1161,78 +1300,47 @@ const Page = () => {
 
               <div className="mt-4 flex flex-col gap-4">
                 {/* AI Evaluation Button - Admin Only */}
+
+                {/* Download AI Report (PDF) - Admin Only */}
                 {userDetails.role === "Admin" && (
-                  <div className="relative group">
-                    <button
-                      onClick={loadCRATForAI}
-                      disabled={loadingCRAT}
-                      className="inline-flex items-center justify-center w-full px-6 py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl hover:from-purple-700 hover:to-indigo-700 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95"
-                    >
-                      {loadingCRAT ? (
-                        <>
-                          <svg
-                            className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                          >
-                            <circle
-                              className="opacity-25"
-                              cx="12"
-                              cy="12"
-                              r="10"
-                              stroke="currentColor"
-                              strokeWidth="4"
-                            ></circle>
-                            <path
-                              className="opacity-75"
-                              fill="currentColor"
-                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                            ></path>
-                          </svg>
-                          {t("ai.preparing", "Preparing AI Analysis...")}
-                        </>
-                      ) : (
-                        <>
-                          <span className="mr-2 text-xl">🤖</span>
-                          {showAIAnalysis
-                            ? t("ai.refreshAnalysis", "Refresh AI Analysis")
-                            : t("ai.generateAnalysis", "Generate AI Analysis")}
-                          <span className="ml-2 text-sm opacity-80">
-                            {showAIAnalysis ? "↻" : "✨"}
-                          </span>
-                        </>
-                      )}
-                    </button>
-
-                    {/* Professional Loading Overlay */}
-                    {loadingCRAT && (
-                      <div className="absolute inset-0 bg-gradient-to-r from-purple-600/90 to-indigo-600/90 rounded-xl flex items-center justify-center">
-                        <div className="flex flex-col items-center text-white">
-                          <div className="relative">
-                            <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
-                            <div className="absolute inset-0 w-8 h-8 border-4 border-transparent border-r-white/50 rounded-full animate-spin animate-reverse"></div>
-                          </div>
-                          <span className="mt-2 text-sm font-medium">
-                            {t("ai.analyzing", "Analyzing...")}
-                          </span>
-                        </div>
-                      </div>
+                  <button
+                    onClick={handleDownloadAIReport}
+                    disabled={pdfLoading}
+                    className="inline-flex items-center justify-center w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl hover:from-blue-600 hover:to-cyan-600 transition-all duration-200 font-semibold text-lg shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {pdfLoading ? (
+                      <>
+                        <svg
+                          className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                        >
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                          ></circle>
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          ></path>
+                        </svg>
+                        {t("report.generatingPdf", "Generating AI Report...")}
+                      </>
+                    ) : (
+                      <>
+                        <span className="mr-2 text-xl">
+                          <FaFilePdf />
+                        </span>
+                        {t("report.downloadAiPdf", "Download Report (PDF)")}
+                      </>
                     )}
-
-                    {/* Tooltip */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-1 bg-gray-900 text-white text-xs rounded-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
-                      {showAIAnalysis
-                        ? t(
-                            "ai.tooltip.update",
-                            "Update analysis with latest data",
-                          )
-                        : t(
-                            "ai.tooltip.generate",
-                            "Generate comprehensive AI investment analysis",
-                          )}
-                    </div>
-                  </div>
+                  </button>
                 )}
 
                 <button
@@ -1374,19 +1482,19 @@ const Page = () => {
                 {[
                   {
                     label: t("ai.domains.commercial", "Commercial"),
-                    score: cratData.scoreData.commercial.percentage,
+                    score: Math.round(cratData.scoreData.commercial.percentage),
                   },
                   {
                     label: t("ai.domains.financial", "Financial"),
-                    score: cratData.scoreData.financial.percentage,
+                    score: Math.round(cratData.scoreData.financial.percentage),
                   },
                   {
                     label: t("ai.domains.operations", "Operations"),
-                    score: cratData.scoreData.operations.percentage,
+                    score: Math.round(cratData.scoreData.operations.percentage),
                   },
                   {
                     label: t("ai.domains.legal", "Legal"),
-                    score: cratData.scoreData.legal.percentage,
+                    score: Math.round(cratData.scoreData.legal.percentage),
                   },
                 ].map((item, index) => {
                   // Dynamic color based on CRAT readiness levels
@@ -1425,18 +1533,24 @@ const Page = () => {
 
             {/* AI Analysis Panel */}
             <div className="bg-white dark:bg-boxdark rounded-2xl shadow-xl border border-black/10 dark:border-strokedark overflow-hidden">
-              <AIAnalysisPanel
-                reportData={cratData.reportData}
-                scoreData={cratData.scoreData}
-                businessInfo={cratData.businessInfo}
-                userDetails={userDetails}
-                isAdminEvaluation={true}
-                targetEntrepreneur={{
-                  name: business?.User?.name,
-                  business: business?.name,
-                  uuid: business?.User?.uuid,
-                }}
-              />
+              <Suspense
+                fallback={
+                  <div className="h-64 bg-gray-100 animate-pulse rounded-xl" />
+                }
+              >
+                <AIAnalysisPanel
+                  reportData={cratData.reportData}
+                  scoreData={cratData.scoreData}
+                  businessInfo={cratData.businessInfo}
+                  userDetails={userDetails}
+                  isAdminEvaluation={true}
+                  targetEntrepreneur={{
+                    name: business?.User?.name,
+                    business: business?.name,
+                    uuid: business?.User?.uuid,
+                  }}
+                />
+              </Suspense>
             </div>
           </div>
         )}

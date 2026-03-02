@@ -12,12 +12,8 @@ import Modal2 from "@/components/Model2";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import dynamic from "@/utils/dynamic";
-const BusinessDomainScores = dynamic(
-  () => import("@/components/Charts/BusinessDomainScores"),
-  { ssr: false, loading: () => <Loader /> },
-);
-const PerformanceDistribution = dynamic(
-  () => import("@/components/Charts/PerformanceDistribution"),
+const PerformanceOverview = dynamic(
+  () => import("@/components/Charts/PerformanceOverview"),
   { ssr: false, loading: () => <Loader /> },
 );
 // import { useSearchParams } from "@/utils/navigation";
@@ -26,6 +22,7 @@ import { UserContext } from "../../../layouts/DashboardLayout";
 import { useRouter } from "../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "../../../locales";
+import { generateCapitalReadinessPDF } from "../../../services/capitalReadinessPDF";
 
 // Define the table headers
 const Report = () => {
@@ -515,6 +512,8 @@ const Report = () => {
   const [scoreData, setScoreData] = useState({}); // State to hold the score data
   const [deletemodalOpen, publishModalOpen] = useState(false);
   const [deletemodalMessage, publishModalMessage] = useState("");
+  const [isPdfLoading, setIsPdfLoading] = useState(false);
+  const [pdfStatus, setPdfStatus] = useState("");
   const [generalStatus, setGeneralStatus] = useState(
     t("report.notReady", "Not Ready"),
   ); // Add this
@@ -724,6 +723,33 @@ const Report = () => {
         "Are you sure you want to publish this report for review?",
       ),
     );
+  };
+
+  const handleDownloadReport = async () => {
+    if (isPdfLoading) return;
+    setIsPdfLoading(true);
+    setPdfStatus("");
+    const toastId = toast.loading(
+      t("report.generatingPdf", "Generating AI report — please wait..."),
+    );
+    try {
+      await generateCapitalReadinessPDF(data, scoreData, userDetails, (msg) => {
+        setPdfStatus(msg);
+        toast.loading(msg, { id: toastId });
+      });
+      toast.success(t("report.pdfReady", "Report downloaded successfully!"), {
+        id: toastId,
+      });
+    } catch (err) {
+      console.error("PDF generation error:", err);
+      toast.error(
+        t("report.pdfError", "Failed to generate report. Please try again."),
+        { id: toastId },
+      );
+    } finally {
+      setIsPdfLoading(false);
+      setPdfStatus("");
+    }
   };
 
   const handleCustomerCommentBlur = async (uuid, comment, item) => {
@@ -1147,6 +1173,65 @@ const Report = () => {
               </h2> */}
             </div>
             <div className="flex space-x-3 pt-4 pr-4">
+              {/* AI PDF Download Button — always visible */}
+              <button
+                onClick={handleDownloadReport}
+                disabled={isPdfLoading}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-sm ${
+                  isPdfLoading
+                    ? "bg-blue-400 cursor-not-allowed opacity-80"
+                    : "bg-[#262D89] hover:bg-blue-800 active:scale-95"
+                }`}
+              >
+                {isPdfLoading ? (
+                  <>
+                    <svg
+                      className="animate-spin h-4 w-4 text-white"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <circle
+                        className="opacity-25"
+                        cx="12"
+                        cy="12"
+                        r="10"
+                        stroke="currentColor"
+                        strokeWidth="4"
+                      />
+                      <path
+                        className="opacity-75"
+                        fill="currentColor"
+                        d="M4 12a8 8 0 018-8v8H4z"
+                      />
+                    </svg>
+                    <span className="text-sm">
+                      {pdfStatus || t("report.generatingPdf", "Generating...")}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-4 w-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth={2}
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3M3 7V4a1 1 0 011-1h4l2 2h8a1 1 0 011 1v3"
+                      />
+                    </svg>
+                    <span className="text-sm">
+                      {t("report.downloadAiReport", "Download Report (PDF)")}
+                    </span>
+                  </>
+                )}
+              </button>
+
               {userDetails.publishStatus === "Draft" ? (
                 <>
                   {userDetails.reportPdf && (
@@ -1188,26 +1273,7 @@ const Report = () => {
         </div>
 
         {/* Charts Section */}
-        <div className="p-6 py-1">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">
-            {t("report.performanceOverview", "Performance Overview")}
-          </h3>
-
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
-            <div className="col-span-1 md:col-span-3">
-              <BusinessDomainScores
-                initialScoreData={scoreData}
-                userDetails={userDetails}
-              />
-            </div>
-            <div className="col-span-1 md:col-span-2">
-              <PerformanceDistribution
-                initialScoreData={scoreData}
-                userDetails={userDetails}
-              />
-            </div>
-          </div>
-        </div>
+        <PerformanceOverview userDetails={userDetails} user_uuid={user_uuid} />
       </div>
 
       {data.commercial &&

@@ -422,16 +422,6 @@ const Sidebar = ({
           {
             name: t("navigation.report", "Report"),
             path: "/dashboard/report",
-            submenu: [
-              {
-                name: t("navigation.initialAnalysis", "Initial Analysis"),
-                path: "/dashboard/report",
-              },
-              {
-                name: t("navigation.finalReport", "Final Report"),
-                path: "/dashboard/finalReport",
-              },
-            ],
           },
         ],
       });

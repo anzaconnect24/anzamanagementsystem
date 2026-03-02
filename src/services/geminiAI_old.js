@@ -11,7 +11,7 @@ const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 export class CRATAIAnalyzer {
   constructor() {
     this.model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-pro",
       generationConfig: {
         temperature: 0.7,
         topK: 40,
@@ -797,7 +797,7 @@ export const testGeminiConnection = async () => {
   try {
     console.log('🧪 Testing Gemini AI connection...');
     
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const result = await model.generateContent("Hello, please respond with 'Connection successful'");
     const response = await result.response;
     const text = response.text();

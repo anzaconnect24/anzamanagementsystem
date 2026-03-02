@@ -4,12 +4,13 @@ import {
   analyzeCompleteReport,
   analyzeDomain,
   generateExecutiveSummary,
-  testGeminiConnection,
-} from "../../services/geminiAI";
+  testOpenAIConnection,
+} from "../../services/openAi";
+import { generateAIReport } from "../../services/aiReportService";
 import {
-  generateAIReport,
-  exportReportToPDF,
-} from "../../services/aiReportService";
+  generateCapitalReadinessPDF,
+  generateCapitalReadinessContent,
+} from "../../services/capitalReadinessPDF";
 import toast from "react-hot-toast";
 import { useTranslation } from "../../locales";
 
@@ -28,6 +29,17 @@ const AIAnalysisPanel = ({
   const [domainAnalysis, setDomainAnalysis] = useState({});
   const [analysisType, setAnalysisType] = useState("complete"); // complete, executive, domain
   const [savedReport, setSavedReport] = useState(null);
+  const [expandedDomains, setExpandedDomains] = useState({});
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [formalReport, setFormalReport] = useState(null);
+
+  // Toggle domain expansion
+  const toggleDomainExpansion = (domain) => {
+    setExpandedDomains((prev) => ({
+      ...prev,
+      [domain]: !prev[domain],
+    }));
+  };
 
   // Check if AI analysis should be available (ADMIN ONLY for entrepreneur evaluation)
   const canAccessAI = () => {
@@ -56,59 +68,24 @@ const AIAnalysisPanel = ({
   const hasAIAccess = canAccessAI();
 
   useEffect(() => {
-    // Auto-generate executive summary for admins only
-    if (hasAIAccess && scoreData && Object.keys(scoreData).length > 0) {
-      generateAIExecutiveSummary();
+    // Auto-generate complete analysis for admins only
+    if (
+      hasAIAccess &&
+      scoreData &&
+      Object.keys(scoreData).length > 0 &&
+      !aiAnalysis
+    ) {
+      generateCompleteAnalysisAuto();
     }
   }, [scoreData, hasAIAccess]);
 
-  const generateAIExecutiveSummary = async () => {
-    try {
-      setLoading(true);
-      const summary = await generateExecutiveSummary(
-        scoreData,
-        scoreData.general_status
-      );
-      setAiAnalysis((prev) => ({ ...prev, executiveSummary: summary }));
-      toast.success(
-        t(
-          "ai.executiveSummaryGenerated",
-          "Executive summary generated successfully!"
-        )
-      );
-    } catch (error) {
-      console.error("Error generating executive summary:", error);
-
-      if (
-        error.message.includes("not properly initialized") ||
-        error.message.includes("API key")
-      ) {
-        toast.error(
-          t(
-            "ai.apiKeyNotConfigured",
-            "❌ API key not configured. Please add your Gemini API key to .env.local and restart the server."
-          ),
-          {
-            duration: 8000,
-          }
-        );
-      } else {
-        toast.error(
-          t(
-            "ai.failedToGenerateAISummary",
-            "Failed to generate AI summary. Please check your API configuration."
-          )
-        );
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const generateCompleteAnalysis = async () => {
+  const generateCompleteAnalysisAuto = async () => {
     if (!reportData || !scoreData) {
       toast.error(
-        t("ai.reportDataNotAvailable", "Report data not available for analysis")
+        t(
+          "ai.reportDataNotAvailable",
+          "Report data not available for analysis",
+        ),
       );
       return;
     }
@@ -128,33 +105,41 @@ const AIAnalysisPanel = ({
         windowAvailable: typeof window !== "undefined",
       });
 
-      // First test basic AI connection
-      console.log("🧪 Testing AI connection first...");
-      const connectionTest = await testGeminiConnection();
-      console.log("🔍 Connection test result:", connectionTest);
+      // Generate and save complete report plus formal PDF-style content
+      console.log("✅ Connection check skipped, generating report directly...");
 
-      if (!connectionTest.success) {
-        throw new Error(`AI Connection Failed: ${connectionTest.error}`);
-      }
+      const pdfUserContext = {
+        Business: {
+          businessName: businessInfo?.name,
+          name: businessInfo?.name,
+          sector: businessInfo?.sector,
+          businessSector: businessInfo?.sector,
+          location: businessInfo?.location,
+          businessLocation: businessInfo?.location,
+        },
+      };
 
-      // Generate and save complete report
-      console.log("✅ AI connection verified, generating report...");
-      const completeReport = await generateAIReport(
-        reportData,
-        scoreData,
-        businessInfo,
-        userDetails
-      );
+      const [completeReport, formal] = await Promise.all([
+        generateAIReport(reportData, scoreData, businessInfo, userDetails),
+        generateCapitalReadinessContent(
+          reportData,
+          scoreData,
+          pdfUserContext,
+          // Avoid spamming toasts here; log to console instead
+          (msg) => console.log("[FormalReportStatus]", msg),
+        ),
+      ]);
 
       console.log("✅ Complete report generated:", completeReport);
       setAiAnalysis(completeReport.aiAnalysis);
       setSavedReport(completeReport);
+      setFormalReport(formal?.content || null);
 
       toast.success(
         t(
           "ai.completeAnalysisGenerated",
-          "Complete AI analysis generated and saved successfully!"
-        )
+          "Complete AI analysis generated successfully!",
+        ),
       );
     } catch (error) {
       console.error("❌ Error generating complete analysis:", error);
@@ -165,58 +150,119 @@ const AIAnalysisPanel = ({
         constructor: error.constructor.name,
       });
 
-      // Show the actual error message for debugging
-      const errorMessage = `AI Analysis Failed: ${error.message}`;
-      console.error("❌ Final error message:", errorMessage);
-
-      toast.error(errorMessage, {
-        duration: 10000, // Show for 10 seconds
-      });
-
-      // Also show alert for debugging
-      alert(`Debug Error: ${error.message}\n\nCheck console for full details.`);
+      if (
+        error.message.includes("not properly initialized") ||
+        error.message.includes("API key")
+      ) {
+        toast.error(
+          t(
+            "ai.apiKeyNotConfigured",
+            "❌ API key not configured. Please add your API key and restart the server.",
+          ),
+          {
+            duration: 8000,
+          },
+        );
+      } else {
+        toast.error(
+          t(
+            "ai.failedToGenerateAISummary",
+            `Failed to generate AI analysis: ${error.message}`,
+          ),
+        );
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleDownloadPDF = async () => {
+    if (pdfLoading) return;
+
     if (!savedReport) {
       toast.error(
-        t("ai.noSavedReportAvailable", "No saved report available for download")
+        t(
+          "ai.noSavedReportAvailable",
+          "No saved report available for download",
+        ),
       );
       return;
     }
 
     try {
-      const fileName = exportReportToPDF(savedReport);
+      if (!reportData || !scoreData || !businessInfo) {
+        toast.error(
+          t(
+            "ai.missingDataForPdf",
+            "Missing assessment data for PDF generation",
+          ),
+        );
+        return;
+      }
+
+      setPdfLoading(true);
+
+      const toastId = toast.loading(
+        t("report.generatingPdf", "Generating AI report — please wait..."),
+      );
+
+      const pdfUserContext = {
+        Business: {
+          businessName: businessInfo?.name,
+          name: businessInfo?.name,
+          sector: businessInfo?.sector,
+          businessSector: businessInfo?.sector,
+          location: businessInfo?.location,
+          businessLocation: businessInfo?.location,
+        },
+      };
+
+      const { filename } = await generateCapitalReadinessPDF(
+        reportData,
+        scoreData,
+        pdfUserContext,
+        (msg) => {
+          toast.loading(msg, { id: toastId });
+        },
+      );
+
       toast.success(
-        t("ai.pdfDownloaded", "PDF downloaded: {{fileName}}", { fileName })
+        t("report.pdfReady", "Report downloaded successfully!", {
+          fileName: filename,
+        }),
+        { id: toastId },
       );
     } catch (error) {
       console.error("Error downloading PDF:", error);
-      toast.error(t("ai.failedToDownloadPDF", "Failed to download PDF"));
+      toast.error(
+        t(
+          "ai.failedToDownloadPDF",
+          "Failed to download PDF. Please try again.",
+        ),
+      );
+    } finally {
+      setPdfLoading(false);
     }
   };
 
   const testAPIConnection = async () => {
     try {
       setLoading(true);
-      const result = await testGeminiConnection();
+      const result = await testOpenAIConnection();
 
       if (result.success) {
         toast.success(
           t(
-            "ai.geminiConnectionSuccessful",
-            "✅ Gemini AI connection successful!"
-          )
+            "ai.openAIConnectionSuccessful",
+            "✅ OpenAI connection successful!",
+          ),
         );
         console.log("Connection test result:", result.message);
       } else {
         toast.error(
           t("ai.connectionFailed", "❌ Connection failed: {{error}}", {
             error: result.error,
-          })
+          }),
         );
         console.error("API Connection Error:", result.error);
 
@@ -226,13 +272,10 @@ const AIAnalysisPanel = ({
           result.error.includes("not configured")
         ) {
           toast.error(
-            t(
-              "ai.configureAPIKey",
-              "Please configure your Gemini API key in .env.local file"
-            ),
+            t("ai.configureAPIKey", "Please configure your OpenAI API key"),
             {
               duration: 6000,
-            }
+            },
           );
         }
       }
@@ -240,7 +283,7 @@ const AIAnalysisPanel = ({
       toast.error(
         t("ai.connectionTestFailed", "❌ Connection test failed: {{message}}", {
           message: error.message,
-        })
+        }),
       );
       console.error("Connection test error:", error);
 
@@ -249,11 +292,11 @@ const AIAnalysisPanel = ({
         toast.error(
           t(
             "ai.apiKeyNotConfiguredRestart",
-            "API key not configured. Check .env.local file and restart server."
+            "API key not configured. Check .env.local file and restart server.",
           ),
           {
             duration: 6000,
-          }
+          },
         );
       }
     } finally {
@@ -273,7 +316,7 @@ const AIAnalysisPanel = ({
       const analysis = await analyzeDomain(
         domain,
         reportData[domain],
-        scoreData[domain]
+        scoreData[domain],
       );
       setDomainAnalysis((prev) => ({ ...prev, [domain]: analysis }));
       toast.success(`${domain} domain analysis generated!`);
@@ -335,77 +378,62 @@ const AIAnalysisPanel = ({
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {t(
                 "ai.poweredByGemini",
-                "Powered by Gemini AI - Expert analysis of your CRAT assessment"
+                "Powered by OpenAI - Expert analysis of your CRAT assessment",
               )}
             </p>
           </div>
 
           <div className="flex gap-2">
-            <button
-              onClick={generateCompleteAnalysis}
-              disabled={loading}
-              className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/80 disabled:bg-gray-400 transition-colors"
-            >
-              {loading ? (
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 714 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-              ) : (
-                <svg
-                  className="w-4 h-4 mr-2"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13 10V3L4 14h7v7l9-11h-7z"
-                  />
-                </svg>
-              )}
-              {t("ai.generateCompleteAnalysis", "Generate Complete Analysis")}
-            </button>
-
             {savedReport && (
               <>
                 <button
                   onClick={handleDownloadPDF}
-                  className="inline-flex items-center px-3 py-2 bg-success text-white rounded-md hover:bg-success/80 transition-colors"
+                  disabled={pdfLoading}
+                  className="inline-flex items-center px-3 py-2 bg-success text-white rounded-md hover:bg-success/80 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
                   title={t("ai.downloadPDFReport", "Download PDF Report")}
                 >
-                  <svg
-                    className="w-4 h-4 mr-1"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                    />
-                  </svg>
-                  {t("common.pdf", "PDF")}
+                  {pdfLoading ? (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-2 animate-spin"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                        ></path>
+                      </svg>
+                      {t("report.generatingPdf", "Generating PDF...")}
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      {t("common.pdf", "PDF")}
+                    </>
+                  )}
                 </button>
               </>
             )}
@@ -451,6 +479,11 @@ const AIAnalysisPanel = ({
               id: "scenarios",
               name: t("ai.scenarioAnalysis", "Scenario Analysis"),
               icon: "🎯",
+            },
+            {
+              id: "formalReport",
+              name: t("ai.formalReport", "Formal Report"),
+              icon: "📄",
             },
           ].map((tab) => (
             <button
@@ -507,7 +540,9 @@ const AIAnalysisPanel = ({
         {/* Executive Summary Tab */}
         {activeTab === "executive" && !loading && (
           <div className="space-y-8">
-            {aiAnalysis?.executiveSummary || aiAnalysis?.executiveSummary ? (
+            {aiAnalysis?.executiveSummary ||
+            aiAnalysis?.rawAnalysis ||
+            (aiAnalysis?.predictions && Object.keys(aiAnalysis).length > 1) ? (
               <div className="space-y-6">
                 {/* Professional Header */}
                 <div className="bg-gradient-to-r from-slate-900 to-slate-800 text-white p-8 rounded-xl shadow-2xl">
@@ -531,13 +566,13 @@ const AIAnalysisPanel = ({
                       <h2 className="text-2xl font-bold">
                         {t(
                           "ai.executiveInvestmentBriefing",
-                          "Executive Investment Briefing"
+                          "Executive Investment Briefing",
                         )}
                       </h2>
                       <p className="text-slate-300">
                         {t(
                           "ai.capitalReadinessAssessment",
-                          "Capital Readiness Assessment & Strategic Analysis"
+                          "Capital Readiness Assessment & Strategic Analysis",
                         )}
                       </p>
                     </div>
@@ -547,22 +582,28 @@ const AIAnalysisPanel = ({
                       {
                         domain: "commercial",
                         label: t("ai.domains.commercial", "Commercial"),
-                        score: scoreData?.commercial?.percentage || 0,
+                        score: Math.round(
+                          scoreData?.commercial?.percentage || 0,
+                        ),
                       },
                       {
                         domain: "financial",
                         label: t("ai.domains.financial", "Financial"),
-                        score: scoreData?.financial?.percentage || 0,
+                        score: Math.round(
+                          scoreData?.financial?.percentage || 0,
+                        ),
                       },
                       {
                         domain: "operations",
                         label: t("ai.domains.operations", "Operations"),
-                        score: scoreData?.operations?.percentage || 0,
+                        score: Math.round(
+                          scoreData?.operations?.percentage || 0,
+                        ),
                       },
                       {
                         domain: "legal",
                         label: t("ai.domains.legal", "Legal"),
-                        score: scoreData?.legal?.percentage || 0,
+                        score: Math.round(scoreData?.legal?.percentage || 0),
                       },
                     ].map((item, index) => {
                       // Dynamic color based on CRAT readiness levels
@@ -579,7 +620,7 @@ const AIAnalysisPanel = ({
                         >
                           <div
                             className={`text-2xl font-bold ${getScoreColor(
-                              item.score
+                              item.score,
                             )}`}
                           >
                             {item.score}%
@@ -612,13 +653,13 @@ const AIAnalysisPanel = ({
                       </svg>
                       {t(
                         "ai.aiPoweredInvestmentAnalysis",
-                        "AI-Powered Investment Analysis"
+                        "AI-Powered Investment Analysis",
                       )}
                     </h3>
                     <p className="text-blue-100 text-sm mt-1">
                       {t(
                         "ai.generatedByAdvancedAI",
-                        "Generated by advanced AI with African market expertise"
+                        "Generated by advanced AI with African market expertise",
                       )}
                     </p>
                   </div>
@@ -626,54 +667,30 @@ const AIAnalysisPanel = ({
                   <div className="p-8">
                     <div className="prose prose-lg dark:prose-invert max-w-none">
                       <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap font-serif text-lg">
-                        {aiAnalysis?.executiveSummary?.summary ||
-                          aiAnalysis?.executiveSummary}
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                        {(() => {
+                          // Check different possible locations for executive summary
+                          const summary =
+                            aiAnalysis?.executiveSummary ||
+                            aiAnalysis?.analysis?.executiveSummary ||
+                            aiAnalysis?.rawAnalysis;
 
-                {/* Call to Action */}
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border border-green-200 dark:border-green-700 rounded-xl p-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 bg-green-500 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <svg
-                        className="w-5 h-5 text-white"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                    </div>
-                    <div>
-                      <h4 className="text-lg font-semibold text-green-800 dark:text-green-200 mb-2">
-                        {t(
-                          "ai.readyForCompleteAnalysis",
-                          "Ready for Complete Analysis?"
-                        )}
-                      </h4>
-                      <p className="text-green-700 dark:text-green-300 mb-4">
-                        {t(
-                          "ai.generateComprehensiveReport",
-                          "Generate a comprehensive investment report with detailed domain analysis, risk assessment, and strategic recommendations."
-                        )}
-                      </p>
-                      <button
-                        onClick={generateCompleteAnalysis}
-                        disabled={loading}
-                        className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors font-medium"
-                      >
-                        {t(
-                          "ai.generateCompleteInvestmentReport",
-                          "Generate Complete Investment Report"
-                        )}
-                      </button>
+                          console.log("📝 Executive Summary Debug:", {
+                            hasAiAnalysis: !!aiAnalysis,
+                            aiAnalysisKeys: aiAnalysis
+                              ? Object.keys(aiAnalysis)
+                              : [],
+                            executiveSummary: aiAnalysis?.executiveSummary,
+                            rawAnalysis: aiAnalysis?.rawAnalysis
+                              ? aiAnalysis.rawAnalysis.substring(0, 100) + "..."
+                              : null,
+                          });
+
+                          return (
+                            summary ||
+                            "Executive summary is being generated. Please check other tabs for detailed analysis."
+                          );
+                        })()}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -702,78 +719,428 @@ const AIAnalysisPanel = ({
                   <p className="text-gray-500 dark:text-gray-400 mb-8 max-w-md mx-auto">
                     {t(
                       "ai.generateProfessionalBriefing",
-                      "Generate a professional executive briefing powered by advanced AI analysis of your business assessment."
+                      "Generating professional executive briefing powered by advanced AI analysis...",
                     )}
                   </p>
                 </div>
-                <button
-                  onClick={generateAIExecutiveSummary}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-300 transform hover:scale-105 shadow-lg font-semibold text-lg"
-                >
-                  {t(
-                    "ai.generateExecutiveBriefing",
-                    "Generate Executive Briefing"
-                  )}
-                </button>
+                {loading && (
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                )}
               </div>
+            )}
+          </div>
+        )}
+
+        {/* Formal Report Tab - uses same content as the PDF */}
+        {activeTab === "formalReport" && !loading && (
+          <div className="space-y-8">
+            {!formalReport ? (
+              <div className="text-center py-12">
+                <p className="text-gray-500 dark:text-gray-400">
+                  {t(
+                    "ai.formalReportGenerating",
+                    "Generate AI analysis to view the formal capital readiness report.",
+                  )}
+                </p>
+              </div>
+            ) : (
+              <>
+                {/* Executive Summary */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>📊</span>
+                    {t("ai.executiveSummary", "Executive Summary")}
+                  </h3>
+                  <p className="whitespace-pre-line text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {formalReport.executiveSummary}
+                  </p>
+                </section>
+
+                {/* Background */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>📚</span>
+                    {t("ai.background", "Background & Methodology")}
+                  </h3>
+                  <div className="space-y-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p className="whitespace-pre-line">
+                      {formalReport.background?.purpose}
+                    </p>
+                    <p className="whitespace-pre-line">
+                      {formalReport.background?.definition}
+                    </p>
+                    <p className="whitespace-pre-line">
+                      {formalReport.background?.scopeAndMethodology}
+                    </p>
+                  </div>
+                </section>
+
+                {/* Company Overview */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>🏢</span>
+                    {t("ai.companyOverview", "Company Overview")}
+                  </h3>
+                  <p className="whitespace-pre-line text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {formalReport.companyOverview}
+                  </p>
+                </section>
+
+                {/* Assessment Outcome */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>📈</span>
+                    {t("ai.assessmentOutcome", "Assessment Outcome")}
+                  </h3>
+                  <div className="space-y-3 text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <p className="whitespace-pre-line">
+                      {formalReport.assessmentOutcome?.overallScore}
+                    </p>
+                    <p className="whitespace-pre-line">
+                      {formalReport.assessmentOutcome?.domainScores}
+                    </p>
+                    <p className="whitespace-pre-line">
+                      {formalReport.assessmentOutcome?.scoringMethodology}
+                    </p>
+                    <p className="whitespace-pre-line">
+                      {formalReport.assessmentOutcome?.thresholdCriteria}
+                    </p>
+                  </div>
+                </section>
+
+                {/* Domain Assessments */}
+                <section className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                    <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+                      <span>🛒</span>
+                      {t("ai.marketAssessment", "Market Assessment")}
+                    </h4>
+                    <p className="whitespace-pre-line text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      {formalReport.marketAssessment}
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                    <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+                      <span>💰</span>
+                      {t("ai.financialAssessment", "Financial Assessment")}
+                    </h4>
+                    <p className="whitespace-pre-line text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      {formalReport.financialAssessment}
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                    <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+                      <span>⚙️</span>
+                      {t("ai.operationsAssessment", "Operations Assessment")}
+                    </h4>
+                    <p className="whitespace-pre-line text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      {formalReport.operationsAssessment}
+                    </p>
+                  </div>
+                  <div className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                    <h4 className="text-lg font-semibold mb-2 text-gray-900 dark:text-white flex items-center gap-2">
+                      <span>⚖️</span>
+                      {t("ai.legalAssessment", "Legal & Compliance Assessment")}
+                    </h4>
+                    <p className="whitespace-pre-line text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                      {formalReport.legalAssessment}
+                    </p>
+                  </div>
+                </section>
+
+                {/* Risk Analysis */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>⚠️</span>
+                    {t("ai.riskAnalysis", "Risk Analysis")}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t("ai.commercialRisks", "Commercial Risks")}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.riskAnalysis?.commercialRisks}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t("ai.financialRisks", "Financial Risks")}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.riskAnalysis?.financialRisks}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t("ai.operationalRisks", "Operational Risks")}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.riskAnalysis?.operationalRisks}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t(
+                          "ai.legalRegulatoryRisks",
+                          "Legal & Regulatory Risks",
+                        )}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.riskAnalysis?.legalRegulatoryRisks}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Roadmap */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>🗺️</span>
+                    {t("ai.roadmap", "Roadmap & Next Steps")}
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300 leading-relaxed">
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t("ai.immediateActions", "Immediate (0–3 months)")}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.roadmap?.immediate}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t("ai.shortTermActions", "Short Term (3–9 months)")}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.roadmap?.shortTerm}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t("ai.mediumTermActions", "Medium Term (9–18 months)")}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.roadmap?.mediumTerm}
+                      </p>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold mb-1">
+                        {t("ai.projectedImprovement", "Projected Improvement")}
+                      </h4>
+                      <p className="whitespace-pre-line">
+                        {formalReport.roadmap?.projectedImprovement}
+                      </p>
+                    </div>
+                  </div>
+                </section>
+
+                {/* Conclusion */}
+                <section className="bg-white dark:bg-gray-900 rounded-xl shadow border border-black/10 dark:border-gray-700 p-6">
+                  <h3 className="text-xl font-semibold mb-3 text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>✅</span>
+                    {t("ai.conclusion", "Conclusion & Recommendation")}
+                  </h3>
+                  <p className="whitespace-pre-line text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {formalReport.conclusion}
+                  </p>
+                </section>
+              </>
             )}
           </div>
         )}
 
         {/* Recommendations Tab */}
         {activeTab === "recommendations" && !loading && (
-          <div className="space-y-4">
-            {aiAnalysis?.recommendations &&
-            aiAnalysis.recommendations.length > 0 ? (
-              <div className="space-y-4">
-                {aiAnalysis.recommendations.map((rec, index) => (
-                  <div
-                    key={index}
-                    className={`p-4 rounded-lg border-l-4 ${
-                      rec.priority === "high"
-                        ? "border-red-500 bg-red-50 dark:bg-red-900/20"
-                        : rec.priority === "medium"
-                        ? "border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20"
-                        : "border-green-500 bg-green-50 dark:bg-green-900/20"
-                    }`}
+          <div className="space-y-6">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-6 rounded-xl border border-blue-200 dark:border-blue-700">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <svg
+                    className="w-5 h-5 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
                   >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              rec.priority === "high"
-                                ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                : rec.priority === "medium"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                : "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                            }`}
-                          >
-                            {rec.priority === "high"
-                              ? t("ai.highPriority", "HIGH PRIORITY")
-                              : rec.priority === "medium"
-                              ? t("ai.mediumPriority", "MEDIUM PRIORITY")
-                              : t("ai.lowPriority", "LOW PRIORITY")}
-                          </span>
-                          <span className="px-2 py-1 text-xs bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300 rounded-full">
-                            {rec.category?.toUpperCase() ||
-                              t("ai.general", "GENERAL")}
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-xl font-bold text-blue-800 dark:text-blue-200">
+                    {t(
+                      "ai.strategicRecommendations",
+                      "Strategic Recommendations",
+                    )}
+                  </h3>
+                  <p className="text-sm text-blue-600 dark:text-blue-400">
+                    {t(
+                      "ai.actionableInsights",
+                      "Actionable insights to improve investment readiness",
+                    )}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {(aiAnalysis?.recommendations ||
+              aiAnalysis?.predictions?.recommendations) &&
+            (
+              aiAnalysis.recommendations ||
+              aiAnalysis.predictions?.recommendations
+            )?.length > 0 ? (
+              <div className="grid grid-cols-1 gap-5">
+                {(
+                  aiAnalysis.recommendations ||
+                  aiAnalysis.predictions.recommendations
+                ).map((rec, index) => {
+                  const priorityConfig = {
+                    HIGH: {
+                      border: "border-red-500",
+                      bg: "bg-red-50 dark:bg-red-900/20",
+                      badge: "bg-red-500",
+                      icon: "🔥",
+                    },
+                    MEDIUM: {
+                      border: "border-yellow-500",
+                      bg: "bg-yellow-50 dark:bg-yellow-900/20",
+                      badge: "bg-yellow-500",
+                      icon: "⚠️",
+                    },
+                    LOW: {
+                      border: "border-green-500",
+                      bg: "bg-green-50 dark:bg-green-900/20",
+                      badge: "bg-green-500",
+                      icon: "✅",
+                    },
+                  };
+                  const priority = (rec.priority || "MEDIUM").toUpperCase();
+                  const config =
+                    priorityConfig[priority] || priorityConfig.MEDIUM;
+
+                  return (
+                    <div
+                      key={index}
+                      className={`${config.bg} ${config.border} border-l-4 rounded-xl shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden`}
+                    >
+                      <div className="p-6">
+                        {/* Header with badges */}
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">{config.icon}</span>
+                            <div className="flex flex-wrap gap-2">
+                              <span
+                                className={`${config.badge} text-white px-3 py-1 text-xs font-bold rounded-full`}
+                              >
+                                {priority} {t("ai.priorityLabel", "PRIORITY")}
+                              </span>
+                              <span className="bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300 px-3 py-1 text-xs font-semibold rounded-full">
+                                {(rec.category || "GENERAL").toUpperCase()}
+                              </span>
+                              {rec.timeframe && (
+                                <span className="bg-blue-100 text-blue-700 dark:bg-blue-800 dark:text-blue-200 px-3 py-1 text-xs font-medium rounded-full">
+                                  🕒 {rec.timeframe}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <span className="text-2xl font-bold text-gray-300 dark:text-gray-600">
+                            #{index + 1}
                           </span>
                         </div>
-                        <p className="text-gray-800 dark:text-gray-200">
-                          {rec.text}
-                        </p>
+
+                        {/* Title */}
+                        <h4 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-3 flex items-center gap-2">
+                          <svg
+                            className="w-5 h-5 text-blue-600"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13 10V3L4 14h7v7l9-11h-7z"
+                            />
+                          </svg>
+                          {rec.title || rec.text || "Strategic Recommendation"}
+                        </h4>
+
+                        {/* Description */}
+                        <div className="bg-white/70 dark:bg-gray-800/70 rounded-lg p-4 mb-4">
+                          <p className="text-gray-700 dark:text-gray-300 leading-relaxed text-base">
+                            {rec.description ||
+                              rec.text ||
+                              "Implement strategic improvements to enhance business performance and investment readiness."}
+                          </p>
+                        </div>
+
+                        {/* Impact Footer */}
+                        {rec.expectedImpact && (
+                          <div className="flex items-center justify-between pt-3 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex items-center gap-2">
+                              <svg
+                                className="w-4 h-4 text-gray-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                                />
+                              </svg>
+                              <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                {t("ai.expectedImpact", "Expected Impact")}:
+                              </span>
+                              <span
+                                className={`text-sm font-bold px-2 py-1 rounded ${
+                                  rec.expectedImpact === "High"
+                                    ? "bg-green-100 text-green-700 dark:bg-green-800 dark:text-green-200"
+                                    : rec.expectedImpact === "Medium"
+                                      ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-800 dark:text-yellow-200"
+                                      : "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+                                }`}
+                              >
+                                {rec.expectedImpact}
+                              </span>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-gray-500 dark:text-gray-400">
+              <div className="text-center py-12 bg-gray-50 dark:bg-gray-800 rounded-xl">
+                <svg
+                  className="w-16 h-16 text-gray-400 mx-auto mb-4"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                  />
+                </svg>
+                <p className="text-gray-500 dark:text-gray-400 text-lg">
                   {t(
-                    "ai.generateCompleteAnalysisDesc",
-                    "Generate complete analysis to see detailed recommendations"
+                    "ai.generatingRecommendations",
+                    "Generating strategic recommendations...",
                   )}
                 </p>
               </div>
@@ -798,7 +1165,7 @@ const AIAnalysisPanel = ({
                       </h4>
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                          {scoreData?.[domain]?.percentage || 0}%
+                          {Math.round(scoreData?.[domain]?.percentage || 0)}%
                         </span>
                         <button
                           onClick={() => generateDomainAnalysis(domain)}
@@ -810,22 +1177,46 @@ const AIAnalysisPanel = ({
                     </div>
 
                     {domainAnalysis[domain] ? (
-                      <div className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
-                        {domainAnalysis[domain].analysis.substring(0, 200)}...
-                        <button className="text-primary hover:underline ml-2">
-                          {t("ai.domainReadMore", "Read More")}
-                        </button>
+                      <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="whitespace-pre-wrap">
+                          {expandedDomains[domain]
+                            ? domainAnalysis[domain].analysis
+                            : `${domainAnalysis[domain].analysis.substring(0, 200)}...`}
+                        </div>
+                        {domainAnalysis[domain].analysis.length > 200 && (
+                          <button
+                            onClick={() => toggleDomainExpansion(domain)}
+                            className="text-primary hover:underline ml-2 mt-2 inline-flex items-center gap-1 font-medium"
+                          >
+                            {expandedDomains[domain]
+                              ? t("ai.domainShowLess", "Show Less")
+                              : t("ai.domainReadMore", "Read More")}
+                            <svg
+                              className={`w-4 h-4 transition-transform ${expandedDomains[domain] ? "rotate-180" : ""}`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M19 9l-7 7-7-7"
+                              />
+                            </svg>
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <p className="text-sm text-gray-500 dark:text-gray-400">
                         {t(
                           "ai.domainClickAnalyze",
-                          'Click "Analyze" to generate AI insights for this domain'
+                          'Click "Analyze" to generate AI insights for this domain',
                         )}
                       </p>
                     )}
                   </div>
-                )
+                ),
               )}
             </div>
           </div>
@@ -876,9 +1267,9 @@ const AIAnalysisPanel = ({
                           "High"
                             ? "text-red-600"
                             : aiAnalysis.predictions.riskAssessment
-                                .riskLevel === "Medium"
-                            ? "text-yellow-600"
-                            : "text-green-600"
+                                  .riskLevel === "Medium"
+                              ? "text-yellow-600"
+                              : "text-green-600"
                         }`}
                       >
                         {aiAnalysis.predictions.riskAssessment.riskLevel}
@@ -923,8 +1314,8 @@ const AIAnalysisPanel = ({
                                 risk.impact === "High"
                                   ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
                                   : risk.impact === "Medium"
-                                  ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                  : "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
+                                    ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
+                                    : "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
                               }`}
                             >
                               {risk.impact} {t("ai.impactLabel", "Impact")}
@@ -949,7 +1340,7 @@ const AIAnalysisPanel = ({
                             <strong>
                               {t(
                                 "ai.mitigationStrategy",
-                                "Mitigation Strategy"
+                                "Mitigation Strategy",
                               )}
                               :
                             </strong>{" "}
@@ -957,7 +1348,7 @@ const AIAnalysisPanel = ({
                           </p>
                         </div>
                       </div>
-                    )
+                    ),
                   )}
                 </div>
               </div>
@@ -974,7 +1365,7 @@ const AIAnalysisPanel = ({
                 <p className="text-gray-500 dark:text-gray-400">
                   {t(
                     "ai.generateCompleteAnalysisRisk",
-                    "Generate complete analysis to see detailed risk assessment"
+                    "Generate complete analysis to see detailed risk assessment",
                   )}
                 </p>
               </div>
@@ -1062,11 +1453,11 @@ const AIAnalysisPanel = ({
                       <tbody>
                         {Object.entries(
                           aiAnalysis.predictions.growthPotential
-                            .revenueProjections || {}
+                            .revenueProjections || {},
                         ).map(([year, projections]) => (
                           <tr
                             key={year}
-                            className="border-b border-gray-100 dark:border-gray-700"
+                            className="border-b border-black/10 dark:border-gray-700"
                           >
                             <td className="py-3 font-medium text-gray-800 dark:text-gray-200 capitalize">
                               {year}
@@ -1097,7 +1488,7 @@ const AIAnalysisPanel = ({
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                     {t(
                       "ai.marketExpansionAnalysis",
-                      "Market Expansion Analysis"
+                      "Market Expansion Analysis",
                     )}
                   </h4>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1127,7 +1518,7 @@ const AIAnalysisPanel = ({
                           <span className="text-gray-600 dark:text-gray-400">
                             {t(
                               "ai.marketSharePotential",
-                              "Market Share Potential"
+                              "Market Share Potential",
                             )}
                           </span>
                           <span className="font-medium text-gray-800 dark:text-gray-200">
@@ -1153,15 +1544,15 @@ const AIAnalysisPanel = ({
                                   factor.impact === "High"
                                     ? "bg-green-500"
                                     : factor.impact === "Medium"
-                                    ? "bg-yellow-500"
-                                    : "bg-gray-400"
+                                      ? "bg-yellow-500"
+                                      : "bg-gray-400"
                                 }`}
                               ></span>
                               <span className="text-sm text-gray-600 dark:text-gray-400">
                                 {factor.factor}
                               </span>
                             </div>
-                          )
+                          ),
                         )}
                       </div>
                     </div>
@@ -1173,7 +1564,7 @@ const AIAnalysisPanel = ({
                 <p className="text-gray-500 dark:text-gray-400">
                   {t(
                     "ai.generateCompleteAnalysisGrowth",
-                    "Generate complete analysis to see growth potential data"
+                    "Generate complete analysis to see growth potential data",
                   )}
                 </p>
               </div>
@@ -1229,12 +1620,12 @@ const AIAnalysisPanel = ({
                             .recommendation === "Invest Now"
                             ? "text-green-600"
                             : aiAnalysis.predictions.investmentDecision
-                                .recommendation === "Conditional Investment"
-                            ? "text-yellow-600"
-                            : aiAnalysis.predictions.investmentDecision
-                                .recommendation === "Monitor"
-                            ? "text-blue-600"
-                            : "text-red-600"
+                                  .recommendation === "Conditional Investment"
+                              ? "text-yellow-600"
+                              : aiAnalysis.predictions.investmentDecision
+                                    .recommendation === "Monitor"
+                                ? "text-blue-600"
+                                : "text-red-600"
                         }`}
                       >
                         {
@@ -1260,149 +1651,96 @@ const AIAnalysisPanel = ({
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
                     {t("ai.investmentFramework", "Investment Framework")}
                   </h4>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {t("ai.minimumInvestment", "Minimum Investment")}
-                      </div>
-                      <div className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                        $
-                        {aiAnalysis.predictions.investmentDecision.investmentAmount?.minimum?.toLocaleString() ||
-                          "N/A"}
-                      </div>
-                    </div>
-                    <div className="text-center p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                      <div className="text-sm text-blue-600 dark:text-blue-400">
-                        {t("ai.optimalInvestment", "Optimal Investment")}
-                      </div>
-                      <div className="text-xl font-bold text-blue-600 dark:text-blue-400">
-                        $
-                        {aiAnalysis.predictions.investmentDecision.investmentAmount?.optimal?.toLocaleString() ||
-                          "N/A"}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 p-4 rounded-lg">
+                      <h5 className="font-medium text-blue-800 dark:text-blue-200 mb-3">
+                        {t("ai.expectedReturns", "Expected Returns")}
+                      </h5>
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {aiAnalysis.predictions.investmentDecision
+                          .expectedReturns || "N/A"}
                       </div>
                     </div>
-                    <div className="text-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                      <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {t("ai.maximumInvestment", "Maximum Investment")}
-                      </div>
-                      <div className="text-xl font-bold text-gray-800 dark:text-gray-200">
-                        $
-                        {aiAnalysis.predictions.investmentDecision.investmentAmount?.maximum?.toLocaleString() ||
-                          "N/A"}
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 p-4 rounded-lg">
+                      <h5 className="font-medium text-green-800 dark:text-green-200 mb-3">
+                        {t("ai.confidenceLevel", "Confidence Level")}
+                      </h5>
+                      <div
+                        className={`text-2xl font-bold ${
+                          aiAnalysis.predictions.investmentDecision
+                            .confidenceLevel === "High"
+                            ? "text-green-600 dark:text-green-400"
+                            : aiAnalysis.predictions.investmentDecision
+                                  .confidenceLevel === "Medium"
+                              ? "text-yellow-600 dark:text-yellow-400"
+                              : "text-red-600 dark:text-red-400"
+                        }`}
+                      >
+                        {aiAnalysis.predictions.investmentDecision
+                          .confidenceLevel || "Medium"}
                       </div>
                     </div>
                   </div>
 
-                  {/* Expected Returns */}
-                  <div className="mb-6">
-                    <h5 className="font-medium text-gray-800 dark:text-gray-200 mb-3">
-                      {t("ai.expectedReturns", "Expected Returns")}
-                    </h5>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="text-center">
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("ai.years3", "3 Years")}
-                        </div>
-                        <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                          {aiAnalysis.predictions.investmentDecision
-                            .expectedReturns?.year3 || "N/A"}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("ai.years5", "5 Years")}
-                        </div>
-                        <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                          {aiAnalysis.predictions.investmentDecision
-                            .expectedReturns?.year5 || "N/A"}
-                        </div>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                          {t("ai.years7", "7 Years")}
-                        </div>
-                        <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                          {aiAnalysis.predictions.investmentDecision
-                            .expectedReturns?.year7 || "N/A"}
-                        </div>
-                      </div>
+                  {/* Investment Rationale */}
+                  {aiAnalysis.predictions.investmentDecision
+                    .investmentRationale && (
+                    <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                      <h5 className="font-medium text-blue-800 dark:text-blue-200 mb-2">
+                        {t("ai.investmentRationale", "Investment Rationale")}
+                      </h5>
+                      <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                        {
+                          aiAnalysis.predictions.investmentDecision
+                            .investmentRationale
+                        }
+                      </p>
                     </div>
-                  </div>
-
-                  {/* Exit Strategy Details */}
-                  <div className="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg">
-                    <h5 className="font-medium text-purple-800 dark:text-purple-200 mb-2">
-                      {t("ai.exitStrategy", "Exit Strategy")}
-                    </h5>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {t("ai.strategy", "Strategy")}:{" "}
-                        </span>
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
-                          {aiAnalysis.predictions.investmentDecision
-                            .exitStrategy?.primaryOption || "N/A"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {t("ai.timeline", "Timeline")}:{" "}
-                        </span>
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
-                          {aiAnalysis.predictions.investmentDecision
-                            .exitStrategy?.timeline || "N/A"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-600 dark:text-gray-400">
-                          {t("ai.expectedMultiple", "Expected Multiple")}:{" "}
-                        </span>
-                        <span className="font-medium text-gray-800 dark:text-gray-200">
-                          {aiAnalysis.predictions.investmentDecision
-                            .exitStrategy?.expectedMultiple || "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Investment Conditions */}
                 <div className="bg-white dark:bg-gray-800 p-6 rounded-lg border border-black/10 dark:border-gray-700">
                   <h4 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-4">
-                    {t("ai.investmentConditions", "Investment Conditions")}
+                    {t(
+                      "ai.investmentConditions",
+                      "Key Conditions & Prerequisites",
+                    )}
                   </h4>
                   <div className="space-y-3">
-                    {aiAnalysis.predictions.investmentDecision.conditions?.map(
-                      (condition, index) => (
-                        <div
-                          key={index}
-                          className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                        >
-                          <span
-                            className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              condition.priority === "Critical"
-                                ? "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100"
-                                : condition.priority === "High"
-                                ? "bg-orange-100 text-orange-800 dark:bg-orange-800 dark:text-orange-100"
-                                : condition.priority === "Medium"
-                                ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100"
-                                : "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100"
-                            }`}
-                          >
-                            {condition.priority}
-                          </span>
-                          <div className="flex-1">
-                            <p className="text-gray-800 dark:text-gray-200 font-medium">
-                              {condition.condition}
-                            </p>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                              {t("ai.timeline", "Timeline")}:{" "}
-                              {condition.timeline}
-                            </p>
+                    {(Array.isArray(
+                      aiAnalysis.predictions.investmentDecision.conditions,
+                    )
+                      ? aiAnalysis.predictions.investmentDecision.conditions
+                      : []
+                    ).map((condition, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-4  dark:bg-gray-700 rounded-lg border border-black/10 dark:border-gray-600"
+                      >
+                        <div className="flex-shrink-0 mt-1">
+                          <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {index + 1}
                           </div>
                         </div>
-                      )
-                    )}
+                        <div className="flex-1">
+                          <p className="text-gray-800 dark:text-gray-200 font-medium leading-relaxed">
+                            {typeof condition === "string"
+                              ? condition
+                              : condition.condition ||
+                                condition.title ||
+                                "No description"}
+                          </p>
+                          {condition.timeline &&
+                            typeof condition !== "string" && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {t("ai.timeline", "Timeline")}:{" "}
+                                {condition.timeline}
+                              </p>
+                            )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1411,7 +1749,7 @@ const AIAnalysisPanel = ({
                 <p className="text-gray-500 dark:text-gray-400">
                   {t(
                     "ai.generateCompleteAnalysisInvestment",
-                    "Generate complete analysis to see investment decision framework"
+                    "Generate complete analysis to see investment decision framework",
                   )}
                 </p>
               </div>
@@ -1431,7 +1769,7 @@ const AIAnalysisPanel = ({
                   <p className="text-gray-600 dark:text-gray-400">
                     {t(
                       "ai.exploreOutcomes",
-                      "Explore different potential outcomes for this investment opportunity"
+                      "Explore different potential outcomes for this investment opportunity",
                     )}
                   </p>
                 </div>
@@ -1471,7 +1809,7 @@ const AIAnalysisPanel = ({
                         ?.description ||
                         t(
                           "ai.noDescriptionAvailable",
-                          "No description available"
+                          "No description available",
                         )}
                     </p>
                     <div>
@@ -1488,7 +1826,7 @@ const AIAnalysisPanel = ({
                               <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
                               {driver}
                             </li>
-                          )
+                          ),
                         )}
                       </ul>
                     </div>
@@ -1528,7 +1866,7 @@ const AIAnalysisPanel = ({
                         ?.description ||
                         t(
                           "ai.noDescriptionAvailable",
-                          "No description available"
+                          "No description available",
                         )}
                     </p>
                     <div>
@@ -1545,7 +1883,7 @@ const AIAnalysisPanel = ({
                               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full"></span>
                               {driver}
                             </li>
-                          )
+                          ),
                         )}
                       </ul>
                     </div>
@@ -1585,7 +1923,7 @@ const AIAnalysisPanel = ({
                         ?.description ||
                         t(
                           "ai.noDescriptionAvailable",
-                          "No description available"
+                          "No description available",
                         )}
                     </p>
                     <div>
@@ -1602,7 +1940,7 @@ const AIAnalysisPanel = ({
                               <span className="w-1.5 h-1.5 bg-red-500 rounded-full"></span>
                               {driver}
                             </li>
-                          )
+                          ),
                         )}
                       </ul>
                     </div>
@@ -1615,21 +1953,62 @@ const AIAnalysisPanel = ({
                     {t("ai.keyPerformanceMetrics", "Key Performance Metrics")}
                   </h4>
                   <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    {Object.entries(
-                      aiAnalysis.predictions.keyMetrics || {}
-                    ).map(([metric, score]) => (
-                      <div
-                        key={metric}
-                        className="text-center p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                      >
-                        <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                          {score}/100
-                        </div>
-                        <div className="text-xs text-gray-600 dark:text-gray-400 capitalize">
-                          {metric.replace(/([A-Z])/g, " $1").trim()}
-                        </div>
+                    {/* Commercial Readiness */}
+                    <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 rounded-lg border border-blue-200 dark:border-blue-700">
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {Math.round(scoreData?.commercial?.percentage || 0)}%
                       </div>
-                    ))}
+                      <div className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">
+                        Commercial
+                      </div>
+                    </div>
+
+                    {/* Financial Readiness */}
+                    <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 rounded-lg border border-green-200 dark:border-green-700">
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {Math.round(scoreData?.financial?.percentage || 0)}%
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">
+                        Financial
+                      </div>
+                    </div>
+
+                    {/* Operations Readiness */}
+                    <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/20 rounded-lg border border-purple-200 dark:border-purple-700">
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        {Math.round(scoreData?.operations?.percentage || 0)}%
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">
+                        Operations
+                      </div>
+                    </div>
+
+                    {/* Legal Readiness */}
+                    <div className="text-center p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 rounded-lg border border-orange-200 dark:border-orange-700">
+                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                        {Math.round(scoreData?.legal?.percentage || 0)}%
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">
+                        Legal
+                      </div>
+                    </div>
+
+                    {/* Overall Readiness */}
+                    <div className="text-center p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 rounded-lg border border-indigo-200 dark:border-indigo-700">
+                      <div className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                        {Math.round(
+                          ((scoreData?.commercial?.percentage || 0) +
+                            (scoreData?.financial?.percentage || 0) +
+                            (scoreData?.operations?.percentage || 0) +
+                            (scoreData?.legal?.percentage || 0)) /
+                            4,
+                        )}
+                        %
+                      </div>
+                      <div className="text-xs text-gray-600 dark:text-gray-400 font-medium mt-1">
+                        Overall
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1638,7 +2017,7 @@ const AIAnalysisPanel = ({
                 <p className="text-gray-500 dark:text-gray-400">
                   {t(
                     "ai.generateCompleteAnalysisScenario",
-                    "Generate complete analysis to see scenario analysis"
+                    "Generate complete analysis to see scenario analysis",
                   )}
                 </p>
               </div>
@@ -1668,7 +2047,7 @@ const AIAnalysisPanel = ({
               <span>
                 {t(
                   "ai.aiAnalysisGenerated",
-                  "AI analysis generated using Gemini AI"
+                  "AI analysis generated using Gemini AI",
                 )}
               </span>
             </div>

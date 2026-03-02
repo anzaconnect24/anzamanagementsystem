@@ -5,8 +5,7 @@ import ChartThree from "../Charts/ChartThree";
 import ChartTwo from "../Charts/ChartTwo";
 import CardDataStats from "../CardDataStats";
 import { SlPeople } from "react-icons/sl";
-import BusinessDomainScores from "../Charts/BusinessDomainScores";
-import PerformanceDistribution from "../Charts/PerformanceDistribution";
+import PerformanceOverview from "../Charts/PerformanceOverview";
 import jsPDF from "jspdf";
 
 // without this the component renders on server and throws an error
@@ -224,21 +223,8 @@ const Dashboard = () => {
             </CardDataStats>
           </div>
 
-          {/* Business Domain Scores Chart */}
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5">
-            <div className="col-span-1 md:col-span-3">
-              <BusinessDomainScores
-                userDetails={userDetails}
-                initialScoreData={!loadingBar ? scoreData : null}
-              />
-            </div>
-            <div className="col-span-1 md:col-span-2">
-              <PerformanceDistribution
-                userDetails={userDetails}
-                initialScoreData={!loadingBar ? scoreData : null}
-              />
-            </div>
-          </div>
+          {/* Performance Overview */}
+          <PerformanceOverview userDetails={userDetails} />
         </div>
       )}
 
@@ -269,10 +255,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="/dashboard/enterprenuers"
-              title={t(
-                "dashboard.totalStartupsShort",
-                "Total Startups",
-              )}
+              title={t("dashboard.totalStartupsShort", "Total Startups")}
               total={data.enterprenuers}
               rate="0.43%"
               levelUp
@@ -281,10 +264,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link="/dashboard/mentorEntreprenuers"
-              title={t(
-                "dashboard.startupsSupported",
-                "Startups Supported",
-              )}
+              title={t("dashboard.startupsSupported", "Startups Supported")}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
               levelUp
@@ -488,10 +468,7 @@ const Dashboard = () => {
             </CardDataStats>
             <CardDataStats
               link=""
-              title={t(
-                "dashboard.interestedStartups",
-                "Interested Startups",
-              )}
+              title={t("dashboard.interestedStartups", "Interested Startups")}
               total={data.enterprenuersInterested}
               rate="2.59%"
               levelUp
