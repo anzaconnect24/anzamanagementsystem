@@ -17,13 +17,12 @@ const Modal2 = ({
     <div className="fixed inset-0 flex items-center justify-center z-50">
       {/* Overlay */}
       <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
-      
+
       {/* Modal */}
-      <div
-       className="bg-white rounded-lg shadow-lg z-10 p-6"
-    
-      >
-        <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">Alert</h2>
+      <div className="bg-white rounded-lg shadow-lg z-10 p-6">
+        <h2 className="text-xl font-semibold mb-4 text-black dark:text-white">
+          Alert
+        </h2>
         <p className="text-black dark:text-gray-300">{message}</p>
         <div className="flex justify-end mt-4 gap-2">
           {/* Close Button */}

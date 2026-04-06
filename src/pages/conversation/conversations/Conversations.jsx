@@ -52,8 +52,8 @@ const Conversations = () => {
                       toast.success(
                         t(
                           "chat.enablingEncryptionWait",
-                          "Enabling end-to-end encryption. Please wait..."
-                        )
+                          "Enabling end-to-end encryption. Please wait...",
+                        ),
                       );
                       navigate(`/dashboard/messages/${item.uuid}`);
                     }}
