@@ -2,6 +2,10 @@
 import React, { useState, useEffect, useContext } from "react";
 import dynamic from "@/utils/dynamic";
 import { getScoreData } from "@/controllers/crat_general_controller";
+import {
+  getPublishedReport,
+  getUserBusiness,
+} from "@/controllers/crat_controller";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { useTranslation } from "@/locales";
 
@@ -33,7 +37,9 @@ const LoadingChart = () => {
             ></path>
           </svg>
         </div>
-        <span className="text-gray-400">{t("common.loadingChart", "Loading chart...")}</span>
+        <span className="text-gray-400">
+          {t("common.loadingChart", "Loading chart...")}
+        </span>
       </div>
     </div>
   );
@@ -45,11 +51,57 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   loading: () => <LoadingChart />,
 });
 
+const mapPublishedReportToScoreData = (published, t) => {
+  if (!published?.domainScores) return null;
+
+  const domainMap = {
+    commercial: "commercial_marketing",
+    financial: "financial",
+    operations: "operations",
+    legal: "legal_compliance",
+  };
+
+  const toStatus = (pct) => {
+    if (pct >= 75) return t("report.ready", "Ready");
+    if (pct >= 60) return t("report.partiallyReady", "Partially Ready");
+    return t("report.notReady", "Not Ready");
+  };
+
+  const result = {};
+  Object.entries(domainMap).forEach(([chartKey, apiKey]) => {
+    const domain = published.domainScores?.[apiKey] || {};
+    const average = Number(domain.average || 0);
+    const reviewedQuestions = Number(domain.reviewedQuestions || 0);
+    const totalQuestions = Number(domain.totalQuestions || 0);
+    const earnedScore = average * reviewedQuestions;
+    const maxScore = totalQuestions * 5;
+    const percentage =
+      maxScore > 0 ? Math.round((earnedScore / maxScore) * 100) : 0;
+
+    result[chartKey] = {
+      percentage,
+      status: toStatus(percentage),
+    };
+  });
+
+  const overall = Math.round(
+    [
+      result.commercial?.percentage || 0,
+      result.financial?.percentage || 0,
+      result.operations?.percentage || 0,
+      result.legal?.percentage || 0,
+    ].reduce((sum, v) => sum + v, 0) / 4,
+  );
+
+  result.general_status = toStatus(overall);
+  return result;
+};
+
 const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
   const { t } = useTranslation();
   const [scoreData, setScoreData] = useState(initialScoreData || {});
   const [loading, setLoading] = useState(
-    !initialScoreData || Object.keys(initialScoreData).length === 0
+    !initialScoreData || Object.keys(initialScoreData).length === 0,
   );
   const [isClient, setIsClient] = useState(false);
 
@@ -70,32 +122,53 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
   // Fetch data if not provided as prop
   useEffect(() => {
     if (!initialScoreData || Object.keys(initialScoreData).length === 0) {
-      setLoading(true);
-      getScoreData({ uuid: userDetails.uuid })
-        .then((res) => {
+      const load = async () => {
+        setLoading(true);
+
+        try {
+          if (userDetails?.uuid) {
+            const business = await getUserBusiness(userDetails.uuid);
+            if (business?.id) {
+              const published = await getPublishedReport(business.id);
+              const mapped = mapPublishedReportToScoreData(published, t);
+              if (mapped && Object.keys(mapped).length > 0) {
+                setScoreData(mapped);
+                setLoading(false);
+                return;
+              }
+            }
+          }
+        } catch (error) {
+          console.log("Published report not available, using fallback:", error);
+        }
+
+        try {
+          const res = await getScoreData({ uuid: userDetails.uuid });
           console.log("BusinessDomainScores fetched data:", res);
           setScoreData(res);
-          setLoading(false);
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error("Error fetching score data:", error);
+        } finally {
           setLoading(false);
-        });
+        }
+      };
+
+      load();
     }
-  }, [initialScoreData]);
+  }, [initialScoreData, t, userDetails?.uuid]);
 
   // Calculate bar colors based on CRAT readiness levels
   const getBarColors = () => {
     const getColor = (score) => {
-      if (score >= 75) return '#219654'; // Ready - 75-100%
-      if (score >= 60) return '#f4dc2c'; // Partially Ready - 60-74%
-      return '#EF4444'; // Not Ready - 0-59%
+      if (score >= 75) return "#219654"; // Ready - 75-100%
+      if (score >= 60) return "#f4dc2c"; // Partially Ready - 60-74%
+      return "#EF4444"; // Not Ready - 0-59%
     };
     return [
       getColor(scoreData.commercial?.percentage || 0),
       getColor(scoreData.financial?.percentage || 0),
       getColor(scoreData.operations?.percentage || 0),
-      getColor(scoreData.legal?.percentage || 0)
+      getColor(scoreData.legal?.percentage || 0),
     ];
   };
 
@@ -204,13 +277,13 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
         <h3 className="text-xl font-bold text-black dark:text-white">
           {t(
             "report.capitalReadinessAssessmentScores",
-            "Capital Readiness Assessment Scores"
+            "Capital Readiness Assessment Scores",
           )}
         </h3>
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {t(
             "report.readinessAcrossDomains",
-            "Your readiness across key business domains"
+            "Your readiness across key business domains",
           )}
         </p>
       </div>
@@ -241,10 +314,7 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
               </svg>
             </div>
             <span className="text-gray-400">
-              {t(
-                "common.loadingAssessmentData",
-                "Loading assessment data..."
-              )}
+              {t("common.loadingAssessmentData", "Loading assessment data...")}
             </span>
           </div>
         </div>

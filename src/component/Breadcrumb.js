@@ -4,6 +4,22 @@ import { useRouter } from "@/utils/navigation";
 
 const Breadcrumb = ({ pageName, prevPage, prevLink }) => {
   const router = useRouter();
+  const hasPrev = Boolean(prevPage) || prevLink === "" || Boolean(prevLink);
+
+  const handlePrevClick = (event) => {
+    event.preventDefault();
+
+    // Empty string means explicit browser-history back behavior.
+    if (prevLink === "") {
+      router.back();
+      return;
+    }
+
+    if (prevLink) {
+      router.push(prevLink);
+    }
+  };
+
   return (
     <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <h2 className="text-title-md2 line-clamp-1 font-semibold text-black dark:text-white">
@@ -11,21 +27,17 @@ const Breadcrumb = ({ pageName, prevPage, prevLink }) => {
       </h2>
       <nav>
         <ol className="flex items-center gap-2">
-          <li>
-            <Link
-              className="font-medium"
-              onClick={() => {
-                if (prevLink == "") {
-                  router.back();
-                } else {
-                  router.push(prevLink);
-                }
-              }}
-              href={prevLink}
-            >
-              {prevPage} /
-            </Link>
-          </li>
+          {hasPrev && (
+            <li>
+              <Link
+                className="font-medium"
+                onClick={handlePrevClick}
+                href={prevLink || "#"}
+              >
+                {prevPage || "Back"} /
+              </Link>
+            </li>
+          )}
           <li className="font-medium line-clamp-1 text-primary">{pageName}</li>
         </ol>
       </nav>

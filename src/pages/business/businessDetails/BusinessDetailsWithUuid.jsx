@@ -88,6 +88,124 @@ const Page = () => {
     return Math.min(score, 95); // Cap at 95%
   };
 
+  const toReadinessStatus = (percentage) => {
+    if (percentage >= 75) return "Ready";
+    if (percentage >= 60) return "Partially Ready";
+    return "Not Ready";
+  };
+
+  const normalizeScoreData = (rawData) => {
+    if (!rawData || typeof rawData !== "object") return null;
+
+    const looksLikeScoreData =
+      typeof rawData?.commercial?.percentage === "number" &&
+      typeof rawData?.financial?.percentage === "number" &&
+      typeof rawData?.operations?.percentage === "number" &&
+      typeof rawData?.legal?.percentage === "number";
+
+    if (looksLikeScoreData) return rawData;
+
+    if (rawData?.scoreData && typeof rawData.scoreData === "object") {
+      const nested = rawData.scoreData;
+      if (
+        typeof nested?.commercial?.percentage === "number" &&
+        typeof nested?.financial?.percentage === "number" &&
+        typeof nested?.operations?.percentage === "number" &&
+        typeof nested?.legal?.percentage === "number"
+      ) {
+        return nested;
+      }
+    }
+
+    const domainScores = rawData?.domainScores;
+    if (!domainScores || typeof domainScores !== "object") return null;
+
+    const toPercentFromDomain = (domain = {}) => {
+      const average = Number(domain.average || 0);
+      const reviewedQuestions = Number(domain.reviewedQuestions || 0);
+      const totalQuestions = Number(domain.totalQuestions || 0);
+      const earnedScore = average * reviewedQuestions;
+      const maxScore = totalQuestions * 5;
+      return maxScore > 0 ? Math.round((earnedScore / maxScore) * 100) : 0;
+    };
+
+    const commercial = toPercentFromDomain(domainScores.commercial_marketing);
+    const financial = toPercentFromDomain(domainScores.financial);
+    const operations = toPercentFromDomain(domainScores.operations);
+    const legal = toPercentFromDomain(domainScores.legal_compliance);
+    const overall = Math.round(
+      (commercial + financial + operations + legal) / 4,
+    );
+
+    return {
+      commercial: {
+        percentage: commercial,
+        status: toReadinessStatus(commercial),
+      },
+      financial: {
+        percentage: financial,
+        status: toReadinessStatus(financial),
+      },
+      operations: {
+        percentage: operations,
+        status: toReadinessStatus(operations),
+      },
+      legal: {
+        percentage: legal,
+        status: toReadinessStatus(legal),
+      },
+      general_status: toReadinessStatus(overall),
+    };
+  };
+
+  const buildDomainDataForPdfFromScores = (scoreData) => {
+    const toItemScore = (percentage) =>
+      Number(((Number(percentage || 0) / 100) * 2).toFixed(2));
+
+    return {
+      commercial: {
+        summary: [
+          {
+            subDomain: "Commercial readiness overview",
+            score: toItemScore(scoreData?.commercial?.percentage),
+            reviewerComment:
+              "Derived from CRAT report domain score normalized by all domain questions.",
+          },
+        ],
+      },
+      financial: {
+        summary: [
+          {
+            subDomain: "Financial readiness overview",
+            score: toItemScore(scoreData?.financial?.percentage),
+            reviewerComment:
+              "Derived from CRAT report domain score normalized by all domain questions.",
+          },
+        ],
+      },
+      operations: {
+        summary: [
+          {
+            subDomain: "Operations readiness overview",
+            score: toItemScore(scoreData?.operations?.percentage),
+            reviewerComment:
+              "Derived from CRAT report domain score normalized by all domain questions.",
+          },
+        ],
+      },
+      legal: {
+        summary: [
+          {
+            subDomain: "Legal and compliance readiness overview",
+            score: toItemScore(scoreData?.legal?.percentage),
+            reviewerComment:
+              "Derived from CRAT report domain score normalized by all domain questions.",
+          },
+        ],
+      },
+    };
+  };
+
   const getData = async () => {
     try {
       const data = await getBusiness(uuid);
@@ -126,32 +244,24 @@ const Page = () => {
       // Try to get actual CRAT data first
       let actualCRATData = null;
       let hasCRATData = false;
+      let normalizedCRATScoreData = null;
       try {
         // Pass the user's uuid to get their CRAT assessment scores
         actualCRATData = await getScoreData({ uuid: business.User?.uuid });
         console.log("📊 Raw CRAT data received:", actualCRATData);
 
+        normalizedCRATScoreData = normalizeScoreData(actualCRATData);
+
         // Check if we have valid CRAT data with actual percentage values
-        if (
-          actualCRATData &&
-          typeof actualCRATData === "object" &&
-          ((actualCRATData.commercial &&
-            typeof actualCRATData.commercial.percentage === "number") ||
-            (actualCRATData.financial &&
-              typeof actualCRATData.financial.percentage === "number") ||
-            (actualCRATData.operations &&
-              typeof actualCRATData.operations.percentage === "number") ||
-            (actualCRATData.legal &&
-              typeof actualCRATData.legal.percentage === "number"))
-        ) {
+        if (normalizedCRATScoreData) {
           hasCRATData = true;
           console.log(
             "✅ Valid CRAT assessment data found - using actual scores:",
             {
-              commercial: actualCRATData.commercial?.percentage,
-              financial: actualCRATData.financial?.percentage,
-              operations: actualCRATData.operations?.percentage,
-              legal: actualCRATData.legal?.percentage,
+              commercial: normalizedCRATScoreData.commercial?.percentage,
+              financial: normalizedCRATScoreData.financial?.percentage,
+              operations: normalizedCRATScoreData.operations?.percentage,
+              legal: normalizedCRATScoreData.legal?.percentage,
             },
           );
           toast.success(t("ai.cratLoaded", "CRAT assessment data loaded"), {
@@ -184,7 +294,7 @@ const Page = () => {
 
       // Create comprehensive score data - ALWAYS use actual CRAT data if available, even if scores are 0%
       const scoreData = hasCRATData
-        ? actualCRATData
+        ? normalizedCRATScoreData
         : {
             commercial: {
               percentage: calculateIntelligentScore("commercial"),
@@ -610,6 +720,7 @@ const Page = () => {
 
       // Reuse existing CRAT/AI data if available, otherwise build fresh score data
       let scoreDataForPdf = cratData?.scoreData;
+      let reportPayloadForPdf = null;
 
       if (!scoreDataForPdf) {
         let hasCRATData = false;
@@ -617,28 +728,20 @@ const Page = () => {
 
         try {
           actualCRATData = await getScoreData({ uuid: business.User?.uuid });
+          reportPayloadForPdf = actualCRATData;
 
-          if (
-            actualCRATData &&
-            typeof actualCRATData === "object" &&
-            ((actualCRATData.commercial &&
-              typeof actualCRATData.commercial.percentage === "number") ||
-              (actualCRATData.financial &&
-                typeof actualCRATData.financial.percentage === "number") ||
-              (actualCRATData.operations &&
-                typeof actualCRATData.operations.percentage === "number") ||
-              (actualCRATData.legal &&
-                typeof actualCRATData.legal.percentage === "number"))
-          ) {
+          const normalizedCRATScoreData = normalizeScoreData(actualCRATData);
+
+          if (normalizedCRATScoreData) {
             hasCRATData = true;
+            scoreDataForPdf = normalizedCRATScoreData;
           }
         } catch (err) {
           console.log("ℹ️ No CRAT assessment found for PDF generation", err);
         }
 
-        scoreDataForPdf = hasCRATData
-          ? actualCRATData
-          : {
+        if (!hasCRATData) {
+          scoreDataForPdf = {
               commercial: {
                 percentage: calculateIntelligentScore("commercial"),
                 status:
@@ -676,6 +779,7 @@ const Page = () => {
                       : t("ai.status.needsImprovement", "Needs Improvement"),
               },
             };
+                    }
       }
 
       const pdfUserContext = {
@@ -689,7 +793,10 @@ const Page = () => {
         },
       };
 
-      const domainDataForPdf = cratData?.reportData || {};
+      const domainDataForPdf =
+        cratData?.reportData ||
+        reportPayloadForPdf?.reportData ||
+        buildDomainDataForPdfFromScores(scoreDataForPdf);
 
       await generateCapitalReadinessPDF(
         domainDataForPdf,

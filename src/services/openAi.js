@@ -1,8 +1,7 @@
 import OpenAI from "openai";
 
 // OpenAI API Key
-const OPENAI_API_KEY =
-  "REDACTED_OPENAI_KEY";
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
 
 if (!OPENAI_API_KEY) {
   console.warn("⚠️ OpenAI API key is not set. AI features will not work.");

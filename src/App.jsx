@@ -20,7 +20,6 @@ import AuthorizationPage from "@/pages/auth/AuthorizationPage";
 
 // Dashboard Pages
 import Dashboard from "@/pages/dashboard/Dashboard";
-import ScoreReadiness from "@/pages/cratSystem/ScoreReadiness";
 // import FinancialDomain from "@/pages/cratSystem/FinancialDomain";
 // import LegalDomain from "@/pages/cratSystem/LegalDomain";
 // import MarketDomain from "@/pages/cratSystem/MarketDomain";
@@ -97,9 +96,9 @@ import CratReviewPage from "./pages/cratSystem/cratReview/CratReview";
 import IntroductionPage from "./pages/cratSystem/Introduction";
 import LegalDomainPage from "./pages/cratSystem/legalDomain/LegalDomain";
 import MarketDomainPage from "./pages/cratSystem/marketDomain/MarketDomain";
-import FinalReportPreview from "./pages/cratSystem/finalReport/FinalReport";
 import FinancialDomain from "./pages/cratSystem/financialDomain/FinancialDomain";
 import Report from "./pages/cratSystem/report/Report";
+import CratSubmissionReviewPage from "./pages/cratSystem/reviewAssessment/CratSubmissionReviewPage";
 
 // Dynamic route components
 import MyMentorDetailsWithUuid from "./pages/mentor/myMentorDetails/MyMentorDetailsWithUuid";
@@ -599,10 +598,13 @@ function App() {
             {/* CRAT System Routes */}
             <Route path="introduction" element={<Introduction />} />
             <Route path="report" element={<Report />} />
-            <Route path="finalReport" element={<FinalReportPreview />} />
 
             {/* Reviewer Routes */}
             <Route path="cratReviews" element={<CratReviews />} />
+            <Route
+              path="cratReviewAssessment"
+              element={<CratSubmissionReviewPage />}
+            />
 
             {/* Application Routes */}
             <Route
@@ -619,12 +621,12 @@ function App() {
             {/* CRAT System nested routes */}
             <Route path="crat-system">
               <Route path="introduction" element={<IntroductionPage />} />
-              <Route path="scoreReadiness" element={<ScoreReadiness />} />
               <Route path="marketDomain" element={<MarketDomainPage />} />
               <Route path="financialDomain" element={<FinancialDomain />} />
               <Route path="operationsDomain" element={<OperationsDomain />} />
               <Route path="legalDomain" element={<LegalDomainPage />} />
               <Route path="cratReview" element={<CratReviewPage />} />
+              <Route path="report" element={<Report />} />
             </Route>
 
             {/* Chat Routes */}
@@ -696,7 +698,6 @@ function App() {
             />
 
             <Route path="messages/:uuid" element={<MessagesWithUuid />} />
-            <Route path="report" element={<Report />} />
           </Route>
 
           {/* Standalone Report Route (accessible outside dashboard) */}

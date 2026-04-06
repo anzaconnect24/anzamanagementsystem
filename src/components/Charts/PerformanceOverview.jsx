@@ -4,6 +4,10 @@ import dynamic from "@/utils/dynamic";
 import Loader from "@/components/common/Loader";
 import { useTranslation } from "@/locales";
 import { getReportData } from "@/controllers/crat_general_controller";
+import {
+  getPublishedReport,
+  getUserBusiness,
+} from "@/controllers/crat_controller";
 import { UserContext } from "@/layouts/DashboardLayout";
 
 const BusinessDomainScores = dynamic(
@@ -184,6 +188,55 @@ const makeFallback = (t) => ({
   general_status: t("report.notReady", "Not Ready"),
 });
 
+const calculateScoresFromPublishedCrat = (publishedData, t) => {
+  if (!publishedData || !publishedData.domainScores) return null;
+
+  const makeStatus = (pct) =>
+    pct >= 70 ? t("report.ready", "Ready") : t("report.notReady", "Not Ready");
+
+  const domainMap = {
+    commercial: "commercial_marketing",
+    financial: "financial",
+    operations: "operations",
+    legal: "legal_compliance",
+  };
+
+  const result = {};
+
+  Object.entries(domainMap).forEach(([uiKey, apiKey]) => {
+    const domain = publishedData.domainScores?.[apiKey];
+    const average = Number(domain?.average || 0);
+    const reviewedQuestions = Number(domain?.reviewedQuestions || 0);
+    const totalQuestions = Number(domain?.totalQuestions || 0);
+
+    // Normalize by full domain question count so partial completion does not
+    // appear as full (e.g. 1 answered question scored 5/5 in a 6-question domain).
+    const earnedScore = average * reviewedQuestions;
+    const maxDomainScore = totalQuestions * 5;
+    const percentage =
+      maxDomainScore > 0 ? Math.round((earnedScore / maxDomainScore) * 100) : 0;
+
+    result[uiKey] = {
+      percentage,
+      status: makeStatus(percentage),
+    };
+  });
+
+  const domainValues = [
+    result.commercial?.percentage || 0,
+    result.financial?.percentage || 0,
+    result.operations?.percentage || 0,
+    result.legal?.percentage || 0,
+  ];
+  const overallPct = Math.round(
+    domainValues.reduce((sum, value) => sum + value, 0) / domainValues.length,
+  );
+  result.general_status = makeStatus(overallPct);
+  result.overallScore = overallPct;
+
+  return result;
+};
+
 // ---------------------------------------------------------------------------
 // PerformanceOverview
 //
@@ -210,18 +263,49 @@ const PerformanceOverview = ({
     const uuid = user_uuid || userDetails?.uuid;
     if (!uuid) return;
 
-    setLoading(true);
-    getReportData({ user_uuid: uuid })
-      .then((responseData) => {
+    const loadScores = async () => {
+      setLoading(true);
+
+      try {
+        // Prefer approved CRAT output (published report) when available.
+        const business = await getUserBusiness(uuid);
+
+        if (business?.id) {
+          const published = await getPublishedReport(business.id);
+          const publishedCalculated = calculateScoresFromPublishedCrat(
+            published,
+            t,
+          );
+
+          if (
+            publishedCalculated &&
+            Object.keys(publishedCalculated).length > 0
+          ) {
+            setScoreData(publishedCalculated);
+            setLoading(false);
+            return;
+          }
+        }
+      } catch {
+        // If published CRAT is not available yet, fall through to legacy source.
+      }
+
+      try {
+        const responseData = await getReportData({ user_uuid: uuid });
         const calculated = calculateScores(responseData, t);
         setScoreData(
           calculated && Object.keys(calculated).length > 0
             ? calculated
             : makeFallback(t),
         );
-      })
-      .catch(() => setScoreData(makeFallback(t)))
-      .finally(() => setLoading(false));
+      } catch {
+        setScoreData(makeFallback(t));
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadScores();
   }, [user_uuid, userDetails?.uuid, refreshKey]);
 
   const initialScoreData =

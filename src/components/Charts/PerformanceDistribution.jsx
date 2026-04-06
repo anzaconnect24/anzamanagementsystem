@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from "react";
 import dynamic from "@/utils/dynamic";
 import { getScoreData } from "@/controllers/crat_general_controller";
+import {
+  getPublishedReport,
+  getUserBusiness,
+} from "@/controllers/crat_controller";
 import { useTranslation } from "@/locales";
 
 // Localized loading component for dynamic import
@@ -46,6 +50,52 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   loading: () => <LoadingChart />,
 });
 
+const mapPublishedReportToScoreData = (published, t) => {
+  if (!published?.domainScores) return null;
+
+  const domainMap = {
+    commercial: "commercial_marketing",
+    financial: "financial",
+    operations: "operations",
+    legal: "legal_compliance",
+  };
+
+  const toStatus = (pct) => {
+    if (pct >= 75) return t("report.ready", "Ready");
+    if (pct >= 60) return t("report.partiallyReady", "Partially Ready");
+    return t("report.notReady", "Not Ready");
+  };
+
+  const result = {};
+  Object.entries(domainMap).forEach(([chartKey, apiKey]) => {
+    const domain = published.domainScores?.[apiKey] || {};
+    const average = Number(domain.average || 0);
+    const reviewedQuestions = Number(domain.reviewedQuestions || 0);
+    const totalQuestions = Number(domain.totalQuestions || 0);
+    const earnedScore = average * reviewedQuestions;
+    const maxScore = totalQuestions * 5;
+    const percentage =
+      maxScore > 0 ? Math.round((earnedScore / maxScore) * 100) : 0;
+
+    result[chartKey] = {
+      percentage,
+      status: toStatus(percentage),
+    };
+  });
+
+  const overall = Math.round(
+    [
+      result.commercial?.percentage || 0,
+      result.financial?.percentage || 0,
+      result.operations?.percentage || 0,
+      result.legal?.percentage || 0,
+    ].reduce((sum, v) => sum + v, 0) / 4,
+  );
+
+  result.general_status = toStatus(overall);
+  return result;
+};
+
 const PerformanceDistribution = ({
   userDetails,
   initialScoreData,
@@ -54,7 +104,7 @@ const PerformanceDistribution = ({
   const { t } = useTranslation();
   const [scoreData, setScoreData] = useState(initialScoreData || {});
   const [loading, setLoading] = useState(
-    !initialScoreData || Object.keys(initialScoreData).length === 0
+    !initialScoreData || Object.keys(initialScoreData).length === 0,
   );
   // const [chartHeight, setChartHeight] = useState(350);
   const [isClient, setIsClient] = useState(false);
@@ -78,19 +128,40 @@ const PerformanceDistribution = ({
   // Fetch data if not provided as prop
   useEffect(() => {
     if (!initialScoreData || Object.keys(initialScoreData).length === 0) {
-      setLoading(true);
-      getScoreData({ uuid: userDetails.uuid })
-        .then((res) => {
+      const load = async () => {
+        setLoading(true);
+
+        try {
+          if (userDetails?.uuid) {
+            const business = await getUserBusiness(userDetails.uuid);
+            if (business?.id) {
+              const published = await getPublishedReport(business.id);
+              const mapped = mapPublishedReportToScoreData(published, t);
+              if (mapped && Object.keys(mapped).length > 0) {
+                setScoreData(mapped);
+                setLoading(false);
+                return;
+              }
+            }
+          }
+        } catch (error) {
+          console.log("Published report not available, using fallback:", error);
+        }
+
+        try {
+          const res = await getScoreData({ uuid: userDetails.uuid });
           console.log("PerformanceDistribution fetched data:", res);
           setScoreData(res);
-          setLoading(false);
-        })
-        .catch((error) => {
+        } catch (error) {
           console.error("Error fetching score data:", error);
+        } finally {
           setLoading(false);
-        });
+        }
+      };
+
+      load();
     }
-  }, [initialScoreData]);
+  }, [initialScoreData, t, userDetails?.uuid]);
 
   // Calculate the overall average score
   const calculateOverallScore = () => {
@@ -103,7 +174,7 @@ const PerformanceDistribution = ({
 
     // Calculate the average and round to whole number
     return Math.round(
-      scores.reduce((sum, score) => sum + score, 0) / scores.length
+      scores.reduce((sum, score) => sum + score, 0) / scores.length,
     );
   };
 
@@ -199,7 +270,7 @@ const PerformanceDistribution = ({
         <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
           {t(
             "report.overallAssessmentAcrossDomains",
-            "Overall assessment score across domains"
+            "Overall assessment score across domains",
           )}
         </p>
       </div>
@@ -232,7 +303,7 @@ const PerformanceDistribution = ({
             <span className="text-gray-400">
               {t(
                 "common.loadingPerformanceData",
-                "Loading performance data..."
+                "Loading performance data...",
               )}
             </span>
           </div>

@@ -389,7 +389,7 @@ const Sidebar = ({
     if (["Enterprenuer"].includes(role)) {
       programsItems.push({
         name: t("navigation.cratSystem", "CRAT System"),
-        path: "/dashboard/financialDomain",
+        path: "/dashboard/crat-system/introduction",
         icon: <MdBusinessCenter className="text-xl" />,
         submenu: [
           {
@@ -397,7 +397,7 @@ const Sidebar = ({
             path: "/dashboard/crat-system/introduction",
           },
           {
-            name: t("navigation.commercialDomain", "Market Domain"),
+            name: t("navigation.commercialDomain", "Commercial & Marketing"),
             path: "/dashboard/crat-system/marketDomain",
           },
           {
@@ -418,7 +418,7 @@ const Sidebar = ({
           },
           {
             name: t("navigation.report", "Report"),
-            path: "/dashboard/report",
+            path: "/dashboard/crat-system/report",
           },
         ],
       });
@@ -426,9 +426,15 @@ const Sidebar = ({
 
     if (["Staff"].includes(role)) {
       programsItems.push({
-        name: t("navigation.cratReviews", "CRAT Reviews"),
+        name: t("navigation.cratReviews", "My CRAT Assignments"),
         path: "/dashboard/cratReviews",
         icon: <MdAssignment className="text-xl" />,
+      });
+
+      programsItems.push({
+        name: t("navigation.report", "CRAT Internal Report"),
+        path: "/dashboard/crat-system/report",
+        icon: <MdBusinessCenter className="text-xl" />,
       });
     }
 
@@ -442,12 +448,15 @@ const Sidebar = ({
 
     if (["Admin"].includes(role)) {
       programsItems.push({
-        name: t(
-          "navigation.cratReviewApplications",
-          "CRAT Review Applications",
-        ),
+        name: t("navigation.cratReviewApplications", "CRAT Assignment Queue"),
         path: "/dashboard/cratReviewApplications",
         icon: <MdAssignment className="text-xl" />,
+      });
+
+      programsItems.push({
+        name: t("navigation.report", "CRAT Reports"),
+        path: "/dashboard/crat-system/report",
+        icon: <MdBusinessCenter className="text-xl" />,
       });
     }
 

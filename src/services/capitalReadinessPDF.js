@@ -2,8 +2,11 @@ import OpenAI from "openai";
 import jsPDF from "jspdf";
 
 // ─── OpenAI client ────────────────────────────────────────────────────────────
-const OPENAI_API_KEY =
-  "REDACTED_OPENAI_KEY";
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+
+if (!OPENAI_API_KEY) {
+  console.warn("VITE_OPENAI_API_KEY is not set. PDF AI generation may fail.");
+}
 
 const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
