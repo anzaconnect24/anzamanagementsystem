@@ -54,7 +54,8 @@ const toPercentFromDomain = (domain = {}) => {
 const toItemScore = (percentage) => Number(((percentage / 100) * 2).toFixed(2));
 
 const buildFallbackDomainDataForPdf = (domainRows) => {
-  const getRow = (chartKey) => domainRows.find((row) => row.chartKey === chartKey);
+  const getRow = (chartKey) =>
+    domainRows.find((row) => row.chartKey === chartKey);
 
   return {
     commercial: {
@@ -101,7 +102,8 @@ const buildFallbackDomainDataForPdf = (domainRows) => {
 };
 
 const buildFallbackScoreDataForPdf = (domainRows) => {
-  const getRow = (chartKey) => domainRows.find((row) => row.chartKey === chartKey);
+  const getRow = (chartKey) =>
+    domainRows.find((row) => row.chartKey === chartKey);
 
   const commercial = getRow("commercial");
   const financial = getRow("financial");
@@ -142,13 +144,15 @@ const getPdfPayloadFromReport = (report, domainRows) => {
   const hasReportData =
     report?.reportData &&
     ["commercial", "financial", "operations", "legal"].every(
-      (key) => report.reportData?.[key] && typeof report.reportData[key] === "object",
+      (key) =>
+        report.reportData?.[key] && typeof report.reportData[key] === "object",
     );
 
   const hasScoreData =
     report?.scoreData &&
     ["commercial", "financial", "operations", "legal"].every(
-      (key) => report.scoreData?.[key] && typeof report.scoreData[key] === "object",
+      (key) =>
+        report.scoreData?.[key] && typeof report.scoreData[key] === "object",
     );
 
   return {

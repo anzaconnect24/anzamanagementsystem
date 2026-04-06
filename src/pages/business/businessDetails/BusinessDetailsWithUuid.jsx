@@ -742,44 +742,44 @@ const Page = () => {
 
         if (!hasCRATData) {
           scoreDataForPdf = {
-              commercial: {
-                percentage: calculateIntelligentScore("commercial"),
-                status:
-                  calculateIntelligentScore("commercial") >= 70
-                    ? t("ai.status.good", "Good")
-                    : calculateIntelligentScore("commercial") >= 50
-                      ? t("ai.status.fair", "Fair")
-                      : t("ai.status.needsImprovement", "Needs Improvement"),
-              },
-              financial: {
-                percentage: calculateIntelligentScore("financial"),
-                status:
-                  calculateIntelligentScore("financial") >= 70
-                    ? t("ai.status.good", "Good")
-                    : calculateIntelligentScore("financial") >= 50
-                      ? t("ai.status.fair", "Fair")
-                      : t("ai.status.needsImprovement", "Needs Improvement"),
-              },
-              operations: {
-                percentage: calculateIntelligentScore("operations"),
-                status:
-                  calculateIntelligentScore("operations") >= 70
-                    ? t("ai.status.good", "Good")
-                    : calculateIntelligentScore("operations") >= 50
-                      ? t("ai.status.fair", "Fair")
-                      : t("ai.status.needsImprovement", "Needs Improvement"),
-              },
-              legal: {
-                percentage: calculateIntelligentScore("legal"),
-                status:
-                  calculateIntelligentScore("legal") >= 70
-                    ? t("ai.status.good", "Good")
-                    : calculateIntelligentScore("legal") >= 50
-                      ? t("ai.status.fair", "Fair")
-                      : t("ai.status.needsImprovement", "Needs Improvement"),
-              },
-            };
-                    }
+            commercial: {
+              percentage: calculateIntelligentScore("commercial"),
+              status:
+                calculateIntelligentScore("commercial") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("commercial") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+            financial: {
+              percentage: calculateIntelligentScore("financial"),
+              status:
+                calculateIntelligentScore("financial") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("financial") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+            operations: {
+              percentage: calculateIntelligentScore("operations"),
+              status:
+                calculateIntelligentScore("operations") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("operations") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+            legal: {
+              percentage: calculateIntelligentScore("legal"),
+              status:
+                calculateIntelligentScore("legal") >= 70
+                  ? t("ai.status.good", "Good")
+                  : calculateIntelligentScore("legal") >= 50
+                    ? t("ai.status.fair", "Fair")
+                    : t("ai.status.needsImprovement", "Needs Improvement"),
+            },
+          };
+        }
       }
 
       const pdfUserContext = {
