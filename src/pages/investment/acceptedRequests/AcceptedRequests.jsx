@@ -92,7 +92,7 @@ const Page = () => {
                         setSelectedBusiness(null);
                       }
                     }}
-                    className="bg-primary hover:bg-opacity-90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative"
+                    className="bg-primary hover:bg-primary/90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative"
                   >
                     Options
                     <div

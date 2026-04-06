@@ -67,7 +67,7 @@ const Page = ({ params }) => {
         <div className="border-b border-stroke px-6 py-4 dark:border-strokedark">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-4">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary bg-opacity-10">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-primary/10">
                 <svg
                   className="fill-primary dark:fill-white"
                   width="24"
@@ -181,7 +181,7 @@ const Page = ({ params }) => {
                     >
                       <td className="border-b border-[#eee] py-5 px-4 pl-9 dark:border-strokedark xl:pl-11">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary bg-opacity-10">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                             <svg
                               className="fill-primary dark:fill-white"
                               width="16"
@@ -207,7 +207,7 @@ const Page = ({ params }) => {
                       </td>
                       <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary bg-opacity-10">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                             <svg
                               className="fill-primary dark:fill-white"
                               width="16"
@@ -233,7 +233,7 @@ const Page = ({ params }) => {
                       </td>
                       <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary bg-opacity-10">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                             <svg
                               className="fill-primary dark:fill-white"
                               width="16"
@@ -259,7 +259,7 @@ const Page = ({ params }) => {
                       </td>
                       <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary bg-opacity-10">
+                          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                             <svg
                               className="fill-primary dark:fill-white"
                               width="16"
@@ -298,7 +298,7 @@ const Page = ({ params }) => {
                                 }
                               );
                             }}
-                            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary py-2 px-4 text-sm font-medium text-white hover:bg-opacity-90 transition-colors duration-200"
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-primary py-2 px-4 text-sm font-medium text-white hover:bg-primary/90 transition-colors duration-200"
                           >
                             <svg
                               className="fill-current"
@@ -333,7 +333,7 @@ const Page = ({ params }) => {
                                 toast.success("Unassigned successfully");
                               });
                             }}
-                            className="inline-flex items-center justify-center gap-2 rounded-md bg-danger bg-opacity-10 py-2 px-4 text-sm font-medium text-danger hover:bg-opacity-20 transition-colors duration-200"
+                            className="inline-flex items-center justify-center gap-2 rounded-md bg-danger/10 py-2 px-4 text-sm font-medium text-danger hover:bg-danger/20 transition-colors duration-200"
                           >
                             <svg
                               className="fill-current"
@@ -475,7 +475,7 @@ const Page = ({ params }) => {
                       }}
                       className={`inline-flex items-center justify-center rounded-md px-3 py-1 text-sm font-medium transition-colors duration-200 ${
                         isCurrentPage
-                          ? "bg-primary text-white hover:bg-opacity-90"
+                          ? "bg-primary text-white hover:bg-primary/90"
                           : "border border-stroke text-black hover:bg-gray-1 dark:border-strokedark dark:text-white dark:hover:bg-meta-4"
                       }`}
                     >

@@ -266,7 +266,7 @@ const MentorEntreprenuer = () => {
             onChange={(e) => {
               setKeyword(e.target.value);
             }}
-            className="py-1 rounded border-bodydark border-opacity-40 "
+            className="py-1 rounded border-bodydark/40 "
             placeholder={t("mentorHub.searchPlaceholder", "Search here")}
           />
         </div>

@@ -138,13 +138,13 @@ const InProgressInvestments = () => {
                 <div className="col-span-2 flex items-center gap-2">
                   <button
                     onClick={() => handleViewDetails(investment)}
-                    className="rounded bg-primary px-3 py-1.5 text-xs text-white hover:bg-opacity-90"
+                    className="rounded bg-primary px-3 py-1.5 text-xs text-white hover:bg-primary/90"
                   >
                     View
                   </button>
                   <button
                     onClick={() => handleComplete(investment.uuid)}
-                    className="rounded bg-success px-3 py-1.5 text-xs text-white hover:bg-opacity-90"
+                    className="rounded bg-success px-3 py-1.5 text-xs text-white hover:bg-success/90"
                   >
                     Complete
                   </button>
@@ -180,7 +180,7 @@ const InProgressInvestments = () => {
 
       {/* Details Modal */}
       {showModal && selectedInvestment && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
           <div className="max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-lg bg-white p-6 dark:bg-boxdark">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-semibold text-black dark:text-white">

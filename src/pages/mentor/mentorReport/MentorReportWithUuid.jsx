@@ -360,7 +360,7 @@ const Page = ({ params }) => {
                     </p>
                     <button
                       onClick={() => window.open(data.url, "_blank")}
-                      className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-all duration-300"
+                      className="inline-flex items-center px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-all duration-300"
                     >
                       <svg
                         className="w-5 h-5 mr-2"

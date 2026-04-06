@@ -206,7 +206,7 @@ const Page = () => {
                     <td className="py-4 px-4">
                       <button
                         onClick={() => handleMessage(user)}
-                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-opacity-90 transition-colors"
+                        className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
                       >
                         <svg
                           xmlns="http://www.w3.org/2000/svg"

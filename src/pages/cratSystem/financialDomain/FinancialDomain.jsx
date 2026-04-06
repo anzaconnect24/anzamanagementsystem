@@ -56,7 +56,7 @@ const FinancialDomain = () => {
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               const fetchedItem = responseData.find(
-                (dataItem) => dataItem.subDomain === item.subDomain
+                (dataItem) => dataItem.subDomain === item.subDomain,
               );
               return fetchedItem
                 ? {
@@ -94,7 +94,7 @@ const FinancialDomain = () => {
         Object.keys(updatedData).forEach((section) => {
           updatedData[section] = updatedData[section].map((item) => {
             const fetchedItem = responseData.find(
-              (dataItem) => dataItem.subDomain === item.subDomain
+              (dataItem) => dataItem.subDomain === item.subDomain,
             );
             return fetchedItem
               ? {
@@ -135,8 +135,8 @@ const FinancialDomain = () => {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
-          "Please upload an attachment first."
-        )
+          "Please upload an attachment first.",
+        ),
       );
       setModalOpen(true);
       return;
@@ -150,8 +150,8 @@ const FinancialDomain = () => {
         toast(
           t(
             "crat.uuidMissingDeferredSave",
-            "Record missing id; will save shortly"
-          )
+            "Record missing id; will save shortly",
+          ),
         );
         return;
       }
@@ -162,12 +162,12 @@ const FinancialDomain = () => {
       setOriginalData((prev) => {
         const clone = { ...prev };
         clone[section] = clone[section].map((it, i) =>
-          i === index ? { ...it, rating: newRating, score } : it
+          i === index ? { ...it, rating: newRating, score } : it,
         );
         return clone;
       });
       toast.success(
-        t("crat.ratingUpdated", "Rating & score updated successfully")
+        t("crat.ratingUpdated", "Rating & score updated successfully"),
       );
     } catch (e) {
       toast.error(t("crat.updateFailed", "Failed to update rating"));
@@ -181,7 +181,7 @@ const FinancialDomain = () => {
       setOriginalData(data);
       setChangesMade(false);
       toast.success(
-        t("crat.changesSubmittedSuccess", "Changes successfully submitted")
+        t("crat.changesSubmittedSuccess", "Changes successfully submitted"),
       );
     } catch (error) {
       toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
@@ -237,10 +237,10 @@ const FinancialDomain = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           console.log(
-            `Mapping ${item.subDomain}: found=${!!fetchedItem}, attachment=${fetchedItem?.attachment}`
+            `Mapping ${item.subDomain}: found=${!!fetchedItem}, attachment=${fetchedItem?.attachment}`,
           );
           return fetchedItem
             ? {
@@ -272,7 +272,7 @@ const FinancialDomain = () => {
   const openDeleteDialog = (domain, id, attachment, section, index, uuid) => {
     deleteModalOpen(true);
     deleteModalMessage(
-      t("crat.confirmDelete", "Are you sure you want to delete?")
+      t("crat.confirmDelete", "Are you sure you want to delete?"),
     );
     setDeleteCache([domain, id, attachment, section, index, uuid]);
   };
@@ -305,7 +305,7 @@ const FinancialDomain = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -351,13 +351,13 @@ const FinancialDomain = () => {
     setData({ ...data, [domain]: newData });
     submitChanges();
     toast.success(
-      t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+      t("crat.commentUpdatedSuccessfully", "Comment updated successfully"),
     );
   };
 
   const handleCustomerCommentBlur = async (domain, index, comment) => {
     console.log(
-      "🔧 DEBUG: handleCustomerCommentBlur called in FinancialDomain"
+      "🔧 DEBUG: handleCustomerCommentBlur called in FinancialDomain",
     );
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
@@ -369,8 +369,8 @@ const FinancialDomain = () => {
       toast.warning(
         t(
           "crat.noPermissionCustomer",
-          "Only entrepreneurs can edit customer comments"
-        )
+          "Only entrepreneurs can edit customer comments",
+        ),
       );
       return;
     }
@@ -385,7 +385,7 @@ const FinancialDomain = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_financial/${item.uuid}`
+        `${server_url}/crat_financial/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -393,7 +393,7 @@ const FinancialDomain = () => {
         {
           customerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -405,7 +405,7 @@ const FinancialDomain = () => {
         setData(newData);
 
         toast.success(
-          t("crat.commentSavedAutomatically", "Comment saved automatically")
+          t("crat.commentSavedAutomatically", "Comment saved automatically"),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
@@ -420,7 +420,7 @@ const FinancialDomain = () => {
 
   const handleReviewerCommentBlur = async (domain, index, comment) => {
     console.log(
-      "🔧 DEBUG: handleReviewerCommentBlur called in FinancialDomain"
+      "🔧 DEBUG: handleReviewerCommentBlur called in FinancialDomain",
     );
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
@@ -430,7 +430,10 @@ const FinancialDomain = () => {
     if (userDetails?.role !== "Admin") {
       console.log("🔧 DEBUG: Permission denied - user is not Admin");
       toast.warning(
-        t("crat.noPermissionReviewer", "Only admins can edit reviewer comments")
+        t(
+          "crat.noPermissionReviewer",
+          "Only admins can edit reviewer comments",
+        ),
       );
       return;
     }
@@ -445,7 +448,7 @@ const FinancialDomain = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_financial/${item.uuid}`
+        `${server_url}/crat_financial/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -453,7 +456,7 @@ const FinancialDomain = () => {
         {
           reviewerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -465,18 +468,21 @@ const FinancialDomain = () => {
         setData(newData);
 
         toast.success(
-          t("crat.reviewerCommentSaved", "Reviewer comment saved automatically")
+          t(
+            "crat.reviewerCommentSaved",
+            "Reviewer comment saved automatically",
+          ),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
         toast.error(
-          t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+          t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
         );
       }
     } catch (error) {
       console.log("🔧 DEBUG: Exception occurred:", error);
       toast.error(
-        t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+        t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
       );
       console.error("Error saving reviewer comment:", error);
     }
@@ -503,7 +509,9 @@ const FinancialDomain = () => {
         key={index}
       >
         <div className="flex items-center px-2">
-          <p className="text-sm text-black dark:text-white">{item.label || item.subDomain}</p>
+          <p className="text-sm text-black dark:text-white">
+            {item.label || item.subDomain}
+          </p>
         </div>
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white">{item.question}</p>
@@ -573,7 +581,7 @@ const FinancialDomain = () => {
                 item.attachment,
                 domain,
                 index,
-                item.uuid
+                item.uuid,
               )
             }
             onView={() => handleViewFile(item.attachment)}
@@ -637,7 +645,7 @@ const FinancialDomain = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {userDetails.publishStatus === "On review" ? (
+        {["On review", "Reviewed"].includes(userDetails.publishStatus) ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               {t("report.onReview", "On review")}
@@ -647,26 +655,26 @@ const FinancialDomain = () => {
           <>
             {renderSection(
               "profitability",
-              t("crat.financial.sections.profitability", "1. Profitability")
+              t("crat.financial.sections.profitability", "1. Profitability"),
             )}
             {renderSection(
               "balanceSheet",
-              t("crat.financial.sections.balanceSheet", "2. Balance Sheet")
+              t("crat.financial.sections.balanceSheet", "2. Balance Sheet"),
             )}
             {renderSection(
               "cashFlows",
-              t("crat.financial.sections.cashFlows", "3. Cash Flows")
+              t("crat.financial.sections.cashFlows", "3. Cash Flows"),
             )}
             {renderSection(
               "projections",
-              t("crat.financial.sections.projections", "4. Projections")
+              t("crat.financial.sections.projections", "4. Projections"),
             )}
             {renderSection(
               "financialManagement",
               t(
                 "crat.financial.sections.financialManagement",
-                "5. Financial Management"
-              )
+                "5. Financial Management",
+              ),
             )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">

@@ -48,12 +48,23 @@ function calcOverallScore(scoreData) {
 
 /** Best-effort business name extraction */
 function getBusinessName(userDetails) {
-  return (
-    userDetails?.Business?.businessName ||
+  console.log("🏢 Extracting business name from userDetails:", {
+    hasUserDetails: !!userDetails,
+    hasBusiness: !!userDetails?.Business,
+    businessName: userDetails?.Business?.name,
+    businessNameAlt: userDetails?.Business?.businessName,
+    fallbackBusinessName: userDetails?.businessName,
+  });
+
+  // Prioritize Business.name (primary field from API response)
+  const name =
     userDetails?.Business?.name ||
-    userDetails?.name ||
-    "The Business"
-  );
+    userDetails?.Business?.businessName ||
+    userDetails?.businessName ||
+    "Business Investment Analysis";
+
+  console.log("✅ Using business name for PDF:", name);
+  return name;
 }
 
 // ─── Core AI Generation ─────────────────────────────────────────────────────

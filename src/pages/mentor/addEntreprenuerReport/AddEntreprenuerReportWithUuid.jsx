@@ -380,7 +380,7 @@ const Page = ({ params }) => {
             </button>
             <button
               type="submit"
-              className="py-3 px-8 bg-primary text-white hover:bg-opacity-90 transition-all duration-300 rounded-md flex items-center justify-center min-w-[150px]"
+              className="py-3 px-8 bg-primary text-white hover:bg-primary/90 transition-all duration-300 rounded-md flex items-center justify-center min-w-[150px]"
               disabled={loading}
             >
               {loading ? <Spinner /> : "Submit Report"}

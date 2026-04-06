@@ -62,7 +62,7 @@ const Conversations = () => {
                   >
                     <div className="w-10/12 flex space-x-2 items-center">
                       <div className="">
-                        <div className=" aspect-square rounded-full flex justify-center bg-opacity-60 items-center h-12 w-12 bg-bodydark1  ">
+                        <div className=" aspect-square rounded-full flex justify-center items-center h-12 w-12 bg-bodydark1/60  ">
                           {showUser1 ? (
                             item.user1.image == null ? (
                               <div>

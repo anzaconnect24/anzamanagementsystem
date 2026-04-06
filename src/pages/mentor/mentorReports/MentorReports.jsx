@@ -75,7 +75,7 @@ const Page = () => {
         {userDetails.role === "Mentor" && (
           <Link
             href="/dashboard/mentorEntreprenuers"
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 transition-all duration-300"
+            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-all duration-300"
           >
             {t("mentorship.submitNewReport", "Submit New Report")}
           </Link>

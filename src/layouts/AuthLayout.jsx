@@ -73,7 +73,7 @@ const AuthLayout = ({ children, title, subtitle }) => {
         }}
       >
         {/* Bluish Overlay */}
-        <div className="absolute inset-0 bg-[#424daf] bg-opacity-75"></div>
+        <div className="absolute inset-0 bg-[#424daf]/75"></div>
 
         {/* Content on top of overlay */}
         <div className="relative z-10">

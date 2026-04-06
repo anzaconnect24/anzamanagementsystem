@@ -287,7 +287,7 @@ const InterestedInvestors = () => {
                           <button
                             onClick={() => handleAccept(application.uuid)}
                             disabled={actionLoading === application.uuid}
-                            className="inline-flex items-center justify-center rounded-md bg-success py-2 px-4 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
+                            className="inline-flex items-center justify-center rounded-md bg-success py-2 px-4 text-center font-medium text-white hover:bg-success/90 disabled:opacity-50"
                           >
                             {actionLoading === application.uuid
                               ? "..."
@@ -296,7 +296,7 @@ const InterestedInvestors = () => {
                           <button
                             onClick={() => handleReject(application.uuid)}
                             disabled={actionLoading === application.uuid}
-                            className="inline-flex items-center justify-center rounded-md bg-danger py-2 px-4 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50"
+                            className="inline-flex items-center justify-center rounded-md bg-danger py-2 px-4 text-center font-medium text-white hover:bg-danger/90 disabled:opacity-50"
                           >
                             {actionLoading === application.uuid
                               ? "..."

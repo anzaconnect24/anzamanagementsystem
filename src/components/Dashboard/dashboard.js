@@ -112,7 +112,7 @@ const Dashboard = () => {
         <div>
           {checkIfProfileIsComplete(userDetails) == false && (
             <div className="bg-white shadow mb-8 rounded-lg">
-              <div className="flex justify-between bg-primary bg-opacity-[6%] border border-primary border-opacity-40 shadow-lg px-4 py-4 text-black items-center rounded-lg">
+              <div className="flex justify-between bg-primary bg-opacity-[6%] border border-primary/40 shadow-lg px-4 py-4 text-black items-center rounded-lg">
                 <h1 className="text-lg">
                   {t(
                     "dashboard.completeProfile",

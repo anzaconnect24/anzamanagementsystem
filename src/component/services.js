@@ -98,7 +98,7 @@ const Services = () => {
                   onClick={() => {
                     window.open(item.link, "__blank");
                   }}
-                  className="font-bold bg-success text-white border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm"
+                  className="font-bold bg-success text-white border border-bodydark/60 cursor-pointer rounded p-1 mt-2 text-sm"
                 >
                   Open file
                 </div>
@@ -120,7 +120,7 @@ const Services = () => {
                       setUserDetails({ ...newData });
                     });
                   }}
-                  className="font-bold text-danger border border-bodydark border-opacity-60 cursor-pointer rounded p-1 mt-2 text-sm"
+                  className="font-bold text-danger border border-bodydark/60 cursor-pointer rounded p-1 mt-2 text-sm"
                 >
                   Delete file
                 </h1>

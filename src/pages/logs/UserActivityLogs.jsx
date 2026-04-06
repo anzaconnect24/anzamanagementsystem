@@ -181,7 +181,7 @@ const UserActivityLogs = () => {
                   <button
                     onClick={() => fetchUserLogs(logsPage - 1)}
                     disabled={logsPage === 1}
-                    className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-center font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     {t("common.previous", "Previous")}
                   </button>
@@ -196,7 +196,7 @@ const UserActivityLogs = () => {
                   <button
                     onClick={() => fetchUserLogs(logsPage + 1)}
                     disabled={logsPage === logsTotalPages}
-                    className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-3 text-center font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
                   >
                     {t("common.next", "Next")}
                   </button>

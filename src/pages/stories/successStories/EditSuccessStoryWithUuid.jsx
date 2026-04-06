@@ -319,7 +319,7 @@ const EditSuccessStoryWithUuid = () => {
               <button
                 type="submit"
                 disabled={submitting}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed lg:px-8 xl:px-10"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed lg:px-8 xl:px-10"
               >
                 {submitting ? (
                   <>

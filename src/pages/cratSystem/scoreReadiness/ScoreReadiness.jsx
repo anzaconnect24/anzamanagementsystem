@@ -12,7 +12,7 @@ const BusinessDomainScores = dynamic(
     loading: () => (
       <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
     ),
-  }
+  },
 );
 
 const PerformanceDistribution = dynamic(
@@ -22,12 +22,13 @@ const PerformanceDistribution = dynamic(
     loading: () => (
       <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
     ),
-  }
+  },
 );
 
 import { UserContext } from "../../../layouts/DashboardLayout";
 
 import { useTranslation } from "@/locales";
+import PerformanceOverview from "../../../components/Charts/PerformanceOverview";
 
 const Page = () => {
   const { t } = useTranslation();
@@ -79,20 +80,20 @@ const Page = () => {
         domain === "commercial"
           ? t("dashboard.commercial", "Commercial")
           : domain === "financial"
-          ? t("dashboard.financial", "Financial")
-          : domain === "operations"
-          ? t("dashboard.operations", "Operations")
-          : domain === "legal"
-          ? t("dashboard.legal", "Legal")
-          : domain;
+            ? t("dashboard.financial", "Financial")
+            : domain === "operations"
+              ? t("dashboard.operations", "Operations")
+              : domain === "legal"
+                ? t("dashboard.legal", "Legal")
+                : domain;
       const statusLabel =
         data.status === "Ready"
           ? t("report.ready", "Ready")
           : data.status === "Not Ready"
-          ? t("report.notReady", "Not Ready")
-          : data.status === "On review"
-          ? t("report.onReview", "On review")
-          : data.status;
+            ? t("report.notReady", "Not Ready")
+            : data.status === "On review"
+              ? t("report.onReview", "On review")
+              : data.status;
       return (
         <tr key={index}>
           <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
@@ -192,14 +193,7 @@ const Page = () => {
           </div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6 2xl:gap-7.5 mt-8">
-          <div className="col-span-1 md:col-span-3">
-            <BusinessDomainScores initialScoreData={scoreData} />
-          </div>
-          <div className="col-span-1 md:col-span-2">
-            <PerformanceDistribution initialScoreData={scoreData} />
-          </div>
-        </div>
+        <PerformanceOverview userDetails={userDetails} />
       )}
 
       {/* Table */}
@@ -262,8 +256,8 @@ const Page = () => {
               ? scoreData.general_status === "Ready"
                 ? t("report.ready", "Ready")
                 : scoreData.general_status === "On review"
-                ? t("report.onReview", "On review")
-                : t("report.notReady", "Not Ready")
+                  ? t("report.onReview", "On review")
+                  : t("report.notReady", "Not Ready")
               : t("report.notReady", "Not Ready")}
           </span>
         </h5>

@@ -60,7 +60,7 @@ const OperationsDomain = () => {
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               const fetchedItem = responseData.find(
-                (dataItem) => dataItem.subDomain === item.subDomain
+                (dataItem) => dataItem.subDomain === item.subDomain,
               );
               return fetchedItem
                 ? {
@@ -100,7 +100,7 @@ const OperationsDomain = () => {
         Object.keys(updatedData).forEach((section) => {
           updatedData[section] = updatedData[section].map((item) => {
             const fetchedItem = responseData.find(
-              (dataItem) => dataItem.subDomain === item.subDomain
+              (dataItem) => dataItem.subDomain === item.subDomain,
             );
             return fetchedItem
               ? {
@@ -143,8 +143,8 @@ const OperationsDomain = () => {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
-          "Please upload an attachment first."
-        )
+          "Please upload an attachment first.",
+        ),
       );
       setModalOpen(true);
       return;
@@ -158,8 +158,8 @@ const OperationsDomain = () => {
         toast(
           t(
             "crat.uuidMissingDeferredSave",
-            "Record missing id; will save shortly"
-          )
+            "Record missing id; will save shortly",
+          ),
         );
         return;
       }
@@ -170,12 +170,12 @@ const OperationsDomain = () => {
       setOriginalData((prev) => {
         const clone = { ...prev };
         clone[section] = clone[section].map((it, i) =>
-          i === index ? { ...it, rating: newRating, score } : it
+          i === index ? { ...it, rating: newRating, score } : it,
         );
         return clone;
       });
       toast.success(
-        t("crat.ratingUpdated", "Rating & score updated successfully")
+        t("crat.ratingUpdated", "Rating & score updated successfully"),
       );
     } catch (e) {
       toast.error(t("crat.updateFailed", "Failed to update rating"));
@@ -189,7 +189,7 @@ const OperationsDomain = () => {
       setOriginalData(data);
       setChangesMade(false);
       toast.success(
-        t("crat.changesSubmittedSuccess", "Changes successfully submitted")
+        t("crat.changesSubmittedSuccess", "Changes successfully submitted"),
       );
     } catch (error) {
       toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
@@ -226,7 +226,7 @@ const OperationsDomain = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -256,7 +256,7 @@ const OperationsDomain = () => {
     // Open the delete modal with the confirmation message
     deleteModalOpen(true);
     deleteModalMessage(
-      t("crat.confirmDelete", "Are you sure you want to delete?")
+      t("crat.confirmDelete", "Are you sure you want to delete?"),
     );
     setDeleteCache([domain, id, attachment, section, index, uuid]);
   };
@@ -286,7 +286,7 @@ const OperationsDomain = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -327,13 +327,13 @@ const OperationsDomain = () => {
     setData({ ...data, [domain]: newData });
     submitChanges();
     toast.success(
-      t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+      t("crat.commentUpdatedSuccessfully", "Comment updated successfully"),
     );
   };
 
   const handleCustomerCommentBlur = async (domain, index, comment) => {
     console.log(
-      "🔧 DEBUG: handleCustomerCommentBlur called in OperationsDomain"
+      "🔧 DEBUG: handleCustomerCommentBlur called in OperationsDomain",
     );
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
@@ -345,8 +345,8 @@ const OperationsDomain = () => {
       toast.warning(
         t(
           "crat.noPermissionCustomer",
-          "Only entrepreneurs can edit customer comments"
-        )
+          "Only entrepreneurs can edit customer comments",
+        ),
       );
       return;
     }
@@ -361,7 +361,7 @@ const OperationsDomain = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_operation/${item.uuid}`
+        `${server_url}/crat_operation/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -369,7 +369,7 @@ const OperationsDomain = () => {
         {
           customerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -381,7 +381,7 @@ const OperationsDomain = () => {
         setData(newData);
 
         toast.success(
-          t("crat.commentSavedAutomatically", "Comment saved automatically")
+          t("crat.commentSavedAutomatically", "Comment saved automatically"),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
@@ -396,7 +396,7 @@ const OperationsDomain = () => {
 
   const handleReviewerCommentBlur = async (domain, index, comment) => {
     console.log(
-      "🔧 DEBUG: handleReviewerCommentBlur called in OperationsDomain"
+      "🔧 DEBUG: handleReviewerCommentBlur called in OperationsDomain",
     );
     console.log("🔧 DEBUG: User role:", userDetails?.role);
     console.log("🔧 DEBUG: Domain:", domain, "Index:", index);
@@ -406,7 +406,10 @@ const OperationsDomain = () => {
     if (userDetails?.role !== "Admin") {
       console.log("🔧 DEBUG: Permission denied - user is not Admin");
       toast.warning(
-        t("crat.noPermissionReviewer", "Only admins can edit reviewer comments")
+        t(
+          "crat.noPermissionReviewer",
+          "Only admins can edit reviewer comments",
+        ),
       );
       return;
     }
@@ -421,7 +424,7 @@ const OperationsDomain = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_operation/${item.uuid}`
+        `${server_url}/crat_operation/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -429,7 +432,7 @@ const OperationsDomain = () => {
         {
           reviewerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -441,18 +444,21 @@ const OperationsDomain = () => {
         setData(newData);
 
         toast.success(
-          t("crat.reviewerCommentSaved", "Reviewer comment saved automatically")
+          t(
+            "crat.reviewerCommentSaved",
+            "Reviewer comment saved automatically",
+          ),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
         toast.error(
-          t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+          t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
         );
       }
     } catch (error) {
       console.log("🔧 DEBUG: Exception occurred:", error);
       toast.error(
-        t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+        t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
       );
       console.error("Error saving reviewer comment:", error);
     }
@@ -554,7 +560,7 @@ const OperationsDomain = () => {
                 item.attachment,
                 domain,
                 index,
-                item.uuid
+                item.uuid,
               )
             }
             onView={() => handleViewFile(item.attachment)}
@@ -618,7 +624,7 @@ const OperationsDomain = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {userDetails.publishStatus === "On review" ? (
+        {["On review", "Reviewed"].includes(userDetails.publishStatus) ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               {t("report.onReview", "On review")}
@@ -630,30 +636,30 @@ const OperationsDomain = () => {
               "managementCapacity",
               t(
                 "crat.operations.sections.managementCapacity",
-                "1. Management Capacity"
-              )
+                "1. Management Capacity",
+              ),
             )}
             {renderSection("mis", t("crat.operations.sections.mis", "2. MIS"))}
             {renderSection(
               "qualityManagement",
               t(
                 "crat.operations.sections.qualityManagement",
-                "3. Quality Management"
-              )
+                "3. Quality Management",
+              ),
             )}
             {renderSection(
               "overallOperations",
               t(
                 "crat.operations.sections.overallOperations",
-                "4. Overall Operations"
-              )
+                "4. Overall Operations",
+              ),
             )}
             {renderSection(
               "strategyPlanning",
               t(
                 "crat.operations.sections.strategyPlanning",
-                "5. Strategy & Planning"
-              )
+                "5. Strategy & Planning",
+              ),
             )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">

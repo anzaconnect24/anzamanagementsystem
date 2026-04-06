@@ -111,7 +111,7 @@ const Page = () => {
 
               <button
                 onClick={() => setshowInvitationForm(true)}
-                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-white hover:bg-opacity-90"
+                className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-medium text-white hover:bg-primary/90"
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -135,7 +135,7 @@ const Page = () => {
 
         {/* Invitation Form Modal */}
         {showInvitationForm && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
             <div className="bg-white dark:bg-boxdark rounded-xl shadow-lg w-full max-w-md mx-4">
               <div className="p-6">
                 <div className="flex justify-between items-center mb-4">
@@ -193,7 +193,7 @@ const Page = () => {
                   </div>
                   <button
                     type="submit"
-                    className="w-full rounded-lg bg-primary py-2 px-4 font-medium text-white hover:bg-opacity-90 flex items-center justify-center"
+                    className="w-full rounded-lg bg-primary py-2 px-4 font-medium text-white hover:bg-primary/90 flex items-center justify-center"
                     disabled={inviting}
                   >
                     {inviting ? (

@@ -50,7 +50,7 @@ const Page = () => {
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               const fetchedItem = responseData.find(
-                (dataItem) => dataItem.subDomain === item.subDomain
+                (dataItem) => dataItem.subDomain === item.subDomain,
               );
               return fetchedItem
                 ? {
@@ -83,8 +83,8 @@ const Page = () => {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
-          "Please upload an attachment first."
-        )
+          "Please upload an attachment first.",
+        ),
       );
       setModalOpen(true);
     } else {
@@ -117,7 +117,7 @@ const Page = () => {
       setChangesMade(false);
 
       toast.success(
-        t("crat.changesSubmittedSuccess", "Changes successfully submitted")
+        t("crat.changesSubmittedSuccess", "Changes successfully submitted"),
       );
       console.log("Changes successfully submitted");
     } catch (error) {
@@ -155,7 +155,7 @@ const Page = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -183,7 +183,7 @@ const Page = () => {
     // Open the delete modal with the confirmation message
     deleteModalOpen(true);
     deleteModalMessage(
-      t("crat.confirmDelete", "Are you sure you want to delete?")
+      t("crat.confirmDelete", "Are you sure you want to delete?"),
     );
     setDeleteCache([domain, id, attachment, section, index]);
   };
@@ -203,7 +203,7 @@ const Page = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -249,7 +249,7 @@ const Page = () => {
     setData({ ...data, [domain]: newData });
     submitChanges();
     toast.success(
-      t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+      t("crat.commentUpdatedSuccessfully", "Comment updated successfully"),
     );
   };
 
@@ -302,7 +302,7 @@ const Page = () => {
                 item.userId,
                 item.attachment,
                 domain,
-                index
+                index,
               )
             }
             onView={() => handleViewFile(item.attachment)}
@@ -365,7 +365,7 @@ const Page = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {userDetails.publishStatus === "On review" ? (
+        {["On review", "Reviewed"].includes(userDetails.publishStatus) ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               {t("report.onReview", "On review")}
@@ -377,36 +377,36 @@ const Page = () => {
               "corporateDocumentsCompliance",
               t(
                 "crat.legal.sections.corporateDocsCompliance",
-                "1. Corporate Documents & Compliance"
-              )
+                "1. Corporate Documents & Compliance",
+              ),
             )}
             {renderSection(
               "contractsAgreements",
               t(
                 "crat.legal.sections.contractsAgreements",
-                "2. Contracts & Agreements"
-              )
+                "2. Contracts & Agreements",
+              ),
             )}
             {renderSection(
               "intellectualProperty",
               t(
                 "crat.legal.sections.intellectualProperty",
-                "3. Intellectual Property"
-              )
+                "3. Intellectual Property",
+              ),
             )}
             {renderSection(
               "entrepreneurFamily",
               t(
                 "crat.legal.sections.entrepreneurFamily",
-                "4. Entrepreneur & Family"
-              )
+                "4. Entrepreneur & Family",
+              ),
             )}
             {renderSection(
               "corporateGovernance",
               t(
                 "crat.legal.sections.corporateGovernance",
-                "5. Corporate Governance"
-              )
+                "5. Corporate Governance",
+              ),
             )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">

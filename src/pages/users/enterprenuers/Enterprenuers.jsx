@@ -94,6 +94,9 @@ const Enterprenuers = () => {
     { value: "program", label: "Program" },
   ];
 
+  const getDefaultFilterValue = (filterKey) =>
+    filterOptions[filterKey]?.options?.[0] || "";
+
   // Check if any filters are active
   const isFiltering =
     Object.values(filters).some((value) => !value.startsWith("All")) || keyword;
@@ -339,7 +342,7 @@ const Enterprenuers = () => {
               <button
                 onClick={() => toggleDropdown(key)}
                 className={`px-4 py-2 rounded-md border ${
-                  filters[key] !== `All ${value.label}s`
+                  filters[key] !== getDefaultFilterValue(key)
                     ? "border-primary bg-primary/10 text-primary"
                     : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
                 } flex items-center gap-2 hover:border-primary transition-colors`}
@@ -440,7 +443,7 @@ const Enterprenuers = () => {
           <div className="mt-4 flex flex-wrap gap-2">
             {Object.entries(filters).map(
               ([key, value]) =>
-                value !== `All ${filterOptions[key].label}s` && (
+                value !== getDefaultFilterValue(key) && (
                   <span
                     key={key}
                     className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
@@ -448,10 +451,7 @@ const Enterprenuers = () => {
                     {translateFilterValue(value)}
                     <button
                       onClick={() =>
-                        handleFilterChange(
-                          key,
-                          `All ${filterOptions[key].label}s`,
-                        )
+                        handleFilterChange(key, getDefaultFilterValue(key))
                       }
                       className="hover:text-primary-dark"
                     >

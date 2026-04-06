@@ -12,7 +12,7 @@ const BusinessDomainScores = dynamic(
     loading: () => (
       <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
     ),
-  }
+  },
 );
 
 const PerformanceDistribution = dynamic(
@@ -22,7 +22,7 @@ const PerformanceDistribution = dynamic(
     loading: () => (
       <div className="animate-pulse bg-gray-200 h-64 rounded"></div>
     ),
-  }
+  },
 );
 
 import { UserContext } from "@/layouts/DashboardLayout";
@@ -78,20 +78,20 @@ const Page = () => {
         domain === "commercial"
           ? t("dashboard.commercial", "Commercial")
           : domain === "financial"
-          ? t("dashboard.financial", "Financial")
-          : domain === "operations"
-          ? t("dashboard.operations", "Operations")
-          : domain === "legal"
-          ? t("dashboard.legal", "Legal")
-          : domain;
+            ? t("dashboard.financial", "Financial")
+            : domain === "operations"
+              ? t("dashboard.operations", "Operations")
+              : domain === "legal"
+                ? t("dashboard.legal", "Legal")
+                : domain;
       const statusLabel =
         data.status === "Ready"
           ? t("report.ready", "Ready")
           : data.status === "Not Ready"
-          ? t("report.notReady", "Not Ready")
-          : data.status === "On review"
-          ? t("report.onReview", "On review")
-          : data.status;
+            ? t("report.notReady", "Not Ready")
+            : data.status === "On review"
+              ? t("report.onReview", "On review")
+              : data.status;
       return (
         <tr key={index}>
           <td className="border-b border-[#eee] py-5 px-4 dark:border-strokedark">
@@ -261,8 +261,8 @@ const Page = () => {
               ? scoreData.general_status === "Ready"
                 ? t("report.ready", "Ready")
                 : scoreData.general_status === "On review"
-                ? t("report.onReview", "On review")
-                : t("report.notReady", "Not Ready")
+                  ? t("report.onReview", "On review")
+                  : t("report.notReady", "Not Ready")
               : t("report.notReady", "Not Ready")}
           </span>
         </h5>

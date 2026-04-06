@@ -306,7 +306,7 @@ Anza account</div> */}
                 {/* <div className=" text-2xl text-black pt-8 pb-4">Personal details</div> */}
                 <div className="flex justify-between w-full mb-8 items-center">
                   <h1 className="text-xl">{steps[selectedIndex]}</h1>
-                  <div className="py-2 px-3 rounded-full bg-primary bg-opacity-10">
+                  <div className="py-2 px-3 rounded-full bg-primary/10">
                     {t("common.step", "Step {{n}}", { n: selectedIndex + 1 })}
                   </div>
                 </div>
@@ -674,7 +674,7 @@ bg-primary"
                   <button
                     type="submit"
                     className="w-48 cursor-pointer rounded-lg border flex justify-center
-border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
+border-primary bg-primary py-3 px-3 text-white transition hover:bg-primary/90"
                   >
                     {loading ? (
                       <Spinner />
@@ -714,7 +714,7 @@ bg-primary"
                   <button
                     type="submit"
                     className="w-48 cursor-pointer rounded-lg border flex justify-center
-border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
+border-primary bg-primary py-3 px-3 text-white transition hover:bg-primary/90"
                   >
                     {loading ? (
                       <Spinner />
@@ -728,7 +728,7 @@ border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
                     <button
                       type="submit"
                       className="w-48 cursor-pointer rounded-lg border flex justify-center
-border-primary bg-primary py-3 px-3 text-white transition hover:bg-opacity-90"
+border-primary bg-primary py-3 px-3 text-white transition hover:bg-primary/90"
                     >
                       {loading ? (
                         <Spinner />

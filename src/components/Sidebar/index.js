@@ -381,7 +381,8 @@ const Sidebar = ({
       programsItems.push({
         name: t("navigation.programsApplications", "Programs Applications"),
         icon: <MdBusinessCenter className="text-xl" />,
-        path: "/dashboard/programsApplications",
+        path: "https://programs.anzaconnect.co.tz/login",
+        external: true,
       });
     }
 
@@ -394,10 +395,6 @@ const Sidebar = ({
           {
             name: t("navigation.introduction", "Introduction"),
             path: "/dashboard/crat-system/introduction",
-          },
-          {
-            name: t("navigation.readiness", "Readiness"),
-            path: "/dashboard/crat-system/scoreReadiness",
           },
           {
             name: t("navigation.commercialDomain", "Market Domain"),
@@ -713,15 +710,26 @@ const Sidebar = ({
                     </SidebarLinkGroup>
                   ) : (
                     <li key={item.name}>
-                      <Link
-                        href={item.path}
-                        className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-300 duration-300 ease-in-out hover:bg-slate-700 ${
-                          pathname === item.path && "bg-slate-700/50 text-white"
-                        }`}
-                      >
-                        {item.icon}
-                        {isVisuallyExpanded && <span>{item.name}</span>}
-                      </Link>
+                      {item.external ? (
+                        <a
+                          href={item.path}
+                          className="group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-300 duration-300 ease-in-out hover:bg-slate-700"
+                        >
+                          {item.icon}
+                          {isVisuallyExpanded && <span>{item.name}</span>}
+                        </a>
+                      ) : (
+                        <Link
+                          href={item.path}
+                          className={`group relative flex items-center gap-2.5 rounded-lg py-2 px-4 font-medium text-slate-300 duration-300 ease-in-out hover:bg-slate-700 ${
+                            pathname === item.path &&
+                            "bg-slate-700/50 text-white"
+                          }`}
+                        >
+                          {item.icon}
+                          {isVisuallyExpanded && <span>{item.name}</span>}
+                        </Link>
+                      )}
                     </li>
                   ),
                 )}

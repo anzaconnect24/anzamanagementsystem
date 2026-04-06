@@ -144,7 +144,7 @@ const Page = ({ params }) => {
                     <div className="mb-5">
                       <button
                         type="submit"
-                        className="w-full cursor-pointer rounded-lg border flex justify-center border-primary bg-primary p-4 text-white transition hover:bg-opacity-90"
+                        className="w-full cursor-pointer rounded-lg border flex justify-center border-primary bg-primary p-4 text-white transition hover:bg-primary/90"
                       >
                         {isLoading ? <Spinner /> : "Save password"}
                       </button>

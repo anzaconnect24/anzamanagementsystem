@@ -62,7 +62,7 @@ const LegalDomainPage = () => {
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               const fetchedItem = responseData.find(
-                (dataItem) => dataItem.subDomain === item.subDomain
+                (dataItem) => dataItem.subDomain === item.subDomain,
               );
               return fetchedItem
                 ? {
@@ -102,7 +102,7 @@ const LegalDomainPage = () => {
         Object.keys(updatedData).forEach((section) => {
           updatedData[section] = updatedData[section].map((item) => {
             const fetchedItem = responseData.find(
-              (dataItem) => dataItem.subDomain === item.subDomain
+              (dataItem) => dataItem.subDomain === item.subDomain,
             );
             return fetchedItem
               ? {
@@ -145,8 +145,8 @@ const LegalDomainPage = () => {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
-          "Please upload an attachment first."
-        )
+          "Please upload an attachment first.",
+        ),
       );
       setModalOpen(true);
       return;
@@ -160,8 +160,8 @@ const LegalDomainPage = () => {
         toast(
           t(
             "crat.uuidMissingDeferredSave",
-            "Record missing id; will save shortly"
-          )
+            "Record missing id; will save shortly",
+          ),
         );
         return;
       }
@@ -169,12 +169,12 @@ const LegalDomainPage = () => {
       setOriginalData((prev) => {
         const clone = { ...prev };
         clone[section] = clone[section].map((it, i) =>
-          i === index ? { ...it, rating: newRating, score } : it
+          i === index ? { ...it, rating: newRating, score } : it,
         );
         return clone;
       });
       toast.success(
-        t("crat.ratingUpdated", "Rating & score updated successfully")
+        t("crat.ratingUpdated", "Rating & score updated successfully"),
       );
     } catch (e) {
       toast.error(t("crat.updateFailed", "Failed to update rating"));
@@ -194,8 +194,8 @@ const LegalDomainPage = () => {
       toast.warning(
         t(
           "crat.noPermissionCustomer",
-          "Only entrepreneurs can edit customer comments"
-        )
+          "Only entrepreneurs can edit customer comments",
+        ),
       );
       return;
     }
@@ -210,7 +210,7 @@ const LegalDomainPage = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_legal/${item.uuid}`
+        `${server_url}/crat_legal/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -218,7 +218,7 @@ const LegalDomainPage = () => {
         {
           customerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -230,7 +230,7 @@ const LegalDomainPage = () => {
         setData(newData);
 
         toast.success(
-          t("crat.commentSavedAutomatically", "Comment saved automatically")
+          t("crat.commentSavedAutomatically", "Comment saved automatically"),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
@@ -253,7 +253,10 @@ const LegalDomainPage = () => {
     if (userDetails?.role !== "Admin") {
       console.log("🔧 DEBUG: Permission denied - user is not Admin");
       toast.warning(
-        t("crat.noPermissionReviewer", "Only admins can edit reviewer comments")
+        t(
+          "crat.noPermissionReviewer",
+          "Only admins can edit reviewer comments",
+        ),
       );
       return;
     }
@@ -268,7 +271,7 @@ const LegalDomainPage = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_legal/${item.uuid}`
+        `${server_url}/crat_legal/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -276,7 +279,7 @@ const LegalDomainPage = () => {
         {
           reviewerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -288,18 +291,21 @@ const LegalDomainPage = () => {
         setData(newData);
 
         toast.success(
-          t("crat.reviewerCommentSaved", "Reviewer comment saved automatically")
+          t(
+            "crat.reviewerCommentSaved",
+            "Reviewer comment saved automatically",
+          ),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
         toast.error(
-          t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+          t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
         );
       }
     } catch (error) {
       console.log("🔧 DEBUG: Exception occurred:", error);
       toast.error(
-        t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+        t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
       );
       console.error("Error saving reviewer comment:", error);
     }
@@ -311,7 +317,7 @@ const LegalDomainPage = () => {
       setOriginalData(data);
       setChangesMade(false);
       toast.success(
-        t("crat.changesSubmittedSuccess", "Changes successfully submitted")
+        t("crat.changesSubmittedSuccess", "Changes successfully submitted"),
       );
     } catch (error) {
       toast.error(t("crat.changesSubmittedError", "Error submitting changes"));
@@ -348,7 +354,7 @@ const LegalDomainPage = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -379,7 +385,7 @@ const LegalDomainPage = () => {
     // Open the delete modal with the confirmation message
     deleteModalOpen(true);
     deleteModalMessage(
-      t("crat.confirmDelete", "Are you sure you want to delete?")
+      t("crat.confirmDelete", "Are you sure you want to delete?"),
     );
     setDeleteCache([domain, id, attachment, section, index, uuid]);
   };
@@ -404,7 +410,7 @@ const LegalDomainPage = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -451,7 +457,7 @@ const LegalDomainPage = () => {
     setData({ ...data, [domain]: newData });
     setChangesMade(true); // auto-save debounce
     toast.success(
-      t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+      t("crat.commentUpdatedSuccessfully", "Comment updated successfully"),
     );
   };
 
@@ -554,7 +560,7 @@ const LegalDomainPage = () => {
                 item.attachment,
                 domain,
                 index,
-                item.uuid
+                item.uuid,
               )
             }
             onView={() => handleViewFile(item.attachment)}
@@ -609,7 +615,7 @@ const LegalDomainPage = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {userDetails.publishStatus === "On review" ? (
+        {["On review", "Reviewed"].includes(userDetails.publishStatus) ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               {t("report.onReview", "On review")}
@@ -621,36 +627,36 @@ const LegalDomainPage = () => {
               "corporateDocumentsCompliance",
               t(
                 "crat.legal.sections.corporateDocsCompliance",
-                "1. Corporate Documents & Compliance"
-              )
+                "1. Corporate Documents & Compliance",
+              ),
             )}
             {renderSection(
               "contractsAgreements",
               t(
                 "crat.legal.sections.contractsAgreements",
-                "2. Contracts & Agreements"
-              )
+                "2. Contracts & Agreements",
+              ),
             )}
             {renderSection(
               "intellectualProperty",
               t(
                 "crat.legal.sections.intellectualProperty",
-                "3. Intellectual Property"
-              )
+                "3. Intellectual Property",
+              ),
             )}
             {renderSection(
               "entrepreneurFamily",
               t(
                 "crat.legal.sections.entrepreneurFamily",
-                "4. Entrepreneur & Family"
-              )
+                "4. Entrepreneur & Family",
+              ),
             )}
             {renderSection(
               "corporateGovernance",
               t(
                 "crat.legal.sections.corporateGovernance",
-                "5. Corporate Governance"
-              )
+                "5. Corporate Governance",
+              ),
             )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">

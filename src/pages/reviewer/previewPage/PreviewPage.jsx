@@ -551,7 +551,7 @@ const Page = () => {
 
 
             {modalOpen && currentItem && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black/50">
                     <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96">
                         <h3 className="text-lg font-bold mb-4 text-gray-700 dark:text-gray-300">Comment & Attachment</h3>
                         <p className="text-sm text-gray-700 dark:text-gray-400 mb-4">
@@ -583,7 +583,7 @@ const Page = () => {
             )}
 
 {publishModalOpen && (
-                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-black/50">
                 <div className="bg-white dark:bg-gray-800 rounded-lg p-6 w-96">
                     <h3 className="text-lg font-bold mb-4 text-gray-700 dark:text-gray-300">
                         Alert!

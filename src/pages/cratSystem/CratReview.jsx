@@ -269,11 +269,10 @@ const CratReviewPage = () => {
                   "Ready to get your CRAT assessment reviewed by our experts? Submit for professional review and feedback."
                 )}
               </p>
-
               <button
                 onClick={handleSubmitReview}
                 disabled={submitting}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>
@@ -421,7 +420,7 @@ const CratReviewPage = () => {
                       <button
                         onClick={handleResubmitReview}
                         disabled={submitting}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {submitting ? (
                           <>

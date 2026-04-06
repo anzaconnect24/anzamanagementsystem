@@ -15,18 +15,45 @@ import {
   MdPending,
   MdAssignment,
   MdRateReview,
+  MdRefresh,
 } from "react-icons/md";
 
-// Resubmit handler for rejected reviews
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 const CratReviewPage = () => {
   const { t } = useTranslation();
-  const { userDetails } = useContext(UserContext);
+  const { userDetails, setUserDetails } = useContext(UserContext);
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [cratReview, setCratReview] = useState(null);
-  const [hasReview, setHasReview] = useState(false);
+
+  // All reviews for this entrepreneur (sorted newest-first)
+  const [allReviews, setAllReviews] = useState([]);
+
+  // Latest review convenience alias
+  const latestReview = allReviews[0] || null;
+
+  // True if ANY review is still active (in-progress)
+  const hasActiveReview = allReviews.some((r) =>
+    ["pending", "assigned", "in_review"].includes(r.status),
+  );
+
+  const isFirstSubmission = allReviews.length === 0;
+
+  const isLatestTerminal =
+    latestReview &&
+    ["reviewed", "accepted", "rejected"].includes(latestReview.status);
+
+  const terminalDate = latestReview?.finalized_at || latestReview?.reviewed_at;
+  const elapsed = terminalDate
+    ? Date.now() - new Date(terminalDate).getTime()
+    : null;
+  const canStartNewVersion =
+    isLatestTerminal && elapsed !== null && elapsed >= THIRTY_DAYS_MS;
+  const daysUntilNewVersion =
+    isLatestTerminal && elapsed !== null && elapsed < THIRTY_DAYS_MS
+      ? Math.ceil((THIRTY_DAYS_MS - elapsed) / (24 * 60 * 60 * 1000))
+      : 0;
 
   useEffect(() => {
     if (userDetails?.role !== "Enterprenuer") {
@@ -36,30 +63,73 @@ const CratReviewPage = () => {
     fetchCratReviews();
   }, [userDetails?.role, userDetails?.id]);
 
+  // Start a new version cycle (after 30-day cooldown)
+  const handleStartNewVersion = async () => {
+    if (!canStartNewVersion) return;
+    try {
+      setSubmitting(true);
+      const response = await axios.post(
+        `${server_url}/crat_reviews`,
+        { entrepreneur_id: userDetails.id },
+        { headers },
+      );
+      if (response.data.status) {
+        toast.success(
+          t(
+            "cratReviewPage.toasts.newVersionStarted",
+            "New version started! Your CRAT forms are now unlocked for editing.",
+          ),
+        );
+        // Reset publishStatus locally so the user sees unlocked forms/report
+        setUserDetails((prev) => ({ ...prev, publishStatus: "Draft" }));
+        fetchCratReviews();
+      } else {
+        toast.error(
+          response.data.message ||
+            t(
+              "cratReviewPage.errors.failedToStartNewVersion",
+              "Failed to start new version",
+            ),
+        );
+      }
+    } catch (error) {
+      console.error("Error starting new version:", error);
+      toast.error(
+        error.response?.data?.message ||
+          t(
+            "cratReviewPage.errors.newVersionError",
+            "Error starting new version",
+          ),
+      );
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleResubmitReview = async () => {
     try {
       setSubmitting(true);
-      if (!cratReview?.uuid) {
+      if (!latestReview?.uuid) {
         toast.error(
           t(
             "cratReviewPage.errors.noReviewToResubmit",
-            "No CRAT review found to resubmit."
-          )
+            "No CRAT review found to resubmit.",
+          ),
         );
         setSubmitting(false);
         return;
       }
       const response = await axios.put(
-        `${server_url}/crat_reviews/${cratReview.uuid}`,
+        `${server_url}/crat_reviews/${latestReview.uuid}`,
         { status: "pending" },
-        { headers }
+        { headers },
       );
       if (response.data.status) {
         toast.success(
           t(
             "cratReviewPage.toasts.resubmitted",
-            "CRAT review resubmitted successfully! You will be notified once it's assigned for review."
-          )
+            "CRAT review resubmitted successfully! You will be notified once it's assigned for review.",
+          ),
         );
         fetchCratReviews();
       } else {
@@ -67,8 +137,8 @@ const CratReviewPage = () => {
           response.data.message ||
             t(
               "cratReviewPage.errors.failedToResubmit",
-              "Failed to resubmit CRAT review"
-            )
+              "Failed to resubmit CRAT review",
+            ),
         );
       }
     } catch (error) {
@@ -79,8 +149,8 @@ const CratReviewPage = () => {
         toast.error(
           t(
             "cratReviewPage.errors.resubmitError",
-            "Error resubmitting CRAT review"
-          )
+            "Error resubmitting CRAT review",
+          ),
         );
       }
     } finally {
@@ -93,36 +163,33 @@ const CratReviewPage = () => {
       setLoading(true);
       const response = await axios.get(
         `${server_url}/crat_reviews/entrepreneur/${userDetails.id}`,
-        { headers }
+        { headers },
       );
 
       if (response.data.status) {
         const reviews = response.data.body.data || [];
-        if (reviews.length > 0) {
-          setCratReview(reviews[0]); // Only one review per entrepreneur
-          setHasReview(true);
-        } else {
-          setCratReview(null);
-          setHasReview(false);
-        }
+        setAllReviews(reviews);
       }
     } catch (error) {
       console.error("Error fetching CRAT reviews:", error);
       toast.error(
-        t("cratReviewPage.errors.failedToFetch", "Failed to fetch CRAT reviews")
+        t(
+          "cratReviewPage.errors.failedToFetch",
+          "Failed to fetch CRAT reviews",
+        ),
       );
     } finally {
       setLoading(false);
     }
   }, [userDetails.id, t]);
   const handleSubmitReview = async () => {
-    // Check if there's already a review
-    if (hasReview) {
+    // Block if there's already an active review in progress
+    if (hasActiveReview) {
       toast.error(
         t(
-          "cratReviewPage.errors.alreadyHasReview",
-          "You already have a CRAT review. Only one review per entrepreneur is allowed."
-        )
+          "cratReviewPage.errors.activeReviewExists",
+          "You already have an active review in progress. Please wait for it to complete.",
+        ),
       );
       return;
     }
@@ -134,15 +201,15 @@ const CratReviewPage = () => {
         {
           entrepreneur_id: userDetails.id,
         },
-        { headers }
+        { headers },
       );
 
       if (response.data.status) {
         toast.success(
           t(
             "cratReviewPage.toasts.submitted",
-            "CRAT review submitted successfully! You will be notified once it's assigned for review."
-          )
+            "CRAT review submitted successfully! You will be notified once it's assigned for review.",
+          ),
         );
         fetchCratReviews();
       } else {
@@ -150,8 +217,8 @@ const CratReviewPage = () => {
           response.data.message ||
             t(
               "cratReviewPage.errors.failedToSubmit",
-              "Failed to submit CRAT review"
-            )
+              "Failed to submit CRAT review",
+            ),
         );
       }
     } catch (error) {
@@ -160,7 +227,10 @@ const CratReviewPage = () => {
         toast.error(error.response.data.message);
       } else {
         toast.error(
-          t("cratReviewPage.errors.submitError", "Error submitting CRAT review")
+          t(
+            "cratReviewPage.errors.submitError",
+            "Error submitting CRAT review",
+          ),
         );
       }
     } finally {
@@ -192,19 +262,19 @@ const CratReviewPage = () => {
       case "pending":
         return t(
           "cratReviewPage.status.pendingAssignment",
-          "Pending Assignment"
+          "Pending Assignment",
         );
       case "assigned":
         return t(
           "cratReviewPage.status.assignedToReviewer",
-          "Assigned to Reviewer"
+          "Assigned to Reviewer",
         );
       case "in_review":
         return t("cratReviewPage.status.underReview", "Under Review");
       case "reviewed":
         return t(
           "cratReviewPage.status.reviewCompleted",
-          "Review Completed - Awaiting Final Decision"
+          "Review Completed - Awaiting Final Decision",
         );
       case "accepted":
         return t("cratReviewPage.status.accepted", "Accepted");
@@ -249,32 +319,31 @@ const CratReviewPage = () => {
           <p className="mt-2 text-bodydark2">
             {t(
               "cratReviewPage.subtitle",
-              "Submit your CRAT assessment for professional review and get expert feedback."
+              "Submit your CRAT assessment for professional review and get expert feedback.",
             )}
           </p>
         </div>
 
         <div className="p-6">
-          {/* Submit New Review Section */}
-          {!hasReview && (
+          {/* ── First-time submit section (no reviews at all) ── */}
+          {isFirstSubmission && (
             <div className="mb-8 p-6 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
               <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
                 {t(
                   "cratReviewPage.submitSection.title",
-                  "Submit CRAT for Review"
+                  "Submit CRAT for Review",
                 )}
               </h5>
               <p className="text-bodydark2 mb-4">
                 {t(
                   "cratReviewPage.submitSection.description",
-                  "Ready to get your CRAT assessment reviewed by our experts? Submit for professional review and feedback."
+                  "Ready to get your CRAT assessment reviewed by our experts? Submit for professional review and feedback.",
                 )}
               </p>
-
               <button
                 onClick={handleSubmitReview}
                 disabled={submitting}
-                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {submitting ? (
                   <>
@@ -286,7 +355,7 @@ const CratReviewPage = () => {
                     <MdRateReview />
                     {t(
                       "cratReviewPage.buttons.submitForReview",
-                      "Submit for Review"
+                      "Submit for Review",
                     )}
                   </>
                 )}
@@ -294,28 +363,85 @@ const CratReviewPage = () => {
             </div>
           )}
 
-          {/* Existing Review Alert */}
-          {hasReview && (
-            <div className="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
-              <div className="flex items-center gap-2">
-                <MdPending className="text-yellow-600 text-xl" />
-                <p className="text-yellow-800 dark:text-yellow-200 font-medium">
-                  {t(
-                    "cratReviewPage.errors.alreadyHasReview",
-                    "You already have a CRAT review. Only one review per entrepreneur is allowed."
+          {/* ── Start New Version section (terminal review + 30-day cooldown) ── */}
+          {!isFirstSubmission && !hasActiveReview && isLatestTerminal && (
+            <div
+              className={`mb-6 p-5 rounded-lg border ${
+                canStartNewVersion
+                  ? "bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800"
+                  : "bg-gray-50 border-gray-200 dark:bg-gray-800 dark:border-gray-700"
+              }`}
+            >
+              <div className="flex items-start gap-3">
+                <MdRefresh
+                  className={`text-xl mt-0.5 flex-shrink-0 ${
+                    canStartNewVersion ? "text-blue-600" : "text-gray-400"
+                  }`}
+                />
+                <div className="flex-1">
+                  <h5 className="font-semibold text-black dark:text-white mb-1">
+                    {t(
+                      "cratReviewPage.newVersion.title",
+                      "Start New Version Cycle",
+                    )}
+                  </h5>
+                  {canStartNewVersion ? (
+                    <>
+                      <p className="text-bodydark2 mb-3 text-sm">
+                        {t(
+                          "cratReviewPage.newVersion.description",
+                          "Your previous review cycle is complete. You can now start a new version to update your CRAT and submit for a fresh review.",
+                        )}
+                      </p>
+                      <button
+                        onClick={handleStartNewVersion}
+                        disabled={submitting}
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {submitting ? (
+                          <>
+                            <Spinner />
+                            {t(
+                              "cratReviewPage.buttons.starting",
+                              "Starting...",
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <MdRefresh />
+                            {t(
+                              "cratReviewPage.buttons.startNewVersion",
+                              `Start Version ${allReviews.length + 1}`,
+                            )}
+                          </>
+                        )}
+                      </button>
+                    </>
+                  ) : (
+                    <p className="text-bodydark2 text-sm">
+                      {t(
+                        "cratReviewPage.newVersion.cooldown",
+                        `A new version cycle will be available in ${daysUntilNewVersion} day(s). The 30-day cooldown period applies between versions.`,
+                      )}
+                    </p>
                   )}
-                </p>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Review History */}
+          {/* ── Version history ── */}
           <div>
             <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-              {t("cratReviewPage.yourReviewTitle", "Your CRAT Review")}
+              {allReviews.length > 1
+                ? t(
+                    "cratReviewPage.versionHistoryTitle",
+                    "Review Version History",
+                  )
+                : t("cratReviewPage.yourReviewTitle", "Your CRAT Review")}
             </h5>
 
-            {!cratReview ? (
+            {allReviews.length === 0 ? (
               <div className="text-center py-12">
                 <MdRateReview className="mx-auto h-12 w-12 text-gray-400 mb-4" />
                 <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">
@@ -324,159 +450,167 @@ const CratReviewPage = () => {
                 <p className="text-sm text-gray-500 dark:text-gray-400">
                   {t(
                     "cratReviewPage.empty.description",
-                    "Submit your CRAT review to get expert feedback on your business readiness."
+                    "Submit your CRAT review to get expert feedback on your business readiness.",
                   )}
                 </p>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="p-6 border border-stroke dark:border-strokedark rounded-lg">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                      {getStatusIcon(cratReview.status)}
-                      <div>
-                        <h6 className="font-semibold text-black dark:text-white">
-                          {t(
-                            "cratReviewPage.yourReviewTitle",
-                            "Your CRAT Review"
-                          )}
-                        </h6>
-                        <p className="text-sm text-bodydark2">
-                          {t(
-                            "cratReviewPage.labels.submittedOn",
-                            "Submitted on"
-                          )}{" "}
-                          {new Date(
-                            cratReview.submitted_at
-                          ).toLocaleDateString()}
-                        </p>
-                      </div>
-                    </div>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
-                        cratReview.status
-                      )}`}
+                {allReviews.map((review, index) => {
+                  const versionNumber =
+                    review.version || allReviews.length - index;
+                  const isLatest = index === 0;
+                  return (
+                    <div
+                      key={review.uuid}
+                      className={`p-6 border rounded-lg ${
+                        isLatest
+                          ? "border-primary/30 dark:border-primary/40 bg-primary/5 dark:bg-primary/10"
+                          : "border-stroke dark:border-strokedark"
+                      }`}
                     >
-                      {getStatusText(cratReview.status)}
-                    </span>
-                  </div>
+                      {/* Card header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                          {getStatusIcon(review.status)}
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h6 className="font-semibold text-black dark:text-white">
+                                {t("cratReviewPage.versionLabel", "Version")}{" "}
+                                {versionNumber}
+                              </h6>
+                              {isLatest && (
+                                <span className="px-2 py-0.5 bg-primary text-white text-xs rounded-full">
+                                  {t("cratReviewPage.latest", "Latest")}
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-bodydark2">
+                              {t(
+                                "cratReviewPage.labels.submittedOn",
+                                "Submitted on",
+                              )}{" "}
+                              {new Date(
+                                review.submitted_at,
+                              ).toLocaleDateString()}
+                            </p>
+                          </div>
+                        </div>
+                        <span
+                          className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(
+                            review.status,
+                          )}`}
+                        >
+                          {getStatusText(review.status)}
+                        </span>
+                      </div>
 
-                  {/* Reviewer Info */}
-                  {cratReview.reviewer && (
-                    <div className="mb-4">
-                      <h6 className="font-medium text-black dark:text-white mb-2">
-                        {t(
-                          "cratReviewPage.labels.assignedReviewer",
-                          "Assigned Reviewer:"
-                        )}
-                      </h6>
-                      <p className="text-bodydark2 text-sm">
-                        {cratReview.reviewer.name}{" "}
-                      </p>
-                    </div>
-                  )}
+                      {/* Reviewer feedback — reviewer name intentionally hidden from entrepreneur */}
+                      {review.reviewer_comments && (
+                        <div className="mb-4">
+                          <h6 className="font-medium text-black dark:text-white mb-2">
+                            {t(
+                              "cratReviewPage.labels.reviewerFeedback",
+                              "Reviewer Feedback:",
+                            )}
+                          </h6>
+                          <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
+                            <p className="text-bodydark2 text-sm">
+                              {review.reviewer_comments}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
-                  {/* Reviewer Comments */}
-                  {cratReview.reviewer_comments && (
-                    <div className="mb-4">
-                      <h6 className="font-medium text-black dark:text-white mb-2">
-                        {t(
-                          "cratReviewPage.labels.reviewerFeedback",
-                          "Reviewer Feedback:"
-                        )}
-                      </h6>
-                      <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
-                        <p className="text-bodydark2 text-sm">
-                          {cratReview.reviewer_comments}
+                      {/* Admin / final decision */}
+                      {review.admin_comments && (
+                        <div className="mb-4">
+                          <h6 className="font-medium text-black dark:text-white mb-2">
+                            {t(
+                              "cratReviewPage.labels.finalDecision",
+                              "Final Decision:",
+                            )}
+                          </h6>
+                          <div
+                            className={`p-4 rounded-lg ${
+                              review.status === "accepted"
+                                ? "bg-green-50 dark:bg-green-900/20"
+                                : "bg-red-50 dark:bg-red-900/20"
+                            }`}
+                          >
+                            <p className="text-bodydark2 text-sm">
+                              {review.admin_comments}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Resubmit button — only on latest rejected review */}
+                      {isLatest && review.status === "rejected" && (
+                        <div className="mb-4">
+                          <button
+                            onClick={handleResubmitReview}
+                            disabled={submitting}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {submitting ? (
+                              <>
+                                <Spinner />
+                                {t(
+                                  "cratReviewPage.buttons.resubmitting",
+                                  "Resubmitting...",
+                                )}
+                              </>
+                            ) : (
+                              <>
+                                <MdRateReview />
+                                {t(
+                                  "cratReviewPage.buttons.resubmitForReview",
+                                  "Resubmit for Review",
+                                )}
+                              </>
+                            )}
+                          </button>
+                          <p className="text-xs text-gray-500 mt-2">
+                            {t(
+                              "cratReviewPage.hints.addressFeedbackBeforeResubmit",
+                              "Please ensure you have addressed the feedback before resubmitting.",
+                            )}
+                          </p>
+                        </div>
+                      )}
+
+                      {/* Timeline */}
+                      <div className="text-xs text-bodydark2 space-y-1 border-t border-stroke dark:border-strokedark pt-3 mt-3">
+                        <p>
+                          {t("cratReviewPage.timeline.submitted", "Submitted:")}{" "}
+                          {new Date(review.submitted_at).toLocaleString()}
                         </p>
+                        {review.assigned_at && (
+                          <p>
+                            {t("cratReviewPage.timeline.assigned", "Assigned:")}{" "}
+                            {new Date(review.assigned_at).toLocaleString()}
+                          </p>
+                        )}
+                        {review.reviewed_at && (
+                          <p>
+                            {t("cratReviewPage.timeline.reviewed", "Reviewed:")}{" "}
+                            {new Date(review.reviewed_at).toLocaleString()}
+                          </p>
+                        )}
+                        {review.finalized_at && (
+                          <p>
+                            {t(
+                              "cratReviewPage.timeline.finalized",
+                              "Finalized:",
+                            )}{" "}
+                            {new Date(review.finalized_at).toLocaleString()}
+                          </p>
+                        )}
                       </div>
                     </div>
-                  )}
-
-                  {/* Admin Comments */}
-                  {cratReview.admin_comments && (
-                    <div className="mb-4">
-                      <h6 className="font-medium text-black dark:text-white mb-2">
-                        {t(
-                          "cratReviewPage.labels.finalDecision",
-                          "Final Decision:"
-                        )}
-                      </h6>
-                      <div
-                        className={`p-4 rounded-lg ${
-                          cratReview.status === "accepted"
-                            ? "bg-green-50 dark:bg-green-900/20"
-                            : "bg-red-50 dark:bg-red-900/20"
-                        }`}
-                      >
-                        <p className="text-bodydark2 text-sm">
-                          {cratReview.admin_comments}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Resubmit Button for Rejected Review */}
-                  {cratReview.status === "rejected" && (
-                    <div className="mb-4">
-                      <button
-                        onClick={handleResubmitReview}
-                        disabled={submitting}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-primary px-6 py-3 text-center font-medium text-white hover:bg-opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        {submitting ? (
-                          <>
-                            <Spinner />
-                            {t(
-                              "cratReviewPage.buttons.resubmitting",
-                              "Resubmitting..."
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <MdRateReview />
-                            {t(
-                              "cratReviewPage.buttons.resubmitForReview",
-                              "Resubmit for Review"
-                            )}
-                          </>
-                        )}
-                      </button>
-                      <p className="text-xs text-gray-500 mt-2">
-                        {t(
-                          "cratReviewPage.hints.addressFeedbackBeforeResubmit",
-                          "Please ensure you have addressed the feedback before resubmitting."
-                        )}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Timeline */}
-                  <div className="text-xs text-bodydark2 space-y-1">
-                    <p>
-                      {t("cratReviewPage.timeline.submitted", "Submitted:")}{" "}
-                      {new Date(cratReview.submitted_at).toLocaleString()}
-                    </p>
-                    {cratReview.assigned_at && (
-                      <p>
-                        {t("cratReviewPage.timeline.assigned", "Assigned:")}{" "}
-                        {new Date(cratReview.assigned_at).toLocaleString()}
-                      </p>
-                    )}
-                    {cratReview.reviewed_at && (
-                      <p>
-                        {t("cratReviewPage.timeline.reviewed", "Reviewed:")}{" "}
-                        {new Date(cratReview.reviewed_at).toLocaleString()}
-                      </p>
-                    )}
-                    {cratReview.finalized_at && (
-                      <p>
-                        {t("cratReviewPage.timeline.finalized", "Finalized:")}{" "}
-                        {new Date(cratReview.finalized_at).toLocaleString()}
-                      </p>
-                    )}
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             )}
           </div>

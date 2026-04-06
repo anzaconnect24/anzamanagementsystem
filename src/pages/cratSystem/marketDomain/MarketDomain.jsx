@@ -69,7 +69,7 @@ const MarketDomainPage = () => {
             updatedData[section] = updatedData[section].map((item) => {
               // Match by canonical English subDomain key stored in DB
               const fetchedItem = responseData.find(
-                (dataItem) => dataItem.subDomain === item.subDomain
+                (dataItem) => dataItem.subDomain === item.subDomain,
               );
               return fetchedItem
                 ? {
@@ -109,7 +109,7 @@ const MarketDomainPage = () => {
         Object.keys(updatedData).forEach((section) => {
           updatedData[section] = updatedData[section].map((item) => {
             const fetchedItem = responseData.find(
-              (dataItem) => dataItem.subDomain === item.subDomain
+              (dataItem) => dataItem.subDomain === item.subDomain,
             );
             return fetchedItem
               ? {
@@ -144,8 +144,8 @@ const MarketDomainPage = () => {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
-          "Please upload an attachment first."
-        )
+          "Please upload an attachment first.",
+        ),
       );
       setModalOpen(true);
     } else {
@@ -195,7 +195,7 @@ const MarketDomainPage = () => {
       setChangesMade(false);
 
       toast.success(
-        t("crat.changesSubmittedSuccess", "Changes successfully submitted")
+        t("crat.changesSubmittedSuccess", "Changes successfully submitted"),
       );
       console.log("Changes successfully submitted");
     } catch (error) {
@@ -245,7 +245,7 @@ const MarketDomainPage = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -279,7 +279,7 @@ const MarketDomainPage = () => {
     console.log(domain, id, attachment, section, index);
     deleteModalOpen(true);
     deleteModalMessage(
-      t("crat.confirmDelete", "Are you sure you want to delete?")
+      t("crat.confirmDelete", "Are you sure you want to delete?"),
     );
     setDeleteCache([domain, id, attachment, section, index]);
   };
@@ -298,7 +298,7 @@ const MarketDomainPage = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -347,7 +347,7 @@ const MarketDomainPage = () => {
     setData({ ...data, [domain]: newData });
     submitChanges();
     toast.success(
-      t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+      t("crat.commentUpdatedSuccessfully", "Comment updated successfully"),
     );
   };
 
@@ -363,8 +363,8 @@ const MarketDomainPage = () => {
       toast.warning(
         t(
           "crat.noPermissionCustomer",
-          "Only entrepreneurs can edit customer comments"
-        )
+          "Only entrepreneurs can edit customer comments",
+        ),
       );
       return;
     }
@@ -379,7 +379,7 @@ const MarketDomainPage = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_market/${item.uuid}`
+        `${server_url}/crat_market/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -387,7 +387,7 @@ const MarketDomainPage = () => {
         {
           customerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -399,7 +399,7 @@ const MarketDomainPage = () => {
         setData(newData);
 
         toast.success(
-          t("crat.commentSavedAutomatically", "Comment saved automatically")
+          t("crat.commentSavedAutomatically", "Comment saved automatically"),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
@@ -422,7 +422,10 @@ const MarketDomainPage = () => {
     if (userDetails?.role !== "Admin") {
       console.log("🔧 DEBUG: Permission denied - user is not Admin");
       toast.warning(
-        t("crat.noPermissionReviewer", "Only admins can edit reviewer comments")
+        t(
+          "crat.noPermissionReviewer",
+          "Only admins can edit reviewer comments",
+        ),
       );
       return;
     }
@@ -437,7 +440,7 @@ const MarketDomainPage = () => {
     try {
       console.log(
         "🔧 DEBUG: Making PATCH request to:",
-        `${server_url}/crat_market/${item.uuid}`
+        `${server_url}/crat_market/${item.uuid}`,
       );
 
       const response = await axios.patch(
@@ -445,7 +448,7 @@ const MarketDomainPage = () => {
         {
           reviewerComment: comment,
         },
-        { headers }
+        { headers },
       );
 
       console.log("🔧 DEBUG: API Response:", response.data);
@@ -457,18 +460,21 @@ const MarketDomainPage = () => {
         setData(newData);
 
         toast.success(
-          t("crat.reviewerCommentSaved", "Reviewer comment saved automatically")
+          t(
+            "crat.reviewerCommentSaved",
+            "Reviewer comment saved automatically",
+          ),
         );
       } else {
         console.log("🔧 DEBUG: API returned error status:", response.data);
         toast.error(
-          t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+          t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
         );
       }
     } catch (error) {
       console.log("🔧 DEBUG: Exception occurred:", error);
       toast.error(
-        t("crat.errorSavingReviewerComment", "Error saving reviewer comment")
+        t("crat.errorSavingReviewerComment", "Error saving reviewer comment"),
       );
       console.error("Error saving reviewer comment:", error);
     }
@@ -568,7 +574,7 @@ const MarketDomainPage = () => {
                 item.userId,
                 item.attachment,
                 domain,
-                index
+                index,
               )
             }
             onView={() => handleViewFile(item.attachment)}
@@ -623,7 +629,7 @@ const MarketDomainPage = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {userDetails.publishStatus === "On review" ? (
+        {["On review", "Reviewed"].includes(userDetails.publishStatus) ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               {t("report.onReview", "On review")}
@@ -635,27 +641,27 @@ const MarketDomainPage = () => {
               "market",
               t(
                 "crat.market.sections.marketDemandShare",
-                "Market Demand & Share"
-              )
+                "Market Demand & Share",
+              ),
             )}
             {renderSection(
               "salesTraction",
-              t("crat.market.sections.salesTraction", "Sales & Traction")
+              t("crat.market.sections.salesTraction", "Sales & Traction"),
             )}
             {renderSection(
               "product",
               t(
                 "crat.market.sections.productDevelopment",
-                "Product Development"
-              )
+                "Product Development",
+              ),
             )}
             {renderSection(
               "competition",
-              t("crat.market.sections.competition", "Competition")
+              t("crat.market.sections.competition", "Competition"),
             )}
             {renderSection(
               "marketing",
-              t("crat.market.sections.marketing", "Marketing")
+              t("crat.market.sections.marketing", "Marketing"),
             )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">

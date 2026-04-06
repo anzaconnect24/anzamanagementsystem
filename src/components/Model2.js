@@ -16,7 +16,7 @@ const Modal2 = ({
   return (
     <div className="fixed inset-0 flex items-center justify-center z-50">
       {/* Overlay */}
-      <div className="absolute inset-0 bg-black opacity-50" onClick={onClose}></div>
+      <div className="absolute inset-0 bg-black/50" onClick={onClose}></div>
       
       {/* Modal */}
       <div
@@ -29,14 +29,14 @@ const Modal2 = ({
           {/* Close Button */}
           <button
             onClick={onClose}
-            className={`px-6 py-2 bg-${closeButtonColor} text-black rounded hover:bg-opacity-90`}
+            className={`px-6 py-2 bg-${closeButtonColor} text-black rounded hover:brightness-95`}
           >
             {closeButtonText}
           </button>
           {/* Confirm Button */}
           <button
             onClick={onDelete}
-            className={`px-4 py-2 bg-${deleteButtonColor} text-white rounded hover:bg-opacity-90`}
+            className={`px-4 py-2 bg-${deleteButtonColor} text-white rounded hover:brightness-95`}
           >
             {deleteButtonText}
           </button>

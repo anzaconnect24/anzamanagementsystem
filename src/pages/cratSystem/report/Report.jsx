@@ -571,10 +571,85 @@ const Report = () => {
   const [loading, setLoading] = useState(true);
   const [searchParams] = useSearchParams();
   const user_uuid = searchParams.get("user_uuid");
+  const [cratReview, setCratReview] = useState(null); // State to hold CRAT review data
+  const [entrepreneurDetails, setEntrepreneurDetails] = useState(null); // State to hold entrepreneur details when viewing someone else's report
+
+  // Helper to check if the CRAT review is completed (reviewed or accepted)
+  const isReviewCompleted =
+    cratReview?.status === "reviewed" || cratReview?.status === "accepted";
+  const isReviewPending =
+    cratReview?.status === "pending" ||
+    cratReview?.status === "assigned" ||
+    cratReview?.status === "in_review";
 
   useEffect(() => {
     fetchData();
-  }, []);
+    // Commenting out the slow API call - we extract user info from report data instead
+    // if (user_uuid && user_uuid !== userDetails?.uuid) {
+    //   fetchEntrepreneurDetails();
+    // }
+    if (userDetails?.id && userDetails?.role === "Enterprenuer") {
+      fetchCratReview();
+    }
+  }, [userDetails?.id, user_uuid]);
+
+  // Fetch entrepreneur details when admin/staff views someone else's report
+  const fetchEntrepreneurDetails = async () => {
+    try {
+      console.log("🔍 Fetching entrepreneur details for user_uuid:", user_uuid);
+      console.log("🔍 Server URL:", server_url);
+      console.log("🔍 Full URL:", `${server_url}/user/${user_uuid}`);
+      console.log("🔍 Headers:", headers);
+      console.log("🔍 Authorization:", headers?.Authorization);
+
+      // Fetch user details (now includes Business model from backend)
+      const userResponse = await axios.get(`${server_url}/user/${user_uuid}`, {
+        headers,
+        timeout: 10000, // 10 second timeout
+      });
+      console.log("📡 User API response:", userResponse.data);
+
+      if (userResponse.data.status) {
+        const userData = userResponse.data.body;
+        console.log("👤 User data fetched:", {
+          name: userData.name,
+          hasBusiness: !!userData.Business,
+          businessName: userData.Business?.name,
+        });
+
+        setEntrepreneurDetails(userData);
+      } else {
+        console.log("⚠️ API returned status false:", userResponse.data);
+      }
+    } catch (error) {
+      console.error("❌ Error fetching entrepreneur details:", error);
+      console.error("❌ Error message:", error.message);
+      console.error("❌ Error code:", error.code);
+      console.error("❌ Error response:", error.response?.data);
+      console.error("❌ Error status:", error.response?.status);
+    }
+  };
+
+  // Fetch CRAT review status
+  const fetchCratReview = async () => {
+    try {
+      const response = await axios.get(
+        `${server_url}/crat_reviews/entrepreneur/${userDetails.id}`,
+        { headers },
+      );
+      if (response.data.status) {
+        const reviews = response.data.body.data || [];
+        if (reviews.length > 0) {
+          setCratReview(reviews[0]); // Only one review per entrepreneur
+        } else {
+          setCratReview(null);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching CRAT review:", error);
+      setCratReview(null);
+    }
+  };
 
   const fetchData = async () => {
     try {
@@ -744,19 +819,18 @@ const Report = () => {
       await publishReport(
         userDetails.id,
         userDetails.versionCount,
-        userDetails.publishStatus,
+        cratReview?.status || "pending",
       );
-
-      setUserDetails((prevDetails) => ({
-        ...prevDetails, // Copy existing properties
-        publishStatus: t("report.onReview", "On review"), // Update the publishStatus property
-      }));
 
       publishModalOpen(false);
       toast.success(
         t("report.publishedSuccessfully", "Published Successfully"),
       );
       console.log("Changes successfully submitted");
+      // Refresh CRAT review status after publishing
+      if (userDetails?.id && userDetails?.role === "Enterprenuer") {
+        fetchCratReview();
+      }
     } catch (error) {
       // Handle errors
       toast.error(t("report.errorPublishingReport", "Error publishing report"));
@@ -783,10 +857,47 @@ const Report = () => {
       t("report.generatingPdf", "Generating AI report — please wait..."),
     );
     try {
-      await generateCapitalReadinessPDF(data, scoreData, userDetails, (msg) => {
-        setPdfStatus(msg);
-        toast.loading(msg, { id: toastId });
-      });
+      // Use entrepreneur details if viewing someone else's report, otherwise use own details
+      const targetUserDetails = entrepreneurDetails || userDetails;
+      console.log("📄 Generating PDF with details:", targetUserDetails);
+      console.log("📄 Business data:", targetUserDetails?.Business);
+
+      // Structure the user context properly for PDF generation (matching BusinessDetailsWithUuid format)
+      const pdfUserContext = {
+        ...targetUserDetails,
+        Business: {
+          businessName:
+            targetUserDetails?.Business?.name ||
+            targetUserDetails?.Business?.businessName,
+          name:
+            targetUserDetails?.Business?.name ||
+            targetUserDetails?.Business?.businessName,
+          sector:
+            targetUserDetails?.Business?.sector ||
+            targetUserDetails?.Business?.BusinessSector?.name,
+          businessSector:
+            targetUserDetails?.Business?.sector ||
+            targetUserDetails?.Business?.BusinessSector?.name,
+          location:
+            targetUserDetails?.Business?.location ||
+            targetUserDetails?.Business?.businessLocation,
+          businessLocation:
+            targetUserDetails?.Business?.location ||
+            targetUserDetails?.Business?.businessLocation,
+        },
+      };
+
+      console.log("📄 Structured PDF user context:", pdfUserContext);
+
+      await generateCapitalReadinessPDF(
+        data,
+        scoreData,
+        pdfUserContext,
+        (msg) => {
+          setPdfStatus(msg);
+          toast.loading(msg, { id: toastId });
+        },
+      );
       toast.success(t("report.pdfReady", "Report downloaded successfully!"), {
         id: toastId,
       });
@@ -1069,12 +1180,47 @@ const Report = () => {
     // Show reviewer comment column to Admin and Staff roles
     const showReviewerComment = ["Admin", "Staff"].includes(userDetails?.role);
 
+    if (showReviewerComment) {
+      // Reviewer order: Subdomain - Attachment - Entrepreneur Comment - Score - Reviewer Comment - Report Narrative
+      return (
+        <div className="grid grid-cols-6 border-b border-stroke py-4 px-4 dark:border-strokedark">
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white font-semibold">
+              {tableHeaders[0]}
+            </p>
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white font-semibold">
+              {tableHeaders[5]}
+            </p>
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white font-semibold">
+              {tableHeaders[3]}
+            </p>
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white font-semibold">
+              {tableHeaders[1]}
+            </p>
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white font-semibold">
+              {tableHeaders[4]}
+            </p>
+          </div>
+          <div className="flex items-center px-2">
+            <p className="text-sm text-black dark:text-white font-semibold">
+              {tableHeaders[2]}
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // Non-reviewer order: Subdomain - Score - Report Narrative - Entrepreneur Comment
     return (
-      <div
-        className={`grid ${
-          showReviewerComment ? "grid-cols-6" : "grid-cols-4"
-        } border-b border-stroke py-4 px-4 dark:border-strokedark`}
-      >
+      <div className="grid grid-cols-4 border-b border-stroke py-4 px-4 dark:border-strokedark">
         <div className="flex items-center px-2">
           <p className="text-sm text-black dark:text-white font-semibold">
             {tableHeaders[0]}
@@ -1095,20 +1241,6 @@ const Report = () => {
             {tableHeaders[3]}
           </p>
         </div>
-        {showReviewerComment && (
-          <>
-            <div className="flex items-center px-2">
-              <p className="text-sm text-black dark:text-white font-semibold">
-                {tableHeaders[4]}
-              </p>
-            </div>
-            <div className="flex items-center px-2">
-              <p className="text-sm text-black dark:text-white font-semibold">
-                {tableHeaders[5]}
-              </p>
-            </div>
-          </>
-        )}
       </div>
     );
   };
@@ -1133,53 +1265,16 @@ const Report = () => {
           } border-t border-stroke py-4 px-4 dark:border-strokedark`}
           key={index}
         >
+          {/* Col 1 – Subdomain (both views) */}
           <div className="flex items-center px-2">
             <p className="text-sm text-black dark:text-white">
               {item.subDomain}
             </p>
           </div>
-          <div className="flex items-center px-2">
-            {canEditReviewerComment ? (
-              <ReviewerRatingCell
-                item={item}
-                onSave={handleReviewerRatingChange}
-              />
-            ) : (
-              <p className="text-sm text-black dark:text-white">{item.score}</p>
-            )}
-          </div>
-          <div className="flex items-center px-2">
-            <p className="text-sm text-black dark:text-white">{narrative}</p>
-          </div>
-          <div className="flex items-center px-2">
-            <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md  dark:border-gray-600 min-h-[2rem] flex items-center">
-              {item.customerComment ||
-                t("crat.noEntrepreneurComment", "No entrepreneur comment")}
-            </p>
-          </div>
-          {showReviewerComment && (
+
+          {showReviewerComment ? (
             <>
-              <div className="flex items-center px-2">
-                {canEditReviewerComment ? (
-                  <textarea
-                    defaultValue={item.reviewerComment || ""}
-                    onBlur={(e) =>
-                      handleReviewerCommentBlur(item.uuid, e.target.value, item)
-                    }
-                    placeholder={t(
-                      "crat.enterReviewerComment",
-                      "Enter reviewer comment...",
-                    )}
-                    className="w-full px-2 py-1 text-sm border border-black/20 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-                    rows={2}
-                  />
-                ) : (
-                  <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400  dark:bg-gray-700 rounded-md  min-h-[2rem] flex items-center">
-                    {item.reviewerComment ||
-                      t("crat.noReviewerComment", "No reviewer comment")}
-                  </p>
-                )}
-              </div>
+              {/* Reviewer col 2 – Attachment */}
               <div className="flex items-center px-2">
                 {item.attachment ? (
                   <a
@@ -1195,6 +1290,82 @@ const Report = () => {
                     {t("crat.noAttachment", "No attachment")}
                   </p>
                 )}
+              </div>
+
+              {/* Reviewer col 3 – Entrepreneur Comment */}
+              <div className="flex items-center px-2">
+                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md dark:border-gray-600 min-h-[2rem] flex items-center">
+                  {item.customerComment ||
+                    t("crat.noEntrepreneurComment", "No entrepreneur comment")}
+                </p>
+              </div>
+
+              {/* Reviewer col 4 – Score / Rating dropdown */}
+              <div className="flex items-center px-2">
+                {canEditReviewerComment ? (
+                  <ReviewerRatingCell
+                    item={item}
+                    onSave={handleReviewerRatingChange}
+                  />
+                ) : (
+                  <p className="text-sm text-black dark:text-white">
+                    {item.score}
+                  </p>
+                )}
+              </div>
+
+              {/* Reviewer col 5 – Reviewer Comment */}
+              <div className="flex items-center px-2">
+                {canEditReviewerComment ? (
+                  <textarea
+                    defaultValue={item.reviewerComment || ""}
+                    onBlur={(e) =>
+                      handleReviewerCommentBlur(item.uuid, e.target.value, item)
+                    }
+                    placeholder={t(
+                      "crat.enterReviewerComment",
+                      "Enter reviewer comment...",
+                    )}
+                    className="w-full px-2 py-1 text-sm border border-black/20 rounded-md resize-none bg-white dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                    rows={2}
+                  />
+                ) : (
+                  <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 dark:bg-gray-700 rounded-md min-h-[2rem] flex items-center">
+                    {item.reviewerComment ||
+                      t("crat.noReviewerComment", "No reviewer comment")}
+                  </p>
+                )}
+              </div>
+
+              {/* Reviewer col 6 – Report Narrative */}
+              <div className="flex items-center px-2">
+                <p className="text-sm text-black dark:text-white">
+                  {narrative}
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Non-reviewer col 2 – Score */}
+              <div className="flex items-center px-2">
+                <p className="text-sm text-black dark:text-white">
+                  {item.score}
+                </p>
+              </div>
+
+              {/* Non-reviewer col 3 – Report Narrative */}
+              <div className="flex items-center px-2">
+                <p className="text-sm text-black dark:text-white">
+                  {narrative}
+                </p>
+              </div>
+
+              {/* Non-reviewer col 4 – Entrepreneur Comment */}
+              <div className="flex items-center px-2">
+                <p className="w-full px-2 py-1 text-sm text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-700 rounded-md dark:border-gray-600 min-h-[2rem] flex items-center">
+                  {item.customerComment ||
+                    t("crat.noEntrepreneurComment", "No entrepreneur comment")}
+                </p>
               </div>
             </>
           )}
@@ -1279,6 +1450,24 @@ const Report = () => {
         prevLink={""}
       />
 
+      {/* Business Name Display */}
+      {(entrepreneurDetails?.Business?.name || userDetails?.Business?.name) && (
+        <div className="px-4">
+          <p className="text-lg font-semibold text-gray-700 dark:text-gray-300">
+            {entrepreneurDetails?.Business?.name || userDetails?.Business?.name}
+          </p>
+        </div>
+      )}
+
+      {/* Debug: Show what we have */}
+      {console.log("🏢 Display check:", {
+        hasEntrepreneurDetails: !!entrepreneurDetails,
+        entrepreneurBusiness: entrepreneurDetails?.Business,
+        userBusiness: userDetails?.Business,
+        displayName:
+          entrepreneurDetails?.Business?.name || userDetails?.Business?.name,
+      })}
+
       {/* {userDetails.role} */}
       <div className="bg-white rounded-lg shadow-sm">
         <div className=" border-b border-black/0">
@@ -1289,66 +1478,122 @@ const Report = () => {
               </h2> */}
             </div>
             <div className="flex space-x-3 pt-4 pr-4">
-              {/* AI PDF Download Button — always visible */}
-              <button
-                onClick={handleDownloadReport}
-                disabled={isPdfLoading}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-sm ${
-                  isPdfLoading
-                    ? "bg-blue-400 cursor-not-allowed opacity-80"
-                    : "bg-[#262D89] hover:bg-blue-800 active:scale-95"
-                }`}
-              >
-                {isPdfLoading ? (
-                  <>
-                    <svg
-                      className="animate-spin h-4 w-4 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
+              {/* AI PDF Download Button — visible to Staff/Admin always; to Entrepreneur only after review is completed */}
+              {userDetails?.role !== "Enterprenuer" || isReviewCompleted ? (
+                <button
+                  onClick={handleDownloadReport}
+                  disabled={isPdfLoading}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-white font-medium transition-all duration-200 shadow-sm ${
+                    isPdfLoading
+                      ? "bg-blue-400 cursor-not-allowed opacity-80"
+                      : "bg-[#262D89] hover:bg-blue-800 active:scale-95"
+                  }`}
+                >
+                  {isPdfLoading ? (
+                    <>
+                      <svg
+                        className="animate-spin h-4 w-4 text-white"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        />
+                      </svg>
+                      <span className="text-sm">
+                        {pdfStatus ||
+                          t("report.generatingPdf", "Generating...")}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
                         stroke="currentColor"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8v8H4z"
-                      />
-                    </svg>
-                    <span className="text-sm">
-                      {pdfStatus || t("report.generatingPdf", "Generating...")}
-                    </span>
-                  </>
-                ) : (
-                  <>
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-4 w-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={2}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3M3 7V4a1 1 0 011-1h4l2 2h8a1 1 0 011 1v3"
-                      />
-                    </svg>
-                    <span className="text-sm">
-                      {t("report.downloadAiReport", "Download Report (PDF)")}
-                    </span>
-                  </>
-                )}
-              </button>
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 10v6m0 0l-3-3m3 3l3-3M3 17v3a1 1 0 001 1h16a1 1 0 001-1v-3M3 7V4a1 1 0 011-1h4l2 2h8a1 1 0 011 1v3"
+                        />
+                      </svg>
+                      <span className="text-sm">
+                        {t("report.downloadAiReport", "Download Report (PDF)")}
+                      </span>
+                    </>
+                  )}
+                </button>
+              ) : (
+                /* Entrepreneur — review not yet completed */
+                <div
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium ${
+                    isReviewPending
+                      ? "bg-yellow-100 text-yellow-800 border border-yellow-300"
+                      : "bg-gray-100 text-gray-600 border border-gray-300"
+                  }`}
+                >
+                  {isReviewPending ? (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {t(
+                        "report.reviewInProgress",
+                        "Report under review — PDF available once review is complete",
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-4 w-4"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth={2}
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
+                      {t(
+                        "report.submitForReviewFirst",
+                        "Submit for review to unlock PDF download",
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
 
-              {userDetails.publishStatus === "Draft" ? (
+              {!cratReview || cratReview.status === "rejected" ? (
                 <>
                   {userDetails.reportPdf && (
                     <button
@@ -1379,14 +1624,40 @@ const Report = () => {
                   className="px-4 py-2 bg-gray-400 text-white rounded-lg cursor-not-allowed"
                   disabled
                 >
-                  {userDetails.publishStatus === "On review"
+                  {isReviewPending
                     ? t("report.onReview", "On review")
-                    : userDetails.publishStatus}
+                    : t("report.reviewed", "Reviewed")}
                 </button>
               )}
             </div>
           </div>
         </div>
+
+        {/* Reviewed status banner for entrepreneurs */}
+        {userDetails?.role === "Enterprenuer" && isReviewCompleted && (
+          <div className="mx-4 mt-4 flex items-center gap-3 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 text-sm">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5 flex-shrink-0 text-green-600"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>
+              {t(
+                "report.reviewedScoresFinalised",
+                "Your report has been reviewed. Scores are now finalised. To make changes, start a new version cycle from the Review page.",
+              )}
+            </span>
+          </div>
+        )}
 
         {/* Charts Section */}
         <PerformanceOverview

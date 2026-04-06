@@ -255,7 +255,7 @@ const ViewInvestmentRequest = () => {
       <div className="flex gap-4">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center justify-center rounded-md bg-meta-3 py-3 px-6 text-center font-medium text-white hover:bg-opacity-90"
+          className="inline-flex items-center justify-center rounded-md bg-meta-3 py-3 px-6 text-center font-medium text-white hover:bg-meta-3/90"
         >
           Back
         </button>

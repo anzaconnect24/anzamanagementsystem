@@ -352,7 +352,7 @@ const CratReviewApplicationsPage = () => {
                     {/* Status Badge Overlay */}
                     <div className="absolute top-3 left-3">
                       <span
-                        className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm bg-opacity-90 flex items-center gap-1.5 ${getStatusColor(
+                        className={`px-3 py-1.5 rounded-full text-xs font-semibold shadow-lg backdrop-blur-sm flex items-center gap-1.5 ${getStatusColor(
                           review.status,
                         )}`}
                       >
@@ -400,6 +400,43 @@ const CratReviewApplicationsPage = () => {
                         </span>
                       </div>
                     </div>
+
+                    {/* Assigned Reviewer */}
+                    {review.reviewer && review.status !== "pending" && (
+                      <div className="mb-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                        <div className="flex items-center gap-2">
+                          <svg
+                            className="w-4 h-4 text-blue-600 dark:text-blue-400 flex-shrink-0"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+                            />
+                          </svg>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-medium text-blue-800 dark:text-blue-300 mb-0.5">
+                              {t(
+                                "cratReviews.assignedReviewer",
+                                "Assigned Reviewer",
+                              )}
+                            </p>
+                            <p className="text-sm font-semibold text-blue-900 dark:text-blue-100 truncate">
+                              {review.reviewer.name || "N/A"}
+                            </p>
+                            {review.reviewer.email && (
+                              <p className="text-xs text-blue-700 dark:text-blue-300 truncate mt-0.5">
+                                {review.reviewer.email}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
 
                     {/* Reviewer Comments (visible when reviewed) */}
                     {/* {review.status === "reviewed" && review.reviewer_comments && (
@@ -509,7 +546,7 @@ const CratReviewApplicationsPage = () => {
 
       {/* Assign Reviewer Modal */}
       {showAssignModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-boxdark rounded-xl max-w-md w-full p-6">
             <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
               {t("cratReviews.modals.assignReviewer.title", "Assign Reviewer")}
@@ -555,7 +592,7 @@ const CratReviewApplicationsPage = () => {
               <button
                 onClick={handleAssignReviewer}
                 disabled={assigningReviewer || !selectedReviewer}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
               >
                 {assigningReviewer ? (
                   <>
@@ -586,7 +623,7 @@ const CratReviewApplicationsPage = () => {
 
       {/* Finalize Review Modal */}
       {showFinalizeModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white dark:bg-boxdark rounded-xl max-w-md w-full p-6">
             <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
               {t("cratReviews.modals.finalizeReview.title", "Finalize Review")}
@@ -667,7 +704,7 @@ const CratReviewApplicationsPage = () => {
               <button
                 onClick={handleFinalizeReview}
                 disabled={finalizing || !finalStatus || !adminComments.trim()}
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-opacity-90 disabled:opacity-50"
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 disabled:opacity-50"
               >
                 {finalizing ? (
                   <>

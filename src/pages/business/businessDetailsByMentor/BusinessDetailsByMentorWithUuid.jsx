@@ -157,7 +157,7 @@ const Page = () => {
               <p className="text-gray-600 mb-3">No meeting scheduled yet</p>
               <button
                 onClick={() => setShowMeetingModal(true)}
-                className="px-4 py-2 bg-primary text-white rounded hover:bg-opacity-90"
+                className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
               >
                 Schedule Google Meet
               </button>
@@ -199,7 +199,7 @@ const Page = () => {
 
       {/* Meeting Setup Modal */}
       {showMeetingModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl font-bold">Setup Google Meet</h2>
@@ -267,7 +267,7 @@ const Page = () => {
                 </button>
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-opacity-90 disabled:bg-gray-400"
+                  className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:bg-gray-400"
                   disabled={settingUpMeeting}
                 >
                   {settingUpMeeting ? "Setting up..." : "Schedule Meeting"}

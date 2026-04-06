@@ -51,7 +51,7 @@ const GeneralDomain = () => {
 
           // Create English template for stable database matching
           const englishTemplate = getInitialDataTemplate(
-            (key, fallback) => fallback || key
+            (key, fallback) => fallback || key,
           );
 
           // Create a mapping of English subDomains with their occurrence count
@@ -69,7 +69,7 @@ const GeneralDomain = () => {
 
               // Find all matching items from responseData
               const matchingItems = responseData.filter(
-                (dataItem) => dataItem.subDomain === englishSubDomain
+                (dataItem) => dataItem.subDomain === englishSubDomain,
               );
 
               // Get the specific item based on occurrence count
@@ -88,8 +88,8 @@ const GeneralDomain = () => {
                     fetchedItem.score === 2
                       ? t("crat.general.assessments.ratingYes", "Yes")
                       : fetchedItem.score === 1
-                      ? t("crat.general.assessments.ratingMaybe", "Maybe")
-                      : t("crat.general.assessments.ratingNo", "No"),
+                        ? t("crat.general.assessments.ratingMaybe", "Maybe")
+                        : t("crat.general.assessments.ratingNo", "No"),
                   attachment: fetchedItem.attachment || null,
                   comments: fetchedItem.comments || "",
                   userId: fetchedItem.userId,
@@ -120,8 +120,8 @@ const GeneralDomain = () => {
       rating === t("crat.general.assessments.ratingYes", "Yes")
         ? 2
         : rating === t("crat.general.assessments.ratingMaybe", "Maybe")
-        ? 1
-        : 0;
+          ? 1
+          : 0;
     setData(newData);
     setChangesMade(true);
   };
@@ -179,8 +179,8 @@ const GeneralDomain = () => {
     deleteModalMessage(
       t(
         "confirmations.deleteFile",
-        "Are you sure you want to delete this file?"
-      )
+        "Are you sure you want to delete this file?",
+      ),
     );
     setDeleteCache([subDomain, userId, attachment, domain, index]);
     deleteModalOpen(true);
@@ -256,7 +256,7 @@ const GeneralDomain = () => {
                 item.userId,
                 item.attachment,
                 domain,
-                index
+                index,
               )
             }
             onView={() => handleViewFile(item.attachment)}
@@ -315,12 +315,12 @@ const GeneralDomain = () => {
       </div>
 
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {userDetails.publishStatus === "On review" ? (
+        {["On review", "Reviewed"].includes(userDetails.publishStatus) ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               {t(
                 "crat.onReviewMessage",
-                "Your application is currently under review"
+                "Your application is currently under review",
               )}
             </p>
           </div>
@@ -330,8 +330,8 @@ const GeneralDomain = () => {
               "generalInformation",
               t(
                 "crat.general.sections.generalInformation",
-                "General Information"
-              )
+                "General Information",
+              ),
             )}
 
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">

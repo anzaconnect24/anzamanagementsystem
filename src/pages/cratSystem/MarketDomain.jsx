@@ -58,7 +58,7 @@ const Page = () => {
           Object.keys(updatedData).forEach((section) => {
             updatedData[section] = updatedData[section].map((item) => {
               const fetchedItem = responseData.find(
-                (dataItem) => dataItem.subDomain === item.subDomain
+                (dataItem) => dataItem.subDomain === item.subDomain,
               );
               return fetchedItem
                 ? {
@@ -93,8 +93,8 @@ const Page = () => {
       setModalMessage(
         t(
           "crat.pleaseUploadAttachmentFirst",
-          "Please upload an attachment first."
-        )
+          "Please upload an attachment first.",
+        ),
       );
       setModalOpen(true);
       return; // abort persist
@@ -106,7 +106,7 @@ const Page = () => {
     try {
       if (!current.uuid) {
         toast(
-          t("crat.uuidMissingDeferredSave", "Record missing id; reload page.")
+          t("crat.uuidMissingDeferredSave", "Record missing id; reload page."),
         );
         return;
       }
@@ -118,12 +118,12 @@ const Page = () => {
       setOriginalData((prev) => {
         const clone = { ...prev };
         clone[section] = clone[section].map((it, i) =>
-          i === index ? { ...it, rating: newRating, score } : it
+          i === index ? { ...it, rating: newRating, score } : it,
         );
         return clone;
       });
       toast.success(
-        t("crat.ratingUpdated", "Rating & score updated successfully")
+        t("crat.ratingUpdated", "Rating & score updated successfully"),
       );
     } catch (e) {
       toast.error(t("crat.updateFailed", "Failed to update rating"));
@@ -167,7 +167,7 @@ const Page = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -199,7 +199,7 @@ const Page = () => {
     console.log(domain, id, attachment, section, index);
     deleteModalOpen(true);
     deleteModalMessage(
-      t("crat.confirmDelete", "Are you sure you want to delete?")
+      t("crat.confirmDelete", "Are you sure you want to delete?"),
     );
     setDeleteCache([domain, id, attachment, section, index]);
   };
@@ -218,7 +218,7 @@ const Page = () => {
       Object.keys(updatedData).forEach((section) => {
         updatedData[section] = updatedData[section].map((item) => {
           const fetchedItem = responseData.find(
-            (dataItem) => dataItem.subDomain === item.subDomain
+            (dataItem) => dataItem.subDomain === item.subDomain,
           );
           return fetchedItem
             ? {
@@ -269,20 +269,23 @@ const Page = () => {
           setOriginalData((prev) => {
             const clone = { ...prev };
             clone[domain] = clone[domain].map((it, i) =>
-              i === index ? { ...it, comments: comment } : it
+              i === index ? { ...it, comments: comment } : it,
             );
             return clone;
           });
           toast.success(
-            t("crat.commentUpdatedSuccessfully", "Comment updated successfully")
+            t(
+              "crat.commentUpdatedSuccessfully",
+              "Comment updated successfully",
+            ),
           );
         })
         .catch(() =>
-          toast.error(t("crat.updateFailed", "Failed to update rating"))
+          toast.error(t("crat.updateFailed", "Failed to update rating")),
         );
     } else {
       toast(
-        t("crat.uuidMissingDeferredSave", "Record missing id; reload page.")
+        t("crat.uuidMissingDeferredSave", "Record missing id; reload page."),
       );
     }
   };
@@ -354,7 +357,7 @@ const Page = () => {
                 item.userId,
                 item.attachment,
                 domain,
-                index
+                index,
               )
             }
             onView={() => handleViewFile(item.attachment)}
@@ -408,7 +411,7 @@ const Page = () => {
         </div>
       </div>
       <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        {userDetails.publishStatus === "On review" ? (
+        {["On review", "Reviewed"].includes(userDetails.publishStatus) ? (
           <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-center items-center">
             <p className="text-lg font-medium text-black dark:text-white">
               {t("report.onReview", "On review")}
@@ -420,27 +423,27 @@ const Page = () => {
               "market",
               t(
                 "crat.market.sections.marketDemandShare",
-                "Market Demand & Share"
-              )
+                "Market Demand & Share",
+              ),
             )}
             {renderSection(
               "salesTraction",
-              t("crat.market.sections.salesTraction", "Sales & Traction")
+              t("crat.market.sections.salesTraction", "Sales & Traction"),
             )}
             {renderSection(
               "product",
               t(
                 "crat.market.sections.productDevelopment",
-                "Product Development"
-              )
+                "Product Development",
+              ),
             )}
             {renderSection(
               "competition",
-              t("crat.market.sections.competition", "Competition")
+              t("crat.market.sections.competition", "Competition"),
             )}
             {renderSection(
               "marketing",
-              t("crat.market.sections.marketing", "Marketing")
+              t("crat.market.sections.marketing", "Marketing"),
             )}
             <div className="mt-4 rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-4">
               <div className="py-6 px-4 md:px-6 xl:px-7.5 flex justify-between items-center">
