@@ -1,6 +1,12 @@
 import React, { useContext, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
+import {
+  MdOutlineAssessment,
+  MdOutlinePublic,
+  MdShowChart,
+} from "react-icons/md";
+import { RiFileChartLine, RiPieChartLine } from "react-icons/ri";
 
 import { UserContext } from "@/layouts/DashboardLayout";
 import {
@@ -20,10 +26,18 @@ const RATING_OPTIONS = [
 ];
 
 const DOMAIN_LABELS = {
-  commercial_marketing: "Commercial & Marketing",
+  commercial_marketing: "Commercial & Market",
   financial: "Financial",
   legal_compliance: "Legal & Compliance",
   operations: "Operations",
+};
+
+const SUMMARY_ICON_BY_DOMAIN = {
+  financial: MdShowChart,
+  commercial_marketing: MdOutlinePublic,
+  legal_compliance: RiFileChartLine,
+  operations: MdOutlineAssessment,
+  total: RiPieChartLine,
 };
 
 const DOMAIN_WEIGHTS = {
@@ -241,12 +255,6 @@ const CratSubmissionReviewPage = () => {
     );
   }, [domainSummaries]);
 
-  const totalWeightPercent = useMemo(() => {
-    return summaryCardOrder.reduce((sum, domainKey) => {
-      return sum + (DOMAIN_WEIGHTS[domainKey] || 0);
-    }, 0);
-  }, [summaryCardOrder]);
-
   const totalWeightedPercent = useMemo(() => {
     return summaryCardOrder.reduce((sum, domainKey) => {
       const summary = domainSummaries[domainKey];
@@ -345,23 +353,17 @@ const CratSubmissionReviewPage = () => {
   };
 
   return (
-    <div className="mx-auto max-w-7xl p-4 md:p-6">
+    <div className="w-full p-4 md:p-6">
       <Breadcrumb
         prevLink={""}
         prevPage={"Back"}
         pageName="CRAT Submission Review"
       />
 
-      <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm md:p-7">
+      <div>
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">
-              Submission Assessment Table
-            </h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Same CRAT structure with reviewer fields for rating, score, and
-              reviewer comments.
-            </p>
+            <p className="mt-1 text-sm text-slate-600"></p>
           </div>
 
           <div className="rounded-lg border border-black/10 bg-slate-50 px-3 py-2 text-xs text-slate-700">
@@ -381,36 +383,35 @@ const CratSubmissionReviewPage = () => {
               <div className="mb-4 grid gap-3 md:grid-cols-5">
                 {summaryCardOrder.map((domainKey) => {
                   const summary = domainSummaries[domainKey];
+                  const SummaryIcon =
+                    SUMMARY_ICON_BY_DOMAIN[domainKey] || MdOutlineAssessment;
                   return (
                     <div
                       key={`summary-${domainKey}`}
-                      className="rounded-xl border border-primary bg-primary p-3"
+                      className="rounded-xl border border-black/10 bg-white p-4"
                     >
-                      <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
-                        {(DOMAIN_LABELS[domainKey] || domainKey) + " Weighted"}
+                      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                        <SummaryIcon className="text-lg" />
+                      </div>
+                      <p className="mt-3 text-xs font-semibold text-slate-600">
+                        {DOMAIN_LABELS[domainKey] || domainKey}
                       </p>
-                      <p className="mt-1 text-2xl font-semibold text-white">
+                      <p className="mt-1 text-2xl font-semibold text-slate-900">
                         {summary?.weightedPercent || 0}%
-                      </p>
-                      <p className="mt-1 text-xs text-white">
-                        Weight: {summary?.weight || 0}%
-                      </p>
-                      <p className="text-xs text-white">
-                        Domain score: {summary?.percent || 0}%
                       </p>
                     </div>
                   );
                 })}
 
-                <div className="rounded-xl border border-primary bg-primary p-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-white/80">
+                <div className="rounded-xl border border-black/10 bg-white p-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                    <RiPieChartLine className="text-lg" />
+                  </div>
+                  <p className="mt-3 text-xs font-semibold text-slate-600">
                     Total Weighted Score
                   </p>
-                  <p className="mt-1 text-2xl font-semibold text-white">
+                  <p className="mt-1 text-2xl font-semibold text-slate-900">
                     {totalWeightedPercent}%
-                  </p>
-                  <p className="mt-1 text-xs text-white">
-                    Total weight: {totalWeightPercent}%
                   </p>
                 </div>
               </div>
@@ -423,10 +424,10 @@ const CratSubmissionReviewPage = () => {
                 return (
                   <section
                     key={section.domainKey}
-                    className="rounded-xl border border-black/10"
+                    className="rounded-lg border border-black/10 bg-white"
                   >
-                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/20 bg-primary/5 px-4 py-3">
-                      <h2 className="text-sm font-semibold uppercase tracking-wide text-primary">
+                    <div className="flex flex-wrap items-center justify-between gap-3 border-b border-primary/20 bg-white px-4 py-3">
+                      <h2 className="text-sm font-semibold text-primary">
                         {section.domainLabel}
                       </h2>
                       <div className="rounded-full bg-primary px-3 py-1 text-xs font-semibold text-white">
@@ -435,31 +436,31 @@ const CratSubmissionReviewPage = () => {
                     </div>
 
                     <div className="overflow-x-auto">
-                      <table className="min-w-[1950px] w-full table-auto bg-white">
+                      <table className="min-w-[1950px] w-full table-auto bg-white rounded-lg">
                         <thead className="bg-slate-100">
                           <tr>
-                            <th className="w-12 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            <th className="w-12 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                               #
                             </th>
-                            <th className="w-[560px] border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                              Assessment Scope & Question
+                            <th className="w-[560px] border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
+                              Assessment Scope
                             </th>
-                            <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                               Required Attachment
                             </th>
-                            <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                               Attachment
                             </th>
-                            <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                               Entrepreneur Remarks
                             </th>
-                            <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                               Rating
                             </th>
-                            <th className="w-20 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            <th className="w-20 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                               Score
                             </th>
-                            <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                            <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                               Reviewer Comment
                             </th>
                           </tr>
@@ -470,19 +471,21 @@ const CratSubmissionReviewPage = () => {
                             return (
                               <tr
                                 key={row.id}
-                                className={`align-top ${hasAttachment ? "bg-primary/5" : "bg-white"}`}
+                                className={`align-top ${hasAttachment ? "bg-white" : "bg-white"}`}
                               >
                                 <td className="border-b border-black/10 px-3 py-3 text-sm text-slate-700">
                                   {index + 1}
                                 </td>
                                 <td className="w-[560px] border-b border-black/10 px-3 py-3 text-sm leading-7 text-slate-800">
-                                  <div className="mb-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                                  <div className="mb-2 text-[11px] font-semibold text-slate-500">
                                     {row.questionCode || "-"}
                                   </div>
                                   {row.questionText}
                                 </td>
                                 <td className="border-b border-black/10 px-3 py-3 text-sm text-slate-700">
-                                  {row.requiredAttachment}
+                                  <div className="pt-7">
+                                    {row.requiredAttachment}
+                                  </div>
                                 </td>
                                 <td className="border-b border-black/10 px-3 py-3 text-sm">
                                   {row.attachment ? (
@@ -565,7 +568,7 @@ const CratSubmissionReviewPage = () => {
 
             {canEdit && (
               <div className="mt-5 flex flex-wrap gap-3">
-                <div className="flex items-center rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs font-medium text-primary">
+                <div className="flex items-center rounded-lg border border-primary/20 bg-white px-3 py-2 text-xs font-medium text-primary">
                   {autoSaveState === "saving" && "Auto-save: saving..."}
                   {autoSaveState === "pending" &&
                     "Auto-save: pending changes..."}

@@ -100,7 +100,7 @@ const CratReviewsPage = () => {
   }, [activeTab]);
 
   return (
-    <div className="mx-auto max-w-7xl p-4 md:p-6">
+    <div className="w-full p-4 md:p-6">
       <Breadcrumb pageName="My CRAT Assignments" />
       <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm md:p-7">
         <h1 className="text-xl font-semibold text-slate-900">Reviewer Queue</h1>
@@ -136,22 +136,22 @@ const CratReviewsPage = () => {
               <table className="min-w-[920px] w-full table-fixed bg-white">
                 <thead className="bg-slate-100">
                   <tr>
-                    <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                       #
                     </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                       Entrepreneur
                     </th>
-                    <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                       Email
                     </th>
-                    <th className="w-40 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="w-40 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                       Status
                     </th>
-                    <th className="w-48 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="w-48 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                       Last Updated
                     </th>
-                    <th className="w-44 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="w-44 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
                       Action
                     </th>
                   </tr>

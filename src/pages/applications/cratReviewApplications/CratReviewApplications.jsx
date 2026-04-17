@@ -186,7 +186,7 @@ const CratReviewApplicationsPage = () => {
   }, [currentPage, totalPages]);
 
   return (
-    <div className="mx-auto max-w-7xl p-4 md:p-6">
+    <div className="w-full p-4 md:p-6">
       <Breadcrumb pageName="CRAT Assignment & Approval Queue" />
       <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm md:p-7">
         <h1 className="text-xl font-semibold text-slate-900 md:text-2xl">

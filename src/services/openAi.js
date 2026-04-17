@@ -8,10 +8,12 @@ if (!OPENAI_API_KEY) {
 }
 
 // Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true, // Allow usage in browser
-});
+const openai = OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: OPENAI_API_KEY,
+      dangerouslyAllowBrowser: true, // Allow usage in browser
+    })
+  : null;
 
 /**
  * Comprehensive CRAT Report Analysis using OpenAI

@@ -255,7 +255,7 @@ export const en = {
     cratSystem: "CRAT System",
     introduction: "Introduction",
     readiness: "Readiness",
-    commercialDomain: "Market Domain",
+    commercialDomain: "Commercial & Market Domain",
     financialDomain: "Financial Domain",
     operationDomain: "Operation Domain",
     legalDomain: "Legal Domain",
@@ -1346,7 +1346,7 @@ export const en = {
     commentSavedAutomatically: "Comment saved automatically",
     errorSavingComment: "Error saving comment",
     market: {
-      title: "Market Domain Assessment",
+      title: "Commercial & Market Domain Assessment",
       sections: {
         marketDemandShare: "Market Demand & Share",
         salesTraction: "Sales & Traction",
@@ -2498,7 +2498,7 @@ export const en = {
     startAssessment: "Start Assessment",
     continueAssessment: "Continue Assessment",
     viewResults: "View Results",
-    marketDomain: "Market Domain",
+    marketDomain: "Commercial & Market Domain",
     financialsDomain: "Financials Domain",
     operationsDomain: "Operations Domain",
     legalDomain: "Legal Domain",
@@ -3174,7 +3174,7 @@ export const en = {
         "This report provides a comprehensive analysis of your business's investment readiness.",
       domainScoresTitle: "Domain Scores:",
       domains: {
-        commercial: "Market Domain",
+        commercial: "Commercial & Market Domain",
         financial: "Financial Domain",
         operations: "Operations Domain",
         legal: "Legal Domain",

@@ -11,10 +11,10 @@ import {
 } from "@/controllers/crat_controller";
 
 const DOMAIN_LABELS = {
-  commercial_marketing: "Commercial & Marketing",
-  financial: "Financial",
-  legal_compliance: "Legal & Compliance",
-  operations: "Operations",
+  commercial_marketing: "Commercial & Market",
+  financial: "Financial Domain",
+  legal_compliance: "Legal Domain",
+  operations: "Operations Domain",
 };
 
 const getFileNameFromUrl = (url = "") => {
@@ -171,8 +171,8 @@ const DomainAssessmentPage = ({ domainKey }) => {
 
   if (loading) {
     return (
-      <div className="mx-auto max-w-6xl p-4 md:p-6">
-        {/* <Breadcrumb pageName={title}  /> */}
+      <div className="w-full p-4 md:p-6">
+        <Breadcrumb pageName={title} />
 
         <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:p-6">
           <div className="mb-5 flex items-start justify-between gap-4">
@@ -190,20 +190,20 @@ const DomainAssessmentPage = ({ domainKey }) => {
           <div className="overflow-x-auto rounded-xl border border-black/10">
             <table className="min-w-[1200px] w-full table-fixed bg-white">
               <thead className="bg-slate-100">
-                <tr>
-                  <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                <tr className="">
+                  <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                     #
                   </th>
-                  <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                    Assessment Scope & Question
+                  <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
+                    Assessment Scope
                   </th>
-                  <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                  <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                     Required Attachment
                   </th>
-                  <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                  <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                     Attachment
                   </th>
-                  <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                  <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                     Remarks
                   </th>
                 </tr>
@@ -222,7 +222,9 @@ const DomainAssessmentPage = ({ domainKey }) => {
                       </div>
                     </td>
                     <td className="border-b border-black/10 px-3 py-3">
-                      <div className="h-4 w-full animate-pulse rounded bg-slate-200" />
+                      <div className="pt-6">
+                        <div className="h-4 w-full animate-pulse rounded bg-slate-200" />
+                      </div>
                     </td>
                     <td className="border-b border-black/10 px-3 py-3">
                       <div className="h-10 w-full animate-pulse rounded-lg bg-slate-200" />
@@ -242,18 +244,13 @@ const DomainAssessmentPage = ({ domainKey }) => {
   }
 
   return (
-    <div className="mx-auto max-w-6xl p-4 md:p-6">
+    <div className="w-full p-4 md:p-6">
       <Breadcrumb pageName={title} />
 
-      <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm md:p-6">
+      <div className="  ">
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">{title}</h1>
-            <p className="mt-1 text-sm text-slate-600">
-              Entrepreneur view: provide evidence and comments for reviewer
-              scoring.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
                 Uploaded: {uploadStats.uploaded}
               </span>
@@ -272,21 +269,21 @@ const DomainAssessmentPage = ({ domainKey }) => {
 
         <div className="overflow-x-auto rounded-xl border border-black/10">
           <table className="min-w-[1200px] w-full table-fixed bg-white">
-            <thead className="bg-slate-100">
+            <thead className="bg-white">
               <tr>
-                <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                   #
                 </th>
-                <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                  Assessment Scope & Question
+                <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
+                  Assessment Scope
                 </th>
-                <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                   Required Attachment
                 </th>
-                <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                   Attachment
                 </th>
-                <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
                   Remarks
                 </th>
               </tr>
@@ -318,7 +315,9 @@ const DomainAssessmentPage = ({ domainKey }) => {
                       {question.questionTextEn}
                     </td>
                     <td className="border-b border-black/10 px-3 py-3 text-sm text-slate-700">
-                      {question.requiredAttachment || "-"}
+                      <div className="pt-8">
+                        {question.requiredAttachment || "-"}
+                      </div>
                     </td>
                     <td className="border-b border-black/10 px-3 py-3">
                       <div className="space-y-2 rounded-lg border border-black/10 bg-slate-50 p-2.5">

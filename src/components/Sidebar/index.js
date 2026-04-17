@@ -397,7 +397,10 @@ const Sidebar = ({
             path: "/dashboard/crat-system/introduction",
           },
           {
-            name: t("navigation.commercialDomain", "Commercial & Marketing"),
+            name: t(
+              "navigation.commercialDomain",
+              "Commercial & Market Domain",
+            ),
             path: "/dashboard/crat-system/marketDomain",
           },
           {

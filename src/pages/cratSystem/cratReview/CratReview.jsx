@@ -128,18 +128,9 @@ const CratReviewPage = () => {
     : "Submit For Admin Assignment";
 
   return (
-    <div className="mx-auto max-w-7xl p-4 md:p-6">
+    <div className="w-full p-4 md:p-6">
       <Breadcrumb pageName="CRAT Review Status" />
       <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
-        <div className="bg-primary/10 px-5 py-7 md:px-8">
-          <h1 className="text-xl font-semibold text-slate-900 md:text-2xl">
-            Assessment Workflow Status
-          </h1>
-          <p className="mt-2 text-sm text-slate-700 md:text-base">
-            Track your submission journey from draft to published report.
-          </p>
-        </div>
-
         <div className="bg-white p-5 md:p-8">
           {loading ? (
             <div className="space-y-4">

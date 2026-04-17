@@ -8,10 +8,12 @@ if (!OPENAI_API_KEY) {
   console.warn("VITE_OPENAI_API_KEY is not set. PDF AI generation may fail.");
 }
 
-const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
-  dangerouslyAllowBrowser: true,
-});
+const openai = OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: OPENAI_API_KEY,
+      dangerouslyAllowBrowser: true,
+    })
+  : null;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -93,6 +95,10 @@ export async function generateCapitalReadinessContent(
   let content;
 
   try {
+    if (!openai) {
+      throw new Error("Missing VITE_OPENAI_API_KEY");
+    }
+
     onStatus?.(
       "Calling AI to generate report content — this may take 20–40 seconds...",
     );
