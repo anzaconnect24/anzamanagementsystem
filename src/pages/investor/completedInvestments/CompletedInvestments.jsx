@@ -113,7 +113,7 @@ const CompletedInvestments = () => {
                 <div className="col-span-2 flex items-center">
                   <p className="text-sm font-medium text-success">
                     {investment.currency}{" "}
-                    {investment.investmentAmount?.toLocaleString()}
+                    Tshs. {investment.investmentAmount?.toLocaleString()}
                   </p>
                 </div>
                 <div className="col-span-2 flex items-center">
@@ -253,6 +253,8 @@ const CompletedInvestments = () => {
                         Investment Amount
                       </p>
                       <p className="text-lg font-semibold text-success">
+                        Tshs. {selectedInvestment.investmentAmount?.toLocaleString()}
+                      </p>
                         {selectedInvestment.currency}{" "}
                         {selectedInvestment.investmentAmount?.toLocaleString()}
                       </p>

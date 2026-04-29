@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
 import Breadcrumb from "@/component/Breadcrumb";
 import { UserContext } from "@/layouts/DashboardLayout";
+import { useTranslation } from "@/locales";
 import {
   getCatalog,
   getCurrentAssessment,
@@ -28,6 +29,7 @@ const getFileNameFromUrl = (url = "") => {
 
 const DomainAssessmentPage = ({ domainKey }) => {
   const { userDetails } = useContext(UserContext);
+  const { isSwahili } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [assessment, setAssessment] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -37,6 +39,41 @@ const DomainAssessmentPage = ({ domainKey }) => {
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const title = DOMAIN_LABELS[domainKey] || "CRAT Domain";
+  const labels = {
+    assessmentScope: isSwahili ? "Eneo la Tathmini" : "Assessment Scope",
+    requiredAttachment: isSwahili
+      ? "Kiambatisho Kinachohitajika"
+      : "Required Attachment",
+    attachment: isSwahili ? "Kiambatisho" : "Attachment",
+    remarks: isSwahili ? "Maoni" : "Remarks",
+    uploaded: isSwahili ? "Imepakiwa" : "Uploaded",
+    pending: isSwahili ? "Zinazosubiri" : "Pending",
+    completion: isSwahili ? "Ukamilifu" : "Completion",
+    saving: isSwahili ? "Inahifadhi..." : "Saving...",
+    loading: isSwahili ? "Inapakia taarifa za eneo" : "Loading domain data",
+    missingAttachment: isSwahili ? "Kiambatisho hakipo" : "Missing Attachment",
+    noAttachmentNeeded: isSwahili
+      ? "Hakuna kiambatisho"
+      : "No Attachment Needed",
+    notRequired: isSwahili ? "Haihitajiki" : "Not required",
+    noAttachmentUploaded: isSwahili
+      ? "Hakuna kiambatisho kilichopakiwa."
+      : "No attachment uploaded.",
+    chooseFileFirst: isSwahili
+      ? "Tafadhali chagua faili kwanza."
+      : "Please choose a file first.",
+    uploadedSuccess: isSwahili
+      ? "Kiambatisho kimepakiwa."
+      : "Attachment uploaded.",
+    uploadFailed: isSwahili
+      ? "Imeshindikana kupakia kiambatisho."
+      : "Failed to upload attachment.",
+    uploading: isSwahili ? "Inapakia..." : "Uploading...",
+    view: isSwahili ? "Tazama" : "View",
+    noQuestions: isSwahili
+      ? "Hakuna maswali hai yaliyopatikana kwa eneo hili."
+      : "No active questions found for this domain.",
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -89,9 +126,12 @@ const DomainAssessmentPage = ({ domainKey }) => {
   );
 
   const uploadStats = useMemo(() => {
-    const total = questions.length;
-    const uploaded = questions.filter((q) =>
-      Boolean(answers[q.id]?.attachment),
+    const requiredQuestions = questions.filter((q) =>
+      Boolean((q.requiredAttachment || "").trim()),
+    );
+    const total = requiredQuestions.length;
+    const uploaded = requiredQuestions.filter((q) =>
+      Boolean((answers[q.id]?.attachment || "").trim()),
     ).length;
     const pending = total - uploaded;
     const completion = total > 0 ? Math.round((uploaded / total) * 100) : 0;
@@ -146,7 +186,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
     }
 
     if (!selectedFile) {
-      toast.error("Please choose a file first.");
+      toast.error(labels.chooseFileFirst);
       return;
     }
 
@@ -160,10 +200,10 @@ const DomainAssessmentPage = ({ domainKey }) => {
       );
 
       setAnswerValue(questionId, "attachment", payload?.attachment || "");
-      toast.success("Attachment uploaded.");
+      toast.success(labels.uploadedSuccess);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to upload attachment.");
+      toast.error(labels.uploadFailed);
     } finally {
       setUploadingByQuestion((prev) => ({ ...prev, [questionId]: false }));
     }
@@ -183,7 +223,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
             </div>
             <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">
               <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-sky-500" />
-              Loading domain data
+              {labels.loading}
             </div>
           </div>
 
@@ -195,16 +235,16 @@ const DomainAssessmentPage = ({ domainKey }) => {
                     #
                   </th>
                   <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                    Assessment Scope
+                    {labels.assessmentScope}
                   </th>
                   <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                    Required Attachment
+                    {labels.requiredAttachment}
                   </th>
                   <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                    Attachment
+                    {labels.attachment}
                   </th>
                   <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                    Remarks
+                    {labels.remarks}
                   </th>
                 </tr>
               </thead>
@@ -252,18 +292,20 @@ const DomainAssessmentPage = ({ domainKey }) => {
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-semibold text-emerald-800">
-                Uploaded: {uploadStats.uploaded}
+                {labels.uploaded}: {uploadStats.uploaded}
               </span>
               <span className="rounded-full bg-amber-100 px-2.5 py-1 text-xs font-semibold text-amber-800">
-                Pending: {uploadStats.pending}
+                {labels.pending}: {uploadStats.pending}
               </span>
               <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-700">
-                Completion: {uploadStats.completion}%
+                {labels.completion}: {uploadStats.completion}%
               </span>
             </div>
           </div>
           {isAutosaving && (
-            <p className="text-xs font-medium text-slate-600">Saving...</p>
+            <p className="text-xs font-medium text-slate-600">
+              {labels.saving}
+            </p>
           )}
         </div>
 
@@ -275,25 +317,36 @@ const DomainAssessmentPage = ({ domainKey }) => {
                   #
                 </th>
                 <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                  Assessment Scope
+                  {labels.assessmentScope}
                 </th>
                 <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                  Required Attachment
+                  {labels.requiredAttachment}
                 </th>
                 <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                  Attachment
+                  {labels.attachment}
                 </th>
                 <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold capitalize text-slate-700">
-                  Remarks
+                  {labels.remarks}
                 </th>
               </tr>
             </thead>
             <tbody>
               {questions.map((question, idx) => {
+                const requiredAttachmentText = isSwahili
+                  ? question.requiredAttachmentSw ||
+                    question.requiredAttachment ||
+                    ""
+                  : question.requiredAttachment ||
+                    question.requiredAttachmentSw ||
+                    "";
+                const needsAttachment = Boolean(requiredAttachmentText.trim());
                 const hasAttachment = Boolean(answers[question.id]?.attachment);
                 const rowStyle = hasAttachment
                   ? "bg-emerald-50/30"
                   : "bg-white";
+                const questionText = isSwahili
+                  ? question.questionTextSw || question.questionTextEn
+                  : question.questionTextEn || question.questionTextSw;
 
                 return (
                   <tr key={question.id} className={`align-top ${rowStyle}`}>
@@ -304,59 +357,69 @@ const DomainAssessmentPage = ({ domainKey }) => {
                       <div className="mb-2">
                         {hasAttachment ? (
                           <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800">
-                            Uploaded
+                            {labels.uploaded}
+                          </span>
+                        ) : needsAttachment ? (
+                          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
+                            {labels.missingAttachment}
                           </span>
                         ) : (
-                          <span className="rounded-full bg-rose-100 px-2 py-0.5 text-[11px] font-semibold text-rose-700">
-                            Missing Attachment
+                          <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-700">
+                            {labels.noAttachmentNeeded}
                           </span>
                         )}
                       </div>
-                      {question.questionTextEn}
+                      {questionText}
                     </td>
                     <td className="border-b border-black/10 px-3 py-3 text-sm text-slate-700">
                       <div className="pt-8">
-                        {question.requiredAttachment || "-"}
+                        {requiredAttachmentText || "-"}
                       </div>
                     </td>
                     <td className="border-b border-black/10 px-3 py-3">
-                      <div className="space-y-2 rounded-lg border border-black/10 bg-slate-50 p-2.5">
-                        <input
-                          type="file"
-                          className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm"
-                          onChange={(e) =>
-                            onUploadAttachment(
-                              question.id,
-                              e.target.files?.[0] || null,
-                            )
-                          }
-                        />
-                        {uploadingByQuestion[question.id] && (
-                          <p className="text-xs font-medium text-slate-600">
-                            Uploading...
-                          </p>
-                        )}
-                        {answers[question.id]?.attachment ? (
-                          <a
-                            href={answers[question.id]?.attachment}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block truncate text-xs font-medium text-sky-700 hover:underline"
-                            title={getFileNameFromUrl(
-                              answers[question.id]?.attachment,
-                            )}
-                          >
-                            View:{" "}
-                            {getFileNameFromUrl(
-                              answers[question.id]?.attachment,
-                            )}
-                          </a>
-                        ) : (
-                          <p className="text-xs text-slate-500">
-                            No attachment uploaded.
-                          </p>
-                        )}
-                      </div>
+                      {needsAttachment ? (
+                        <div className="space-y-2 rounded-lg border border-black/10 bg-slate-50 p-2.5">
+                          <input
+                            type="file"
+                            className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm"
+                            onChange={(e) =>
+                              onUploadAttachment(
+                                question.id,
+                                e.target.files?.[0] || null,
+                              )
+                            }
+                          />
+                          {uploadingByQuestion[question.id] && (
+                            <p className="text-xs font-medium text-slate-600">
+                              {labels.uploading}
+                            </p>
+                          )}
+                          {answers[question.id]?.attachment ? (
+                            <a
+                              href={answers[question.id]?.attachment}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="block truncate text-xs font-medium text-sky-700 hover:underline"
+                              title={getFileNameFromUrl(
+                                answers[question.id]?.attachment,
+                              )}
+                            >
+                              {labels.view}:{" "}
+                              {getFileNameFromUrl(
+                                answers[question.id]?.attachment,
+                              )}
+                            </a>
+                          ) : (
+                            <p className="text-xs text-slate-500">
+                              {labels.noAttachmentUploaded}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="rounded-lg border border-black/10 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-500">
+                          {labels.notRequired}
+                        </div>
+                      )}
                     </td>
                     <td className="border-b border-black/10 px-3 py-3">
                       <textarea
@@ -383,7 +446,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
 
         {questions.length === 0 && (
           <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            No active questions found for this domain.
+            {labels.noQuestions}
           </p>
         )}
       </div>

@@ -131,7 +131,7 @@ const ViewInvestmentRequest = () => {
               <div>
                 <p className="mb-2 text-sm text-bodydark">Investment Amount</p>
                 <p className="text-2xl font-bold text-primary">
-                  {request.currency}{" "}
+                  {request.currency} Tshs.{" "}
                   {request.investmentAmount?.toLocaleString() || "0"}
                 </p>
               </div>

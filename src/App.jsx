@@ -83,6 +83,7 @@ import CratReviews from "./pages/reviewer/cratReviews/CratReviews";
 
 // Application Pages
 import CratReviewApplications from "./pages/applications/cratReviewApplications/CratReviewApplications";
+import CratCatalogManager from "./pages/admin/CratCatalogManager";
 
 // Stories Pages
 import SuccessStories from "./pages/stories/successStories/SuccessStories";
@@ -611,6 +612,7 @@ function App() {
               path="cratReviewApplications"
               element={<CratReviewApplications />}
             />
+            <Route path="cratCatalogManager" element={<CratCatalogManager />} />
 
             {/* Stories Routes */}
             <Route path="successStories" element={<SuccessStories />} />

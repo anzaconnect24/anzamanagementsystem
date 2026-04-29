@@ -154,7 +154,7 @@ const InterestedStartups = () => {
                 </div>
                 <div className="col-span-2 flex items-center">
                   <p className="text-sm text-black dark:text-white">
-                    {request.currency}{" "}
+                    {request.currency} Tshs.{" "}
                     {request.investmentAmount?.toLocaleString()}
                   </p>
                 </div>
@@ -288,7 +288,7 @@ const InterestedStartups = () => {
                         Amount Requested
                       </p>
                       <p className="text-sm font-medium text-black dark:text-white">
-                        {selectedRequest.currency}{" "}
+                        Tshs.{" "}
                         {selectedRequest.investmentAmount?.toLocaleString()}
                       </p>
                     </div>

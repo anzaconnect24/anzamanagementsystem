@@ -96,13 +96,18 @@ const mapPublishedReportToScoreData = (published, t) => {
   return result;
 };
 
+const normalizeScoreData = (data) =>
+  data && typeof data === "object" ? data : {};
+
 const PerformanceDistribution = ({
   userDetails,
   initialScoreData,
   chartHeight = 350,
 }) => {
   const { t } = useTranslation();
-  const [scoreData, setScoreData] = useState(initialScoreData || {});
+  const [scoreData, setScoreData] = useState(
+    normalizeScoreData(initialScoreData),
+  );
   const [loading, setLoading] = useState(
     !initialScoreData || Object.keys(initialScoreData).length === 0,
   );
@@ -120,7 +125,7 @@ const PerformanceDistribution = ({
   useEffect(() => {
     if (initialScoreData && Object.keys(initialScoreData).length > 0) {
       console.log("PerformanceDistribution received data:", initialScoreData);
-      setScoreData(initialScoreData);
+      setScoreData(normalizeScoreData(initialScoreData));
       setLoading(false);
     }
   }, [initialScoreData]);
@@ -151,7 +156,7 @@ const PerformanceDistribution = ({
         try {
           const res = await getScoreData({ uuid: userDetails.uuid });
           console.log("PerformanceDistribution fetched data:", res);
-          setScoreData(res);
+          setScoreData(normalizeScoreData(res));
         } catch (error) {
           console.error("Error fetching score data:", error);
         } finally {
@@ -165,11 +170,12 @@ const PerformanceDistribution = ({
 
   // Calculate the overall average score
   const calculateOverallScore = () => {
+    const safeScoreData = normalizeScoreData(scoreData);
     const scores = [
-      scoreData.commercial?.percentage || 0,
-      scoreData.financial?.percentage || 0,
-      scoreData.operations?.percentage || 0,
-      scoreData.legal?.percentage || 0,
+      safeScoreData.commercial?.percentage || 0,
+      safeScoreData.financial?.percentage || 0,
+      safeScoreData.operations?.percentage || 0,
+      safeScoreData.legal?.percentage || 0,
     ];
 
     // Calculate the average and round to whole number

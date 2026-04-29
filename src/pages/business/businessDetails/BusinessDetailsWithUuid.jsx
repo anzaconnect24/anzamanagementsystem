@@ -296,48 +296,27 @@ const Page = () => {
       const scoreData = hasCRATData
         ? normalizedCRATScoreData
         : {
+            // When no CRAT assessment exists, show 0% to indicate no readiness data
             commercial: {
-              percentage: calculateIntelligentScore("commercial"),
-              status:
-                calculateIntelligentScore("commercial") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("commercial") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
             financial: {
-              percentage: calculateIntelligentScore("financial"),
-              status:
-                calculateIntelligentScore("financial") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("financial") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
             operations: {
-              percentage: calculateIntelligentScore("operations"),
-              status:
-                calculateIntelligentScore("operations") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("operations") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
             legal: {
-              percentage: calculateIntelligentScore("legal"),
-              status:
-                calculateIntelligentScore("legal") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("legal") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
-            general_status: hasCRATData
-              ? t("ai.generalStatus.cratAssessment", "CRAT Assessment")
-              : t(
-                  "ai.generalStatus.profileAnalysis",
-                  "Business Profile Analysis",
-                ),
+            general_status: t(
+              "ai.generalStatus.noAssessment",
+              "No CRAT Assessment",
+            ),
           };
 
       // Log final scoreData to verify what's being used
@@ -711,16 +690,23 @@ const Page = () => {
   const handleDownloadAIReport = async () => {
     if (pdfLoading) return;
 
+    let toastId;
     try {
       setPdfLoading(true);
 
-      const toastId = toast.loading(
+      toastId = toast.loading(
         t("report.generatingPdf", "Generating AI report — please wait..."),
       );
 
       // Reuse existing CRAT/AI data if available, otherwise build fresh score data
       let scoreDataForPdf = cratData?.scoreData;
       let reportPayloadForPdf = null;
+
+      console.log("📄 PDF Generation - Initial cratData check:", {
+        hasCratData: !!cratData,
+        hasScoreData: !!cratData?.scoreData,
+        scoreData: cratData?.scoreData,
+      });
 
       if (!scoreDataForPdf) {
         let hasCRATData = false;
@@ -730,53 +716,47 @@ const Page = () => {
           actualCRATData = await getScoreData({ uuid: business.User?.uuid });
           reportPayloadForPdf = actualCRATData;
 
+          console.log(
+            "📄 PDF Generation - Raw CRAT data fetched:",
+            actualCRATData,
+          );
+
           const normalizedCRATScoreData = normalizeScoreData(actualCRATData);
+
+          console.log("📄 PDF Generation - Normalized CRAT data:", {
+            normalized: normalizedCRATScoreData,
+            isValid: !!normalizedCRATScoreData,
+          });
 
           if (normalizedCRATScoreData) {
             hasCRATData = true;
             scoreDataForPdf = normalizedCRATScoreData;
+            console.log("✅ PDF using actual CRAT scores:", scoreDataForPdf);
           }
         } catch (err) {
           console.log("ℹ️ No CRAT assessment found for PDF generation", err);
         }
 
         if (!hasCRATData) {
+          console.log("⚠️ No CRAT assessment data - using 0% for all domains");
+
+          // When there's no CRAT assessment data, use 0% to indicate no readiness data
           scoreDataForPdf = {
             commercial: {
-              percentage: calculateIntelligentScore("commercial"),
-              status:
-                calculateIntelligentScore("commercial") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("commercial") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
             financial: {
-              percentage: calculateIntelligentScore("financial"),
-              status:
-                calculateIntelligentScore("financial") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("financial") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
             operations: {
-              percentage: calculateIntelligentScore("operations"),
-              status:
-                calculateIntelligentScore("operations") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("operations") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
             legal: {
-              percentage: calculateIntelligentScore("legal"),
-              status:
-                calculateIntelligentScore("legal") >= 70
-                  ? t("ai.status.good", "Good")
-                  : calculateIntelligentScore("legal") >= 50
-                    ? t("ai.status.fair", "Fair")
-                    : t("ai.status.needsImprovement", "Needs Improvement"),
+              percentage: 0,
+              status: t("ai.status.notAssessed", "Not Assessed"),
             },
           };
         }
@@ -798,6 +778,15 @@ const Page = () => {
         reportPayloadForPdf?.reportData ||
         buildDomainDataForPdfFromScores(scoreDataForPdf);
 
+      console.log(
+        "📄 PDF Generation - Final data being passed to generateCapitalReadinessPDF:",
+        {
+          scoreDataForPdf,
+          domainDataForPdf: domainDataForPdf ? "exists" : "null",
+          pdfUserContext,
+        },
+      );
+
       await generateCapitalReadinessPDF(
         domainDataForPdf,
         scoreDataForPdf,
@@ -812,11 +801,10 @@ const Page = () => {
       });
     } catch (error) {
       console.error("❌ Error generating AI PDF:", error);
+      const errorMessage = error?.message || "Unknown error";
       toast.error(
-        t(
-          "ai.failedToDownloadPDF",
-          "Failed to generate AI PDF. Please try again.",
-        ),
+        `${t("ai.failedToDownloadPDF", "Failed to generate AI PDF")}: ${errorMessage}`,
+        { id: toastId },
       );
     } finally {
       setPdfLoading(false);

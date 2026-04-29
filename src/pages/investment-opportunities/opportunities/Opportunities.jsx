@@ -27,7 +27,7 @@ const InvestmentOpportunities = () => {
   const fetchOpportunities = async (
     page = 1,
     keyword = "",
-    isSearch = false
+    isSearch = false,
   ) => {
     try {
       if (isSearch) {
@@ -45,7 +45,7 @@ const InvestmentOpportunities = () => {
             keyword: keyword,
           },
           headers: headers,
-        }
+        },
       );
 
       if (response.data.status) {
@@ -102,8 +102,8 @@ const InvestmentOpportunities = () => {
       !confirm(
         t(
           "investment.deleteOpportunityConfirm",
-          "Are you sure you want to delete this investment opportunity?"
-        )
+          "Are you sure you want to delete this investment opportunity?",
+        ),
       )
     ) {
       return;
@@ -115,7 +115,7 @@ const InvestmentOpportunities = () => {
         `${server_url}/investment-opportunities/${uuid}`,
         {
           headers: headers,
-        }
+        },
       );
 
       if (response.status === 200 || response.status === 204) {
@@ -125,14 +125,14 @@ const InvestmentOpportunities = () => {
         alert(
           t(
             "investment.failedToDeleteOpportunity",
-            "Failed to delete opportunity"
-          )
+            "Failed to delete opportunity",
+          ),
         );
       }
     } catch (error) {
       console.error("Error deleting opportunity:", error);
       alert(
-        t("investment.errorDeletingOpportunity", "Error deleting opportunity")
+        t("investment.errorDeletingOpportunity", "Error deleting opportunity"),
       );
     } finally {
       setDeleting(null);
@@ -156,13 +156,13 @@ const InvestmentOpportunities = () => {
             <h1 className="text-3xl font-bold text-gray-900">
               {t(
                 "investment.investmentOpportunities",
-                "Investment Opportunities"
+                "Investment Opportunities",
               )}
             </h1>
             <p className="mt-2 text-gray-600">
               {t(
                 "investment.manageExploreOpportunities",
-                "Manage and explore investment opportunities"
+                "Manage and explore investment opportunities",
               )}
             </p>
           </div>
@@ -186,7 +186,7 @@ const InvestmentOpportunities = () => {
           {t(
             "investment.showingOpportunities",
             "Showing {{current}} of {{total}} opportunities",
-            { current: opportunities.length, total: totalCount }
+            { current: opportunities.length, total: totalCount },
           )}
         </div>
         <div className="mb-6">
@@ -202,7 +202,7 @@ const InvestmentOpportunities = () => {
               type="text"
               placeholder={t(
                 "investment.searchOpportunities",
-                "Search opportunities..."
+                "Search opportunities...",
               )}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -230,7 +230,7 @@ const InvestmentOpportunities = () => {
           <p className="mt-1 text-sm text-gray-500">
             {t(
               "investment.createOpportunityPrompt",
-              "Get started by creating a new investment opportunity."
+              "Get started by creating a new investment opportunity.",
             )}
           </p>
           {userDetails?.role === "Admin" && (
@@ -288,7 +288,7 @@ const InvestmentOpportunities = () => {
                       <span className="font-medium">
                         {t("investment.amount", "Amount")}:
                       </span>{" "}
-                      ${parseFloat(opportunity.amount).toLocaleString()}
+                      Tshs {parseFloat(opportunity.amount).toLocaleString()}
                     </div>
                   )}
 
@@ -300,7 +300,7 @@ const InvestmentOpportunities = () => {
                       {t(
                         "investment.types." +
                           opportunity.investmentType.toLowerCase(),
-                        opportunity.investmentType
+                        opportunity.investmentType,
                       ) || opportunity.investmentType}
                       {/* { opportunity.investmentType} */}
                     </div>
@@ -391,7 +391,7 @@ const InvestmentOpportunities = () => {
               <h2 className="text-xl font-semibold text-gray-900">
                 {t(
                   "investment.opportunityDetails",
-                  "Investment Opportunity Details"
+                  "Investment Opportunity Details",
                 )}
               </h2>
               <button
@@ -450,7 +450,8 @@ const InvestmentOpportunities = () => {
                       {t("investment.investmentAmount", "Investment Amount")}
                     </h3>
                     <p className="text-2xl font-bold text-green-600">
-                      ${parseFloat(selectedOpportunity.amount).toLocaleString()}
+                      Tshs.{" "}
+                      {parseFloat(selectedOpportunity.amount).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -521,7 +522,7 @@ const InvestmentOpportunities = () => {
                           <BsTrash className="mr-2" />
                           {t(
                             "investment.deleteOpportunity",
-                            "Delete Opportunity"
+                            "Delete Opportunity",
                           )}
                         </>
                       )}

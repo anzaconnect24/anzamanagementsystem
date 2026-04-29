@@ -1463,16 +1463,16 @@ const AIAnalysisPanel = ({
                               {year}
                             </td>
                             <td className="py-3 text-right text-gray-600 dark:text-gray-400">
-                              $
+                              Tshs.
                               {projections.conservative?.toLocaleString() ||
                                 "N/A"}
                             </td>
                             <td className="py-3 text-right text-green-600 dark:text-green-400 font-medium">
-                              $
+                              Tshs.
                               {projections.realistic?.toLocaleString() || "N/A"}
                             </td>
                             <td className="py-3 text-right text-blue-600 dark:text-blue-400">
-                              $
+                              Tshs.
                               {projections.optimistic?.toLocaleString() ||
                                 "N/A"}
                             </td>
@@ -1499,7 +1499,7 @@ const AIAnalysisPanel = ({
                             {t("ai.currentMarketSize", "Current Market Size")}
                           </span>
                           <span className="font-medium text-gray-800 dark:text-gray-200">
-                            $
+                            Tshs.
                             {aiAnalysis.predictions.growthPotential.marketExpansion?.currentMarketSize?.toLocaleString() ||
                               "N/A"}
                           </span>
@@ -1509,9 +1509,9 @@ const AIAnalysisPanel = ({
                             {t("ai.addressableMarket", "Addressable Market")}
                           </span>
                           <span className="font-medium text-gray-800 dark:text-gray-200">
-                            $
+                            Tshs.
                             {aiAnalysis.predictions.growthPotential.marketExpansion?.addressableMarket?.toLocaleString() ||
-                              "N/A"}
+                              "N/A"}}
                           </span>
                         </div>
                         <div className="flex justify-between">

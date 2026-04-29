@@ -457,6 +457,12 @@ const Sidebar = ({
       });
 
       programsItems.push({
+        name: t("navigation.cratCatalogManager", "CRAT Form Builder"),
+        path: "/dashboard/cratCatalogManager",
+        icon: <MdAssignment className="text-xl" />,
+      });
+
+      programsItems.push({
         name: t("navigation.report", "CRAT Reports"),
         path: "/dashboard/crat-system/report",
         icon: <MdBusinessCenter className="text-xl" />,

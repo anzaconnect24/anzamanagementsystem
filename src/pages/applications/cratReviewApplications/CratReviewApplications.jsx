@@ -48,8 +48,11 @@ const CratReviewApplicationsPage = () => {
   const [queue, setQueue] = useState([]);
   const [reviewers, setReviewers] = useState([]);
   const [notes, setNotes] = useState({});
-  const [selectedReviewerByAssessment, setSelectedReviewerByAssessment] =
+  // Multi-reviewer selection: { assessmentId: Set<reviewerId (string)> }
+  const [selectedReviewersByAssessment, setSelectedReviewersByAssessment] =
     useState({});
+  // Track which dropdowns are open
+  const [openReviewerDropdown, setOpenReviewerDropdown] = useState(null);
   const [activeTab, setActiveTab] = useState(TAB_KEYS.active);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 6;
@@ -77,11 +80,22 @@ const CratReviewApplicationsPage = () => {
 
       const nextSelected = {};
       (rows || []).forEach((item) => {
-        if (item?.assignedReviewer?.id) {
-          nextSelected[item.id] = String(item.assignedReviewer.id);
+        // Prefer assignedReviewers (join table) if present, fallback to assignedReviewer
+        const reviewerList = item?.assignedReviewers?.length
+          ? item.assignedReviewers.map((ar) =>
+              String(ar.reviewer_id || ar.reviewer?.id),
+            )
+          : item?.assignedReviewer?.id
+            ? [String(item.assignedReviewer.id)]
+            : [];
+        if (reviewerList.length > 0) {
+          nextSelected[item.id] = new Set(reviewerList.filter(Boolean));
         }
       });
-      setSelectedReviewerByAssessment((prev) => ({ ...prev, ...nextSelected }));
+      setSelectedReviewersByAssessment((prev) => ({
+        ...prev,
+        ...nextSelected,
+      }));
     } catch (error) {
       console.error(error);
       if (error?.response?.status === 403) {
@@ -108,15 +122,15 @@ const CratReviewApplicationsPage = () => {
     setCurrentPage(1);
   }, [activeTab]);
 
-  const onAssign = async (assessmentId, reviewerId) => {
-    if (!reviewerId) return;
+  const onAssign = async (assessmentId, reviewerIds) => {
+    if (!reviewerIds || reviewerIds.length === 0) return;
     try {
-      await assignReviewer(assessmentId, Number(reviewerId));
-      toast.success("Reviewer assigned.");
+      await assignReviewer(assessmentId, reviewerIds);
+      toast.success(`${reviewerIds.length} reviewer(s) assigned.`);
       await load(activeTab);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to assign reviewer.");
+      toast.error("Failed to assign reviewer(s).");
     }
   };
 
@@ -184,6 +198,18 @@ const CratReviewApplicationsPage = () => {
       setCurrentPage(totalPages);
     }
   }, [currentPage, totalPages]);
+
+  // Close reviewer dropdown when clicking outside
+  useEffect(() => {
+    if (!openReviewerDropdown) return;
+    const handler = (e) => {
+      if (!e.target.closest("[data-reviewer-dropdown]")) {
+        setOpenReviewerDropdown(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [openReviewerDropdown]);
 
   return (
     <div className="w-full p-4 md:p-6">
@@ -278,7 +304,7 @@ const CratReviewApplicationsPage = () => {
                           Entrepreneur
                         </th>
                         <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                          Assigned Reviewer
+                          Assigned Reviewers
                         </th>
                         <th className="w-40 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
                           Status
@@ -302,20 +328,36 @@ const CratReviewApplicationsPage = () => {
                     </thead>
                     <tbody>
                       {paginatedQueue.map((item, index) => {
-                        const selectedReviewerId =
-                          selectedReviewerByAssessment[item.id] ||
-                          (item.assignedReviewer?.id
-                            ? String(item.assignedReviewer.id)
-                            : "");
-                        const assignedReviewerId = item.assignedReviewer?.id
-                          ? String(item.assignedReviewer.id)
-                          : "";
+                        // Compute currently assigned reviewer IDs from join table or fallback
+                        const assignedReviewerIds = new Set(
+                          item?.assignedReviewers?.length
+                            ? item.assignedReviewers.map((ar) =>
+                                String(ar.reviewer_id || ar.reviewer?.id),
+                              )
+                            : item?.assignedReviewer?.id
+                              ? [String(item.assignedReviewer.id)]
+                              : [],
+                        );
+
+                        const selectedIds =
+                          selectedReviewersByAssessment[item.id] || new Set();
+
+                        // Show save if selection differs from currently assigned
+                        const selArray = [...selectedIds].sort();
+                        const assignedArray = [...assignedReviewerIds].sort();
                         const showSaveAssignment =
-                          Boolean(selectedReviewerId) &&
-                          selectedReviewerId !== assignedReviewerId;
+                          selArray.length > 0 &&
+                          JSON.stringify(selArray) !==
+                            JSON.stringify(assignedArray);
+
                         const canFinalizeReview =
                           item.status === "review_submitted";
                         const isHistoryTab = activeTab === TAB_KEYS.previous;
+
+                        // List of reviewer names for assigned display
+                        const assignedNames = item?.assignedReviewers
+                          ?.map((ar) => ar.reviewer?.name)
+                          .filter(Boolean);
 
                         return (
                           <tr key={item.id} className="align-top bg-white">
@@ -331,7 +373,21 @@ const CratReviewApplicationsPage = () => {
                               </p>
                             </td>
                             <td className="border-b border-black/10 px-3 py-3">
-                              {item.assignedReviewer ? (
+                              {assignedNames && assignedNames.length > 0 ? (
+                                <ul className="space-y-1">
+                                  {assignedNames.map((name, i) => (
+                                    <li
+                                      key={i}
+                                      className="flex items-center gap-1"
+                                    >
+                                      <span className="inline-block h-1.5 w-1.5 rounded-full bg-violet-400" />
+                                      <span className="text-xs font-medium text-slate-800">
+                                        {name}
+                                      </span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              ) : item.assignedReviewer ? (
                                 <>
                                   <p className="text-sm font-medium text-slate-900">
                                     {item.assignedReviewer.name}
@@ -341,7 +397,7 @@ const CratReviewApplicationsPage = () => {
                                   </p>
                                 </>
                               ) : (
-                                <p className="text-sm text-slate-600">
+                                <p className="text-sm text-slate-400 italic">
                                   Not assigned yet.
                                 </p>
                               )}
@@ -374,41 +430,96 @@ const CratReviewApplicationsPage = () => {
                                 Open
                               </button>
                             </td>
+                            {/* Multi-reviewer assignment column */}
                             <td className="border-b border-black/10 px-3 py-3">
-                              <div className="flex items-center gap-2">
-                                <select
-                                  className="w-36 rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-xs focus:border-primary/40 focus:outline-none"
-                                  value={selectedReviewerId}
-                                  onChange={(e) =>
-                                    setSelectedReviewerByAssessment((prev) => ({
-                                      ...prev,
-                                      [item.id]: e.target.value,
-                                    }))
-                                  }
-                                  disabled={isHistoryTab}
+                              {isHistoryTab ? (
+                                <p className="text-xs text-slate-500 italic">
+                                  Finalized
+                                </p>
+                              ) : (
+                                <div
+                                  className="relative"
+                                  data-reviewer-dropdown
                                 >
-                                  <option value="">Reviewer</option>
-                                  {reviewers.map((reviewer) => (
-                                    <option
-                                      key={reviewer.id}
-                                      value={reviewer.id}
-                                    >
-                                      {reviewer.name}
-                                    </option>
-                                  ))}
-                                </select>
-
-                                {showSaveAssignment && !isHistoryTab && (
+                                  {/* Trigger button */}
                                   <button
+                                    type="button"
                                     onClick={() =>
-                                      onAssign(item.id, selectedReviewerId)
+                                      setOpenReviewerDropdown((prev) =>
+                                        prev === item.id ? null : item.id,
+                                      )
                                     }
-                                    className="rounded-lg border border-black/15 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 transition hover:border-primary/40 hover:text-primary"
+                                    className="w-40 rounded-lg border border-black/10 bg-white px-2.5 py-1.5 text-left text-xs focus:border-primary/40 focus:outline-none"
                                   >
-                                    Save
+                                    {selectedIds.size === 0
+                                      ? "Select reviewers"
+                                      : `${selectedIds.size} selected`}
                                   </button>
-                                )}
-                              </div>
+
+                                  {/* Dropdown */}
+                                  {openReviewerDropdown === item.id && (
+                                    <div className="absolute left-0 top-full z-30 mt-1 w-52 rounded-lg border border-black/10 bg-white shadow-lg">
+                                      {reviewers.length === 0 ? (
+                                        <p className="px-3 py-2 text-xs text-slate-500">
+                                          No reviewers available.
+                                        </p>
+                                      ) : (
+                                        reviewers.map((reviewer) => {
+                                          const rid = String(reviewer.id);
+                                          const checked = selectedIds.has(rid);
+                                          return (
+                                            <label
+                                              key={reviewer.id}
+                                              className="flex cursor-pointer items-center gap-2 px-3 py-2 text-xs hover:bg-slate-50"
+                                            >
+                                              <input
+                                                type="checkbox"
+                                                checked={checked}
+                                                onChange={() => {
+                                                  setSelectedReviewersByAssessment(
+                                                    (prev) => {
+                                                      const next = new Set(
+                                                        prev[item.id] || [],
+                                                      );
+                                                      if (checked)
+                                                        next.delete(rid);
+                                                      else next.add(rid);
+                                                      return {
+                                                        ...prev,
+                                                        [item.id]: next,
+                                                      };
+                                                    },
+                                                  );
+                                                }}
+                                                className="accent-primary"
+                                              />
+                                              <span className="text-slate-800">
+                                                {reviewer.name}
+                                              </span>
+                                            </label>
+                                          );
+                                        })
+                                      )}
+                                      {showSaveAssignment && (
+                                        <div className="border-t border-black/10 px-3 py-2">
+                                          <button
+                                            onClick={() => {
+                                              setOpenReviewerDropdown(null);
+                                              onAssign(
+                                                item.id,
+                                                [...selectedIds].map(Number),
+                                              );
+                                            }}
+                                            className="w-full rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white"
+                                          >
+                                            Assign ({selectedIds.size})
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                </div>
+                              )}
                             </td>
                             <td className="border-b border-black/10 px-3 py-3">
                               {canFinalizeReview && !isHistoryTab ? (

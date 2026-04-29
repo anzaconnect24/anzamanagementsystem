@@ -87,11 +87,13 @@ export const getAdminQueue = async (
   return unwrap(response) || [];
 };
 
-export const assignReviewer = async (assessmentId, reviewerId) => {
+export const assignReviewer = async (assessmentId, reviewerIds) => {
+  // Accept either a single number (legacy) or an array
+  const ids = Array.isArray(reviewerIds) ? reviewerIds : [reviewerIds];
   const response = await axios.post(
     `${server_url}/crat/admin/assessments/${assessmentId}/assign`,
     {
-      reviewerId,
+      reviewerIds: ids,
     },
     {
       headers,
@@ -173,6 +175,55 @@ export const getPublishedReport = async (businessId) => {
     {
       headers,
     },
+  );
+  return unwrap(response);
+};
+
+// ─── Admin Catalog Management ─────────────────────────────────────────────────
+
+export const getAdminCatalog = async (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  const url = query
+    ? `${server_url}/crat/admin/catalog-mgmt?${query}`
+    : `${server_url}/crat/admin/catalog-mgmt`;
+  const response = await axios.get(url, { headers });
+  return unwrap(response) || [];
+};
+
+export const createCatalogQuestion = async (data) => {
+  const response = await axios.post(
+    `${server_url}/crat/admin/catalog-mgmt`,
+    data,
+    { headers },
+  );
+  return unwrap(response);
+};
+
+export const updateCatalogQuestion = async (questionId, data) => {
+  const response = await axios.put(
+    `${server_url}/crat/admin/catalog-mgmt/${questionId}`,
+    data,
+    { headers },
+  );
+  return unwrap(response);
+};
+
+export const toggleCatalogQuestion = async (questionId) => {
+  const response = await axios.patch(
+    `${server_url}/crat/admin/catalog-mgmt/${questionId}/toggle`,
+    {},
+    { headers },
+  );
+  return unwrap(response);
+};
+
+// ─── Backend AI Review ────────────────────────────────────────────────────────
+
+export const runAiReview = async (assessmentId) => {
+  const response = await axios.post(
+    `${server_url}/crat/admin/assessments/${assessmentId}/ai-review`,
+    {},
+    { headers },
   );
   return unwrap(response);
 };

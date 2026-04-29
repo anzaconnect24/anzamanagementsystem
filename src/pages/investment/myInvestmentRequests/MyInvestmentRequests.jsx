@@ -92,7 +92,7 @@ const Page = () => {
                 </div> */}
                 <div className="col-span-2 flex items-center">
                   <p className="text-sm text-black dark:text-white">
-                    {item.currency}{" "}
+                    {item.currency} Tshs.{" "}
                     {item.investmentAmount?.toLocaleString() || "N/A"}
                   </p>
                 </div>

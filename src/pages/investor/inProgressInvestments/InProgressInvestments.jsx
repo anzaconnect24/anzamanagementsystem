@@ -126,7 +126,7 @@ const InProgressInvestments = () => {
                 </div>
                 <div className="col-span-2 flex items-center">
                   <p className="text-sm text-black dark:text-white">
-                    {investment.currency}{" "}
+                    {investment.currency} Tshs.{" "}
                     {investment.investmentAmount?.toLocaleString()}
                   </p>
                 </div>
@@ -266,7 +266,7 @@ const InProgressInvestments = () => {
                         Amount
                       </p>
                       <p className="text-sm font-medium text-black dark:text-white">
-                        {selectedInvestment.currency}{" "}
+                        Tshs.{" "}
                         {selectedInvestment.investmentAmount?.toLocaleString()}
                       </p>
                     </div>

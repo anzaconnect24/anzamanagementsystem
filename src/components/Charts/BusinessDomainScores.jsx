@@ -97,9 +97,14 @@ const mapPublishedReportToScoreData = (published, t) => {
   return result;
 };
 
+const normalizeScoreData = (data) =>
+  data && typeof data === "object" ? data : {};
+
 const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
   const { t } = useTranslation();
-  const [scoreData, setScoreData] = useState(initialScoreData || {});
+  const [scoreData, setScoreData] = useState(
+    normalizeScoreData(initialScoreData),
+  );
   const [loading, setLoading] = useState(
     !initialScoreData || Object.keys(initialScoreData).length === 0,
   );
@@ -114,7 +119,7 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
   useEffect(() => {
     if (initialScoreData && Object.keys(initialScoreData).length > 0) {
       console.log("BusinessDomainScores received data:", initialScoreData);
-      setScoreData(initialScoreData);
+      setScoreData(normalizeScoreData(initialScoreData));
       setLoading(false);
     }
   }, [initialScoreData]);
@@ -132,7 +137,7 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
               const published = await getPublishedReport(business.id);
               const mapped = mapPublishedReportToScoreData(published, t);
               if (mapped && Object.keys(mapped).length > 0) {
-                setScoreData(mapped);
+                setScoreData(normalizeScoreData(mapped));
                 setLoading(false);
                 return;
               }
@@ -145,7 +150,7 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
         try {
           const res = await getScoreData({ uuid: userDetails.uuid });
           console.log("BusinessDomainScores fetched data:", res);
-          setScoreData(res);
+          setScoreData(normalizeScoreData(res));
         } catch (error) {
           console.error("Error fetching score data:", error);
         } finally {
@@ -159,16 +164,17 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
 
   // Calculate bar colors based on CRAT readiness levels
   const getBarColors = () => {
+    const safeScoreData = normalizeScoreData(scoreData);
     const getColor = (score) => {
       if (score >= 75) return "#219654"; // Ready - 75-100%
       if (score >= 60) return "#f4dc2c"; // Partially Ready - 60-74%
       return "#EF4444"; // Not Ready - 0-59%
     };
     return [
-      getColor(scoreData.commercial?.percentage || 0),
-      getColor(scoreData.financial?.percentage || 0),
-      getColor(scoreData.operations?.percentage || 0),
-      getColor(scoreData.legal?.percentage || 0),
+      getColor(safeScoreData.commercial?.percentage || 0),
+      getColor(safeScoreData.financial?.percentage || 0),
+      getColor(safeScoreData.operations?.percentage || 0),
+      getColor(safeScoreData.legal?.percentage || 0),
     ];
   };
 
@@ -263,10 +269,10 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
     {
       name: t("report.score", "Score"),
       data: [
-        Math.round(scoreData.commercial?.percentage || 0),
-        Math.round(scoreData.financial?.percentage || 0),
-        Math.round(scoreData.operations?.percentage || 0),
-        Math.round(scoreData.legal?.percentage || 0),
+        Math.round(normalizeScoreData(scoreData).commercial?.percentage || 0),
+        Math.round(normalizeScoreData(scoreData).financial?.percentage || 0),
+        Math.round(normalizeScoreData(scoreData).operations?.percentage || 0),
+        Math.round(normalizeScoreData(scoreData).legal?.percentage || 0),
       ],
     },
   ];
