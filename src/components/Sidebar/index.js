@@ -451,21 +451,15 @@ const Sidebar = ({
 
     if (["Admin"].includes(role)) {
       programsItems.push({
-        name: t("navigation.cratReviewApplications", "CRAT Assignment Queue"),
-        path: "/dashboard/cratReviewApplications",
-        icon: <MdAssignment className="text-xl" />,
-      });
-
-      programsItems.push({
-        name: t("navigation.cratCatalogManager", "CRAT Form Builder"),
+        name: t("navigation.cratCatalogManager", "CRAT Builder"),
         path: "/dashboard/cratCatalogManager",
         icon: <MdAssignment className="text-xl" />,
       });
 
       programsItems.push({
-        name: t("navigation.report", "CRAT Reports"),
-        path: "/dashboard/crat-system/report",
-        icon: <MdBusinessCenter className="text-xl" />,
+        name: t("navigation.cratReviewApplications", "CRAT Assignment Queue"),
+        path: "/dashboard/cratReviewApplications",
+        icon: <MdAssignment className="text-xl" />,
       });
     }
 

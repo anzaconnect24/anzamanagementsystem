@@ -18,6 +18,7 @@ import {
 import Breadcrumb from "../../../component/Breadcrumb";
 
 const RATING_OPTIONS = [
+  { value: 0, label: "0 - Not Evidenced" },
   { value: 1, label: "1 - Very Weak" },
   { value: 2, label: "2 - Weak" },
   { value: 3, label: "3 - Moderate" },
@@ -121,7 +122,7 @@ const CratSubmissionReviewPage = () => {
           const normalizedScore = Number(answer.score);
           nextDrafts[answer.questionId] = {
             score:
-              normalizedScore >= 1 && normalizedScore <= 5
+              normalizedScore >= 0 && normalizedScore <= 5
                 ? normalizedScore
                 : "",
             reviewerComment: answer.reviewerComment || "",
@@ -153,7 +154,7 @@ const CratSubmissionReviewPage = () => {
       const question = questionMap[answer.questionId] || null;
       const draft = drafts[answer.questionId] || {
         score:
-          Number(answer.score) >= 1 && Number(answer.score) <= 5
+          Number(answer.score) >= 0 && Number(answer.score) <= 5
             ? Number(answer.score)
             : "",
         reviewerComment: answer.reviewerComment || "",
@@ -163,7 +164,12 @@ const CratSubmissionReviewPage = () => {
         ...answer,
         questionText: question?.questionTextEn || answer.questionCode || "-",
         requiredAttachment: question?.requiredAttachment || "-",
-        draftScore: Number(draft.score || 0),
+        draftScore:
+          draft.score === "" ||
+          draft.score === null ||
+          draft.score === undefined
+            ? ""
+            : Number(draft.score),
         draftReviewerComment: draft.reviewerComment || "",
       };
     });
@@ -220,17 +226,25 @@ const CratSubmissionReviewPage = () => {
     return domainsToSummarize.reduce((acc, domainKey) => {
       const domainRows = rowsByDomain[domainKey] || [];
       const ratedCount = domainRows.filter(
-        (row) => Number(row.draftScore) >= 1 && Number(row.draftScore) <= 5,
+        (row) =>
+          row.draftScore !== "" &&
+          Number(row.draftScore) >= 0 &&
+          Number(row.draftScore) <= 5,
       ).length;
       const earnedScore = domainRows.reduce(
-        (sum, row) => sum + (Number(row.draftScore) || 0),
+        (sum, row) =>
+          sum +
+          (row.draftScore !== "" && Number(row.draftScore) >= 0
+            ? Number(row.draftScore)
+            : 0),
         0,
       );
       const totalQuestions = catalogDomainCounts[domainKey] || 0;
       const maxScore = totalQuestions * 5;
       const percent =
         maxScore > 0 ? Math.round((earnedScore / maxScore) * 100) : 0;
-      const weight = DOMAIN_WEIGHTS[domainKey] || 0;
+      const fallbackWeight = Math.round(100 / (domainsToSummarize.length || 1));
+      const weight = DOMAIN_WEIGHTS[domainKey] || fallbackWeight;
       const weightedPercent = Math.round((percent * weight) / 100);
 
       acc[domainKey] = {
@@ -263,11 +277,13 @@ const CratSubmissionReviewPage = () => {
   }, [domainSummaries, summaryCardOrder]);
 
   const buildScoresPayload = (currentRows) => {
-    return currentRows.map((row) => ({
-      questionId: row.questionId,
-      score: Number(row.draftScore || 0),
-      reviewerComment: row.draftReviewerComment || "",
-    }));
+    return currentRows
+      .filter((row) => row.draftScore !== "")
+      .map((row) => ({
+        questionId: row.questionId,
+        score: Number(row.draftScore || 0),
+        reviewerComment: row.draftReviewerComment || "",
+      }));
   };
 
   const persistScores = async (currentRows) => {
@@ -515,7 +531,9 @@ const CratSubmissionReviewPage = () => {
                                       setDraftValue(
                                         row.questionId,
                                         "score",
-                                        Number(e.target.value),
+                                        e.target.value === ""
+                                          ? ""
+                                          : Number(e.target.value),
                                       )
                                     }
                                     disabled={!canEdit}
@@ -532,7 +550,7 @@ const CratSubmissionReviewPage = () => {
                                   </select>
                                 </td>
                                 <td className="border-b border-black/10 px-3 py-3 text-sm font-semibold text-slate-800">
-                                  {row.draftScore || "-"}
+                                  {row.draftScore === "" ? "-" : row.draftScore}
                                 </td>
                                 <td className="border-b border-black/10 px-3 py-3">
                                   <textarea

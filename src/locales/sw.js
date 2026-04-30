@@ -247,6 +247,7 @@ export const sw = {
     cratReviews: "Mapitio ya CRAT",
     mentorReports: "Ripoti za Washauri wa Biashara",
     cratReviewApplications: "Maombi ya Mapitio ya CRAT",
+    cratCatalogManager: "Mjenzi wa CRAT",
     learnAndGrow: "Jifunze na Kuza Maarifa",
     generalResources: "Maarifa ya Jumla",
     classRooms: "Mafunzo Maalum",

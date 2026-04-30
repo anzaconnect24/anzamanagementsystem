@@ -9,19 +9,6 @@ import {
   toggleCatalogQuestion,
 } from "@/controllers/crat_controller";
 
-const DOMAINS = [
-  { value: "", label: "All Domains" },
-  { value: "commercial_marketing", label: "Commercial & Marketing" },
-  { value: "financial", label: "Financial" },
-  { value: "legal_compliance", label: "Legal & Compliance" },
-  { value: "operations", label: "Operations" },
-];
-
-const VARIANTS = [
-  { value: "default", label: "Default" },
-  { value: "fintech", label: "Fintech" },
-];
-
 const DOMAIN_LABELS = {
   commercial_marketing: "Commercial & Marketing",
   financial: "Financial",
@@ -30,7 +17,7 @@ const DOMAIN_LABELS = {
 };
 
 const emptyForm = {
-  domain: "commercial_marketing",
+  domain: "",
   variant: "default",
   question_code: "",
   question_text_en: "",
@@ -54,6 +41,8 @@ const CratCatalogManager = () => {
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [expandedAiPrompt, setExpandedAiPrompt] = useState(null);
+  const [domainOptions, setDomainOptions] = useState([]);
+  const [variantOptions, setVariantOptions] = useState(["default"]);
 
   const isAdmin = userDetails?.role === "Admin";
 
@@ -65,6 +54,22 @@ const CratCatalogManager = () => {
       if (filterVariant) params.variant = filterVariant;
       const data = await getAdminCatalog(params);
       setQuestions(data || []);
+
+      const nextDomains = [...new Set((data || []).map((q) => q.domain))]
+        .filter(Boolean)
+        .sort();
+      const nextVariants = [
+        ...new Set((data || []).map((q) => q.variant || "default")),
+      ]
+        .filter(Boolean)
+        .sort();
+
+      setDomainOptions(nextDomains);
+      setVariantOptions(
+        nextVariants.includes("default")
+          ? nextVariants
+          : ["default", ...nextVariants],
+      );
     } catch (err) {
       toast.error("Failed to load catalog.");
     } finally {
@@ -78,7 +83,11 @@ const CratCatalogManager = () => {
 
   const openCreate = () => {
     setEditingQuestion(null);
-    setForm({ ...emptyForm });
+    setForm({
+      ...emptyForm,
+      domain: domainOptions[0] || "",
+      variant: "default",
+    });
     setShowModal(true);
   };
 
@@ -107,14 +116,20 @@ const CratCatalogManager = () => {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.question_code.trim() || !form.question_text_en.trim()) {
-      toast.error("Question code and English text are required.");
+    if (
+      !form.domain.trim() ||
+      !form.question_code.trim() ||
+      !form.question_text_en.trim()
+    ) {
+      toast.error("Domain, question code, and English text are required.");
       return;
     }
     try {
       setSaving(true);
       const payload = {
         ...form,
+        domain: form.domain.trim().toLowerCase(),
+        variant: (form.variant || "default").trim().toLowerCase(),
         sort_order: Number(form.sort_order) || 0,
       };
       if (editingQuestion) {
@@ -186,7 +201,13 @@ const CratCatalogManager = () => {
             onChange={(e) => setFilterDomain(e.target.value)}
             className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
           >
-            {DOMAINS.map((d) => (
+            {[
+              { value: "", label: "All Domains" },
+              ...domainOptions.map((d) => ({
+                value: d,
+                label: DOMAIN_LABELS[d] || d,
+              })),
+            ].map((d) => (
               <option key={d.value} value={d.value}>
                 {d.label}
               </option>
@@ -197,10 +218,10 @@ const CratCatalogManager = () => {
             onChange={(e) => setFilterVariant(e.target.value)}
             className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
           >
-            <option value="">All Variants</option>
-            {VARIANTS.map((v) => (
-              <option key={v.value} value={v.value}>
-                {v.label}
+            <option value="">All Categories</option>
+            {variantOptions.map((v) => (
+              <option key={v} value={v}>
+                {v}
               </option>
             ))}
           </select>
@@ -352,39 +373,39 @@ const CratCatalogManager = () => {
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
                     Domain *
                   </label>
-                  <select
+                  <input
+                    list="crat-domain-options"
                     value={form.domain}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, domain: e.target.value }))
                     }
-                    disabled={!!editingQuestion}
-                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none disabled:opacity-60"
-                  >
-                    {DOMAINS.filter((d) => d.value).map((d) => (
-                      <option key={d.value} value={d.value}>
-                        {d.label}
-                      </option>
+                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                    placeholder="e.g. financial, operations, technology"
+                  />
+                  <datalist id="crat-domain-options">
+                    {domainOptions.map((domain) => (
+                      <option key={domain} value={domain} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
-                    Variant
+                    Category
                   </label>
-                  <select
+                  <input
+                    list="crat-variant-options"
                     value={form.variant}
                     onChange={(e) =>
                       setForm((f) => ({ ...f, variant: e.target.value }))
                     }
-                    disabled={!!editingQuestion}
-                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none disabled:opacity-60"
-                  >
-                    {VARIANTS.map((v) => (
-                      <option key={v.value} value={v.value}>
-                        {v.label}
-                      </option>
+                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                    placeholder="e.g. default, fintech, blue economy"
+                  />
+                  <datalist id="crat-variant-options">
+                    {variantOptions.map((variant) => (
+                      <option key={variant} value={variant} />
                     ))}
-                  </select>
+                  </datalist>
                 </div>
               </div>
 
@@ -399,9 +420,8 @@ const CratCatalogManager = () => {
                     onChange={(e) =>
                       setForm((f) => ({ ...f, question_code: e.target.value }))
                     }
-                    disabled={!!editingQuestion}
                     placeholder="e.g. CM-006"
-                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none disabled:opacity-60"
+                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
                   />
                 </div>
                 <div>

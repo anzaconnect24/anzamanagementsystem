@@ -266,6 +266,7 @@ export const en = {
     cratReviews: "CRAT Reviews",
     mentorReports: "Mentor Reports",
     cratReviewApplications: "CRAT Review Applications",
+    cratCatalogManager: "CRAT Builder",
     learnAndGrow: "Learn & Grow",
     generalResources: "General Resources",
     businessTools: "Business Tools",
