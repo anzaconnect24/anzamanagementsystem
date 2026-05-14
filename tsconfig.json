@@ -1,28 +1,23 @@
 {
   "compilerOptions": {
-    "target": "es2017",
-    "lib": ["dom", "dom.iterable", "esnext"],
+    "target": "ES2017",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "allowJs": true,
     "skipLibCheck": true,
-    "strict": true,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "noEmit": true,
     "esModuleInterop": true,
-    "module": "esnext",
-    "moduleResolution": "bundler",
+    "module": "ESNext",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "jsx": "preserve",
-    "incremental": true,
-    "plugins": [
-      {
-        "name": "next"
-      }
-    ],
+    "jsx": "react-jsx",
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "components/icons/pitch_icon.js", "app/(auth)/signin/page.js", "app/(auth)/signup/page.js", "app/component/Breadcrumb.js", "app/layout.js", "components/Breadcrumbs/Breadcrumb.js", "app/(dashboard)/chart/page.js", "app/(dashboard)/settings/page.js", "components/Charts/ChartThree.js", "components/Dashboard/dashboard.js", "components/Sidebar/index.js", "app/(dashboard)/layout.js", "components/Charts/ChartOne.js", "components/common/Loader/index.js", "app/controllers/story_controller.js", "components/Header/DropdownNotification.js"],
-  "exclude": ["node_modules"]
+  "include": ["src", "vite.config.js", "vite.config.mjs"],
+  "exclude": ["node_modules", "dist"]
 }

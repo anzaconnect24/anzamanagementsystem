@@ -1,4 +1,5 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
@@ -13,20 +14,35 @@ import toast from "react-hot-toast";
 import NoData from "@/component/noData";
 import { useTranslation } from "../../../locales";
 
+import {
+  FaArrowRight,
+  FaCheckCircle,
+  FaClock,
+  FaEnvelope,
+  FaMapMarkerAlt,
+  FaPhoneAlt,
+  FaSearch,
+  FaTimes,
+  FaUserGraduate,
+} from "react-icons/fa";
+
 const MentorEntreprenuer = () => {
   const { t } = useTranslation();
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(null);
   const [keyword, setKeyword] = useState("");
   const [selectedRequest, setSelectedRequest] = useState(null);
+
   const { userDetails } = useContext(UserContext);
+
   useEffect(() => {
     getData();
   }, []);
+
   const getData = () => {
     getUnapprovedMentorEntreprenuers().then((res) => {
-      console.log(res);
       setData(res);
       setLoading(false);
     });
@@ -34,9 +50,14 @@ const MentorEntreprenuer = () => {
 
   const handleApprove = async (uuid) => {
     setProcessing(uuid);
+
     try {
-      await updateMentorshipApplication(uuid, { status: "ACCEPTED" });
+      await updateMentorshipApplication(uuid, {
+        status: "ACCEPTED",
+      });
+
       toast.success("Mentorship request approved successfully");
+
       getData();
     } catch (error) {
       toast.error("Failed to approve request");
@@ -48,9 +69,14 @@ const MentorEntreprenuer = () => {
 
   const handleReject = async (uuid) => {
     setProcessing(uuid);
+
     try {
-      await updateMentorshipApplication(uuid, { status: "REJECTED" });
+      await updateMentorshipApplication(uuid, {
+        status: "REJECTED",
+      });
+
       toast.success("Mentorship request rejected");
+
       getData();
     } catch (error) {
       toast.error("Failed to reject request");
@@ -59,246 +85,344 @@ const MentorEntreprenuer = () => {
       setProcessing(null);
     }
   };
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="bg-white py-6 shadow mt-6 px-6 ">
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-bold">
-          {t("mentorship.mentorshipRequests", "Mentorship requests")}
-        </h1>
-        <input
-          onChange={(e) => {
-            setKeyword(e.target.value);
+
+  const filteredData = data.filter(
+    (e) =>
+      e.entrepreneur?.name
+        ?.toLowerCase()
+        .includes(keyword.toLowerCase()) ||
+      e.entrepreneur?.Business?.name
+        ?.toLowerCase()
+        .includes(keyword.toLowerCase()) ||
+      e.entrepreneur?.Business?.BusinessSector?.name
+        ?.toLowerCase()
+        .includes(keyword.toLowerCase()),
+  );
+
+  if (loading) return <Loader />;
+
+  return (
+    <div className="min-h-screen px-6 py-4">
+      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/mentor_hero.svg')",
           }}
-          className="py-1 rounded border-bodydark/40 "
-          placeholder={t("mentorship.searchHere", "Search here")}
         />
+
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-[#c9672b]/30" />
+
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Mentorship Management
+          </span>
+
+          <h1 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            Mentorship Requests
+          </h1>
+
+          <p className="mb-6 text-lg text-white/85 drop-shadow-md">
+            Review entrepreneur mentorship applications, assess business needs,
+            and approve mentoring relationships across accelerator programs.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaUserGraduate />
+              Entrepreneur Applications
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaClock />
+              Review & Approval Workflow
+            </span>
+          </div>
+        </div>
       </div>
-      {data.length < 1 ? (
+
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h2 className="text-2xl font-bold text-[#172033]">
+            Pending Applications
+          </h2>
+
+          <p className="mt-1 text-sm text-[#6f6f72]">
+            Review and manage entrepreneur mentorship requests.
+          </p>
+        </div>
+
+        <div className="relative w-full md:w-[320px]">
+          <FaSearch className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8a8f98]" />
+
+          <input
+            onChange={(e) => {
+              setKeyword(e.target.value);
+            }}
+            className="w-full rounded-xl border border-black/10 bg-transparent py-3 pl-11 pr-4 text-sm outline-none backdrop-blur-sm transition focus:border-green-600 focus:ring-1 focus:ring-green-600"
+            placeholder={t("mentorship.searchHere", "Search here")}
+          />
+        </div>
+      </div>
+
+      {filteredData.length < 1 ? (
         <NoData />
       ) : (
-        <table className="mt-8 w-full">
-          <thead>
-            <tr>
-              <th className="text-left px-3">
-                {t("mentorship.assigned", "Assigned")}
-              </th>
-              <th className="text-left px-3">
-                {t("mentorship.entrepreneur", "Entrepreneur")}
-              </th>
-              <th className="text-left px-3">
-                {t("mentorship.company", "Company")}
-              </th>
-              <th className="text-left px-3">{t("common.email", "Email")}</th>
-              <th className="text-left px-3">{t("common.phone", "Phone")}</th>
-              <th className="text-left px-3">
-                {t("common.actions", "Actions")}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {data
-              .filter(
-                (e) =>
-                  e.entrepreneur?.name
-                    .toLowerCase()
-                    .includes(keyword.toLowerCase()) ||
-                  e.entrepreneur?.Business?.name
-                    .toLowerCase()
-                    .includes(keyword.toLowerCase()) ||
-                  e.entrepreneur?.Business?.BusinessSector?.name
-                    .toLowerCase()
-                    .includes(keyword.toLowerCase()),
-              )
-              .map((item, index) => {
-                const isProcessing = processing === item.uuid;
-                return (
-                  <tr key={item.uuid} className="border-b border-black/10">
-                    <td className="py-3 px-3">{timeAgo(item.createdAt)}</td>
-                    <td className="py-3 px-3">{item.entrepreneur?.name}</td>
-                    <td className="py-3 px-3">
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          {filteredData.map((item) => {
+            const isProcessing = processing === item.uuid;
+
+            return (
+              <div
+                key={item.uuid}
+                className="group rounded-2xl border border-black/10 p-6 backdrop-blur-sm transition duration-200 hover:shadow-lg"
+              >
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <div>
+                    <div className="mb-2 flex items-center gap-2">
+                      <span
+                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-medium ${
+                          item.status === "ACCEPTED"
+                            ? "bg-green-50 text-green-700"
+                            : item.status === "REJECTED"
+                              ? "bg-red-50 text-red-700"
+                              : "bg-yellow-50 text-yellow-700"
+                        }`}
+                      >
+                        {item.status === "ACCEPTED" ? (
+                          <FaCheckCircle />
+                        ) : item.status === "REJECTED" ? (
+                          <FaTimes />
+                        ) : (
+                          <FaClock />
+                        )}
+
+                        {item.status}
+                      </span>
+
+                      <span className="text-xs text-[#8a8f98]">
+                        {timeAgo(item.createdAt)}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-[#172033]">
+                      {item.entrepreneur?.name}
+                    </h3>
+
+                    <p className="mt-1 text-sm text-[#6f6f72]">
                       {item.entrepreneur?.Business?.name}
-                    </td>
-                    <td className="py-3 px-3">{item.entrepreneur?.email}</td>
-                    <td className="py-3 px-3">{item.entrepreneur?.phone}</td>
-                    <td className="py-3 px-3">
-                      <div className="flex gap-2 flex-wrap items-center">
-                        <button
-                          onClick={() => setSelectedRequest(item)}
-                          className="py-2 px-3 text-sm bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 rounded"
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mb-6 space-y-3">
+                  <div className="flex items-center gap-3 text-sm text-[#6f6f72]">
+                    <FaEnvelope className="text-[#8a8f98]" />
+                    <span>{item.entrepreneur?.email}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-sm text-[#6f6f72]">
+                    <FaPhoneAlt className="text-[#8a8f98]" />
+                    <span>{item.entrepreneur?.phone}</span>
+                  </div>
+
+                  <div className="flex items-center gap-3 text-sm text-[#6f6f72]">
+                    <FaMapMarkerAlt className="text-[#8a8f98]" />
+                    <span>
+                      {item.entrepreneur?.Business?.location ||
+                        "Location not provided"}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mb-6 rounded-xl border border-black/10 p-4">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#8a8f98]">
+                    Mentorship Areas
+                  </p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {item.mentorshipAreas &&
+                    Object.values(item.mentorshipAreas).length > 0 ? (
+                      Object.values(item.mentorshipAreas).map((area, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-[#f8f8f6] px-3 py-1 text-xs font-medium text-[#172033]"
                         >
-                          {t("common.viewDetails", "View Details")}
-                        </button>
-                        {item.status === "ACCEPTED" && (
-                          <span className="py-2 px-3 text-sm bg-green-100 text-green-800 rounded">
-                            {t("mentorship.accepted", "Accepted")}
-                          </span>
-                        )}
-                        {item.status === "REJECTED" && (
-                          <span className="py-2 px-3 text-sm bg-red-100 text-red-800 rounded">
-                            {t("mentorship.rejected", "Rejected")}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
-          </tbody>
-        </table>
+                          {area}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-sm text-[#6f6f72]">
+                        No mentorship areas specified
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-3 border-t border-black/10 pt-5">
+                  <button
+                    onClick={() => setSelectedRequest(item)}
+                    className="rounded-lg border border-black/10 bg-transparent px-5 py-3 text-sm font-medium text-[#172033] transition hover:border-green-600 hover:text-green-700"
+                  >
+                    View Details
+                  </button>
+
+                  {item.status === "PENDING" && (
+                    <>
+                      <button
+                        onClick={() => handleApprove(item.uuid)}
+                        disabled={isProcessing}
+                        className="rounded-lg border border-green-600 bg-transparent px-5 py-3 text-sm font-medium text-green-700 transition hover:bg-green-50 disabled:border-gray-300 disabled:text-gray-400"
+                      >
+                        {isProcessing ? "Processing..." : "Approve"}
+                      </button>
+
+                      <button
+                        onClick={() => handleReject(item.uuid)}
+                        disabled={isProcessing}
+                        className="rounded-lg border border-red-600 bg-transparent px-5 py-3 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:border-gray-300 disabled:text-gray-400"
+                      >
+                        Reject
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
 
-      {/* Request Details Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">
-                {t("mentorship.requestDetails", "Request Details")}
-              </h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-8 shadow-xl">
+            <div className="mb-8 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-3xl font-bold text-[#172033]">
+                  Request Details
+                </h2>
+
+                <p className="mt-1 text-sm text-[#6f6f72]">
+                  Review entrepreneur application and mentorship requirements.
+                </p>
+              </div>
+
               <button
                 onClick={() => setSelectedRequest(null)}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                className="rounded-full p-2 text-[#8a8f98] transition hover:bg-[#f8f8f6] hover:text-[#172033]"
               >
-                ×
+                <FaTimes />
               </button>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {t("mentorship.entrepreneurInfo", "Entrepreneur Information")}
-                </h3>
-                <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded">
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {t("common.name", "Name")}
-                    </p>
-                    <p className="font-medium">
-                      {selectedRequest.entrepreneur?.name}
-                    </p>
+            <div className="space-y-8">
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="rounded-2xl border border-black/10 p-5">
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-[#8a8f98]">
+                    Entrepreneur
+                  </p>
+
+                  <h3 className="text-xl font-bold text-[#172033]">
+                    {selectedRequest.entrepreneur?.name}
+                  </h3>
+
+                  <div className="mt-4 space-y-3 text-sm text-[#6f6f72]">
+                    <p>{selectedRequest.entrepreneur?.email}</p>
+                    <p>{selectedRequest.entrepreneur?.phone}</p>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {t("common.email", "Email")}
-                    </p>
-                    <p className="font-medium">
-                      {selectedRequest.entrepreneur?.email}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {t("common.phone", "Phone")}
-                    </p>
-                    <p className="font-medium">
-                      {selectedRequest.entrepreneur?.phone}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">
-                      {t("mentorship.company", "Company")}
-                    </p>
-                    <p className="font-medium">
-                      {selectedRequest.entrepreneur?.Business?.name}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Business Sector</p>
-                    <p className="font-medium">
+                </div>
+
+                <div className="rounded-2xl border border-black/10 p-5">
+                  <p className="mb-1 text-xs font-medium uppercase tracking-wide text-[#8a8f98]">
+                    Business
+                  </p>
+
+                  <h3 className="text-xl font-bold text-[#172033]">
+                    {selectedRequest.entrepreneur?.Business?.name}
+                  </h3>
+
+                  <div className="mt-4 space-y-3 text-sm text-[#6f6f72]">
+                    <p>
+                      Sector:{" "}
                       {selectedRequest.entrepreneur?.Business?.BusinessSector
-                        ?.name || t("common.notProvided", "Not provided")}
+                        ?.name || "Not provided"}
                     </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Location</p>
-                    <p className="font-medium">
+
+                    <p>
+                      Location:{" "}
                       {selectedRequest.entrepreneur?.Business?.location ||
-                        t("common.notProvided", "Not provided")}
+                        "Not provided"}
                     </p>
                   </div>
                 </div>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {t("mentorship.challenges", "Challenges")}
+              <div className="rounded-2xl border border-black/10 p-6">
+                <h3 className="mb-3 text-xl font-bold text-[#172033]">
+                  Challenges
                 </h3>
-                <p className="bg-gray-50 p-4 rounded whitespace-pre-wrap">
-                  {selectedRequest.challenges ||
-                    t("common.notProvided", "Not provided")}
+
+                <p className="whitespace-pre-wrap leading-7 text-[#6f6f72]">
+                  {selectedRequest.challenges || "Not provided"}
                 </p>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-lg mb-2">
-                  {t("mentorship.mentorshipAreas", "Mentorship Areas")}
+              <div className="rounded-2xl border border-black/10 p-6">
+                <h3 className="mb-4 text-xl font-bold text-[#172033]">
+                  Mentorship Areas
                 </h3>
-                <div className="bg-gray-50 p-4 rounded">
+
+                <div className="flex flex-wrap gap-3">
                   {selectedRequest.mentorshipAreas &&
                   Object.values(selectedRequest.mentorshipAreas).length > 0 ? (
-                    <ul className="list-disc list-inside space-y-1">
-                      {Object.values(selectedRequest.mentorshipAreas).map(
-                        (area, idx) => (
-                          <li key={idx}>{area}</li>
-                        ),
-                      )}
-                    </ul>
+                    Object.values(selectedRequest.mentorshipAreas).map(
+                      (area, idx) => (
+                        <span
+                          key={idx}
+                          className="rounded-full bg-[#f8f8f6] px-4 py-2 text-sm font-medium text-[#172033]"
+                        >
+                          {area}
+                        </span>
+                      ),
+                    )
                   ) : (
-                    <p>{t("common.notProvided", "Not provided")}</p>
+                    <p className="text-[#6f6f72]">Not provided</p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">
-                    {t("mentorship.availability", "Availability")}
-                  </h3>
-                  <p className="bg-gray-50 p-4 rounded">
-                    {selectedRequest.availability ||
-                      t("common.notProvided", "Not provided")}
+              <div className="grid gap-6 md:grid-cols-2">
+                <div className="rounded-2xl border border-black/10 p-5">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#8a8f98]">
+                    Availability
+                  </p>
+
+                  <p className="text-[#6f6f72]">
+                    {selectedRequest.availability || "Not provided"}
                   </p>
                 </div>
 
-                <div>
-                  <h3 className="font-semibold text-lg mb-2">
-                    {t("mentorship.mentorshipMode", "Mentorship Mode")}
-                  </h3>
-                  <p className="bg-gray-50 p-4 rounded">
-                    {selectedRequest.mentorshipMode ||
-                      t("common.notProvided", "Not provided")}
+                <div className="rounded-2xl border border-black/10 p-5">
+                  <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#8a8f98]">
+                    Mentorship Mode
                   </p>
-                </div>
-              </div>
 
-              <div>
-                <h3 className="font-semibold text-lg mb-2">Request Status</h3>
-                <div className="bg-gray-50 p-4 rounded">
-                  <span
-                    className={`py-2 px-4 rounded font-medium ${
-                      selectedRequest.status === "PENDING"
-                        ? "bg-yellow-100 text-yellow-800"
-                        : selectedRequest.status === "ACCEPTED"
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                    }`}
-                  >
-                    {selectedRequest.status}
-                  </span>
-                  <p className="text-sm text-gray-600 mt-2">
-                    Requested {timeAgo(selectedRequest.createdAt)}
+                  <p className="text-[#6f6f72]">
+                    {selectedRequest.mentorshipMode || "Not provided"}
                   </p>
                 </div>
               </div>
 
-              <div className="flex gap-3 pt-4 border-t">
+              <div className="flex flex-wrap gap-3 border-t border-black/10 pt-6">
                 <Link
                   href={`/dashboard/mentorEntreprenuers/businessDetailsByMentor/${selectedRequest.entrepreneur?.Business?.uuid}`}
-                  className="py-2 px-4 bg-blue-500 text-white hover:bg-blue-600 transition-all duration-300 rounded"
+                  className="inline-flex items-center gap-2 rounded-lg border border-black/10 bg-transparent px-5 py-3 text-sm font-medium text-[#172033] transition hover:border-green-600 hover:text-green-700"
                 >
-                  {t("mentorship.viewBusinessProfile", "View Business Profile")}
+                  View Business Profile
+                  <FaArrowRight />
                 </Link>
+
                 {selectedRequest.status === "PENDING" && (
                   <>
                     <button
@@ -307,23 +431,24 @@ const MentorEntreprenuer = () => {
                         setSelectedRequest(null);
                       }}
                       disabled={processing === selectedRequest.uuid}
-                      className="py-2 px-4 bg-green-500 text-white hover:bg-green-600 disabled:bg-gray-400 transition-all duration-300 rounded"
+                      className="rounded-lg border border-green-600 bg-transparent px-5 py-3 text-sm font-medium text-green-700 transition hover:bg-green-50 disabled:border-gray-300 disabled:text-gray-400"
                     >
                       {processing === selectedRequest.uuid
-                        ? t("mentorship.approving", "Approving...")
-                        : t("mentorship.approve", "Approve")}
+                        ? "Approving..."
+                        : "Approve"}
                     </button>
+
                     <button
                       onClick={() => {
                         handleReject(selectedRequest.uuid);
                         setSelectedRequest(null);
                       }}
                       disabled={processing === selectedRequest.uuid}
-                      className="py-2 px-4 bg-red-500 text-white hover:bg-red-600 disabled:bg-gray-400 transition-all duration-300 rounded"
+                      className="rounded-lg border border-red-600 bg-transparent px-5 py-3 text-sm font-medium text-red-700 transition hover:bg-red-50 disabled:border-gray-300 disabled:text-gray-400"
                     >
                       {processing === selectedRequest.uuid
-                        ? t("mentorship.rejecting", "Rejecting...")
-                        : t("mentorship.reject", "Reject")}
+                        ? "Rejecting..."
+                        : "Reject"}
                     </button>
                   </>
                 )}

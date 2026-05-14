@@ -1,127 +1,46 @@
 "use client";
-import React, { useState } from "react";
+
+import React from "react";
 import { useTranslation } from "../../locales";
 
 const LanguageToggle = () => {
-  const { language, switchLanguage, isSwahili, isEnglish } = useTranslation();
-  const [isOpen, setIsOpen] = useState(false);
+  const { switchLanguage, isSwahili, isEnglish } = useTranslation();
 
-  const toggleLanguage = (newLanguage) => {
+  const handleToggle = (newLanguage) => {
     switchLanguage(newLanguage);
-    setIsOpen(false);
   };
 
   return (
     <div className="fixed bottom-4 right-4 z-50">
-      <div className="relative">
-        {/* Toggle Button */}
+      <div className="relative flex h-11 w-28 items-center rounded-full border border-stroke bg-white p-1 shadow-lg dark:border-strokedark dark:bg-boxdark">
+        <div
+          className={`absolute left-1 top-1 h-9 w-[52px] rounded-full bg-blue-600 shadow transition-transform duration-300 ease-in-out ${
+            isSwahili ? "translate-x-[52px]" : "translate-x-0"
+          }`}
+        />
+
         <button
-          onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg shadow-lg hover:bg-primary/90 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-          aria-label="Change Language"
+          type="button"
+          onClick={() => handleToggle("en")}
+          className={`relative z-10 flex h-9 w-[52px] items-center justify-center rounded-full text-sm font-semibold transition-colors duration-300 ${
+            isEnglish ? "text-white" : "text-gray-600 dark:text-gray-300"
+          }`}
+          aria-label="Switch to English"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9h7M11 21l5-10 5 10M12.751 5C11.783 10.77 8.07 15.61 3 18.129"
-            />
-          </svg>
-          <span className="font-medium text-sm">{isEnglish ? "EN" : "SW"}</span>
-          <svg
-            className={`w-4 h-4 transition-transform duration-200 ${
-              isOpen ? "rotate-180" : ""
-            }`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
+          En
         </button>
 
-        {/* Dropdown Menu */}
-        {isOpen && (
-          <div className="absolute bottom-full right-0 mb-2 bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-lg shadow-lg overflow-hidden min-w-[140px]">
-            <button
-              onClick={() => toggleLanguage("en")}
-              className={`w-full px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-boxdark-2 transition-colors duration-150 flex items-center gap-3 ${
-                isEnglish
-                  ? "bg-primary/10 text-primary dark:bg-primary/20"
-                  : "text-gray-700 dark:text-gray-200"
-              }`}
-            >
-              <div className="w-6 h-4 rounded-sm overflow-hidden flex-shrink-0">
-                <div className="w-full h-full bg-gradient-to-b from-red-500 via-white to-red-500 flex items-center justify-center">
-                  <span className="text-xs font-bold text-red-600">🇺🇸</span>
-                </div>
-              </div>
-              <span className="font-medium">English</span>
-              {isEnglish && (
-                <svg
-                  className="w-4 h-4 ml-auto"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-            </button>
-            <button
-              onClick={() => toggleLanguage("sw")}
-              className={`w-full px-4 py-3 text-left text-sm hover:bg-gray-50 dark:hover:bg-boxdark-2 transition-colors duration-150 flex items-center gap-3 ${
-                isSwahili
-                  ? "bg-primary/10 text-primary dark:bg-primary/20"
-                  : "text-gray-700 dark:text-gray-200"
-              }`}
-            >
-              <div className="w-6 h-4 rounded-sm overflow-hidden flex-shrink-0">
-                <div className="w-full h-full bg-gradient-to-b from-green-500 via-black to-blue-500 flex items-center justify-center">
-                  <span className="text-xs font-bold text-white">🇹🇿</span>
-                </div>
-              </div>
-              <span className="font-medium">Kiswahili</span>
-              {isSwahili && (
-                <svg
-                  className="w-4 h-4 ml-auto"
-                  fill="currentColor"
-                  viewBox="0 0 20 20"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                    clipRule="evenodd"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-        )}
+        <button
+          type="button"
+          onClick={() => handleToggle("sw")}
+          className={`relative z-10 flex h-9 w-[52px] items-center justify-center rounded-full text-sm font-semibold transition-colors duration-300 ${
+            isSwahili ? "text-white" : "text-gray-600 dark:text-gray-300"
+          }`}
+          aria-label="Switch to Swahili"
+        >
+          Sw
+        </button>
       </div>
-
-      {/* Click outside to close */}
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-[-1]"
-          onClick={() => setIsOpen(false)}
-        />
-      )}
     </div>
   );
 };

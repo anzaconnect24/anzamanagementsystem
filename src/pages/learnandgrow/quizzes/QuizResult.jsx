@@ -1,20 +1,35 @@
 "use client";
+
 import { useState, useEffect } from "react";
 import { useRouter } from "@/utils/navigation";
 import { useParams } from "react-router-dom";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Loader from "@/components/common/Loader";
+
 import {
   getAttemptDetails,
   downloadCertificate,
 } from "@/controllers/quiz_controller";
+
 import { toast } from "react-hot-toast";
-import { BsCheckCircle, BsXCircle, BsClock, BsDownload } from "react-icons/bs";
+
+import {
+  BsCheckCircle,
+  BsXCircle,
+  BsClock,
+  BsDownload,
+  BsAward,
+  BsQuestionCircle,
+  BsArrowRight,
+  BsArrowRepeat,
+} from "react-icons/bs";
+
 import { useTranslation } from "@/locales";
 
 const QuizResultPage = () => {
   const { t } = useTranslation();
+
   const { moduleId, attemptId } = useParams();
+
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -28,12 +43,17 @@ const QuizResultPage = () => {
   const loadAttempt = async () => {
     try {
       setLoading(true);
+
       const result = await getAttemptDetails(attemptId);
+
       setAttempt(result.data);
+
       setLoading(false);
     } catch (error) {
       console.error("Error loading attempt:", error);
+
       toast.error(t("quizzes.failedToLoadQuiz"));
+
       router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`);
     }
   };
@@ -41,10 +61,13 @@ const QuizResultPage = () => {
   const handleDownloadCertificate = async () => {
     try {
       setDownloading(true);
+
       await downloadCertificate(attemptId);
+
       toast.success(t("quizzes.downloadCertificate"));
     } catch (error) {
       console.error("Error downloading certificate:", error);
+
       toast.error(t("quizzes.failedToDownloadCertificate"));
     } finally {
       setDownloading(false);
@@ -55,238 +78,410 @@ const QuizResultPage = () => {
 
   const hasDescriptionQuestions = attempt.answers.some(
     (ans) =>
-      ans.question.questionType === "description" && ans.isCorrect === null
+      ans.question.questionType === "description" &&
+      ans.isCorrect === null
   );
 
+  const progressColor = attempt.isPassed
+    ? "text-emerald-500"
+    : "text-red-500";
+
+  const badgeColor = attempt.isPassed
+    ? "bg-emerald-100 text-emerald-700"
+    : "bg-red-100 text-red-700";
+
   return (
-    <div>
-      <Breadcrumb
-        prevLink={`/dashboard/learn-and-grow/quizzes/${moduleId}`}
-        pageName={t("quizzes.quizResults")}
-        prevPage={t("quizzes.backToQuizzes")}
-      />
+    <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
+      <div className="mx-auto max-w-7xl">
+        {/* HERO */}
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage:
+                "url('/images/business_tools_hero.svg')",
+            }}
+          />
 
-      {/* Results Header */}
-      <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6 mb-6">
-        <div className="text-center mb-6">
-          <div className="mb-4">
-            {attempt.isPassed ? (
-              <BsCheckCircle
-                className="inline-block text-green-500"
-                size={64}
-              />
-            ) : (
-              <BsXCircle className="inline-block text-red-500" size={64} />
-            )}
-          </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
 
-          <h1 className="text-3xl font-bold mb-2">
-            {attempt.isPassed
-              ? t("quizzes.congratulations")
-              : t("quizzes.tryAgain")}
-          </h1>
-
-          <p className="text-xl text-gray-600 mb-4">
-            {t("quizzes.yourScore")}{" "}
-            <span className="font-bold text-primary">
-              {Number(attempt.score || 0).toFixed(1)}%
+          <div className="relative z-10 flex min-h-[320px] flex-col justify-end gap-6 p-8 text-white lg:p-12">
+            <span className="inline-flex w-fit items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+              Quiz Results
             </span>
-          </p>
 
-          <div className="inline-block">
-            {attempt.isPassed ? (
-              <span className="bg-green-100 text-green-800 px-4 py-2 rounded-full font-medium">
-                ✓ {t("quizzes.passed")}
-              </span>
-            ) : (
-              <span className="bg-red-100 text-red-800 px-4 py-2 rounded-full font-medium">
-                ✗ {t("quizzes.failed")} ({t("common.required")}:{" "}
-                {attempt.quiz.passingScore}%)
-              </span>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-3 gap-4 pt-6 border-t">
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">{t("quizzes.totalPoints")}</p>
-            <p className="text-2xl font-bold">{attempt.totalPoints}</p>
-          </div>
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">{t("quizzes.pointsEarned")}</p>
-            <p className="text-2xl font-bold text-green-600">
-              {attempt.earnedPoints}
-            </p>
-          </div>
-          <div className="text-center">
-            <p className="text-gray-500 text-sm">{t("common.questions")}</p>
-            <p className="text-2xl font-bold">{attempt.answers.length}</p>
-          </div>
-        </div>
-
-        {hasDescriptionQuestions && (
-          <div className="mt-6 bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-            <p className="text-yellow-800 text-sm">
-              <BsClock className="inline mr-2" />
-              {t("quizzes.answersUnderReview")}
-            </p>
-          </div>
-        )}
-
-        {attempt.isPassed && attempt.submittedAt && (
-          <div className="mt-6 text-center">
-            <button
-              onClick={handleDownloadCertificate}
-              disabled={downloading}
-              className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg hover:bg-primary/90 disabled:opacity-50"
-            >
-              <BsDownload />
-              {downloading
-                ? t("quizzes.downloading")
-                : t("quizzes.downloadCertificate")}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Quiz Details */}
-      <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6 mb-6">
-        <h2 className="text-xl font-bold mb-4">{attempt.quiz.title}</h2>
-        <div className="grid grid-cols-2 gap-4 text-sm">
-          <div>
-            <span className="text-gray-500">{t("quizzes.module")}</span>
-            <span className="font-medium ml-2">
-              {attempt.quiz.module.title}
-            </span>
-          </div>
-          <div>
-            <span className="text-gray-500">{t("quizzes.submitted")}</span>
-            <span className="font-medium ml-2">
-              {new Date(attempt.submittedAt).toLocaleString()}
-            </span>
-          </div>
-        </div>
-      </div>
-
-      {/* Answer Review */}
-      <div className="bg-white rounded-lg shadow-sm border border-black/10 p-6">
-        <h2 className="text-xl font-bold mb-6">Your Answers</h2>
-
-        <div className="space-y-6">
-          {attempt.answers.map((answer, index) => (
-            <div
-              key={answer.uuid}
-              className={`border rounded-lg p-4 transition-colors ${
-                answer.isCorrect === true
-                  ? "border-green-300 bg-green-50"
-                  : answer.isCorrect === false
-                  ? "border-red-300 bg-red-50"
-                  : "border-yellow-300 bg-yellow-50"
-              }`}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h3 className="font-bold">
-                  Question {index + 1}
-                  {answer.isCorrect === true && (
-                    <BsCheckCircle className="inline ml-2 text-green-600" />
-                  )}
-                  {answer.isCorrect === false && (
-                    <BsXCircle className="inline ml-2 text-red-600" />
-                  )}
-                  {answer.isCorrect === null && (
-                    <BsClock className="inline ml-2 text-yellow-600" />
-                  )}
-                </h3>
-                <span className="text-sm font-medium">
-                  {answer.pointsEarned} / {answer.question.points} pts
-                </span>
-              </div>
-
-              <p className="text-gray-700 mb-3">
-                {answer.question.questionText}
-              </p>
-
-              {answer.question.questionType === "description" ? (
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-1">
-                    Your Answer:
-                  </p>
-                  <div className="bg-white rounded p-3 mb-2">
-                    <p className="text-gray-800">{answer.answerText}</p>
-                  </div>
-                  {answer.feedback && (
-                    <div className="bg-blue-50 border border-blue-200 rounded p-3">
-                      <p className="text-sm font-medium text-blue-900 mb-1">
-                        Instructor Feedback:
-                      </p>
-                      <p className="text-blue-800">{answer.feedback}</p>
-                    </div>
-                  )}
-                  {answer.isCorrect === null && (
-                    <p className="text-sm text-yellow-700 mt-2">
-                      ⏳ Awaiting review from instructor
-                    </p>
+            <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+              <div className="max-w-3xl">
+                <div className="mb-5">
+                  {attempt.isPassed ? (
+                    <BsCheckCircle
+                      className="text-6xl text-emerald-400"
+                    />
+                  ) : (
+                    <BsXCircle className="text-6xl text-red-400" />
                   )}
                 </div>
-              ) : (
-                <div>
-                  <p className="text-sm font-medium text-gray-600 mb-2">
-                    Your Answer:
-                  </p>
-                  <div className="space-y-1 mb-3">
+
+                <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+                  {attempt.isPassed
+                    ? t("quizzes.congratulations")
+                    : t("quizzes.tryAgain")}
+                </h1>
+
+                <p className="mt-5 max-w-3xl text-sm leading-7 text-white/85 md:text-base">
+                  {attempt.isPassed
+                    ? "You successfully completed the assessment and achieved the required passing score."
+                    : "Review your quiz performance, identify improvement areas, and retake the assessment when ready."}
+                </p>
+
+                <div className="mt-7 flex flex-wrap items-center gap-6 text-sm font-medium text-white/90">
+                  <span className="flex items-center gap-2">
+                    <BsAward />
+                    {Number(attempt.score || 0).toFixed(1)}%
+                    Score
+                  </span>
+
+                  <span className="flex items-center gap-2">
+                    <BsQuestionCircle />
+                    {attempt.answers.length} Questions
+                  </span>
+
+                  <span className="flex items-center gap-2">
+                    <BsClock />
+                    {new Date(
+                      attempt.submittedAt
+                    ).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+
+              <div>
+                <span
+                  className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold ${badgeColor}`}
+                >
+                  {attempt.isPassed
+                    ? `✓ ${t("quizzes.passed")}`
+                    : `✗ ${t("quizzes.failed")}`}
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* STATUS CARDS */}
+        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <BsAward className="absolute right-5 top-5 text-xl text-blue-500" />
+
+            <p
+              className={`text-3xl font-bold ${progressColor}`}
+            >
+              {Number(attempt.score || 0).toFixed(1)}%
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Final Score
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <BsCheckCircle className="absolute right-5 top-5 text-xl text-emerald-500" />
+
+            <p className="text-3xl font-bold text-[#101828]">
+              {attempt.earnedPoints}
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Points Earned
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <BsQuestionCircle className="absolute right-5 top-5 text-xl text-amber-500" />
+
+            <p className="text-3xl font-bold text-[#101828]">
+              {attempt.answers.length}
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Questions
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <BsClock className="absolute right-5 top-5 text-xl text-sky-500" />
+
+            <p className="text-3xl font-bold text-[#101828]">
+              {attempt.quiz.passingScore}%
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Passing Score
+            </p>
+          </div>
+        </section>
+
+        {/* REVIEW NOTICE */}
+        {hasDescriptionQuestions && (
+          <section className="mb-8 rounded-3xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
+            <div className="flex items-start gap-3">
+              <BsClock className="mt-1 text-xl text-yellow-600" />
+
+              <div>
+                <h3 className="font-semibold text-yellow-900">
+                  Answers Under Review
+                </h3>
+
+                <p className="mt-1 text-sm leading-6 text-yellow-800">
+                  Some descriptive answers are pending
+                  instructor review. Final scores may update
+                  after grading is completed.
+                </p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* QUIZ DETAILS */}
+        <section className="mb-8 rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm">
+          <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-xs font-semibold tracking-wide text-[#2563EB]">
+                Quiz Overview
+              </p>
+
+              <h2 className="mt-2 text-2xl font-bold text-[#101828]">
+                {attempt.quiz.title}
+              </h2>
+
+              <p className="mt-3 text-sm leading-7 text-[#667085]">
+                Review your submitted answers, scoring
+                breakdown, and instructor feedback below.
+              </p>
+            </div>
+
+            {attempt.isPassed &&
+              attempt.submittedAt && (
+                <button
+                  onClick={handleDownloadCertificate}
+                  disabled={downloading}
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:opacity-50"
+                >
+                  <BsDownload />
+
+                  {downloading
+                    ? t("quizzes.downloading")
+                    : t(
+                        "quizzes.downloadCertificate"
+                      )}
+                </button>
+              )}
+          </div>
+
+          <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-2xl bg-[#F9FAFB] p-5">
+              <p className="text-sm text-[#667085]">
+                Module
+              </p>
+
+              <p className="mt-2 font-semibold text-[#101828]">
+                {attempt.quiz.module.title}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-[#F9FAFB] p-5">
+              <p className="text-sm text-[#667085]">
+                Submitted
+              </p>
+
+              <p className="mt-2 font-semibold text-[#101828]">
+                {new Date(
+                  attempt.submittedAt
+                ).toLocaleString()}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-[#F9FAFB] p-5">
+              <p className="text-sm text-[#667085]">
+                Total Points
+              </p>
+
+              <p className="mt-2 font-semibold text-[#101828]">
+                {attempt.totalPoints}
+              </p>
+            </div>
+
+            <div className="rounded-2xl bg-[#F9FAFB] p-5">
+              <p className="text-sm text-[#667085]">
+                Earned Points
+              </p>
+
+              <p className="mt-2 font-semibold text-[#101828]">
+                {attempt.earnedPoints}
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* ANSWERS */}
+        <section className="rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm">
+          <div className="mb-8">
+            <p className="text-xs font-semibold tracking-wide text-[#2563EB]">
+              Answer Review
+            </p>
+
+            <h2 className="mt-2 text-2xl font-bold text-[#101828]">
+              Your Submitted Answers
+            </h2>
+          </div>
+
+          <div className="space-y-6">
+            {attempt.answers.map((answer, index) => (
+              <article
+                key={answer.uuid}
+                className={`rounded-3xl border p-6 ${
+                  answer.isCorrect === true
+                    ? "border-emerald-200 bg-emerald-50"
+                    : answer.isCorrect === false
+                    ? "border-red-200 bg-red-50"
+                    : "border-yellow-200 bg-yellow-50"
+                }`}
+              >
+                <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <span className="mb-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#344054] shadow-sm">
+                      Question {index + 1}
+                    </span>
+
+                    <h3 className="max-w-4xl text-lg font-semibold leading-8 text-[#101828]">
+                      {answer.question.questionText}
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {answer.isCorrect === true && (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                        <BsCheckCircle />
+                      </div>
+                    )}
+
+                    {answer.isCorrect === false && (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-red-100 text-red-600">
+                        <BsXCircle />
+                      </div>
+                    )}
+
+                    {answer.isCorrect === null && (
+                      <div className="flex h-11 w-11 items-center justify-center rounded-full bg-yellow-100 text-yellow-600">
+                        <BsClock />
+                      </div>
+                    )}
+
+                    <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#344054] shadow-sm">
+                      {answer.pointsEarned} /{" "}
+                      {answer.question.points} pts
+                    </div>
+                  </div>
+                </div>
+
+                {/* DESCRIPTION */}
+                {answer.question.questionType ===
+                "description" ? (
+                  <div>
+                    <div className="rounded-2xl bg-white p-5 shadow-sm">
+                      <p className="mb-2 text-sm font-semibold text-[#667085]">
+                        Your Answer
+                      </p>
+
+                      <p className="text-sm leading-7 text-[#101828]">
+                        {answer.answerText}
+                      </p>
+                    </div>
+
+                    {answer.feedback && (
+                      <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-5">
+                        <p className="mb-2 text-sm font-semibold text-blue-900">
+                          Instructor Feedback
+                        </p>
+
+                        <p className="text-sm leading-7 text-blue-800">
+                          {answer.feedback}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3">
                     {answer.question.options.map((opt) => (
                       <div
                         key={opt.uuid}
-                        className={`p-2 rounded ${
-                          opt.uuid === answer.option?.uuid
+                        className={`rounded-2xl border p-4 text-sm font-medium transition ${
+                          opt.uuid ===
+                          answer.option?.uuid
                             ? answer.isCorrect
-                              ? "bg-green-100 border border-green-300"
-                              : "bg-red-100 border border-red-300"
+                              ? "border-emerald-300 bg-emerald-100 text-emerald-900"
+                              : "border-red-300 bg-red-100 text-red-900"
                             : opt.isCorrect
-                            ? "bg-green-50 border border-green-200"
-                            : "bg-white"
+                            ? "border-emerald-200 bg-emerald-50 text-emerald-900"
+                            : "border-white bg-white text-[#344054]"
                         }`}
                       >
-                        {opt.uuid === answer.option?.uuid && "→ "}
-                        {opt.isCorrect && "✓ "}
-                        {opt.optionText}
-                        {opt.isCorrect && (
-                          <span className="text-xs text-green-600 ml-2">
-                            (Correct Answer)
-                          </span>
-                        )}
+                        <div className="flex items-center gap-2">
+                          {opt.uuid ===
+                            answer.option?.uuid && (
+                            <span>→</span>
+                          )}
+
+                          {opt.isCorrect && (
+                            <span>✓</span>
+                          )}
+
+                          <span>{opt.optionText}</span>
+
+                          {opt.isCorrect && (
+                            <span className="ml-2 text-xs font-semibold text-emerald-700">
+                              (Correct Answer)
+                            </span>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
 
-      <div className="mt-6 flex gap-4">
-        <button
-          onClick={() =>
-            router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`)
-          }
-          className="bg-gray-500 text-black/70 px-6 py-2 rounded-lg hover:bg-gray-600"
-        >
-          Back to Quizzes
-        </button>
-
-        {!attempt.isPassed && (
+        {/* ACTIONS */}
+        <section className="mt-8 flex flex-wrap gap-4">
           <button
             onClick={() =>
               router.push(
-                `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${attempt.quiz.uuid}`
+                `/dashboard/learn-and-grow/quizzes/${moduleId}`
               )
             }
-            className="bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#101828] px-6 py-3 text-sm font-semibold text-white transition hover:bg-black"
           >
-            Try Again
+            <BsArrowRight />
+            Back to Quizzes
           </button>
-        )}
+
+          {!attempt.isPassed && (
+            <button
+              onClick={() =>
+                router.push(
+                  `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${attempt.quiz.uuid}`
+                )
+              }
+              className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+            >
+              <BsArrowRepeat />
+              Try Again
+            </button>
+          )}
+        </section>
       </div>
     </div>
   );

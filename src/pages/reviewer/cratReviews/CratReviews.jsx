@@ -1,33 +1,69 @@
+"use client";
+
 import React, { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
-import Breadcrumb from "@/component/Breadcrumb";
 import { useNavigate } from "react-router-dom";
+
 import { getReviewerAssignments } from "@/controllers/crat_controller";
+
+import Image from "@/utils/image";
+
+import {
+  FaCheckCircle,
+  FaClock,
+  FaClipboardCheck,
+  FaChartLine,
+  FaBuilding,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaArrowRight,
+} from "react-icons/fa";
 
 const TAB_KEYS = {
   active: "active",
   submitted: "submitted",
 };
 
-const ACTIVE_STATUSES = ["assigned", "in_review", "admin_rejected"];
-const SUBMITTED_STATUSES = ["review_submitted", "published"];
+const ACTIVE_STATUSES = [
+  "assigned",
+  "in_review",
+  "admin_rejected",
+];
+
+const SUBMITTED_STATUSES = [
+  "review_submitted",
+  "published",
+];
 
 const CratReviewsPage = () => {
   const navigate = useNavigate();
+
   const [loading, setLoading] = useState(true);
+
   const [assignments, setAssignments] = useState([]);
-  const [activeTab, setActiveTab] = useState(TAB_KEYS.active);
-  const [currentPage, setCurrentPage] = useState(1);
-  const ITEMS_PER_PAGE = 10;
+
+  const [activeTab, setActiveTab] =
+    useState(TAB_KEYS.active);
 
   const loadAssignments = async () => {
     try {
       setLoading(true);
-      const data = await getReviewerAssignments();
+
+      const data =
+        await getReviewerAssignments();
+
+      console.log(
+        "Reviewer Assignments:",
+        data
+      );
+
       setAssignments(data || []);
     } catch (error) {
       console.error(error);
-      toast.error("Failed to load reviewer assignments.");
+
+      toast.error(
+        "Failed to load reviewer assignments."
+      );
     } finally {
       setLoading(false);
     }
@@ -37,202 +73,352 @@ const CratReviewsPage = () => {
     loadAssignments();
   }, []);
 
-  const formatStatus = (status = "") =>
+  const formatStatus = (
+    status = ""
+  ) =>
     String(status)
       .split("_")
       .filter(Boolean)
-      .map((part) => part[0]?.toUpperCase() + part.slice(1))
+      .map(
+        (part) =>
+          part[0]?.toUpperCase() +
+          part.slice(1)
+      )
       .join(" ");
 
-  const statusTone = (status = "") => {
-    const value = String(status).toLowerCase();
+  const statusTone = (
+    status = ""
+  ) => {
+    const value =
+      String(status).toLowerCase();
+
     if (value === "assigned") {
-      return "bg-violet-100 text-violet-700 border-violet-200";
+      return "bg-violet-100 text-violet-700";
     }
+
     if (value === "in_review") {
-      return "bg-sky-100 text-sky-700 border-sky-200";
+      return "bg-sky-100 text-sky-700";
     }
+
     if (value === "admin_rejected") {
-      return "bg-amber-100 text-amber-700 border-amber-200";
+      return "bg-amber-100 text-amber-700";
     }
-    if (value === "review_submitted") {
-      return "bg-primary/10 text-primary border-primary/20";
+
+    if (
+      value === "review_submitted"
+    ) {
+      return "bg-blue-100 text-blue-700";
     }
+
     if (value === "published") {
-      return "bg-emerald-100 text-emerald-700 border-emerald-200";
+      return "bg-emerald-100 text-emerald-700";
     }
-    return "bg-slate-100 text-slate-700 border-slate-200";
+
+    return "bg-slate-100 text-slate-700";
   };
 
-  const filteredAssignments = useMemo(() => {
-    if (activeTab === TAB_KEYS.submitted) {
-      return assignments.filter((assignment) =>
-        SUBMITTED_STATUSES.includes(String(assignment.status || "")),
+  const getEntrepreneurName = (
+    assignment
+  ) =>
+    assignment?.Business?.name ||
+    assignment?.business?.name ||
+    assignment?.entrepreneur?.name ||
+    assignment?.user?.name ||
+    "Entrepreneur";
+
+  const getEntrepreneurEmail = (
+    assignment
+  ) =>
+    assignment?.Business?.email ||
+    assignment?.business?.email ||
+    assignment?.entrepreneur?.email ||
+    assignment?.user?.email ||
+    "-";
+
+  const filteredAssignments =
+    useMemo(() => {
+      if (
+        activeTab ===
+        TAB_KEYS.submitted
+      ) {
+        return assignments.filter(
+          (assignment) =>
+            SUBMITTED_STATUSES.includes(
+              String(
+                assignment.status || ""
+              )
+            )
+        );
+      }
+
+      return assignments.filter(
+        (assignment) =>
+          ACTIVE_STATUSES.includes(
+            String(
+              assignment.status || ""
+            )
+          )
       );
-    }
+    }, [activeTab, assignments]);
 
-    return assignments.filter((assignment) =>
-      ACTIVE_STATUSES.includes(String(assignment.status || "")),
-    );
-  }, [activeTab, assignments]);
+  const stats = {
+    total: assignments.length,
 
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredAssignments.length / ITEMS_PER_PAGE),
-  );
-  const rows = useMemo(
-    () =>
-      filteredAssignments.slice(
-        (currentPage - 1) * ITEMS_PER_PAGE,
-        currentPage * ITEMS_PER_PAGE,
-      ),
-    [filteredAssignments, currentPage],
-  );
+    active: assignments.filter(
+      (item) =>
+        ACTIVE_STATUSES.includes(
+          String(item.status || "")
+        )
+    ).length,
 
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, totalPages]);
+    submitted:
+      assignments.filter((item) =>
+        SUBMITTED_STATUSES.includes(
+          String(item.status || "")
+        )
+      ).length,
 
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [activeTab]);
+    published:
+      assignments.filter(
+        (item) =>
+          item.status ===
+          "published"
+      ).length,
+  };
 
   return (
-    <div className="w-full p-4 md:p-6">
-      <Breadcrumb pageName="My CRAT Assignments" />
-      <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm md:p-7">
-        <h1 className="text-xl font-semibold text-slate-900">Reviewer Queue</h1>
+    <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
+      <div className="mx-auto max-w-7xl">
+        {/* HERO */}
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+          <div className="absolute inset-0">
+            <Image
+              src="/images/general_resources_hero.svg"
+              alt="CRAT reviews"
+              width={1600}
+              height={900}
+              className="h-full w-full object-cover"
+            />
+          </div>
 
-        <div className="mt-4 inline-flex rounded-lg border border-black/10 bg-slate-100 p-1">
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+
+          <div className="relative z-10 flex min-h-[320px] max-w-3xl flex-col justify-center p-8 lg:p-12">
+            <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+              CRAT Reviewer Dashboard
+            </span>
+
+            <h1 className="mb-4 text-4xl font-bold leading-tight text-white md:text-5xl">
+              Manage Review
+              Assignments
+            </h1>
+
+            <p className="mb-8 max-w-2xl text-base leading-8 text-white/85 md:text-lg">
+              Review assigned
+              businesses, track
+              submissions, and manage
+              CRAT assessment workflows
+              from one central
+              workspace.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-white/90">
+              <div className="flex items-center gap-2">
+                <FaClipboardCheck />
+
+                <span>
+                  {stats.total}{" "}
+                  Assignments
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <FaClock />
+
+                <span>
+                  {stats.active} Active
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <FaCheckCircle />
+
+                <span>
+                  {stats.submitted}{" "}
+                  Submitted
+                </span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* STATS */}
+        <section className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-4">
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <FaClipboardCheck className="absolute right-5 top-5 text-xl text-[#2563EB]" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.total}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Total Assignments
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <FaClock className="absolute right-5 top-5 text-xl text-yellow-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.active}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Active Reviews
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <FaChartLine className="absolute right-5 top-5 text-xl text-blue-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.submitted}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Submitted Reviews
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <FaCheckCircle className="absolute right-5 top-5 text-xl text-green-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.published}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Published Reports
+            </p>
+          </div>
+        </section>
+
+        {/* TABS */}
+        <div className="mb-8 flex items-center gap-3">
           <button
-            onClick={() => setActiveTab(TAB_KEYS.active)}
-            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-              activeTab === TAB_KEYS.active
-                ? "bg-primary text-white"
-                : "text-slate-700 hover:bg-white"
+            onClick={() =>
+              setActiveTab(
+                TAB_KEYS.active
+              )
+            }
+            className={`rounded-xl px-5 py-3 text-sm font-semibold transition ${
+              activeTab ===
+              TAB_KEYS.active
+                ? "bg-[#2563EB] text-white"
+                : "border border-[#D0D5DD] bg-white text-[#344054]"
             }`}
           >
             Active Assignments
           </button>
+
           <button
-            onClick={() => setActiveTab(TAB_KEYS.submitted)}
-            className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
-              activeTab === TAB_KEYS.submitted
-                ? "bg-primary text-white"
-                : "text-slate-700 hover:bg-white"
+            onClick={() =>
+              setActiveTab(
+                TAB_KEYS.submitted
+              )
+            }
+            className={`rounded-xl px-5 py-3 text-sm font-semibold transition ${
+              activeTab ===
+              TAB_KEYS.submitted
+                ? "bg-[#2563EB] text-white"
+                : "border border-[#D0D5DD] bg-white text-[#344054]"
             }`}
           >
             Submitted Reviews
           </button>
         </div>
 
+        {/* CARDS */}
         {loading ? (
-          <p className="mt-4 text-sm text-slate-600">Loading assignments...</p>
+          <div className="rounded-3xl border border-[#EAECF0] bg-white p-8 text-center shadow-sm">
+            <p className="text-sm text-[#667085]">
+              Loading assignments...
+            </p>
+          </div>
+        ) : filteredAssignments.length ===
+          0 ? (
+          <div className="rounded-3xl border border-[#EAECF0] bg-white p-8 text-center shadow-sm">
+            <p className="text-sm text-[#667085]">
+              {activeTab ===
+              TAB_KEYS.submitted
+                ? "No submitted reviews yet."
+                : "No active assignments available."}
+            </p>
+          </div>
         ) : (
-          <div className="mt-4 rounded-xl border border-black/10">
-            <div className="overflow-x-auto">
-              <table className="min-w-[920px] w-full table-fixed bg-white">
-                <thead className="bg-slate-100">
-                  <tr>
-                    <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
-                      #
-                    </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
-                      Entrepreneur
-                    </th>
-                    <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
-                      Email
-                    </th>
-                    <th className="w-40 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
-                      Status
-                    </th>
-                    <th className="w-48 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
-                      Last Updated
-                    </th>
-                    <th className="w-44 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold text-slate-700">
-                      Action
-                    </th>
+          <div className="overflow-x-auto rounded-xl border border-[#EAECF0] bg-white shadow-sm">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th scope="col" className="px-6 py-4 text-left text-sm font-semibold tracking-wider text-gray-500">
+                    Business Name
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-sm font-semibold tracking-wider text-gray-500">
+                    Email
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-sm font-semibold tracking-wider text-gray-500">
+                    Location
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-sm font-semibold tracking-wider text-gray-500">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-left text-sm font-semibold tracking-wider text-gray-500">
+                    Joined
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-right text-sm font-semibold tracking-wider text-gray-500">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-200 bg-white">
+                {filteredAssignments.map((assignment, index) => (
+                  <tr key={assignment.id || assignment.uuid || index} className="transition-colors hover:bg-gray-50">
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm font-bold text-gray-900">{getEntrepreneurName(assignment)}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-gray-500">{getEntrepreneurEmail(assignment)}</div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-gray-500">
+                        {assignment?.Business?.location || assignment?.business?.location || assignment?.location || "Not specified"}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${statusTone(assignment.status)}`}>
+                        {formatStatus(assignment.status)}
+                      </span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4">
+                      <div className="text-sm text-gray-500">
+                        {assignment?.Business?.createdAt || assignment?.business?.createdAt || assignment?.createdAt
+                          ? new Date(assignment?.Business?.createdAt || assignment?.business?.createdAt || assignment?.createdAt).getFullYear()
+                          : "N/A"}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-4 text-right text-sm font-medium">
+                      <button
+                        onClick={() => navigate(`/dashboard/cratReviewAssessment?businessId=${assignment.business_id}`)}
+                        className="text-[#2563EB] hover:text-blue-800 font-semibold"
+                      >
+                        {activeTab === TAB_KEYS.submitted ? "View Review" : "Open Review"}
+                      </button>
+                    </td>
                   </tr>
-                </thead>
-                <tbody>
-                  {rows.map((assignment, index) => (
-                    <tr key={assignment.id} className="align-top bg-white">
-                      <td className="border-b border-black/10 px-3 py-3 text-sm text-slate-700">
-                        {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}
-                      </td>
-                      <td className="border-b border-black/10 px-3 py-3 text-sm font-medium text-slate-900">
-                        {assignment.entrepreneur?.name || "Entrepreneur"}
-                      </td>
-                      <td className="border-b border-black/10 px-3 py-3 text-sm text-slate-700">
-                        {assignment.entrepreneur?.email || "-"}
-                      </td>
-                      <td className="border-b border-black/10 px-3 py-3 text-sm">
-                        <span
-                          className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${statusTone(
-                            assignment.status,
-                          )}`}
-                        >
-                          {formatStatus(assignment.status)}
-                        </span>
-                      </td>
-                      <td className="border-b border-black/10 px-3 py-3 text-sm text-slate-700">
-                        {assignment.updatedAt
-                          ? new Date(assignment.updatedAt).toLocaleString()
-                          : "-"}
-                      </td>
-                      <td className="border-b border-black/10 px-3 py-3">
-                        <button
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/cratReviewAssessment?businessId=${assignment.business_id}`,
-                            )
-                          }
-                          className="rounded-lg bg-primary px-3 py-1.5 text-xs font-semibold text-white"
-                        >
-                          {activeTab === TAB_KEYS.submitted ? "View" : "Open"}
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {filteredAssignments.length === 0 && (
-              <p className="px-3 py-4 text-sm text-slate-600">
-                {activeTab === TAB_KEYS.submitted
-                  ? "No submitted reviews yet."
-                  : "No active assignments available."}
-              </p>
-            )}
-
-            {filteredAssignments.length > 0 && (
-              <div className="flex items-center justify-between gap-3 border-t border-black/10 px-3 py-3">
-                <p className="text-xs text-slate-600">
-                  Page {currentPage} of {totalPages}
-                </p>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="rounded-lg border border-black/15 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Previous
-                  </button>
-                  <button
-                    onClick={() =>
-                      setCurrentPage((p) => Math.min(totalPages, p + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="rounded-lg border border-black/15 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            )}
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>

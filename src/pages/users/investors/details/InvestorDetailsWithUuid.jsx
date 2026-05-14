@@ -71,7 +71,7 @@ const Page = () => {
     });
   }, [uuid]);
 
-  const handleStartChat = () => {
+  const handleStartChatClick = () => {
     const data = {
       to: user.uuid,
       type: "userToUser",
@@ -84,260 +84,33 @@ const Page = () => {
       message: t("messages.newMessage", "You have a new message"),
     });
 
-    if (!user) {
-      return (
-        <div className="flex flex-col items-center justify-center min-h-[400px]">
-          <div className="text-xl font-medium text-gray-600 dark:text-gray-400 mb-2">
-            {t("users.investorNotFound", "Investor not found")}
-          </div>
-          <p className="text-gray-500 dark:text-gray-500">
-            {t(
-              "users.investorNotFoundDescription",
-              "The investor profile you're looking for doesn't exist or has been removed.",
-            )}
-          </p>
-        </div>
-      );
-    }
-
-    // Define profile sections
-    const contactSection = {
-      title: "Contact Information",
-      items: [
-        {
-          icon: <HiOutlineUserCircle className="w-5 h-5" />,
-          label: "Name",
-          value: user.name,
-        },
-        {
-          icon: <HiOutlineMail className="w-5 h-5" />,
-          label: "Email",
-          value: user.email,
-        },
-        {
-          icon: <HiOutlinePhone className="w-5 h-5" />,
-          label: "Phone",
-          value: user.phone,
-        },
-        {
-          icon: <HiOutlineLocationMarker className="w-5 h-5" />,
-          label: "Location",
-          value: user.InvestorProfile?.geography || "Not specified",
-        },
-        {
-          icon: <HiOutlineOfficeBuilding className="w-5 h-5" />,
-          label: "Company",
-          value: user.InvestorProfile?.company || "Not specified",
-        },
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Position",
-          value: user.InvestorProfile?.role || "Not specified",
-        },
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "LinkedIn",
-          value: user.InvestorProfile?.linkedinURL ? (
-            <a
-              href={user.InvestorProfile.linkedinURL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              View Profile
-            </a>
-          ) : (
-            "Not provided"
-          ),
-        },
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Website",
-          value: user.InvestorProfile?.website ? (
-            <a
-              href={user.InvestorProfile.website}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit Website
-            </a>
-          ) : (
-            "Not provided"
-          ),
-        },
-      ],
-    };
-
-    const investmentSection = {
-      title: "Investment Preferences",
-      items: [
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Sector",
-          value: user.InvestorProfile?.BusinessSector?.name || "Not specified",
-        },
-        {
-          icon: <HiOutlineCash className="w-5 h-5" />,
-          label: "Investment Size",
-          value: user.InvestorProfile?.ticketSize || "Not specified",
-        },
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Investment Types",
-          value:
-            Object.values(user.InvestorProfile?.investmentType || {}).join(
-              ", ",
-            ) || "Not specified",
-        },
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Investment Focus",
-          value:
-            Object.values(user.InvestorProfile?.investmentFocus || {}).join(
-              ", ",
-            ) || "Not specified",
-        },
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Mentoring Preference",
-          value:
-            user.InvestorProfile?.mentoringPreference === "yes"
-              ? "Open to mentoring startups"
-              : "Investment only",
-        },
-      ],
-    };
-
-    const bioSection = {
-      title: "Background & Experience",
-      items: [
-        {
-          icon: <HiOutlineDocumentText className="w-5 h-5" />,
-          label: "Notable Investments",
-          value: user.InvestorProfile?.notableInvestment || "Not provided",
-        },
-      ],
-    };
-
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <Breadcrumb
-          prevLink={``}
-          prevPage={t("users.investors", "Investors")}
-          pageName={
-            user.InvestorProfile?.company || t("users.noCompany", "No Company")
-          }
-        />
-
-        <div className=" bg-primary/5 border border-primary/5 p-8 mt-6 rounded-xl">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 ">
-            <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
-              <div className="text-4xl mb-3">📍</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 text-center">
-                {user.InvestorProfile?.geography ||
-                  t("mentorHub.notAvailable", "N/A")}{" "}
-                {/* Updated to use location */}
-              </h3>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("users.location", "Location")}
-              </p>
-            </div>
-            <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
-              <div className="text-4xl mb-3">💡</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 ">
-                {isSwahili
-                  ? user?.InvestorProfile?.BusinessSector?.swName
-                  : user?.InvestorProfile?.BusinessSector?.name ||
-                    t("mentorHub.notAvailable", "N/A")}
-              </h3>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("users.sector", "Sector")}
-              </p>
-            </div>
-            <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
-              <div className="text-4xl mb-3">👥</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-                {Object.values(user?.InvestorProfile?.investmentType).join(
-                  ", ",
-                ) || t("mentorHub.notAvailable", "N/A")}{" "}
-                {/* Updated to use numberOfCustomers */}
-              </h3>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("users.structure", "Investment Type")}
-              </p>
-            </div>
-            <div className="p-6 rounded-2xl bg-white dark:bg-boxdark-2 shadow-sm hover:shadow-md transition-all duration-300 flex flex-col items-center">
-              <div className="text-4xl mb-3">🏢</div>
-              <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-1 line-clamp-1 overflow-y-hidden">
-                {user?.InvestorProfile?.investmentSize ||
-                  t("mentorHub.notAvailable", "N/A")}{" "}
-                {/* Updated to use UserSector.name */}
-              </h3>
-              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-                {t("users.ticketSize", "Investment Range")}
-              </p>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-              <span className="text-xl mr-3">🙍</span>
-              {t("users.bio", "Bio")}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-              {user?.InvestorProfile?.bio ||
-                t("users.noInformationAvailable", "No Information Available")}
-            </p>
-          </div>
-          <div className="mb-4">
-            <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-              <span className="text-xl mr-3">💰</span>
-              {t("users.notableInvestments", "Notable investments")}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-              {user?.InvestorProfile?.notableInvestment ||
-                t("users.noInformationAvailable", "No Information Available")}
-            </p>
-          </div>
-        </div>
-        <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-              <span className="text-xl mr-3">📪</span>
-              {t("users.seeking", "Seeking")}
-            </h2>
-            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-              {user?.InvestorProfile?.seeking ||
-                t("users.noInformationAvailable", "No Information Available")}
-            </p>
-          </div>
-        </div>
-        <div className="flex space-x-4 mt-4">
-          {/* {userDetails.role} */}
-
-          <button
-            onClick={handleStartChat}
-            className=" px-6 py-3 bg-green-500 text-white rounded-lg  transition-colors"
-          >
-            <span className="flex items-center justify-center gap-2">
-              <HiOutlineChat className="w-5 h-5" />
-              {t("users.message", "Message")}
-            </span>
-          </button>
-          {userDetails.role === "Enterprenuer" && (
-            <Link
-              href={`/dashboard/investmentApplicationByEntreprenuer/${user.uuid}`}
-              className="py-2 px-4 text-white font-bold bg-primary  hover:text-opacity-80 transition-all duration-300 rounded"
-            >
-              {t("users.askForInvestment", "Ask for Investment")}
-            </Link>
-          )}
-        </div>
-      </div>
-    );
+    createConversation(data).then((res) => {
+      router.push(`/dashboard/messages/${res.uuid}`);
+    });
   };
+
+  const heroCards = [
+    {
+      label: t("users.location", "Location"),
+      value: user?.InvestorProfile?.geography || t("mentorHub.notAvailable", "N/A"),
+    },
+    {
+      label: t("users.sector", "Sector"),
+      value: (isSwahili
+        ? user?.InvestorProfile?.BusinessSector?.swName
+        : user?.InvestorProfile?.BusinessSector?.name) || t("mentorHub.notAvailable", "N/A"),
+    },
+    {
+      label: t("users.structure", "Investment Type"),
+      value: user?.InvestorProfile?.investmentType
+        ? Object.values(user.InvestorProfile.investmentType).join(", ")
+        : t("mentorHub.notAvailable", "N/A"),
+    },
+    {
+      label: t("users.ticketSize", "Investment Range"),
+      value: user?.InvestorProfile?.investmentSize || t("mentorHub.notAvailable", "N/A"),
+    },
+  ];
 
   if (loading) {
     return (
@@ -363,7 +136,108 @@ const Page = () => {
     );
   }
 
-  return handleStartChat();
+  return (
+    <div className="container mx-auto px-4 py-8">
+      {/* Hero Section */}
+      <div className="relative mt-6 overflow-hidden rounded-3xl bg-black shadow-xl">
+        <img
+          src="/images/investment_readiness_classes.svg"
+          alt={user.InvestorProfile?.company || user.name}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
+
+        <div className="relative z-10 flex min-h-[280px] items-end">
+          <div className="w-full p-6 sm:p-8 lg:p-12">
+            <div className="max-w-4xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-sm font-medium text-white backdrop-blur-md">
+                <span className="h-2 w-2 rounded-full bg-orange-500"></span>
+                Investor Profile
+              </div>
+              <h1 className="mb-5 max-w-4xl text-3xl font-bold leading-tight tracking-tight text-white drop-shadow-2xl md:text-4xl">
+                {user.InvestorProfile?.company || user.name}
+              </h1>
+
+              <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                {heroCards.map((card, index) => (
+                  <div
+                    key={index}
+                    className="rounded-2xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur-md"
+                  >
+                    <p className="text-sm font-medium text-white/70">
+                      {card.label}
+                    </p>
+
+                    <p className="mt-2 line-clamp-2 text-lg font-bold leading-snug">
+                      {card.value}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+            <span className="text-xl mr-3">🙍</span>
+            {t("users.bio", "Bio")}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+            {user?.InvestorProfile?.bio ||
+              t("users.noInformationAvailable", "No Information Available")}
+          </p>
+        </div>
+        <div className="mb-4">
+          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+            <span className="text-xl mr-3">💰</span>
+            {t("users.notableInvestments", "Notable investments")}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+            {user?.InvestorProfile?.notableInvestment ||
+              t("users.noInformationAvailable", "No Information Available")}
+          </p>
+        </div>
+      </div>
+
+      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
+        <div className="mb-4">
+          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+            <span className="text-xl mr-3">📪</span>
+            {t("users.seeking", "Seeking")}
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+            {user?.InvestorProfile?.seeking ||
+              t("users.noInformationAvailable", "No Information Available")}
+          </p>
+        </div>
+      </div>
+
+      <div className="flex space-x-4 mt-6">
+        <button
+          onClick={handleStartChatClick}
+          className=" px-6 py-3 bg-green-500 text-white rounded-lg  transition-colors flex items-center justify-center gap-2"
+        >
+          <HiOutlineChat className="w-5 h-5" />
+          {t("users.message", "Message")}
+        </button>
+        {userDetails?.role === "Enterprenuer" && (
+          <Link
+            href={`/dashboard/investmentApplicationByEntreprenuer/${user.uuid}`}
+            className="py-3 px-6 text-white font-bold bg-primary hover:bg-primary/90 transition-all duration-300 rounded-lg flex items-center justify-center"
+          >
+            {t("users.askForInvestment", "Ask for Investment")}
+          </Link>
+        )}
+      </div>
+    </div>
+  );
 };
 
 export default Page;

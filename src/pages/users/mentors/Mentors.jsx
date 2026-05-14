@@ -1,4 +1,5 @@
 "use client";
+
 import { useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { getMentors } from "@/controllers/user_controller";
 import Link from "@/utils/link";
@@ -7,11 +8,21 @@ import NoData from "@/component/noData";
 import Image from "@/utils/image";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import { useTranslation } from "../../../locales";
+import {
+  FaLayerGroup,
+  FaSearch,
+  FaUserTie,
+  FaBriefcase,
+  FaCalendarAlt,
+  FaArrowRight,
+} from "react-icons/fa";
 
 const Mentors = () => {
   const { t } = useTranslation();
-  const [allData, setAllData] = useState([]); // Store all data
-  const [displayedUsers, setDisplayedUsers] = useState([]); // Data to display
+  const { userDetails } = useContext(UserContext);
+
+  const [allData, setAllData] = useState([]);
+  const [displayedUsers, setDisplayedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [initialLoading, setInitialLoading] = useState(true);
   const [keyword, setKeyword] = useState("");
@@ -28,9 +39,7 @@ const Mentors = () => {
   const [totalPages, setTotalPages] = useState(1);
   const limit = 12;
   const [openDropdown, setOpenDropdown] = useState(null);
-  const { userDetails } = useContext(UserContext);
 
-  // Filter and sort options
   const filterOptions = {
     sector: {
       label: t("users.sector", "Sector"),
@@ -70,7 +79,6 @@ const Mentors = () => {
     { value: "date", label: t("users.joinedDate", "Joined Date") },
   ];
 
-  // Helper functions
   const getMentorName = (item) =>
     item?.name || t("users.unnamedMentor", "Unnamed Mentor");
 
@@ -79,10 +87,13 @@ const Mentors = () => {
     Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") ||
     t("business.noSector", "No Sector");
 
-  // Translation helper functions
+  const makeFirstLetterLowercase = (str = "") => {
+    if (!str) return "";
+    return str.charAt(0).toLowerCase() + str.slice(1);
+  };
+
   const translateFilterValue = (value) => {
     switch (value) {
-      // Sectors
       case "All Sectors":
         return t("users.allSectors", "All Sectors");
       case "Technology":
@@ -102,8 +113,6 @@ const Mentors = () => {
         );
       case "Fintech":
         return t("users.fintech", "Fintech");
-
-      // Expertise
       case "All Expertise":
         return t("users.allExpertise", "All Expertise");
       case "Business Strategy":
@@ -116,13 +125,10 @@ const Mentors = () => {
         return t("users.operations", "Operations");
       case "Leadership":
         return t("users.leadership", "Leadership");
-
-      // Years
       case "All Years":
         return t("users.allYears", "All Years");
-
       default:
-        return value; // numbers & other values
+        return value;
     }
   };
 
@@ -143,7 +149,9 @@ const Mentors = () => {
 
   const matchesSearchKeyword = (item, searchTerm) => {
     if (!searchTerm.trim()) return true;
+
     const searchLower = searchTerm.toLowerCase();
+
     return (
       getMentorName(item).toLowerCase().includes(searchLower) ||
       (item?.email || "").toLowerCase().includes(searchLower) ||
@@ -155,26 +163,22 @@ const Mentors = () => {
     );
   };
 
-  // Apply filters and sorting to data
   const getFilteredAndSortedData = useCallback(
     (data, searchKeyword, currentFilters, currentSortConfig) => {
       let filtered = [...data];
 
-      // Apply keyword filter
       if (searchKeyword.trim()) {
         filtered = filtered.filter((item) =>
           matchesSearchKeyword(item, searchKeyword)
         );
       }
 
-      // Apply sector filter
       if (currentFilters.sector !== "All Sectors") {
         filtered = filtered.filter((item) =>
           getMentorSector(item).includes(currentFilters.sector)
         );
       }
 
-      // Apply expertise filter
       if (currentFilters.expertise !== "All Expertise") {
         filtered = filtered.filter((item) =>
           (item?.MentorProfile?.expertise || "")
@@ -183,26 +187,29 @@ const Mentors = () => {
         );
       }
 
-      // Apply year filter
       if (currentFilters.year !== "All Years") {
         filtered = filtered.filter((item) => {
           const createdYear = item?.createdAt
             ? new Date(item.createdAt).getFullYear().toString()
             : "";
+
           return createdYear === currentFilters.year;
         });
       }
 
-      // Apply sorting
       filtered.sort((a, b) => {
         const direction = currentSortConfig.direction === "asc" ? 1 : -1;
+
         switch (currentSortConfig.key) {
           case "name":
             return direction * getMentorName(a).localeCompare(getMentorName(b));
+
           case "sector":
             return (
-              direction * getMentorSector(a).localeCompare(getMentorSector(b))
+              direction *
+              getMentorSector(a).localeCompare(getMentorSector(b))
             );
+
           case "expertise":
             return (
               direction *
@@ -210,11 +217,14 @@ const Mentors = () => {
                 b?.MentorProfile?.expertise || ""
               )
             );
+
           case "date":
             return (
               direction *
-              (new Date(a?.createdAt || 0) - new Date(b?.createdAt || 0))
+              (new Date(a?.createdAt || 0) -
+                new Date(b?.createdAt || 0))
             );
+
           default:
             return 0;
         }
@@ -225,13 +235,13 @@ const Mentors = () => {
     []
   );
 
-  // Fetch all data initially
   useEffect(() => {
     const fetchAllData = async () => {
       try {
         setInitialLoading(true);
-        // Fetch all data at once
+
         const body = await getMentors(1000, 1);
+
         setAllData(body.data || []);
       } catch (error) {
         console.error("Error fetching mentors:", error);
@@ -244,7 +254,6 @@ const Mentors = () => {
     fetchAllData();
   }, []);
 
-  // Apply filters, sorting, and pagination whenever dependencies change
   useEffect(() => {
     if (allData.length === 0 && !initialLoading) {
       setDisplayedUsers([]);
@@ -254,7 +263,6 @@ const Mentors = () => {
 
     setLoading(true);
 
-    // Get filtered and sorted data
     const filteredData = getFilteredAndSortedData(
       allData,
       keyword,
@@ -262,22 +270,19 @@ const Mentors = () => {
       sortConfig
     );
 
-    // Calculate pagination
     const totalFilteredPages = Math.ceil(filteredData.length / limit);
-    setTotalPages(totalFilteredPages);
 
-    // Ensure current page is valid
+    setTotalPages(totalFilteredPages || 1);
+
     if (currentPage > totalFilteredPages && totalFilteredPages > 0) {
       setCurrentPage(1);
       return;
     }
 
-    // Get current page data
     const startIndex = (currentPage - 1) * limit;
     const endIndex = startIndex + limit;
-    const pageData = filteredData.slice(startIndex, endIndex);
 
-    setDisplayedUsers(pageData);
+    setDisplayedUsers(filteredData.slice(startIndex, endIndex));
     setLoading(false);
   }, [
     allData,
@@ -289,53 +294,15 @@ const Mentors = () => {
     getFilteredAndSortedData,
   ]);
 
-  // Handle dropdown toggle
-  const toggleDropdown = (name) => {
-    setOpenDropdown(openDropdown === name ? null : name);
-  };
+  const totalFilteredCount = useMemo(() => {
+    return getFilteredAndSortedData(
+      allData,
+      keyword,
+      filters,
+      sortConfig
+    ).length;
+  }, [allData, keyword, filters, sortConfig, getFilteredAndSortedData]);
 
-  // Handle filter changes
-  const handleFilterChange = (type, value) => {
-    setFilters((prev) => ({ ...prev, [type]: value }));
-    setCurrentPage(1);
-    setOpenDropdown(null);
-  };
-  const makeFirstLetterLowercase = (str) => {
-    return str.charAt(0).toLowerCase() + str.slice(1);
-  };
-  // Handle sort changes
-  const handleSortChange = (key) => {
-    setSortConfig((prev) => ({
-      key,
-      direction: prev.key === key && prev.direction === "asc" ? "desc" : "asc",
-    }));
-    setOpenDropdown(null);
-  };
-
-  // Handle search input - no debouncing for instant search
-  const handleSearchChange = (e) => {
-    setKeyword(e.target.value);
-    setCurrentPage(1);
-  };
-
-  // Clear all filters
-  const clearAllFilters = () => {
-    setFilters({
-      sector: "All Sectors",
-      expertise: "All Expertise",
-      year: "All Years",
-    });
-    setKeyword("");
-    setCurrentPage(1);
-  };
-
-  // Clear search
-  const clearSearch = () => {
-    setKeyword("");
-    setCurrentPage(1);
-  };
-
-  // Check if any filters are active
   const isFiltering = useMemo(
     () =>
       Object.values(filters).some((value) => !value.startsWith("All")) ||
@@ -343,41 +310,184 @@ const Mentors = () => {
     [filters, keyword]
   );
 
-  // Get total count of filtered results
-  const totalFilteredCount = useMemo(() => {
-    if (!isFiltering) return allData.length;
-    return getFilteredAndSortedData(allData, keyword, filters, sortConfig)
-      .length;
-  }, [
-    allData,
-    keyword,
-    filters,
-    sortConfig,
-    isFiltering,
-    getFilteredAndSortedData,
-  ]);
+  const toggleDropdown = (name) => {
+    setOpenDropdown(openDropdown === name ? null : name);
+  };
 
-  if (initialLoading) {
-    return <Loader />;
-  }
+  const handleFilterChange = (type, value) => {
+    setFilters((prev) => ({ ...prev, [type]: value }));
+    setCurrentPage(1);
+    setOpenDropdown(null);
+  };
+
+  const handleSortChange = (key) => {
+    setSortConfig((prev) => ({
+      key,
+      direction:
+        prev.key === key && prev.direction === "asc" ? "desc" : "asc",
+    }));
+
+    setOpenDropdown(null);
+  };
+
+  const handleSearchChange = (e) => {
+    setKeyword(e.target.value);
+    setCurrentPage(1);
+  };
+
+  const clearSearch = () => {
+    setKeyword("");
+    setCurrentPage(1);
+  };
+
+  const clearAllFilters = () => {
+    setFilters({
+      sector: "All Sectors",
+      expertise: "All Expertise",
+      year: "All Years",
+    });
+
+    setKeyword("");
+    setCurrentPage(1);
+  };
+
+  if (initialLoading) return <Loader />;
 
   return (
-    <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">
-        {t("users.welcome", "Welcome")}{" "}
-        {userDetails?.name || t("users.user", "User")}!
-      </h1>
+    <div className="min-h-screen px-6 py-4">
+      {/* HERO */}
+      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/mentor_hero.svg')",
+          }}
+        />
 
-      {/* Search and Filter Bar */}
-      <div className="mb-8">
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl text-gray-600 dark:text-gray-300">
-              {totalFilteredCount} {t("users.mentors", "mentors")}{" "}
-              {isFiltering && `(${t("users.filtered", "filtered")})`}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30" />
+
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Mentor Network
+          </span>
+
+          <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            Mentors
+          </h2>
+
+          <p className="mb-6 text-lg text-white/85 drop-shadow-md">
+            Connect with experienced mentors across business strategy,
+            marketing, finance, operations, leadership, and technology to
+            strengthen your entrepreneurial journey.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaLayerGroup />
+              Mentor Profiles
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaUserTie />
+              Expert Guidance
             </span>
           </div>
-          <div className="relative">
+        </div>
+      </div>
+
+      <h2 className="mb-6 text-2xl font-bold text-[#172033]">
+        Available Mentors
+      </h2>
+
+      <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            {Object.entries(filterOptions).map(([key, value]) => (
+              <div key={key} className="relative inline-block">
+                <button
+                  onClick={() => toggleDropdown(key)}
+                  className={`inline-flex items-center gap-2 rounded-md border px-4 py-3 text-sm transition-colors ${
+                    filters[key] !== value.options[0]
+                      ? "border-green-600 bg-green-50 text-green-700"
+                      : "border-black/10 bg-white text-[#6f6f72] hover:border-green-600"
+                  }`}
+                >
+                  <span>{translateFilterValue(filters[key])}</span>
+                  <span>{openDropdown === key ? "⌃" : "⌄"}</span>
+                </button>
+
+                {openDropdown === key && (
+                  <div className="absolute z-20 mt-2 max-h-64 w-64 overflow-y-auto rounded-xl border border-black/10 bg-white shadow-lg">
+                    {value.options.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => handleFilterChange(key, option)}
+                        className={`block w-full px-4 py-2 text-left text-sm ${
+                          filters[key] === option
+                            ? "bg-green-50 text-green-700"
+                            : "text-[#6f6f72] hover:bg-[#f8f8f6]"
+                        }`}
+                      >
+                        {translateFilterValue(option)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <div className="relative inline-block">
+              <button
+                onClick={() => toggleDropdown("sort")}
+                className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-3 text-sm text-[#6f6f72] transition-colors hover:border-green-600"
+              >
+                <span>
+                  {t("users.sortBy", "Sort By")}:{" "}
+                  {translateSortLabel(sortConfig.key)}
+                </span>
+
+                <span>{openDropdown === "sort" ? "⌃" : "⌄"}</span>
+              </button>
+
+              {openDropdown === "sort" && (
+                <div className="absolute z-20 mt-2 w-56 rounded-xl border border-black/10 bg-white shadow-lg">
+                  {sortOptions.map((option) => (
+                    <button
+                      key={option.value}
+                      onClick={() => handleSortChange(option.value)}
+                      className={`block w-full px-4 py-2 text-left text-sm ${
+                        sortConfig.key === option.value
+                          ? "bg-green-50 text-green-700"
+                          : "text-[#6f6f72] hover:bg-[#f8f8f6]"
+                      }`}
+                    >
+                      {translateSortLabel(option.value)}
+
+                      {sortConfig.key === option.value && (
+                        <span className="float-right">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {isFiltering && (
+              <button
+                onClick={clearAllFilters}
+                className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 transition hover:bg-red-100"
+              >
+                {t("filters.clearAll", "Clear All")}
+              </button>
+            )}
+          </div>
+
+          <div className="relative ml-auto w-full sm:w-80">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8f98]" />
+
             <input
               type="text"
               placeholder={t(
@@ -386,363 +496,119 @@ const Mentors = () => {
               )}
               value={keyword}
               onChange={handleSearchChange}
-              className="w-64 px-4 py-2 rounded-md border border-white bg-white focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary"
+              className="w-full rounded-md border border-black/10 bg-[#f8f8f6] px-4 py-3 pl-10 pr-10 text-sm text-[#172033] outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
             />
+
             {keyword && (
               <button
                 onClick={clearSearch}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8a8f98] hover:text-[#172033]"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                ×
               </button>
             )}
           </div>
         </div>
-
-        {/* Filters and Sort */}
-        <div className="flex flex-wrap gap-3">
-          {Object.entries(filterOptions).map(([key, value]) => (
-            <div key={key} className="relative inline-block">
-              <button
-                onClick={() => toggleDropdown(key)}
-                className={`px-4 py-2 rounded-md border border-white transition-colors ${
-                  filters[key] !== value.options[0]
-                    ? "bg-primary/10 text-primary"
-                    : "bg-white"
-                } flex items-center gap-2`}
-              >
-                <span>{translateFilterValue(filters[key])}</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    openDropdown === key ? "rotate-180" : ""
-                  }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
-              {openDropdown === key && (
-                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
-                  {value.options.map((option) => (
-                    <button
-                      key={option}
-                      onClick={() => handleFilterChange(key, option)}
-                      className={`block w-full text-left px-4 py-2 text-sm ${
-                        filters[key] === option
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
-                      }`}
-                    >
-                      {translateFilterValue(option)}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-          <div className="relative inline-block">
-            <button
-              onClick={() => toggleDropdown("sort")}
-              className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-600 flex items-center gap-2 hover:border-primary transition-colors"
-            >
-              <span>
-                {t("users.sortBy", "Sort By")}:{" "}
-                {translateSortLabel(sortConfig.key)}
-              </span>
-              <svg
-                className={`w-4 h-4 transition-transform ${
-                  openDropdown === "sort" ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
-            {openDropdown === "sort" && (
-              <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSortChange(option.value)}
-                    className={`block w-full text-left px-4 py-2 text-sm ${
-                      sortConfig.key === option.value
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
-                    }`}
-                  >
-                    {translateSortLabel(option.value)}{" "}
-                    {sortConfig.key === option.value && (
-                      <span className="float-right">
-                        {sortConfig.direction === "asc" ? "↑" : "↓"}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
-          {isFiltering && (
-            <button
-              onClick={clearAllFilters}
-              className="px-4 py-2 rounded-md border border-red-300 bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-            >
-              {t("filters.clearAll", "Clear All")}
-            </button>
-          )}
-        </div>
-
-        {/* Active Filters */}
-        {(Object.values(filters).some((v) => !v.startsWith("All")) ||
-          keyword) && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {Object.entries(filters).map(([key, value]) =>
-              !value.startsWith("All") ? (
-                <span
-                  key={key}
-                  className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
-                >
-                  {translateFilterValue(value)}
-                  <button
-                    onClick={() =>
-                      handleFilterChange(key, filterOptions[key].options[0])
-                    }
-                    className="hover:text-primary-dark"
-                  >
-                    ×
-                  </button>
-                </span>
-              ) : null
-            )}
-            {keyword && (
-              <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                {t("filters.search", "Search")}: {keyword}
-                <button
-                  onClick={clearSearch}
-                  className="hover:text-primary-dark"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Grid Section */}
       {loading && !initialLoading ? (
-        <div className="flex justify-center items-center h-64">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-green-600" />
         </div>
       ) : displayedUsers.length < 1 ? (
         <NoData />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {displayedUsers.map((item, key) => (
             <Link
               href={`/dashboard/mentors/${item?.uuid || "#"}`}
               key={item?.uuid || key}
-              className="group h-full"
+              className="group overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
             >
-              <div className="bg-white dark:bg-boxdark-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden h-full flex flex-col">
-                <div className="relative w-full h-56 overflow-hidden bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-800">
-                  <Image
-                    src={
-                      item?.image ||
-                      `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                        getMentorName(item)
-                      )}&background=6366f1&color=fff&size=400`
-                    }
-                    alt={`${getMentorName(item)} profile`}
-                    fill
-                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-                    priority={key < 4}
-                    className="object-cover w-full h-full group-hover:scale-110 transition-all duration-500 ease-out"
-                    style={{ objectPosition: "center top" }}
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      if (!target.getAttribute("data-fallback")) {
-                        target.setAttribute("data-fallback", "true");
-                        target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                          getMentorName(item)
-                        )}&background=random&color=fff&size=400&font-size=0.4&rounded=true`;
-                      }
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <div className="absolute bottom-4 left-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                      {item?.MentorProfile?.expertise ||
-                        t(
-                          `mentor.expertise.${makeFirstLetterLowercase(
-                            Object.values(
-                              item?.MentorProfile?.areasOfExperties || {}
-                            )
-                              .slice(0, 2)
-                              .join(", ")
-                              .replace("&", "And")
-                              .replaceAll(" ", "")
-                          )}`
-                        ) ||
-                        t("users.generalExpertise", "General Expertise")}
-                    </span>
-                  </div>
-                  <div className="absolute top-3 right-3">
-                    <div className="w-3 h-3 bg-green-400 rounded-full border-2 border-white shadow-sm"></div>
-                  </div>
+              <div className="relative h-56 overflow-hidden bg-black">
+                <Image
+                  src={
+                    item?.image ||
+                    `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                      getMentorName(item)
+                    )}&background=6366f1&color=fff&size=400`
+                  }
+                  alt={`${getMentorName(item)} profile`}
+                  fill
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                <div className="absolute bottom-4 left-4">
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
+                    {item?.MentorProfile?.expertise ||
+                      t(
+                        `mentor.expertise.${makeFirstLetterLowercase(
+                          Object.values(
+                            item?.MentorProfile?.areasOfExperties || {}
+                          )
+                            .slice(0, 2)
+                            .join(", ")
+                            .replace("&", "And")
+                            .replaceAll(" ", "")
+                        )}`,
+                        t("users.generalExpertise", "General Expertise")
+                      )}
+                  </span>
                 </div>
-                <div className="p-6 flex-grow space-y-4">
-                  <div className="space-y-2">
-                    <h2 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-                      {getMentorName(item)}
-                    </h2>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                      {item?.email ||
-                        t("users.noEmailProvided", "No email provided")}
-                    </p>
-                  </div>
-                  <div className="space-y-3 pt-2">
-                    {item?.MentorProfile?.expertise && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg
-                          className="w-4 h-4 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        <span className="line-clamp-1">
-                          {item.MentorProfile.expertise}
-                        </span>
-                      </div>
-                    )}
-                    {item?.role && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg
-                          className="w-4 h-4 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                          />
-                        </svg>
-                        <span className="line-clamp-1">
-                          {t("users.mentor", "mentor")}
-                        </span>
-                      </div>
-                    )}
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <svg
-                        className="w-4 h-4 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>
-                        {t("users.joined", "Joined")}{" "}
-                        {item?.createdAt
-                          ? new Date(item.createdAt).getFullYear()
-                          : t("common.na", "N/A")}
+
+                <div className="absolute right-4 top-4">
+                  <div className="h-3 w-3 rounded-full border-2 border-white bg-green-400 shadow-sm" />
+                </div>
+              </div>
+
+              <div className="flex min-h-[250px] flex-col p-5">
+                <h3 className="mb-2 line-clamp-2 text-lg font-bold text-[#111827]">
+                  {getMentorName(item)}
+                </h3>
+
+                <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
+                  {item?.email ||
+                    t("users.noEmailProvided", "No email provided")}
+                </p>
+
+                <div className="space-y-3 text-sm text-[#6f6f72]">
+                  {item?.MentorProfile?.expertise && (
+                    <div className="flex items-center gap-2">
+                      <FaBriefcase className="shrink-0" />
+                      <span className="line-clamp-1">
+                        {item.MentorProfile.expertise}
                       </span>
                     </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <FaUserTie className="shrink-0" />
+                    <span>{t("users.mentor", "Mentor")}</span>
                   </div>
-                  <div className="flex items-center gap-3 pt-3">
-                    {item?.facebook && (
-                      <a
-                        href={item.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-primary transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Image
-                          height={20}
-                          width={20}
-                          alt={`${getMentorName(item)} Facebook profile`}
-                          className="w-5 h-5 opacity-75 hover:opacity-100 transition-opacity"
-                          src="/facebook.svg"
-                        />
-                      </a>
-                    )}
-                    {item?.linkedin && (
-                      <a
-                        href={item.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-primary transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Image
-                          height={20}
-                          width={20}
-                          alt={`${getMentorName(item)} LinkedIn profile`}
-                          className="w-5 h-5 opacity-75 hover:opacity-100 transition-opacity"
-                          src="/linkedin.png"
-                        />
-                      </a>
-                    )}
+
+                  <div className="flex items-center gap-2">
+                    <FaCalendarAlt className="shrink-0" />
+                    <span>
+                      {t("users.joined", "Joined")}{" "}
+                      {item?.createdAt
+                        ? new Date(item.createdAt).getFullYear()
+                        : t("common.na", "N/A")}
+                    </span>
                   </div>
                 </div>
-                <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
-                  <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                    <span>{t("investment.viewDetails", "View Details")}</span>
-                    <svg
-                      className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
+
+                <div className="mt-auto flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                  <span className="flex items-center gap-1">
+                    <FaUserTie />
+                    Mentor
+                  </span>
+
+                  <span className="flex items-center gap-1 font-medium text-green-600">
+                    {t("investment.viewDetails", "View Details")}
+                    <FaArrowRight />
+                  </span>
                 </div>
               </div>
             </Link>
@@ -750,10 +616,9 @@ const Mentors = () => {
         </div>
       )}
 
-      {/* Pagination */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-between p-6 border-t border-stroke dark:border-strokedark mt-6">
-          <p className="text-sm text-gray-600 dark:text-gray-400">
+        <div className="mt-8 flex flex-col items-center justify-between gap-4 rounded-2xl bg-white p-5 shadow-sm md:flex-row">
+          <p className="text-sm text-[#6f6f72]">
             {t(
               "users.showingRange",
               "Showing {{start}} - {{end}} of {{total}} {{type}}",
@@ -765,59 +630,54 @@ const Mentors = () => {
               }
             )}
           </p>
-          <div className="flex gap-2">
+
+          <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              onClick={() =>
+                setCurrentPage((prev) => Math.max(1, prev - 1))
+              }
               disabled={currentPage === 1}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                currentPage === 1
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
+              className="rounded-md border border-black/10 bg-white px-4 py-2 text-sm text-[#6f6f72] transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("pagination.previous", "Previous")}
             </button>
 
-            {/* Page numbers */}
-            <div className="flex gap-1">
-              {[...Array(Math.min(5, totalPages))].map((_, idx) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = idx + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = idx + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + idx;
-                } else {
-                  pageNum = currentPage - 2 + idx;
-                }
+            {[...Array(Math.min(5, totalPages))].map((_, idx) => {
+              let pageNum;
 
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`px-3 py-2 rounded-lg transition-colors duration-200 ${
-                      currentPage === pageNum
-                        ? "bg-primary text-white"
-                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
-            </div>
+              if (totalPages <= 5) {
+                pageNum = idx + 1;
+              } else if (currentPage <= 3) {
+                pageNum = idx + 1;
+              } else if (currentPage >= totalPages - 2) {
+                pageNum = totalPages - 4 + idx;
+              } else {
+                pageNum = currentPage - 2 + idx;
+              }
+
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => setCurrentPage(pageNum)}
+                  className={`rounded-md px-3 py-2 text-sm transition ${
+                    currentPage === pageNum
+                      ? "bg-primary-gradient text-white"
+                      : "border border-black/10 bg-white text-[#6f6f72] hover:border-primary hover:text-primary"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              );
+            })}
 
             <button
               onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                setCurrentPage((prev) =>
+                  Math.min(totalPages, prev + 1)
+                )
               }
               disabled={currentPage === totalPages}
-              className={`px-4 py-2 rounded-lg transition-colors duration-200 ${
-                currentPage === totalPages
-                  ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                  : "bg-primary text-white hover:bg-primary/90"
-              }`}
+              className="rounded-md border border-black/10 bg-white px-4 py-2 text-sm text-[#6f6f72] transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
             >
               {t("pagination.next", "Next")}
             </button>

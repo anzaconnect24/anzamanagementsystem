@@ -313,7 +313,7 @@ const TanzaniaMap = () => {
   // Loading state
   if (loading) {
     return (
-      <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+      <div className="col-span-12 rounded-2xl border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-lg dark:border-strokedark dark:bg-boxdark sm:px-7.5">
         <div className="flex items-center justify-center h-[400px]">
           <div className="text-center">
             <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
@@ -332,7 +332,7 @@ const TanzaniaMap = () => {
   // Error state
   if (error) {
     return (
-      <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+      <div className="col-span-12 rounded-2xl border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-lg dark:border-strokedark dark:bg-boxdark sm:px-7.5">
         <div className="flex flex-col items-center justify-center h-[400px] text-center">
           <div className="text-red-500 mb-4">
             <svg
@@ -367,7 +367,7 @@ const TanzaniaMap = () => {
   // No data state
   if (totalStartups === 0) {
     return (
-      <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+      <div className="col-span-12 rounded-2xl border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-lg dark:border-strokedark dark:bg-boxdark sm:px-7.5">
         <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap mb-6">
           <div>
             <h3 className="text-xl font-bold text-black dark:text-white">
@@ -566,7 +566,7 @@ const TanzaniaMap = () => {
   };
 
   return (
-    <div className="col-span-12 rounded-sm border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-default dark:border-strokedark dark:bg-boxdark sm:px-7.5">
+    <div className="col-span-12 rounded-2xl border border-stroke bg-white px-5 pt-7.5 pb-5 shadow-lg dark:border-strokedark dark:bg-boxdark sm:px-7.5">
       <div className="flex flex-wrap items-start justify-between gap-3 sm:flex-nowrap mb-6">
         <div>
           <h3 className="text-xl font-bold text-black dark:text-white">

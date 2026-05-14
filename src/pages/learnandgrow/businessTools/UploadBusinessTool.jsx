@@ -1,8 +1,8 @@
 "use client";
+
 import { createBusinessTool } from "../../../controllers/business_tools_controller";
 import { useState } from "react";
 import { useRouter } from "@/utils/navigation";
-import Loader from "../../../components/common/Loader";
 import Breadcrumb from "../../../components/Breadcrumbs/Breadcrumb";
 import Spinner from "../../../components/spinner";
 import { uploadFile } from "../../../controllers/file_upload_controller";
@@ -43,39 +43,50 @@ const UploadBusinessTool = () => {
     try {
       const fileType = e.target.fileType.value;
       const file = e.target.file.files[0];
+      const thumbnail = e.target.thumbnail.files[0];
 
       if (!file) {
+        toast.error(t("businessTools.pleaseSelectFile", "Please select a file"));
+        setLoading(false);
+        return;
+      }
+
+      if (!thumbnail) {
         toast.error(
-          t("businessTools.pleaseSelectFile", "Please select a file"),
+          t("businessTools.pleaseSelectThumbnail", "Please select a thumbnail image")
         );
         setLoading(false);
         return;
       }
 
-      // Upload file
-      let formData = new FormData();
-      formData.append("file", file);
-      const fileUrl = await uploadFile(formData);
+      const fileFormData = new FormData();
+      fileFormData.append("file", file);
+      const fileUrl = await uploadFile(fileFormData);
 
-      // Prepare payload
+      const thumbnailFormData = new FormData();
+      thumbnailFormData.append("file", thumbnail);
+      const thumbnailUrl = await uploadFile(thumbnailFormData);
+
       const payload = {
         fileName: e.target.fileName.value,
         description: e.target.description.value,
         fileType,
         fileUrl,
         fileSize: file.size,
+        thumbnailUrl,
       };
 
-      // Create business tool record
       await createBusinessTool(payload);
+
       toast.success(
-        t("businessTools.uploadSuccess", "Business tool uploaded successfully"),
+        t("businessTools.uploadSuccess", "Business tool uploaded successfully")
       );
+
       router.push("/dashboard/businessTools");
     } catch (error) {
       console.error("Error uploading business tool:", error);
       toast.error(
-        t("businessTools.errorUploading", "Error uploading business tool"),
+        t("businessTools.errorUploading", "Error uploading business tool")
       );
     } finally {
       setLoading(false);
@@ -89,13 +100,14 @@ const UploadBusinessTool = () => {
         prevPage={t("common.back", "Back")}
         pageName={t("businessTools.uploadTool", "Upload Business Tool")}
       />
+
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <form onSubmit={handleSubmit} className="py-6 px-4 md:px-6 xl:px-7.5">
+        <form onSubmit={handleSubmit} className="px-4 py-6 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">
             {t("businessTools.uploadNewTool", "Upload new business tool")}
           </h4>
 
-          <div className="grid grid-cols-2 gap-y-3 gap-x-3 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
                 {t("businessTools.fileName", "File Name")}
@@ -104,10 +116,7 @@ const UploadBusinessTool = () => {
                 name="fileName"
                 required
                 className="form-style disabled:opacity-75"
-                placeholder={t(
-                  "businessTools.enterFileName",
-                  "Enter file name",
-                )}
+                placeholder={t("businessTools.enterFileName", "Enter file name")}
                 type="text"
               />
             </div>
@@ -121,18 +130,16 @@ const UploadBusinessTool = () => {
                 required
                 className="form-style disabled:opacity-75"
                 onChange={(e) => {
-                  const fileInput =
-                    document.querySelector('input[name="file"]');
+                  const fileInput = document.querySelector('input[name="file"]');
                   if (fileInput) {
-                    fileInput.accept = getAcceptedFileExtensions(
-                      e.target.value,
-                    );
+                    fileInput.accept = getAcceptedFileExtensions(e.target.value);
                   }
                 }}
               >
                 <option value="">
                   {t("businessTools.selectFileType", "Select file type")}
                 </option>
+
                 {fileTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -141,7 +148,26 @@ const UploadBusinessTool = () => {
               </select>
             </div>
 
-            <div className="col-span-2">
+            <div className="md:col-span-2">
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                {t("businessTools.thumbnailImage", "Thumbnail Image")}
+              </label>
+              <input
+                name="thumbnail"
+                required
+                className="form-style disabled:opacity-75"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                {t(
+                  "businessTools.thumbnailHelp",
+                  "This image will appear on the business tool card."
+                )}
+              </p>
+            </div>
+
+            <div className="md:col-span-2">
               <label className="mb-2.5 block font-medium text-black dark:text-white">
                 {t("businessTools.uploadFile", "Upload File")}
               </label>
@@ -152,16 +178,10 @@ const UploadBusinessTool = () => {
                 type="file"
                 accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf"
               />
-              <p className="text-sm text-gray-500 mt-1">
-                {t(
-                  "businessTools.supportedFormats",
-                  "Supported formats: Word (.doc, .docx), Excel (.xls, .xlsx), PowerPoint (.ppt, .pptx), PDF (.pdf)",
-                )}
-              </p>
             </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-4">
             <label className="mb-2.5 block font-medium text-black dark:text-white">
               {t("businessTools.description", "Description")}
             </label>
@@ -171,26 +191,25 @@ const UploadBusinessTool = () => {
               className="form-style"
               placeholder={t(
                 "businessTools.writeDescription",
-                "Write a brief description of this tool",
+                "Write a brief description of this tool"
               )}
               rows={4}
             />
           </div>
 
-          <div className="flex gap-4 mt-6">
+          <div className="mt-6 flex gap-4">
             <button
               type="submit"
               disabled={loading}
-              className="py-3 px-4 w-40 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex w-40 justify-center rounded bg-primary px-4 py-3 text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <div>
-                {loading ? <Spinner /> : t("businessTools.upload", "Upload")}
-              </div>
+              {loading ? <Spinner /> : t("businessTools.upload", "Upload")}
             </button>
+
             <button
               type="button"
               onClick={() => router.push("/dashboard/businessTools")}
-              className="py-3 px-4 w-40 flex justify-center bg-gray-500 cursor-pointer text-white rounded hover:opacity-95"
+              className="flex w-40 justify-center rounded bg-gray-500 px-4 py-3 text-white hover:opacity-95"
             >
               {t("common.cancel", "Cancel")}
             </button>

@@ -1,4 +1,5 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import {
@@ -19,18 +20,15 @@ import {
   HiOutlineXCircle,
   HiOutlineDocumentText,
   HiOutlineThumbUp,
-  HiOutlineThumbDown,
 } from "react-icons/hi";
-import { RiMoneyDollarCircleLine } from "react-icons/ri";
 import { BiUser, BiEnvelope, BiPhone } from "react-icons/bi";
 import { useTranslation } from "@/locales";
-import { useRouter } from "@/utils/navigation";
 
 const InvestmentApplicationDetailWithActions = () => {
   const { t } = useTranslation();
   const { uuid } = useParams();
-  const router = useRouter();
   const { userDetails } = useContext(UserContext);
+
   const [application, setApplication] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showResponseModal, setShowResponseModal] = useState(false);
@@ -61,14 +59,10 @@ const InvestmentApplicationDetailWithActions = () => {
     setActionLoading(true);
     try {
       await investorShowInterest(uuid);
-      toast.success(
-        t("investment.interestShownSuccess", "Interest shown successfully"),
-      );
+      toast.success(t("investment.interestShownSuccess", "Interest shown successfully"));
       fetchApplication();
-    } catch (error) {
-      toast.error(
-        t("investment.interestShownError", "Failed to show interest"),
-      );
+    } catch {
+      toast.error(t("investment.interestShownError", "Failed to show interest"));
     } finally {
       setActionLoading(false);
     }
@@ -86,9 +80,7 @@ const InvestmentApplicationDetailWithActions = () => {
 
   const submitResponse = async () => {
     if (!investorResponse.trim()) {
-      toast.error(
-        t("investment.responseRequired", "Please provide a response"),
-      );
+      toast.error(t("investment.responseRequired", "Please provide a response"));
       return;
     }
 
@@ -96,19 +88,16 @@ const InvestmentApplicationDetailWithActions = () => {
     try {
       if (responseType === "approve") {
         await investorApproveApplication(uuid, investorResponse);
-        toast.success(
-          t("investment.approvedSuccess", "Application approved successfully"),
-        );
+        toast.success(t("investment.approvedSuccess", "Application approved successfully"));
       } else {
         await investorRejectApplication(uuid, investorResponse);
-        toast.success(
-          t("investment.rejectedSuccess", "Application rejected successfully"),
-        );
+        toast.success(t("investment.rejectedSuccess", "Application rejected successfully"));
       }
+
       setShowResponseModal(false);
       setInvestorResponse("");
       fetchApplication();
-    } catch (error) {
+    } catch {
       toast.error(t("investment.actionError", "Failed to process application"));
     } finally {
       setActionLoading(false);
@@ -127,14 +116,10 @@ const InvestmentApplicationDetailWithActions = () => {
       setActionLoading(true);
       try {
         await markInvestmentCompleted(uuid);
-        toast.success(
-          t("investment.completedSuccess", "Investment marked as completed"),
-        );
+        toast.success(t("investment.completedSuccess", "Investment marked as completed"));
         fetchApplication();
-      } catch (error) {
-        toast.error(
-          t("investment.completedError", "Failed to mark as completed"),
-        );
+      } catch {
+        toast.error(t("investment.completedError", "Failed to mark as completed"));
       } finally {
         setActionLoading(false);
       }
@@ -148,25 +133,25 @@ const InvestmentApplicationDetailWithActions = () => {
       pending: {
         bg: "bg-warning/10",
         text: "text-warning",
-        icon: <HiOutlineClock className="w-5 h-5" />,
+        icon: <HiOutlineClock className="h-5 w-5" />,
         label: t("investment.pending", "Pending"),
       },
       in_progress: {
         bg: "bg-blue-100",
         text: "text-blue-600",
-        icon: <HiOutlineClock className="w-5 h-5" />,
+        icon: <HiOutlineClock className="h-5 w-5" />,
         label: t("investment.inProgress", "In Progress"),
       },
       completed: {
         bg: "bg-success/10",
         text: "text-success",
-        icon: <HiOutlineCheckCircle className="w-5 h-5" />,
+        icon: <HiOutlineCheckCircle className="h-5 w-5" />,
         label: t("investment.completed", "Completed"),
       },
       dropped: {
         bg: "bg-danger/10",
         text: "text-danger",
-        icon: <HiOutlineXCircle className="w-5 h-5" />,
+        icon: <HiOutlineXCircle className="h-5 w-5" />,
         label: t("investment.dropped", "Dropped"),
       },
     };
@@ -175,10 +160,10 @@ const InvestmentApplicationDetailWithActions = () => {
 
     return (
       <div
-        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${config.bg} ${config.text}`}
+        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${config.bg} ${config.text}`}
       >
         {config.icon}
-        <span className="text-base font-medium">{config.label}</span>
+        <span className="text-sm font-semibold">{config.label}</span>
       </div>
     );
   };
@@ -213,9 +198,9 @@ const InvestmentApplicationDetailWithActions = () => {
 
     return (
       <div
-        className={`inline-flex items-center gap-2 px-4 py-2 rounded-full ${config.bg} ${config.text}`}
+        className={`inline-flex items-center gap-2 rounded-full px-4 py-2 ${config.bg} ${config.text}`}
       >
-        <span className="text-sm font-medium">{config.label}</span>
+        <span className="text-sm font-semibold">{config.label}</span>
       </div>
     );
   };
@@ -228,20 +213,39 @@ const InvestmentApplicationDetailWithActions = () => {
     }).format(amount || 0);
   };
 
-  const formatDate = (date) => {
-    if (!date) return t("investment.notAvailable", "N/A");
-    return new Date(date).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+  const displayPerson = isInvestor ? application?.Entrepreneur : application?.Investor;
+
+  const DetailCard = ({ title, icon, children, className = "" }) => (
+    <div
+      className={`rounded-3xl border border-stroke/70 bg-white p-6 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md dark:border-strokedark dark:bg-boxdark ${className}`}
+    >
+      <div className="mb-5 flex items-center gap-3">
+        {icon && (
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+            {icon}
+          </div>
+        )}
+        <h5 className="text-lg font-semibold text-black dark:text-white">{title}</h5>
+      </div>
+      {children}
+    </div>
+  );
+
+  const Field = ({ label, value, icon }) => (
+    <div className="rounded-2xl bg-gray-50/80 p-4 dark:bg-meta-4/40">
+      <p className="mb-2 flex items-center gap-1.5 text-sm font-medium text-gray-500 dark:text-gray-400">
+        {icon}
+        {label}
+      </p>
+      <p className="break-words text-base font-semibold text-black dark:text-white">
+        {value || t("investment.notAvailable", "Not Available")}
+      </p>
+    </div>
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-[400px] bg-white">
+      <div className="flex min-h-[400px] items-center justify-center bg-white">
         <Loader />
       </div>
     );
@@ -254,6 +258,7 @@ const InvestmentApplicationDetailWithActions = () => {
           <p className="text-lg text-gray-500">
             {t("investment.notFound", "Application not found")}
           </p>
+
           <Link
             href="/dashboard/investmentApplications"
             className="mt-4 inline-flex items-center gap-2 text-primary hover:underline"
@@ -268,62 +273,72 @@ const InvestmentApplicationDetailWithActions = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Back Button */}
       <Link
         href="/dashboard/investmentApplications"
-        className="inline-flex items-center gap-2 text-primary hover:underline mb-6"
+        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-primary transition-all hover:gap-3"
       >
         <HiOutlineArrowLeft />
         {t("investment.backToApplications", "Back to Applications")}
       </Link>
 
-      <div className="rounded-2xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark overflow-hidden">
-        {/* Header */}
-        <div className="p-6 border-b border-stroke dark:border-strokedark bg-gradient-to-r from-primary/5 to-transparent">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className="p-4 rounded-xl bg-primary/10">
-                <RiMoneyDollarCircleLine className="text-4xl text-primary" />
-              </div>
-              <div>
-                <h4 className="text-2xl font-semibold text-black dark:text-white mb-2">
-                  {t("investment.applicationDetails", "Application Details")}
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {t("investment.submittedOn", "Submitted on")}{" "}
-                  {formatDate(application.createdAt)}
-                </p>
-              </div>
-            </div>
-            <div className="flex flex-col gap-2">
-              {getStatusBadge(application.status)}
-              {isInvestor && getInvestorStatusBadge(application.investorStatus)}
-            </div>
+      <div className="relative overflow-hidden rounded-[24px] bg-black shadow-md">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/investors_hero.svg')",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/65 to-black/20" />
+
+        <div className="relative z-10 px-7 py-10 md:px-10 md:py-14 lg:px-12 lg:py-16">
+          <div className="mb-7 inline-flex items-center gap-3 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-md">
+            <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
+            {t("investment.investmentApplication", "Investment Application")}
           </div>
 
-          {/* Investor Action Buttons */}
+          <h1 className="max-w-3xl text-4xl font-bold leading-tight text-white md:text-5xl">
+            {isInvestor
+              ? t("investment.reviewInvestmentOpportunity", "Review Investment Opportunity")
+              : t("investment.trackInvestorApplication", "Track Investor Application")}
+          </h1>
+
+          <p className="mt-5 max-w-3xl text-lg leading-8 text-white/85">
+            {t(
+              "investment.detailHeroDescription",
+              "Review the investment request, evaluate the entrepreneur’s proposal, and manage the application decision from one focused workspace.",
+            )}
+          </p>
+
+          <div className="mt-6 flex flex-wrap items-center gap-3">
+            {getStatusBadge(application.status)}
+            {isInvestor && getInvestorStatusBadge(application.investorStatus)}
+          </div>
+
           {isInvestor && application.investorStatus === "pending" && (
-            <div className="mt-6 flex flex-wrap gap-3">
+            <div className="mt-7 flex flex-wrap gap-3">
               <button
                 onClick={handleShowInterest}
                 disabled={actionLoading}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="inline-flex items-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-semibold text-gray-900 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <HiOutlineThumbUp />
                 {t("investment.showInterest", "Show Interest")}
               </button>
+
               <button
                 onClick={handleApprove}
                 disabled={actionLoading}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-success text-white rounded-lg hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="inline-flex items-center gap-2 rounded-xl bg-success px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-success/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <HiOutlineCheckCircle />
                 {t("investment.approve", "Approve")}
               </button>
+
               <button
                 onClick={handleReject}
                 disabled={actionLoading}
-                className="inline-flex items-center gap-2 px-6 py-3 bg-danger text-white rounded-lg hover:bg-danger/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="inline-flex items-center gap-2 rounded-xl bg-danger px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-danger/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <HiOutlineXCircle />
                 {t("investment.reject", "Reject")}
@@ -331,221 +346,130 @@ const InvestmentApplicationDetailWithActions = () => {
             </div>
           )}
 
-          {/* Mark as Completed Button */}
-          {(isInvestor || isEntrepreneur) &&
-            application.status === "in_progress" && (
-              <div className="mt-6">
-                <button
-                  onClick={handleMarkCompleted}
-                  disabled={actionLoading}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-success text-white rounded-lg hover:bg-success/90 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                >
-                  <HiOutlineCheckCircle />
-                  {t("investment.markCompleted", "Mark as Completed")}
-                </button>
-              </div>
-            )}
-        </div>
-
-        {/* Content */}
-        <div className="p-6 space-y-6">
-          {/* Investment Amount */}
-          <div className="p-6 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20">
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              {t("investment.requestedAmount", "Requested Amount")}
-            </p>
-            <p className="text-4xl font-bold text-primary">
-              {formatCurrency(application.amount)}
-            </p>
-          </div>
-
-          {/* Investor Information (for entrepreneurs) / Entrepreneur Information (for investors) */}
-          <div className="p-6 rounded-xl border border-stroke dark:border-strokedark">
-            <h5 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center gap-2">
-              <BiUser className="text-xl text-primary" />
-              {isInvestor
-                ? t(
-                    "investment.entrepreneurInformation",
-                    "Entrepreneur Information",
-                  )
-                : t("investment.investorInformation", "Investor Information")}
-            </h5>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                  {t("investment.name", "Name")}
-                </p>
-                <p className="text-base font-medium text-black dark:text-white">
-                  {isInvestor
-                    ? application.Entrepreneur?.name ||
-                      t("investment.notAvailable", "Not Available")
-                    : application.Investor?.name ||
-                      t("investment.notAvailable", "Not Available")}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
-                  <BiEnvelope />
-                  {t("investment.email", "Email")}
-                </p>
-                <p className="text-base font-medium text-black dark:text-white">
-                  {isInvestor
-                    ? application.Entrepreneur?.email ||
-                      t("investment.notAvailable", "Not Available")
-                    : application.Investor?.email ||
-                      t("investment.notAvailable", "Not Available")}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-1">
-                  <BiPhone />
-                  {t("investment.phone", "Phone")}
-                </p>
-                <p className="text-base font-medium text-black dark:text-white">
-                  {isInvestor
-                    ? application.Entrepreneur?.phone ||
-                      t("investment.notAvailable", "Not Available")
-                    : application.Investor?.phone ||
-                      t("investment.notAvailable", "Not Available")}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          {/* Purpose of Investment */}
-          <div className="p-6 rounded-xl border border-stroke dark:border-strokedark">
-            <h5 className="text-lg font-semibold text-black dark:text-white mb-4 flex items-center gap-2">
-              <HiOutlineDocumentText className="text-xl text-primary" />
-              {t("investment.purposeOfInvestment", "Purpose of Investment")}
-            </h5>
-            <p className="text-base text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-              {application.purposeOfInvestment ||
-                t("investment.noPurposeProvided", "No purpose provided")}
-            </p>
-          </div>
-
-          {/* Offer to Investor */}
-          <div className="p-6 rounded-xl border border-stroke dark:border-strokedark">
-            <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-              {t("investment.offerToInvestor", "Offer to Investor")}
-            </h5>
-            <p className="text-base text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-              {application.offerToInvestor ||
-                t("investment.noOfferProvided", "No offer provided")}
-            </p>
-          </div>
-
-          {/* Investor Response */}
-          {application.investorResponse && (
-            <div className="p-6 rounded-xl border-2 border-primary/20 bg-primary/5">
-              <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-                {t("investment.investorResponse", "Investor Response")}
-              </h5>
-              <p className="text-base text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
-                {application.investorResponse}
-              </p>
-              {application.respondedAt && (
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  {t("investment.respondedOn", "Responded on")}{" "}
-                  {formatDate(application.respondedAt)}
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Pitch Deck */}
-          {application.pitchdeck && (
-            <div className="p-6 rounded-xl border border-stroke dark:border-strokedark">
-              <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-                {t("investment.pitchDeck", "Pitch Deck")}
-              </h5>
-              <a
-                href={application.pitchdeck}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-white hover:bg-primary/90 transition-all"
+          {(isInvestor || isEntrepreneur) && application.status === "in_progress" && (
+            <div className="mt-7">
+              <button
+                onClick={handleMarkCompleted}
+                disabled={actionLoading}
+                className="inline-flex items-center gap-2 rounded-xl bg-success px-5 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:-translate-y-0.5 hover:bg-success/90 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
               >
-                <HiOutlineDocumentText />
-                {t("investment.viewPitchDeck", "View Pitch Deck")}
-              </a>
+                <HiOutlineCheckCircle />
+                {t("investment.markCompleted", "Mark as Completed")}
+              </button>
             </div>
           )}
-
-          {/* Timeline */}
-          <div className="p-6 rounded-xl border border-stroke dark:border-strokedark">
-            <h5 className="text-lg font-semibold text-black dark:text-white mb-4">
-              {t("investment.timeline", "Timeline")}
-            </h5>
-            <div className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-primary"></div>
-                <div>
-                  <p className="text-sm font-medium text-black dark:text-white">
-                    {t("investment.applicationCreated", "Application Created")}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatDate(application.createdAt)}
-                  </p>
-                </div>
-              </div>
-              {application.respondedAt && (
-                <div className="flex items-center gap-3">
-                  <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                  <div>
-                    <p className="text-sm font-medium text-black dark:text-white">
-                      {t("investment.investorResponded", "Investor Responded")}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {formatDate(application.respondedAt)}
-                    </p>
-                  </div>
-                </div>
-              )}
-              <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
-                <div>
-                  <p className="text-sm font-medium text-black dark:text-white">
-                    {t("investment.lastUpdated", "Last Updated")}
-                  </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatDate(application.updatedAt)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Response Modal */}
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[1.35fr_0.65fr]">
+        <div className="space-y-6">
+          <DetailCard
+            title={t("investment.purposeOfInvestment", "Purpose of Investment")}
+            icon={<HiOutlineDocumentText className="text-xl" />}
+          >
+            <p className="whitespace-pre-wrap text-base leading-8 text-gray-700 dark:text-gray-300">
+              {application.purposeOfInvestment ||
+                t("investment.noPurposeProvided", "No purpose provided")}
+            </p>
+          </DetailCard>
+
+          <DetailCard title={t("investment.offerToInvestor", "Offer to Investor")}>
+            <p className="whitespace-pre-wrap text-base leading-8 text-gray-700 dark:text-gray-300">
+              {application.offerToInvestor ||
+                t("investment.noOfferProvided", "No offer provided")}
+            </p>
+          </DetailCard>
+
+          {application.pitchdeck && (
+            <div className="max-w-md">
+              <DetailCard title={t("investment.pitchDeck", "Pitch Deck")}>
+                <a
+                  href={application.pitchdeck}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-primary px-5 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-md"
+                >
+                  <HiOutlineDocumentText />
+                  {t("investment.viewPitchDeck", "View Pitch Deck")}
+                </a>
+              </DetailCard>
+            </div>
+          )}
+
+          {application.investorResponse && (
+            <DetailCard
+              title={t("investment.investorResponse", "Investor Response")}
+              className="border-primary/20 bg-primary/5"
+            >
+              <p className="whitespace-pre-wrap text-base leading-8 text-gray-700 dark:text-gray-300">
+                {application.investorResponse}
+              </p>
+            </DetailCard>
+          )}
+        </div>
+
+        <div className="space-y-6">
+          <DetailCard
+            title={
+              isInvestor
+                ? t("investment.entrepreneurInformation", "Entrepreneur Information")
+                : t("investment.investorInformation", "Investor Information")
+            }
+            icon={<BiUser className="text-xl" />}
+          >
+            <div className="space-y-4">
+              <Field label={t("investment.name", "Name")} value={displayPerson?.name} />
+
+              <Field
+                label={t("investment.email", "Email")}
+                value={displayPerson?.email}
+                icon={<BiEnvelope />}
+              />
+
+              <Field
+                label={t("investment.phone", "Phone")}
+                value={displayPerson?.phone}
+                icon={<BiPhone />}
+              />
+
+              <Field
+                label={t("investment.requestedAmount", "Requested Amount")}
+                value={formatCurrency(application.amount)}
+                icon={<HiOutlineDocumentText />}
+              />
+            </div>
+          </DetailCard>
+        </div>
+      </div>
+
       {showResponseModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-99999 p-4">
-          <div className="bg-white dark:bg-boxdark rounded-2xl p-6 max-w-md w-full">
-            <h3 className="text-xl font-semibold text-black dark:text-white mb-4">
+        <div className="fixed inset-0 z-99999 flex items-center justify-center bg-black/50 p-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 dark:bg-boxdark">
+            <h3 className="mb-4 text-xl font-semibold text-black dark:text-white">
               {responseType === "approve"
                 ? t("investment.approveApplication", "Approve Application")
                 : t("investment.rejectApplication", "Reject Application")}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
+
+            <p className="mb-4 text-sm text-gray-600 dark:text-gray-400">
               {t(
                 "investment.provideResponse",
                 "Please provide your response to the entrepreneur:",
               )}
             </p>
+
             <textarea
               value={investorResponse}
               onChange={(e) => setInvestorResponse(e.target.value)}
-              placeholder={t(
-                "investment.responsePlaceholder",
-                "Write your message here...",
-              )}
-              className="w-full rounded-lg border border-stroke p-3 outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4 min-h-32"
-            ></textarea>
-            <div className="flex gap-3 mt-4">
+              placeholder={t("investment.responsePlaceholder", "Write your message here...")}
+              className="min-h-32 w-full rounded-lg border border-stroke p-3 outline-none focus:border-primary dark:border-strokedark dark:bg-meta-4"
+            />
+
+            <div className="mt-4 flex gap-3">
               <button
                 onClick={submitResponse}
                 disabled={actionLoading || !investorResponse.trim()}
-                className={`flex-1 px-4 py-2 rounded-lg text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                className={`flex-1 rounded-lg px-4 py-2 text-white transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
                   responseType === "approve"
                     ? "bg-success hover:bg-success/90"
                     : "bg-danger hover:bg-danger/90"
@@ -555,13 +479,14 @@ const InvestmentApplicationDetailWithActions = () => {
                   ? t("investment.processing", "Processing...")
                   : t("investment.submit", "Submit")}
               </button>
+
               <button
                 onClick={() => {
                   setShowResponseModal(false);
                   setInvestorResponse("");
                 }}
                 disabled={actionLoading}
-                className="flex-1 px-4 py-2 rounded-lg border border-stroke dark:border-strokedark hover:bg-gray-1 dark:hover:bg-meta-4 transition-all disabled:opacity-50"
+                className="flex-1 rounded-lg border border-stroke px-4 py-2 transition-all hover:bg-gray-1 disabled:opacity-50 dark:border-strokedark dark:hover:bg-meta-4"
               >
                 {t("investment.cancel", "Cancel")}
               </button>

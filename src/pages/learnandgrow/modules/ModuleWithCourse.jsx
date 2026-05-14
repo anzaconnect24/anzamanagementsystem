@@ -1,40 +1,49 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
-import {
-  deleteModule,
-  editModule,
-  getModules,
-} from "@/controllers/modules_controller";
+import { deleteModule, getModules } from "@/controllers/modules_controller";
 import {
   checkProgramCompletion,
   downloadProgramCertificate,
 } from "@/controllers/quiz_controller";
+
 import Link from "@/utils/link";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import { BsPlus, BsLock } from "react-icons/bs";
 
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { BsPencil, BsPlus, BsTrash, BsLock } from "react-icons/bs";
+import {
+  FaDownload,
+  FaLayerGroup,
+  FaClock,
+  FaBookOpen,
+  FaCheckCircle,
+  FaChartLine,
+} from "react-icons/fa";
+
 import Image from "@/utils/image";
 import Loader from "@/components/common/Loader";
-import { editComment } from "@/controllers/comment_controllers";
 import { useRouter } from "@/utils/navigation";
 import { useTranslation } from "@/locales";
-import Pagination from "../../../component/pagination";
 import { useParams } from "react-router-dom";
 
-const Page = ({ params }) => {
+const Page = () => {
   const { programId } = useParams();
+
   const [modules, setModules] = useState([]);
+
   const { userDetails } = useContext(UserContext);
+
   const [loading, setLoading] = useState(true);
+
   const router = useRouter();
-  const [limit, setLimit] = useState(20);
-  const [page, setPage] = useState(1);
-  const [count, setCount] = useState(0);
+
   const { t } = useTranslation();
-  const [programCompletion, setProgramCompletion] = useState(null);
-  const [completionLoading, setCompletionLoading] = useState(false);
-  const [certificateLoading, setCertificateLoading] = useState(false);
+
+  const [programCompletion, setProgramCompletion] =
+    useState(null);
+
+  const [certificateLoading, setCertificateLoading] =
+    useState(false);
 
   useEffect(() => {
     loadData();
@@ -42,378 +51,400 @@ const Page = ({ params }) => {
   }, []);
 
   const loadData = () => {
-    getModules({ program_uuid: programId, page, limit }).then((res) => {
-      console.log(res);
+    getModules({
+      program_uuid: programId,
+      page: 1,
+      limit: 100,
+    }).then((res) => {
       setModules(res.data);
-      setCount(res.count);
       setLoading(false);
     });
   };
 
   const loadProgramCompletion = async () => {
-    if (["Admin"].includes(userDetails.role)) return; // Skip for admin
+    if (["Admin"].includes(userDetails.role)) return;
 
     try {
-      setCompletionLoading(true);
-      const completion = await checkProgramCompletion(programId);
+      const completion =
+        await checkProgramCompletion(programId);
+
       setProgramCompletion(completion);
     } catch (error) {
-      console.error("Error loading program completion:", error);
-    } finally {
-      setCompletionLoading(false);
+      console.error(error);
     }
   };
 
   const handleDownloadCertificate = async () => {
     try {
       setCertificateLoading(true);
+
       await downloadProgramCertificate(
         programId,
         programCompletion?.program?.title || "Program"
       );
     } catch (error) {
-      console.error("Error downloading certificate:", error);
-      alert(error.response?.data?.message || "Failed to download certificate");
+      console.error(error);
     } finally {
       setCertificateLoading(false);
     }
   };
-  return loading ? (
-    <Loader />
-  ) : (
-    <div>
-      <Breadcrumb
-        prevLink={"/dashboard/classRooms"}
-        pageName={`${t("learnAndGrow.modules", "Modules")}`}
-        prevPage={t("common.back", "Back")}
-      />
 
-      <div className="flex justify-between">
-        <h1 className="text-2xl font-bold"></h1>
-      </div>
+  if (loading) return <Loader />;
 
-      {/* Program Completion Status and Certificate */}
-      {!["Admin"].includes(userDetails.role) && programCompletion && (
-        <div className="bg-white rounded-lg border border-black/10 p-6 mb-6">
-          <h2 className="text-xl font-bold mb-4">
-            {t("learnAndGrow.programProgress", "Program Progress")}
-          </h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                {t("learnAndGrow.modulesCompleted", "Modules")}
-              </p>
-              <p className="text-2xl font-bold text-blue-600">
-                {programCompletion.totalModules}
-              </p>
-            </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                {t("learnAndGrow.quizzesPassed", "Quizzes Passed")}
-              </p>
-              <p className="text-2xl font-bold text-green-600">
-                {programCompletion.passedQuizzes} /{" "}
-                {programCompletion.totalQuizzes}
-              </p>
-            </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">
-                {t("learnAndGrow.averageScore", "Average Score")}
-              </p>
-              <p className="text-2xl font-bold text-purple-600">
-                {programCompletion.averageScore?.toFixed(1) || 0}%
-              </p>
-            </div>
+  return (
+    <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
+      <div className="mx-auto max-w-7xl">
+        {/* HERO */}
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+          <div className="absolute inset-0">
+            <Image
+              src="/images/general_resources_hero.svg"
+              alt="Learning modules"
+              width={1600}
+              height={800}
+              className="h-full w-full object-cover"
+            />
           </div>
 
-          {programCompletion.isCompleted ? (
-            <div className="bg-green-100 border border-green-300 rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <svg
-                    className="w-8 h-8 text-green-600"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  <div>
-                    <h3 className="font-bold text-green-800">
-                      {t(
-                        "learnAndGrow.congratulations",
-                        "Congratulations! Program Completed"
-                      )}
-                    </h3>
-                    <p className="text-sm text-green-700">
-                      {t(
-                        "learnAndGrow.allQuizzesPassed",
-                        "You have successfully passed all quizzes in this program"
-                      )}
-                    </p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleDownloadCertificate}
-                  disabled={certificateLoading}
-                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {certificateLoading ? (
-                    <>
-                      <svg
-                        className="animate-spin h-5 w-5"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                      >
-                        <circle
-                          className="opacity-25"
-                          cx="12"
-                          cy="12"
-                          r="10"
-                          stroke="currentColor"
-                          strokeWidth="4"
-                        ></circle>
-                        <path
-                          className="opacity-75"
-                          fill="currentColor"
-                          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                        ></path>
-                      </svg>
-                      {t("common.loading", "Loading...")}
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-5 h-5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      {t(
-                        "learnAndGrow.downloadCertificate",
-                        "Download Certificate"
-                      )}
-                    </>
-                  )}
-                </button>
-              </div>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+
+          <div className="relative z-10 flex min-h-[320px] max-w-3xl flex-col justify-center p-8 lg:p-12">
+            <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+              Learning Modules
+            </span>
+
+            <h1 className="mb-4 text-4xl font-bold leading-tight text-white md:text-4xl">
+              Continue Your Learning Journey
+            </h1>
+
+            <p className="mb-8 max-w-2xl text-base leading-8 text-white/85 md:text-lg">
+              Access structured learning modules,
+              quizzes, downloadable resources, and
+              progress tracking to support your learning
+              experience.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-white/90">
+              <span className="flex items-center gap-2">
+                <FaLayerGroup />
+                {modules.length} Modules
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaDownload />
+                Certificates Available
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaClock />
+                Flexible Learning
+              </span>
             </div>
-          ) : (
-            <div className="bg-yellow-50 border border-yellow-300 rounded-lg p-4">
-              <div className="flex items-center gap-3">
-                <svg
-                  className="w-6 h-6 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+          </div>
+        </section>
+
+        {/* PROGRAM PROGRESS */}
+        {!["Admin"].includes(userDetails.role) &&
+          programCompletion && (
+            <section className="mb-8 rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm">
+              <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                  <h3 className="font-semibold text-yellow-800">
-                    {t("learnAndGrow.programInProgress", "Program In Progress")}
+                  <h2 className="text-2xl font-bold text-[#101828]">
+                    Program Progress
+                  </h2>
+                </div>
+
+                {programCompletion.isCompleted && (
+                  <button
+                    onClick={
+                      handleDownloadCertificate
+                    }
+                    disabled={certificateLoading}
+                    className="rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:opacity-50"
+                  >
+                    {certificateLoading
+                      ? "Loading..."
+                      : "Download Certificate"}
+                  </button>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
+                <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+                  <FaBookOpen className="absolute right-5 top-5 text-xl text-[#2563EB]" />
+
+                  <h3 className="text-3xl font-bold text-[#101828]">
+                    {
+                      programCompletion.totalModules
+                    }
                   </h3>
-                  <p className="text-sm text-yellow-700">
-                    {t(
-                      "learnAndGrow.completeAllQuizzes",
-                      "Complete and pass all quizzes to earn your certificate"
-                    )}
+
+                  <p className="mt-2 text-sm font-medium text-[#667085]">
+                    Modules
                   </p>
-                  {programCompletion.quizzes && (
-                    <p className="text-sm text-yellow-700 mt-1">
-                      {
-                        programCompletion.quizzes.filter((q) => !q.isPassed)
-                          .length
-                      }{" "}
-                      {t(
-                        "learnAndGrow.quizzesRemaining",
-                        "quiz(zes) remaining"
-                      )}
-                    </p>
-                  )}
+                </div>
+
+                <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+                  <FaCheckCircle className="absolute right-5 top-5 text-xl text-[#039855]" />
+
+                  <h3 className="text-3xl font-bold text-[#101828]">
+                    {
+                      programCompletion.passedQuizzes
+                    }
+                    /
+                    {
+                      programCompletion.totalQuizzes
+                    }
+                  </h3>
+
+                  <p className="mt-2 text-sm font-medium text-[#667085]">
+                    Quizzes Passed
+                  </p>
+                </div>
+
+                <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+                  <FaChartLine className="absolute right-5 top-5 text-xl text-[#7A5AF8]" />
+
+                  <h3 className="text-3xl font-bold text-[#101828]">
+                    {programCompletion.averageScore?.toFixed(
+                      1
+                    ) || 0}
+                    %
+                  </h3>
+
+                  <p className="mt-2 text-sm font-medium text-[#667085]">
+                    Average Score
+                  </p>
                 </div>
               </div>
-            </div>
+            </section>
+          )}
+
+        {/* HEADER */}
+        <div className="mb-8 flex items-center justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold text-[#101828]">
+              Available Modules
+            </h2>
+          </div>
+
+          {["Admin"].includes(userDetails.role) && (
+            <Link
+              href={`/dashboard/modules/add/?programId=${programId}`}
+              className="rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+            >
+              Add Module
+            </Link>
           )}
         </div>
-      )}
 
-      <div className="grid grid-cols-3 gap-6 pt-4">
-        {modules.map((item, idx) => {
-          let length = item.Slides.length;
-          let progress = item.Slides.reduce(
-            (prev, curr) => prev + (curr.SlideReaders.length > 0 ? 1 : 0),
-            0
-          );
-          let percentage = length > 0 ? (progress / length) * 100 : 0;
+        {/* MODULES */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {modules.map((item, idx) => {
+            const length = item.Slides.length;
 
-          // Determine if this module should be locked (only for non-Admin users)
-          let isLocked = false;
-          if (idx > 0 && !["Admin"].includes(userDetails.role)) {
-            // Previous module must be completed
-            let prev = modules[idx - 1];
-            let prevLength = prev.Slides.length;
-            let prevProgress = prev.Slides.reduce(
-              (prev, curr) => prev + (curr.SlideReaders.length > 0 ? 1 : 0),
+            const progress = item.Slides.reduce(
+              (prev, curr) =>
+                prev +
+                (curr.SlideReaders.length > 0
+                  ? 1
+                  : 0),
               0
             );
-            let prevPercentage =
-              prevLength > 0 ? (prevProgress / prevLength) * 100 : 0;
-            isLocked = prevPercentage < 100;
-          }
 
-          return (
-            <div
-              key={item.uuid}
-              className={`border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start justify-between space-y-4 ${
-                isLocked ? "opacity-60" : ""
-              }`}
-            >
-              <div className="space-y-4">
-                <Image
-                  className="h-48 w-full object-cover"
-                  alt="adf"
-                  width={1000}
-                  height={1000}
-                  src={item.image}
-                />
-                <div className="">
+            const percentage =
+              length > 0
+                ? (progress / length) * 100
+                : 0;
+
+            let isLocked = false;
+
+            if (
+              idx > 0 &&
+              !["Admin"].includes(userDetails.role)
+            ) {
+              const prev = modules[idx - 1];
+
+              const prevLength = prev.Slides.length;
+
+              const prevProgress =
+                prev.Slides.reduce(
+                  (prevValue, curr) =>
+                    prevValue +
+                    (curr.SlideReaders.length > 0
+                      ? 1
+                      : 0),
+                  0
+                );
+
+              const prevPercentage =
+                prevLength > 0
+                  ? (prevProgress / prevLength) *
+                    100
+                  : 0;
+
+              isLocked = prevPercentage < 100;
+            }
+
+            return (
+              <div
+                key={item.uuid}
+                className={`overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg ${
+                  isLocked ? "opacity-60" : ""
+                }`}
+              >
+                {/* IMAGE */}
+                <div className="relative h-56 overflow-hidden">
+                  <Image
+                    className="h-full w-full object-cover"
+                    alt={item.title}
+                    width={1000}
+                    height={1000}
+                    src={item.image}
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+                  <div className="absolute bottom-4 left-4">
+                    <span className="rounded-full bg-white/90 px-3 py-1 text-xs font-semibold text-[#101828] shadow-sm backdrop-blur-sm">
+                      Business
+                    </span>
+                  </div>
+
+                  {isLocked && (
+                    <div className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-sm">
+                      <BsLock className="text-gray-500" />
+                    </div>
+                  )}
+                </div>
+
+                {/* CONTENT */}
+                <div className="flex min-h-[270px] flex-col p-6">
                   {percentage > 0 && (
-                    <div>
-                      <p className="text-sm mb-1">
-                        {progress}/{length}{" "}
-                        {t("learnAndGrow.slidesCompleted", "slides completed")}
-                      </p>
-                      <div className="w-full bg-black/10 rounded-full h-2">
+                    <div className="mb-5">
+                      <div className="mb-2 flex items-center justify-between text-sm">
+                        <span className="text-[#667085]">
+                          Progress
+                        </span>
+
+                        <span className="font-semibold text-[#101828]">
+                          {progress}/{length}
+                        </span>
+                      </div>
+
+                      <div className="h-2 overflow-hidden rounded-full bg-[#EAECF0]">
                         <div
-                          className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
+                          className="h-full rounded-full bg-[#22C55E]"
+                          style={{
+                            width: `${percentage}%`,
+                          }}
+                        />
                       </div>
                     </div>
                   )}
-                  <h1 className="font-bold text-lg line-clamp-1 mt-2 flex items-center gap-2">
-                    {item.title}
-                    {isLocked && (
-                      <BsLock
-                        className="text-gray-400"
-                        title={t(
-                          "learnAndGrow.completePrevious",
-                          "Complete previous module to unlock"
-                        )}
-                      />
-                    )}
-                  </h1>
-                  <p className="mb-3 line-clamp-3">{item.description}</p>
-                </div>
-              </div>
-              <div className="flex flex-col space-y-2 mt-auto">
-                <div className="flex space-x-2 items-center">
-                  {["Admin"].includes(userDetails.role) ? (
-                    <Link
-                      href={`/dashboard/slides/${item.uuid}`}
-                      className="bg-primary px-4 py-2 whitespace-nowrap rounded-lg text-white flex-1 text-center"
-                    >
-                      {t("learnAndGrow.manageSlides", "Manage Slides")}
-                    </Link>
-                  ) : isLocked ? (
-                    <button
-                      className="bg-gray-200 text-gray-400 px-4 py-2 rounded-lg flex items-center justify-center cursor-not-allowed flex-1"
-                      disabled
-                      title={t(
-                        "learnAndGrow.completePrevious",
-                        "Complete previous module to unlock"
-                      )}
-                    >
-                      <BsLock className="mr-2" />{" "}
-                      {t("learnAndGrow.locked", "Locked")}
-                    </button>
-                  ) : percentage > 0 ? (
-                    <Link
-                      href={`/dashboard/slides/${item.uuid}`}
-                      className="bg-primary px-4 py-2 rounded-lg text-white flex-1 text-center"
-                    >
-                      {percentage == 100
-                        ? t("learnAndGrow.completed", "Completed")
-                        : t("learnAndGrow.resume", "Resume")}
-                    </Link>
-                  ) : (
-                    <Link
-                      href={`/dashboard/slides/${item.uuid}`}
-                      className="bg-primary px-4 py-2 rounded-lg text-white flex-1 text-center"
-                    >
-                      {t("learnAndGrow.startLearning", "Start Learning")}
-                    </Link>
-                  )}
-                  {["Admin"].includes(userDetails.role) && (
-                    <button
-                      className="bg-green-100 text-green-500 py-2 px-4 rounded-lg"
-                      onClick={() => {
-                        router.push(
-                          `/dashboard/modules/edit/?uuid=${item.uuid}`
-                        );
-                      }}
-                    >
-                      {t("common.edit", "Edit")}
-                    </button>
-                  )}
-                  {["Admin"].includes(userDetails.role) && (
-                    <button
-                      className="bg-red-100 text-red-500 py-2 px-4 rounded-lg"
-                      onClick={() => {
-                        deleteModule(item.uuid).then((res) => {
-                          loadData();
-                        });
-                      }}
-                    >
-                      {t("common.delete", "Delete")}
-                    </button>
-                  )}
 
-                  {(percentage === 100 || userDetails.role === "Admin") && (
-                    <Link
-                      href={`/dashboard/learn-and-grow/quizzes/${item.uuid}`}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-2 py-2 rounded-lg text-center w-full"
-                    >
-                      {t("learnAndGrow.quizzes", "Quizzes")}
-                    </Link>
-                  )}
+                  <h3 className="mb-3 line-clamp-2 text-xl font-bold text-[#101828]">
+                    {item.title}
+                  </h3>
+
+                  <p className="mb-6 line-clamp-3 text-sm leading-7 text-[#667085]">
+                    {item.description}
+                  </p>
+
+                  {/* FOOTER */}
+                  <div className="mt-auto border-t border-[#EAECF0] pt-5">
+                    <div className="flex flex-col gap-4">
+                      <div className="flex flex-wrap items-center gap-5 text-sm text-[#667085]">
+                        <div className="flex items-center gap-2">
+                          <FaLayerGroup className="text-[#98A2B3]" />
+
+                          <span>
+                            {item.Slides.length} Lessons
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <FaClock className="text-[#98A2B3]" />
+
+                          <span>
+                            Flexible Learning
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-wrap items-center gap-3">
+                        {isLocked ? (
+                          <button
+                            disabled
+                            className="rounded-xl bg-[#F2F4F7] px-4 py-2 text-sm font-semibold text-[#98A2B3]"
+                          >
+                            Locked
+                          </button>
+                        ) : (
+                          <Link
+                            href={`/dashboard/slides/${item.uuid}`}
+                            className="rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                          >
+                            {percentage === 100
+                              ? "Completed"
+                              : percentage > 0
+                              ? "Resume"
+                              : "Start"}
+                          </Link>
+                        )}
+
+                        {(percentage === 100 ||
+                          userDetails.role ===
+                            "Admin") && (
+                          <Link
+                            href={`/dashboard/learn-and-grow/quizzes/${item.uuid}`}
+                            className="rounded-xl bg-[#EEF4FF] px-4 py-2 text-sm font-semibold text-[#2563EB] transition hover:bg-[#DCE7FF]"
+                          >
+                            Quiz
+                          </Link>
+                        )}
+
+                        {["Admin"].includes(
+                          userDetails.role
+                        ) && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                router.push(
+                                  `/dashboard/modules/edit/?uuid=${item.uuid}`
+                                );
+                              }}
+                              className="rounded-xl bg-[#ECFDF3] px-4 py-2 text-sm font-semibold text-[#027A48] transition hover:bg-[#D1FADF]"
+                            >
+                              Edit
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                deleteModule(
+                                  item.uuid
+                                ).then(() => {
+                                  loadData();
+                                });
+                              }}
+                              className="rounded-xl bg-[#FEF3F2] px-4 py-2 text-sm font-semibold text-[#B42318] transition hover:bg-[#FEE4E2]"
+                            >
+                              Delete
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                {/* Quizzes Button */}
               </div>
-            </div>
-          );
-        })}
-        {["Admin"].includes(userDetails.role) && (
-          <Link
-            href={`/dashboard/modules/add/?programId=${programId}`}
-            className="bg-white hover:bg-primary/5 transition-all duration-200 rounded-lg p-5 flex flex-col justify-center items-center border border-black/10 "
-          >
-            <BsPlus className="text-4xl" />
-            <p>{t("learnAndGrow.addModule", "Add Module")}</p>
-          </Link>
-        )}
+            );
+          })}
+        </div>
       </div>
-      <Pagination limit={limit} count={count} setPage={setPage} page={page} />
     </div>
   );
 };

@@ -1,94 +1,163 @@
 "use client";
 
-import { useContext, useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import { useTranslation } from "@/locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import {
+  FaLayerGroup,
+  FaClock,
+  FaGraduationCap,
+  FaStar,
+} from "react-icons/fa";
 
-const Page = ({ params }) => {
-  // const { uuid } = params;
+const Page = () => {
   const { userDetails } = useContext(UserContext);
-  const [loading, setLoading] = useState(false);
+  const [loading] = useState(false);
   const { t } = useTranslation();
+
+  const classes = [
+    {
+      icon: "/images/ideation-classes.svg",
+      englishKey: "Ideation",
+      label: t("learnAndGrow.ideationClasses", "Ideation Classes"),
+      description: t(
+        "learnAndGrow.ideationDescription",
+        "Learn how to validate business ideas, understand customer needs, and turn early concepts into practical opportunities."
+      ),
+      rating: "0.0",
+    },
+    {
+      icon: "/images/business_foundation_classes.svg",
+      englishKey: "Business Foundation",
+      label: t(
+        "learnAndGrow.businessFoundationClasses",
+        "Business Foundation Classes"
+      ),
+      description: t(
+        "learnAndGrow.businessFoundationDescription",
+        "Build the core systems your business needs, including planning, operations, finance, sales, and customer management."
+      ),
+      rating: "0.0",
+    },
+    {
+      icon: "/images/investment_readiness_classes.svg",
+      englishKey: "Investment readiness",
+      label: t(
+        "learnAndGrow.investmentReadinessClasses",
+        "Investment Readiness Classes"
+      ),
+      description: t(
+        "learnAndGrow.investmentReadinessDescription",
+        "Prepare your business for funding by strengthening your financials, pitch, growth strategy, and investor documentation."
+      ),
+      rating: "0.0",
+    },
+  ];
 
   return loading ? (
     <Loader />
   ) : (
-    <div>
-      {/* Stats Section - Full Width */}
-      <h1 className="text-2xl font-bold">
-        {t("learnAndGrow.welcomeBack", "Welcome back")} {userDetails.name}!
-      </h1>
-      <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
-        <p>
-          {t(
-            "learnAndGrow.classRoomsWelcome",
-            "Track your progress, access curated courses, and grow your business step by step. Whether you're just starting out with an idea or actively scaling your venture, this platform is designed to guide you through every stage of your entrepreneurial journey. Monitor your learning milestones, enroll in tailored classes that match your business stage, and unlock practical tools, expert insights, and mentorship opportunities. With each completed module, you'll build stronger foundations sharpen your strategy, and move closer to achieving your business goals. Let's grow—one step at a time."
-          )}
-        </p>
-      </div>
-      <h1 className="text-xl font-bold">
-        {t("learnAndGrow.availableClasses", "Available classes")}
-      </h1>
+    <div className="min-h-screen px-6 py-4">
+      {/* HERO */}
+      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/business-class-hero.svg')",
+          }}
+        />
 
-      <div className="grid grid-cols-3 gap-6 pt-4">
-        {[
-          {
-            icon: "/discussion.avif",
-            englishKey: "Ideation", // English key for URL
-            label: t("learnAndGrow.ideation", "Ideation"),
-            description: t(
-              "learnAndGrow.ideationDescription",
-              "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability"
-            ),
-            path: `/classRooms`,
-          },
-          {
-            icon: "/discussion.avif",
-            englishKey: "Business Foundation", // English key for URL
-            label: t("learnAndGrow.businessFoundation", "Business Foundation"),
-            description: t(
-              "learnAndGrow.businessFoundationDescription",
-              "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability"
-            ),
-            path: `/classRooms`,
-          },
-          {
-            icon: "/discussion.avif",
-            englishKey: "Investment readiness", // English key for URL
-            label: t(
-              "learnAndGrow.investmentReadiness",
-              "Investment readiness"
-            ),
-            description: t(
-              "learnAndGrow.investmentReadinessDescription",
-              "This course equips entrepreneurs and business managers with the tools to manage cash flow, make informed decisions, and ensure financial sustainability"
-            ),
-            path: `/classRooms`,
-          },
-        ].map((item) => {
-          return (
-            <Link
-              key={item.englishKey}
-              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-center  "
-            >
-              <img className="h-48" src={item.icon} />
-              <div>
-                <h1 className="font-bold text-lg">{item.label}</h1>
-                <p className="mb-4">{item.description}</p>
-                <Link
-                  href={`/dashboard/programs/${encodeURIComponent(
-                    item.englishKey
-                  )}`}
-                  className="bg-primary px-4 py-2 rounded-lg text-white mt-2"
-                >
-                  {t("learnAndGrow.accessPrograms", "Access Programs")}
-                </Link>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
+
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Learning Center
+          </span>
+
+          <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            {t("learnAndGrow.classRooms", "Class Rooms")}
+          </h2>
+
+          <p className="mb-6 text-lg text-white/85 drop-shadow-md line-clamp-3 max-w-xl">
+            {t(
+              "learnAndGrow.classRoomsWelcome",
+              "Track your progress, access curated classes, and grow your business step by step."
+            )}
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaLayerGroup />
+              {classes.length} Classes
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaGraduationCap />
+              Guided Learning
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaClock />
+              Flexible Learning
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION TITLE */}
+      <h2 className="mb-6 text-2xl font-bold text-[#172033]">
+        {t("learnAndGrow.availableClasses", "Available Classes")}
+      </h2>
+
+      {/* CARDS */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {classes.map((item) => (
+          <Link
+            key={item.englishKey}
+            href={`/dashboard/programs/${encodeURIComponent(item.englishKey)}`}
+            className="group flex min-h-[430px] flex-col overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.01] hover:shadow-lg"
+          >
+            <div className="relative h-60 shrink-0 overflow-hidden bg-black">
+              <img
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                src={item.icon}
+                alt={item.label}
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            </div>
+
+            <div className="flex flex-1 flex-col p-5">
+              <h3 className="mb-3 text-lg font-bold text-[#111827]">
+                {item.label}
+              </h3>
+
+              <p className="mb-6 flex-1 text-sm text-[#6f6f72]">
+                {item.description}
+              </p>
+
+              <div className="mt-auto flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                <span className="flex items-center gap-1">
+                  <FaGraduationCap />
+                  Classes
+                </span>
+
+                <span className="flex items-center gap-1">
+                  <FaClock />
+                  Flexible Learning
+                </span>
+
+                <span className="flex items-center gap-1 text-[#f6b800]">
+                  <FaStar />
+                  {item.rating}
+                </span>
               </div>
-            </Link>
-          );
-        })}
+            </div>
+          </Link>
+        ))}
       </div>
     </div>
   );

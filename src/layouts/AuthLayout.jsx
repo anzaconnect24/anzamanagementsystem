@@ -1,169 +1,137 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import Image from "@/utils/image";
 import { useTranslation } from "@/locales";
 
-const AuthLayout = ({ children, title, subtitle }) => {
+const AuthLayout = ({ children }) => {
   const { t } = useTranslation();
 
-  // Carousel state
-  const [activeFeature, setActiveFeature] = useState(0);
+  const [activeFeature, setActiveFeature] =
+    useState(0);
 
-  // Features data
   const features = [
     {
-      title: t("auth.investorsMentors", "Investors & Mentors"),
+      title: "Anza Connect",
+
+      description:
+        "Manage your business, track performance, and scale with ease using Anza Connect.",
+    },
+
+    {
+      title: t(
+        "auth.investorsMentors",
+        "Investors & Mentors"
+      ),
+
       description: t(
         "auth.investorsMentorsDesc",
         "Build connections with investors and experienced mentors who can guide you on your entrepreneurial journey."
       ),
     },
+
     {
-      title: t("auth.learningMaterials", "Learning Materials"),
-      description: t(
-        "auth.learningDescription",
-        "Access a rich library of resources, toolkits, and insights designed to help you strengthen your business skills and scale your venture."
+      title: t(
+        "auth.learningMaterials",
+        "Learning Materials"
       ),
+
+      description:
+        "Access resources, toolkits, and insights designed to help you strengthen your business skills.",
     },
+
     {
-      title: t("auth.cratTool", "Capital Readiness Assessment Tool"),
-      description: t(
-        "auth.cratToolDesc",
-        "Evaluate your Investment Readiness with CRAT and identify the steps you need to take to become investment ready."
+      title: t(
+        "auth.programOpportunities",
+        "Program Opportunities"
       ),
-    },
-    {
-      title: t("auth.programOpportunities", "Program Opportunities"),
+
       description: t(
         "auth.programOpportunitiesDesc",
-        "Discover and apply for tailored programs, accelerators and initiatives that can help you unlock growth."
+        "Discover and apply for tailored programs, accelerators, and initiatives that can help you unlock growth."
       ),
     },
   ];
 
-  // Auto-rotate carousel every 4 seconds
   useEffect(() => {
     const interval = setInterval(() => {
-      setActiveFeature((prev) => (prev + 1) % features.length);
+      setActiveFeature(
+        (prev) =>
+          (prev + 1) % features.length
+      );
     }, 4000);
 
     return () => clearInterval(interval);
   }, [features.length]);
 
-  // Handle dot click
-  const handleDotClick = (index) => {
-    setActiveFeature(index);
-  };
+  const active =
+    features[activeFeature];
 
   return (
-    <div className="min-h-screen flex">
+    <div className="flex min-h-screen bg-white">
       <Toaster position="top-right" />
 
-      {/* Left Panel - Background Image with Overlay */}
+      {/* LEFT PANEL */}
       <div
-        className="hidden lg:flex lg:w-1/2 fixed h-screen text-white flex-col justify-between py-24 p-12 text-center items-center"
+        className="fixed hidden h-screen w-1/2 overflow-hidden bg-cover bg-center lg:block"
         style={{
-          backgroundImage: "url('/authbg.jpg')",
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-          backgroundRepeat: "no-repeat",
+          backgroundImage:
+            "url('/images/business-class-hero.svg')",
         }}
       >
-        {/* Bluish Overlay */}
-        <div className="absolute inset-0 bg-[#424daf]/75"></div>
+        {/* LIGHTER OVERLAYS */}
+        <div className="absolute inset-0 bg-black/50" />
 
-        {/* Content on top of overlay */}
-        <div className="relative z-10">
-          {/* Logo */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
 
-          {/* Welcome Content */}
-          <div>
-            <h1 className="text-2xl lg:text-4xl font-bold mb-2 ">
-              {t("auth.welcome", "Welcome to Anza Connect")}
+        {/* CONTENT */}
+        <div className="relative z-10 flex h-full flex-col justify-end px-16 pb-16 text-white">
+          {/* DYNAMIC CONTENT */}
+          <div
+            key={activeFeature}
+            className="transition-all duration-500 ease-in-out"
+          >
+            <h1 className="max-w-2xl text-5xl font-bold leading-tight tracking-tight">
+              {active.title}
             </h1>
-            <p className="text-lg text-blue-100 mb-12 leading-relaxed">
-              {t(
-                "auth.gatewayText",
-                "Your gateway to growth, Learning and Investment opportunities"
-              )}
+
+            <p className="mt-8 max-w-xl text-2xl font-light leading-relaxed text-white/90">
+              {active.description}
             </p>
           </div>
-        </div>
 
-        {/* Feature Carousel Section */}
-        <div className="relative z-10 space-y-1">
-          <div className="min-h-[160px] flex flex-col justify-center">
-            <div className="transition-all duration-500 ease-in-out">
-              <h2 className="text-2xl font-bold mb-2">
-                {features[activeFeature].title}
-              </h2>
-              <p className="text-blue-100 leading-relaxed">
-                {features[activeFeature].description}
-              </p>
-            </div>
-          </div>
-
-          {/* Pagination dots */}
-          <div className="flex space-x-3 justify-center">
-            {features.map((_, index) => (
-              <button
-                key={index}
-                onClick={() => handleDotClick(index)}
-                className={`w-3 h-3 rounded-full transition-all duration-300 hover:scale-110 ${
-                  index === activeFeature
-                    ? "bg-white"
-                    : index <= activeFeature
-                    ? "bg-white/60"
-                    : "bg-white/30"
-                }`}
-                aria-label={`Go to feature ${index + 1}`}
-              />
-            ))}
+          {/* SLIDER DOTS */}
+          <div className="mt-10 flex items-center gap-3">
+            {features.map(
+              (_, index) => (
+                <button
+                  key={index}
+                  onClick={() =>
+                    setActiveFeature(
+                      index
+                    )
+                  }
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    index ===
+                    activeFeature
+                      ? "w-24 bg-white"
+                      : "w-10 bg-white/40 hover:bg-white/70"
+                  }`}
+                  aria-label={`Go to slide ${
+                    index + 1
+                  }`}
+                />
+              )
+            )}
           </div>
         </div>
       </div>
 
-      {/* Right Panel - Form Section */}
-      <div className="w-full lg:w-1/2  ms-auto  flex items-center justify-center  ">
-        <div className="w-full text-center ">
-          {/* Mobile Logo */}
-          {/* <div className="lg:hidden flex justify-center mb-8">
-            <Image
-              height={80}
-              width={200}
-              alt="Anza Logo"
-              src="https://anzaentrepreneurs.co.tz/wp-content/uploads/2023/08/cropped-White-Version-300x92.png"
-              className="h-auto"
-            />
-          </div> */}
-
-          {/* Form Header */}
-          {/* <div className="mb-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">
-              {title || t("auth.signInToContinue", "Sign In to Continue")}
-            </h2>
-            {subtitle && <p className="text-gray-600">{subtitle}</p>}
-          </div> */}
-
-          {/* Form Content */}
-          <div className="  ">{children || <Outlet />}</div>
-
-          {/* Footer Links */}
-          {/* <div className="mt-8 text-center">
-            <p className="text-sm text-gray-500">
-              {t("auth.termsText", "By continuing, you agree to our")}{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700">
-                {t("auth.termsOfService", "Terms of Service")}
-              </a>{" "}
-              {t("common.and", "and")}{" "}
-              <a href="#" className="text-blue-600 hover:text-blue-700">
-                {t("auth.privacyPolicy", "Privacy Policy")}
-              </a>
-            </p>
-          </div> */}
+      {/* RIGHT PANEL */}
+      <div className="ml-auto flex min-h-screen w-full items-center justify-center px-6 py-10 lg:w-1/2">
+        <div className="w-full max-w-md">
+          {children || <Outlet />}
         </div>
       </div>
     </div>

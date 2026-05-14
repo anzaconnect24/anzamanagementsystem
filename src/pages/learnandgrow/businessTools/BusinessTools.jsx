@@ -9,22 +9,20 @@ import {
   getAllBusinessTools,
 } from "@/controllers/business_tools_controller";
 import toast from "react-hot-toast";
-import { useTranslation } from "../../../locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import {
-  FaFileWord,
-  FaFileExcel,
-  FaFilePowerpoint,
-  FaFilePdf,
-  FaDownload,
   FaEdit,
   FaTrash,
+  FaStar,
+  FaDownload,
+  FaLayerGroup,
+  FaClock,
 } from "react-icons/fa";
 
 const BusinessTools = () => {
-  const { t } = useTranslation();
   const { userDetails } = useContext(UserContext);
   const router = useRouter();
+
   const [loading, setLoading] = useState(false);
   const [tools, setTools] = useState([]);
 
@@ -34,204 +32,234 @@ const BusinessTools = () => {
 
   const loadTools = () => {
     setLoading(true);
+
     getAllBusinessTools()
       .then((res) => {
-        console.log(res);
         setTools(res.body || []);
       })
       .catch((error) => {
         console.error(error);
-        toast.error(
-          t("businessTools.failedToLoad", "Failed to load business tools"),
-        );
+        toast.error("Failed to load business tools");
       })
       .finally(() => setLoading(false));
   };
 
-  const getFileIcon = (fileType) => {
-    switch (fileType?.toLowerCase()) {
-      case "word":
-        return <FaFileWord className="text-4xl text-blue-600" />;
-      case "excel":
-        return <FaFileExcel className="text-4xl text-green-600" />;
-      case "ppt":
-        return <FaFilePowerpoint className="text-4xl text-orange-600" />;
-      case "pdf":
-        return <FaFilePdf className="text-4xl text-red-600" />;
-      default:
-        return <FaFilePdf className="text-4xl text-gray-600" />;
-    }
-  };
-
   const formatFileSize = (bytes) => {
     if (!bytes) return "N/A";
-    if (bytes < 1024) return bytes + " B";
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(2) + " KB";
-    return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+
+    if (bytes < 1024) return `${bytes} B`;
+
+    if (bytes < 1024 * 1024) {
+      return `${(bytes / 1024).toFixed(2)} KB`;
+    }
+
+    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  };
+
+  const formatFileType = (type) => {
+    if (!type) return "File";
+
+    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
   };
 
   const handleDelete = async (tool) => {
     const confirmed = confirm(
-      t(
-        "businessTools.deleteConfirm",
-        `Are you sure you want to delete "${tool.fileName}"? This action cannot be undone.`,
-      ),
+      `Are you sure you want to delete "${tool.fileName}"?`
     );
+
     if (!confirmed) return;
 
     try {
       await deleteBusinessTool(tool.uuid);
-      toast.success(
-        t("businessTools.deleteSuccess", "Business tool deleted successfully"),
+
+      toast.success("Deleted successfully");
+
+      setTools((prev) =>
+        prev.filter((item) => item.uuid !== tool.uuid)
       );
-      setTools((prev) => prev.filter((t) => t.uuid !== tool.uuid));
     } catch (error) {
       console.error(error);
-      toast.error(
-        t("businessTools.deleteFailed", "Failed to delete business tool"),
-      );
+      toast.error("Delete failed");
     }
   };
 
   const handleDownload = (fileUrl, fileName) => {
     const link = document.createElement("a");
+
     link.href = fileUrl;
     link.download = fileName;
     link.target = "_blank";
+
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
   };
 
-  return loading ? (
-    <Loader />
-  ) : (
-    <div>
-      {/* Header Section */}
-      <div className="flex justify-between ">
-        <h1 className="text-2xl font-bold">
-          {t("businessTools.title", "Business Tools")}
-        </h1>
-        {["Admin"].includes(userDetails.role) && (
-          <div className="mb-4">
-            <Link
-              href={"/dashboard/uploadBusinessTool"}
-              className="text-white bg-primary py-2 px-3 cursor-pointer rounded hover:bg-primary/90"
-            >
-              {t("businessTools.uploadTool", "Upload Business Tool")}
-            </Link>
+  if (loading) return <Loader />;
+
+  return (
+    <div className="min-h-screen px-6 py-4">
+      {/* HERO */}
+      {tools[0] && (
+        <div
+          onClick={() =>
+            handleDownload(tools[0].fileUrl, tools[0].fileName)
+          }
+          className="relative mb-10 min-h-[320px] cursor-pointer overflow-hidden rounded-2xl bg-black shadow-sm"
+        >
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url('${
+                tools[0].thumbnailUrl ||
+                "/images/business_tools_hero.svg"
+              }')`,
+            }}
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
+
+          <div className="relative z-10 max-w-3xl p-10 text-white">
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+              Business Toolkit
+            </span>
+
+            <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+              Business Tools
+            </h2>
+
+            <p className="mb-6 text-lg text-white/85 drop-shadow-md">
+              Download ready-to-use templates, documents, and tools
+              to help you manage, structure, and grow your business
+              more effectively.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+              <span className="flex items-center gap-2">
+                <FaLayerGroup />
+                {tools.length} Tools
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaDownload />
+                Downloadable Resources
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaClock />
+                Practical Support
+              </span>
+            </div>
           </div>
+        </div>
+      )}
+
+      {/* HEADER */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-[#172033]">
+          Available Tools
+        </h2>
+
+        {["Admin"].includes(userDetails.role) && (
+          <Link
+            href="/dashboard/uploadBusinessTool"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
+          >
+            <FaDownload className="text-lg text-blue-200" />
+            Add Business Tool
+          </Link>
         )}
       </div>
 
-      <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
-        <p>
-          {t(
-            "businessTools.pageDescription",
-            "Access essential business templates and tools including Word documents, Excel spreadsheets, PowerPoint presentations, and PDF guides to help you manage and grow your startup.",
-          )}
-        </p>
-      </div>
+      {/* CARDS */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {tools.map((tool) => (
+          <div
+            key={tool.uuid}
+            onClick={() =>
+              handleDownload(tool.fileUrl, tool.fileName)
+            }
+            className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
+          >
+            <div className="relative h-40 overflow-hidden bg-black">
+              <div
+                className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                style={{
+                  backgroundImage: `url('${
+                    tool.thumbnailUrl ||
+                    "/images/business-tool-card.jpg"
+                  }')`,
+                }}
+              />
 
-      {/* Add Button for Admin */}
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+            </div>
 
-      {/* Tools List */}
-      {tools.length === 0 ? (
-        <div className="text-center py-20 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-dashed border-black/10">
-          <div className="flex flex-col items-center justify-center">
-            <FaFilePdf className="text-6xl text-black/30 mb-4" />
-            <h3 className="text-xl font-semibold text-black/70 mb-2">
-              {t("businessTools.noTools", "No business tools available yet")}
-            </h3>
-            <p className="text-gray-500 mb-6 max-w-md">
-              {["Admin"].includes(userDetails.role)
-                ? t(
-                    "businessTools.noToolsAdminMessage",
-                    "Get started by uploading your first business template or tool to share with your community.",
-                  )
-                : t(
-                    "businessTools.noToolsUserMessage",
-                    "Business templates and tools will appear here once they are uploaded by administrators.",
-                  )}
-            </p>
-            {["Admin"].includes(userDetails.role) && (
-              <Link
-                href="/dashboard/uploadBusinessTool"
-                className="bg-primary text-white py-3 px-6 rounded-lg hover:bg-primary/90 transition-colors font-medium"
+            <div className="p-4">
+              <h3
+                className="mb-2 line-clamp-1 text-base font-bold text-[#111827]"
+                title={tool.fileName}
               >
-                {t("businessTools.uploadFirstTool", "Upload Your First Tool")}
-              </Link>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4">
-          {tools.map((tool) => (
-            <div
-              key={tool.uuid}
-              className="border border-black/10 bg-white rounded-lg p-6 shadow-md hover:shadow-lg transition-shadow"
-            >
-              {/* File Icon */}
-              <div className="flex items-center justify-center mb-4">
-                {getFileIcon(tool.fileType)}
+                {tool.fileName}
+              </h3>
+
+              <p className="mb-6 line-clamp-2 text-sm text-[#6f6f72]">
+                {tool.description || "No description available"}
+              </p>
+
+              <div className="mb-3 flex items-center justify-between text-xs text-[#8a8f98]">
+                <span>{formatFileSize(tool.fileSize)}</span>
+
+                <span>{formatFileType(tool.fileType)}</span>
               </div>
 
-              {/* File Info */}
-              <div className="flex flex-col space-y-2">
-                <h3
-                  className="font-bold text-lg text-gray-800 truncate"
-                  title={tool.fileName}
-                >
-                  {tool.fileName}
-                </h3>
-                <p className="text-sm text-gray-600 line-clamp-2">
-                  {tool.description ||
-                    t(
-                      "businessTools.noDescription",
-                      "No description available",
-                    )}
-                </p>
-                <p className="text-xs text-gray-500">
-                  {t("businessTools.fileSize", "Size")}:{" "}
-                  {formatFileSize(tool.fileSize)}
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-2 mt-4">
-                <button
-                  onClick={() => handleDownload(tool.fileUrl, tool.fileName)}
-                  className="flex-1 bg-primary text-white py-2 px-4 rounded hover:bg-primary/90 flex items-center justify-center gap-2"
-                >
+              <div className="flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                <span className="flex items-center gap-2">
                   <FaDownload />
-                  {t("businessTools.openFile", "Open File")}
-                </button>
+                  Downloadable
+                </span>
 
-                {["Admin"].includes(userDetails.role) && (
-                  <>
+                {["Admin"].includes(userDetails.role) ? (
+                  <div className="flex items-center gap-4">
                     <button
-                      onClick={() =>
-                        router.push(`/dashboard/editBusinessTool/${tool.uuid}`)
-                      }
-                      className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 flex items-center justify-center"
-                      title={t("businessTools.edit", "Edit")}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+
+                        router.push(
+                          `/dashboard/editBusinessTool/${tool.uuid}`
+                        );
+                      }}
+                      className="flex items-center gap-1 text-green-600 hover:text-green-700"
                     >
                       <FaEdit />
+                      Edit
                     </button>
+
                     <button
-                      onClick={() => handleDelete(tool)}
-                      className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600 flex items-center justify-center"
-                      title={t("businessTools.delete", "Delete")}
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(tool);
+                      }}
+                      className="flex items-center gap-1 text-red-600 hover:text-red-700"
                     >
                       <FaTrash />
+                      Delete
                     </button>
-                  </>
+                  </div>
+                ) : (
+                  <span className="flex items-center gap-1 text-[#f6b800]">
+                    <FaStar />
+                    0.0
+                  </span>
                 )}
               </div>
             </div>
-          ))}
-        </div>
-      )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

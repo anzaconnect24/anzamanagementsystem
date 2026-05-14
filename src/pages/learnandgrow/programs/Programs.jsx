@@ -1,15 +1,13 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
 import { deleteProgram, getPrograms } from "@/controllers/program_controller";
 import Link from "@/utils/link";
 import { UserContext } from "../../../layouts/DashboardLayout";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
-import { BsPlus } from "react-icons/bs";
 import Image from "@/utils/image";
 import Loader from "@/components/common/Loader";
 import { useRouter } from "@/utils/navigation";
 import { useTranslation } from "@/locales";
-import Pagination from "../../../component/pagination";
 import { useParams } from "react-router-dom";
 
 const ProgramsPage = () => {
@@ -18,132 +16,211 @@ const ProgramsPage = () => {
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
-  const [limit, setLimit] = useState(20);
-  const [page, setPage] = useState(1);
-  const [count, setCount] = useState(0);
+  const [limit] = useState(20);
+  const [page] = useState(1);
   const { t } = useTranslation();
+
+  const isAdmin = ["Admin"].includes(userDetails?.role);
+
+  const formatCourseName = (value) => {
+    return decodeURIComponent(value || "")
+      .split(" ")
+      .map(
+        (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+      )
+      .join(" ");
+  };
+
+  const courseName = formatCourseName(course);
+
+  const getFallbackImage = () => {
+    const name = courseName.toLowerCase();
+
+    if (name.includes("investment")) {
+      return "/images/investment_readiness_classes.svg";
+    }
+
+    if (name.includes("business")) {
+      return "/images/business_foundation_classes.svg";
+    }
+
+    return "/images/ideation-classes.svg";
+  };
 
   useEffect(() => {
     loadData();
-  }, [page]);
+  }, []);
 
   const loadData = () => {
-    getPrograms(page, limit, decodeURIComponent(course)).then((res) => {
-      console.log(res);
+    setLoading(true);
+
+    getPrograms(page, limit, courseName).then((res) => {
       setPrograms(res.data || []);
-      setCount(res.count || 0);
       setLoading(false);
     });
+  };
+
+  const handleDelete = (programUuid) => {
+    if (
+      window.confirm(
+        t("common.confirmDelete", "Are you sure you want to delete this course?")
+      )
+    ) {
+      deleteProgram(programUuid).then(() => {
+        loadData();
+      });
+    }
   };
 
   return loading ? (
     <Loader />
   ) : (
-    <div>
-      <Breadcrumb
-        prevLink={"/dashboard/classRooms"}
-        pageName={`${decodeURIComponent(course)} ${t(
-          "learnAndGrow.programs",
-          "Programs"
-        )}`}
-        prevPage={t("common.back", "Back")}
-      />
+    <div className="min-h-screen px-6 py-6">
+      {programs.length > 0 && (
+        <div className="relative mb-10 min-h-[360px] overflow-hidden rounded-3xl shadow-sm">
+          <Image
+            src={programs[0]?.image || getFallbackImage()}
+            alt={programs[0]?.title || "Featured course"}
+            width={1600}
+            height={700}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
 
-      <div className="flex justify-end items-center mb-4">
-        {/* <h1 className="text-2xl font-bold">
-          {t("learnAndGrow.programs", "Programs")}
-        </h1> */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/25" />
 
-        {/* {["Admin"].includes(userDetails.role) && (
-          <Link
-            href={`/dashboard/programs/add/?course=${course}`}
-            className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 flex items-center gap-2"
+          <div className="relative z-10 flex min-h-[360px] items-center p-8 text-white lg:p-12">
+            <div className="max-w-3xl">
+              <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+                Featured Courses
+              </span>
+
+              <h2 className="mb-4 text-3xl font-bold leading-tight md:text-4xl">
+                {programs[0].title}
+              </h2>
+
+              <p className="max-w-2xl text-base leading-7 text-white/85 line-clamp-3">
+                {programs[0].description}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="mb-6 flex items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-[#101828]">Explore Courses</h2>
+
+        {isAdmin && (
+          <button
+            className="rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+            onClick={() => {
+              router.push(`/dashboard/programs/add/?course=${course}`);
+            }}
           >
-            <BsPlus className="text-xl" />
-            {t("learnAndGrow.addProgram", "Add Program")}
-          </Link>
-        )} */}
+            Add Course
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-3 gap-6 pt-4">
-        {programs.map((item) => {
-          return (
+      {programs.length === 0 ? (
+        <div className="rounded-3xl border border-dashed border-[#D0D5DD] bg-white p-10 text-center">
+          <h3 className="text-xl font-semibold text-[#101828]">
+            No courses available
+          </h3>
+
+          <p className="mt-2 text-sm text-[#667085]">
+            There are no courses under this category yet.
+          </p>
+
+          {isAdmin && (
+            <button
+              className="mt-6 rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+              onClick={() => {
+                router.push(`/dashboard/programs/add/?course=${course}`);
+              }}
+            >
+              Add Course
+            </button>
+          )}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          {programs.map((item) => (
             <div
               key={item.uuid}
-              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-start justify-between space-y-4"
+              className="group overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
             >
-              <div className="space-y-4 w-full">
-                <Image
-                  className="h-48 w-full object-cover rounded-lg"
-                  alt={item.title}
-                  width={1000}
-                  height={1000}
-                  src={item.image}
-                />
-                <div>
-                  <h1 className="font-bold text-lg line-clamp-1 mt-2">
-                    {item.title}
-                  </h1>
-                  <p className="mb-3 line-clamp-3">{item.description}</p>
+              <Link href={`/dashboard/programs/details/${item.uuid}`}>
+                <div className="relative h-52 overflow-hidden">
+                  <Image
+                    className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
+                    alt={item.title}
+                    width={1000}
+                    height={1000}
+                    src={item.image || getFallbackImage()}
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
                 </div>
-              </div>
-              <div className="flex flex-col space-y-2 mt-auto w-full">
-                <div className="flex space-x-2 items-center">
-                  <Link
-                    href={`/dashboard/modules/${item.uuid}`}
-                    className="bg-primary px-4 py-2 whitespace-nowrap rounded-lg text-white flex-1 text-center"
-                  >
-                    {t("learnAndGrow.viewModules", "View Modules")}
-                  </Link>
-                  {["Admin"].includes(userDetails.role) && (
+              </Link>
+
+              <div className="p-6">
+                <h3 className="mb-3 line-clamp-2 text-xl font-bold leading-snug text-[#101828]">
+                  {item.title}
+                </h3>
+
+                <p className="mb-6 min-h-[72px] text-sm leading-7 text-[#667085] line-clamp-3">
+                  {item.description || "COMING SOON"}
+                </p>
+
+                <div className="flex items-center justify-between border-t border-[#EAECF0] pt-5">
+                  <span className="rounded-full bg-[#F9FAFB] px-3 py-1 text-sm text-[#667085]">
+                    Flexible Learning
+                  </span>
+
+                  {!isAdmin && (
+                    <Link
+                      href={`/dashboard/programs/details/${item.uuid}`}
+                      className="text-sm font-semibold text-[#2563EB]"
+                    >
+                      Explore Course →
+                    </Link>
+                  )}
+                </div>
+
+                {isAdmin && (
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Link
+                      href={`/dashboard/programs/details/${item.uuid}`}
+                      className="rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                    >
+                      View
+                    </Link>
+
                     <button
-                      className="bg-green-100 text-green-500 py-2 px-4 rounded-lg"
+                      className="rounded-xl bg-[#EEF4FF] px-5 py-2.5 text-sm font-semibold text-[#2563EB] transition hover:bg-[#DCE7FF]"
                       onClick={() => {
                         router.push(
-                          `/dashboard/programs/edit/?uuid=${item.uuid}&course=${course}`
+                          `/dashboard/programs/edit?uuid=${item.uuid}&course=${course}`
                         );
                       }}
                     >
                       {t("common.edit", "Edit")}
                     </button>
-                  )}
-                  {["Admin"].includes(userDetails.role) && (
+
                     <button
-                      className="bg-red-100 text-red-500 py-2 px-4 rounded-lg"
-                      onClick={() => {
-                        if (
-                          window.confirm(
-                            t(
-                              "common.confirmDelete",
-                              "Are you sure you want to delete this program?"
-                            )
-                          )
-                        ) {
-                          deleteProgram(item.uuid).then((res) => {
-                            loadData();
-                          });
-                        }
-                      }}
+                      className="rounded-xl bg-[#FEF3F2] px-5 py-2.5 text-sm font-semibold text-[#B42318] transition hover:bg-[#FEE4E2]"
+                      onClick={() => handleDelete(item.uuid)}
                     >
                       {t("common.delete", "Delete")}
                     </button>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
-          );
-        })}
-        {["Admin"].includes(userDetails.role) && (
-          <Link
-            href={`/dashboard/programs/add/?course=${course}`}
-            className="bg-white hover:bg-primary/5 transition-all duration-200 rounded-lg p-5 flex flex-col justify-center items-center border border-black/10"
-          >
-            <BsPlus className="text-4xl" />
-            <p>{t("learnAndGrow.addProgram", "Add Program")}</p>
-          </Link>
-        )}
-      </div>
-      <Pagination limit={limit} count={count} setPage={setPage} page={page} />
+          ))}
+        </div>
+      )}
     </div>
   );
 };

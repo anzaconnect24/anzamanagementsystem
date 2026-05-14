@@ -1,47 +1,48 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { getMyInvestmentApplications } from "@/controllers/investment_application_controller";
+
 import Link from "@/utils/link";
+import Image from "@/utils/image";
+
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
+
 import {
-  HiOutlineSearch,
-  HiOutlineEye,
-  HiOutlineClock,
-  HiOutlineCheckCircle,
-  HiOutlineXCircle,
-} from "react-icons/hi";
-import { RiMoneyDollarCircleLine } from "react-icons/ri";
-import { BiFilterAlt } from "react-icons/bi";
+  FaClock,
+  FaCheckCircle,
+  FaTimesCircle,
+  FaMoneyBillWave,
+  FaChartLine,
+} from "react-icons/fa";
+
 import { timeAgo } from "@/utils/time_ago";
 import { useTranslation } from "@/locales";
 
 const InvestmentApplications = () => {
   const { t } = useTranslation();
+
   const [applications, setApplications] = useState([]);
   const [filteredApplications, setFilteredApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const itemsPerPage = 10;
 
   useEffect(() => {
     fetchApplications();
-  }, [currentPage]);
+  }, []);
 
   useEffect(() => {
     filterApplications();
-  }, [searchTerm, applications, statusFilter]);
+  }, [applications, statusFilter]);
 
   const fetchApplications = async () => {
     setLoading(true);
+
     try {
-      const data = await getMyInvestmentApplications(currentPage, itemsPerPage);
-      console.log("Fetched applications:", data);
+      const data = await getMyInvestmentApplications(1, 100);
+
       setApplications(data?.data || []);
-      setTotalCount(data?.count || 0);
     } catch (error) {
       console.error("Error fetching applications:", error);
     } finally {
@@ -52,361 +53,354 @@ const InvestmentApplications = () => {
   const filterApplications = () => {
     let filtered = [...applications];
 
-    // Filter by status
     if (statusFilter !== "all") {
-      filtered = filtered.filter((app) => app.status === statusFilter);
-    }
-
-    if (searchTerm) {
-      filtered = filtered.filter((app) => {
-        const searchLower = searchTerm.toLowerCase();
-        return (
-          app.amount?.toString().includes(searchLower) ||
-          app.purposeOfInvestment?.toLowerCase().includes(searchLower) ||
-          app.Entrepreneur?.name?.toLowerCase().includes(searchLower)
-        );
-      });
+      filtered = filtered.filter(
+        (app) =>
+          app.status?.toLowerCase() ===
+          statusFilter
+      );
     }
 
     setFilteredApplications(filtered);
   };
 
-  const getStatusBadge = (status) => {
-    const statusLower = status?.toLowerCase() || "pending";
+  const stats = {
+    all: applications.length,
 
-    const statusConfig = {
-      pending: {
-        bg: "bg-warning/10",
-        text: "text-warning",
-        icon: <HiOutlineClock className="w-4 h-4" />,
-        label: t("investment.pending", "Pending"),
-      },
-      in_progress: {
-        bg: "bg-blue-100",
-        text: "text-blue-600",
-        icon: <HiOutlineClock className="w-4 h-4" />,
-        label: t("investment.inProgress", "In Progress"),
-      },
-      completed: {
-        bg: "bg-success/10",
-        text: "text-success",
-        icon: <HiOutlineCheckCircle className="w-4 h-4" />,
-        label: t("investment.completed", "Completed"),
-      },
-      dropped: {
-        bg: "bg-danger/10",
-        text: "text-danger",
-        icon: <HiOutlineXCircle className="w-4 h-4" />,
-        label: t("investment.dropped", "Dropped"),
-      },
-    };
+    pending: applications.filter(
+      (a) => a.status === "pending"
+    ).length,
 
-    const config = statusConfig[statusLower] || statusConfig.pending;
+    in_progress: applications.filter(
+      (a) => a.status === "in_progress"
+    ).length,
+
+    completed: applications.filter(
+      (a) => a.status === "completed"
+    ).length,
+
+    dropped: applications.filter(
+      (a) => a.status === "dropped"
+    ).length,
+  };
+
+  const formatStatus = (status) => {
+    if (!status) return "Pending";
+
+    const readableStatus =
+      status.replace(/_/g, " ");
 
     return (
-      <div
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${config.bg} ${config.text}`}
-      >
-        {config.icon}
-        <span className="text-sm font-medium">{config.label}</span>
-      </div>
+      readableStatus.charAt(0).toUpperCase() +
+      readableStatus.slice(1)
     );
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "TZS",
-      minimumFractionDigits: 0,
-    }).format(amount || 0);
-  };
+  const getStatusBadge = (status) => {
+    const statusLower =
+      status?.toLowerCase() || "pending";
 
-  const totalPages = Math.ceil(totalCount / itemsPerPage);
+    const styles = {
+      pending:
+        "bg-yellow-100 text-yellow-800",
 
-  const stats = {
-    all: applications.length,
-    pending: applications.filter((a) => a.status === "pending").length,
-    in_progress: applications.filter((a) => a.status === "in_progress").length,
-    completed: applications.filter((a) => a.status === "completed").length,
-    dropped: applications.filter((a) => a.status === "dropped").length,
+      in_progress:
+        "bg-blue-100 text-blue-700",
+
+      completed:
+        "bg-green-100 text-green-700",
+
+      dropped:
+        "bg-red-100 text-red-700",
+    };
+
+    return (
+      <span
+        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+          styles[statusLower] ||
+          styles.pending
+        }`}
+      >
+        {formatStatus(statusLower)}
+      </span>
+    );
   };
 
   return loading ? (
-    <div className="flex items-center justify-center min-h-[400px] bg-white">
-      <Loader />
-    </div>
+    <Loader />
   ) : (
-    <div className="container mx-auto px-4 py-8">
-      <div className="rounded-2xl border border-stroke bg-white shadow-default min-h-[80vh] dark:border-strokedark dark:bg-boxdark overflow-hidden">
-        {/* Header Section */}
-        <div className="relative p-6 border-b border-stroke dark:border-strokedark bg-gradient-to-r from-primary/5 to-transparent">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-3 rounded-xl bg-primary/10">
-                <RiMoneyDollarCircleLine className="text-3xl text-primary" />
-              </div>
-              <div>
-                <h4 className="text-xl font-semibold text-black dark:text-white flex items-center gap-3 mb-2">
-                  {t(
-                    "investment.investmentApplications",
-                    "Investment Applications",
-                  )}
-                  <span className="px-3 py-1 text-sm bg-primary/10 text-primary rounded-full font-medium">
-                    {totalCount} {t("investment.total", "Total")}
-                  </span>
-                </h4>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {t(
-                    "investment.manageApplicationsDescription",
-                    "View and manage your investment applications to investors",
-                  )}
-                </p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
+      <div className="mx-auto max-w-7xl">
+        {/* HERO SECTION */}
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+          {/* Background Image */}
+          <div className="absolute inset-0">
+            <Image
+              src="/images/investors_hero.svg"
+              alt="Investment Applications"
+              width={1600}
+              height={900}
+              className="h-full w-full object-cover"
+            />
           </div>
 
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mt-6">
-            <div
-              onClick={() => setStatusFilter("all")}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                statusFilter === "all"
-                  ? "border-primary bg-primary/5"
-                  : "border-stroke bg-white dark:border-strokedark dark:bg-boxdark"
-              }`}
-            >
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t("investment.allApplications", "All")}
-              </p>
-              <p className="text-2xl font-bold text-black dark:text-white">
-                {stats.all}
-              </p>
-            </div>
-            <div
-              onClick={() => setStatusFilter("pending")}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                statusFilter === "pending"
-                  ? "border-warning bg-warning/5"
-                  : "border-stroke bg-white dark:border-strokedark dark:bg-boxdark"
-              }`}
-            >
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t("investment.pending", "Pending")}
-              </p>
-              <p className="text-2xl font-bold text-warning">{stats.pending}</p>
-            </div>
-            <div
-              onClick={() => setStatusFilter("in_progress")}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                statusFilter === "in_progress"
-                  ? "border-blue-600 bg-blue-50"
-                  : "border-stroke bg-white dark:border-strokedark dark:bg-boxdark"
-              }`}
-            >
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t("investment.inProgress", "In Progress")}
-              </p>
-              <p className="text-2xl font-bold text-blue-600">
-                {stats.in_progress}
-              </p>
-            </div>
-            <div
-              onClick={() => setStatusFilter("completed")}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                statusFilter === "completed"
-                  ? "border-success bg-success/5"
-                  : "border-stroke bg-white dark:border-strokedark dark:bg-boxdark"
-              }`}
-            >
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t("investment.completed", "Completed")}
-              </p>
-              <p className="text-2xl font-bold text-success">
-                {stats.completed}
-              </p>
-            </div>
-            <div
-              onClick={() => setStatusFilter("dropped")}
-              className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
-                statusFilter === "dropped"
-                  ? "border-danger bg-danger/5"
-                  : "border-stroke bg-white dark:border-strokedark dark:bg-boxdark"
-              }`}
-            >
-              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">
-                {t("investment.dropped", "Dropped")}
-              </p>
-              <p className="text-2xl font-bold text-danger">{stats.dropped}</p>
-            </div>
-          </div>
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
 
-          {/* Search Bar */}
-          <div className="mt-6">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder={t(
-                  "investment.searchPlaceholder",
-                  "Search by entrepreneur name, amount, or purpose...",
-                )}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full rounded-xl border border-stroke bg-white/80 backdrop-blur-sm py-3 pl-12 pr-4 outline-none focus:border-primary dark:border-strokedark dark:bg-boxdark/80"
-              />
-              <span className="absolute left-4 top-1/2 -translate-y-1/2">
-                <HiOutlineSearch className="h-5 w-5 text-body dark:text-bodydark" />
+          {/* Content */}
+          <div className="relative z-10 flex min-h-[300px] max-w-3xl flex-col justify-center p-8 lg:p-12">
+            <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+              Investment Applications
+            </span>
+
+            <h1 className="mb-4 text-4xl font-bold leading-tight text-white md:text-4xl">
+              Track Your Investment Requests
+            </h1>
+
+            <p className="mb-8 max-w-2xl text-base leading-8 text-white/85 md:text-lg">
+              Monitor application progress
+              and stay updated on
+              investment opportunities.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-white/90">
+              <span className="flex items-center gap-2">
+                <FaMoneyBillWave />
+                {applications.length}{" "}
+                Applications
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaCheckCircle />
+                {stats.completed} Approved
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaChartLine />
+                Investment Tracking
               </span>
             </div>
           </div>
+        </section>
+
+        {/* STATS */}
+        <section className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-5">
+          <div
+            onClick={() =>
+              setStatusFilter("all")
+            }
+            className={`relative cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition ${
+              statusFilter === "all"
+                ? "border-[#2563EB]"
+                : "border-[#EAECF0]"
+            }`}
+          >
+            <FaMoneyBillWave className="absolute right-5 top-5 text-xl text-[#2563EB]" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.all}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              All Applications
+            </p>
+          </div>
+
+          <div
+            onClick={() =>
+              setStatusFilter("pending")
+            }
+            className={`relative cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition ${
+              statusFilter === "pending"
+                ? "border-yellow-500"
+                : "border-[#EAECF0]"
+            }`}
+          >
+            <FaClock className="absolute right-5 top-5 text-xl text-yellow-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.pending}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Pending
+            </p>
+          </div>
+
+          <div
+            onClick={() =>
+              setStatusFilter(
+                "in_progress"
+              )
+            }
+            className={`relative cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition ${
+              statusFilter ===
+              "in_progress"
+                ? "border-blue-500"
+                : "border-[#EAECF0]"
+            }`}
+          >
+            <FaChartLine className="absolute right-5 top-5 text-xl text-blue-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.in_progress}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              In progress
+            </p>
+          </div>
+
+          <div
+            onClick={() =>
+              setStatusFilter("completed")
+            }
+            className={`relative cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition ${
+              statusFilter ===
+              "completed"
+                ? "border-green-500"
+                : "border-[#EAECF0]"
+            }`}
+          >
+            <FaCheckCircle className="absolute right-5 top-5 text-xl text-green-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.completed}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Approved
+            </p>
+          </div>
+
+          <div
+            onClick={() =>
+              setStatusFilter("dropped")
+            }
+            className={`relative cursor-pointer rounded-2xl border bg-white p-5 shadow-sm transition ${
+              statusFilter === "dropped"
+                ? "border-red-500"
+                : "border-[#EAECF0]"
+            }`}
+          >
+            <FaTimesCircle className="absolute right-5 top-5 text-xl text-red-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {stats.dropped}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Rejected
+            </p>
+          </div>
+        </section>
+
+        {/* HEADER */}
+        <div className="mb-6">
+          <h2 className="text-3xl font-bold text-[#101828]">
+            My Applications
+          </h2>
         </div>
 
-        {/* Applications List */}
-        {filteredApplications.length < 1 ? (
+        {/* TABLE */}
+        {filteredApplications.length <
+        1 ? (
           <NoData />
         ) : (
-          <div className="p-6">
-            {/* Table Header */}
-            <div className="hidden md:grid grid-cols-12 gap-4 mb-4 px-4 py-3 bg-gray-1 dark:bg-meta-4 rounded-lg">
-              <div className="col-span-2">
-                <p className="text-sm font-semibold text-black dark:text-white">
-                  {t("investment.status", "Status")}
-                </p>
-              </div>
-              <div className="col-span-3">
-                <p className="text-sm font-semibold text-black dark:text-white">
-                  {t("investment.entrepreneur", "Entrepreneur")}
-                </p>
-              </div>
-              <div className="col-span-2">
-                <p className="text-sm font-semibold text-black dark:text-white">
-                  {t("investment.amount", "Amount")}
-                </p>
-              </div>
-              <div className="col-span-3">
-                <p className="text-sm font-semibold text-black dark:text-white">
-                  {t("investment.purpose", "Purpose")}
-                </p>
-              </div>
-              <div className="col-span-1">
-                <p className="text-sm font-semibold text-black dark:text-white">
-                  {t("investment.date", "Date")}
-                </p>
-              </div>
-              <div className="col-span-1">
-                <p className="text-sm font-semibold text-black dark:text-white text-right">
-                  {t("investment.actions", "Actions")}
-                </p>
-              </div>
-            </div>
+          <div className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-[#EAECF0]">
+                <thead className="bg-[#F9FAFB]">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Entrepreneur
+                    </th>
 
-            {/* Table Body */}
-            <div className="space-y-3">
-              {filteredApplications.map((application, index) => (
-                <div
-                  key={application.uuid || index}
-                  className="grid grid-cols-1 md:grid-cols-12 gap-4 p-4 bg-white dark:bg-boxdark border border-stroke dark:border-strokedark rounded-lg hover:shadow-md transition-all duration-200"
-                >
-                  {/* Status */}
-                  <div className="col-span-1 md:col-span-2 flex items-center">
-                    {getStatusBadge(application.status)}
-                  </div>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Email
+                    </th>
 
-                  {/* Entrepreneur */}
-                  <div className="col-span-1 md:col-span-3 flex items-center">
-                    <div>
-                      <p className="text-sm font-medium text-black dark:text-white">
-                        {application.Entrepreneur?.name ||
-                          t(
-                            "investment.unknownEntrepreneur",
-                            "Unknown Entrepreneur",
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Status
+                    </th>
+
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Date
+                    </th>
+
+                    <th className="px-6 py-4 text-right text-sm font-semibold text-[#344054]">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-[#EAECF0] bg-white">
+                  {filteredApplications.map(
+                    (
+                      application,
+                      index
+                    ) => (
+                      <tr
+                        key={
+                          application.uuid ||
+                          index
+                        }
+                        className="transition duration-200 hover:bg-[#F9FAFB]"
+                      >
+                        {/* Entrepreneur */}
+                        <td className="whitespace-nowrap px-6 py-5">
+                          <p className="text-sm font-semibold text-[#101828]">
+                            {application
+                              ?.Entrepreneur
+                              ?.name ||
+                              application
+                                ?.entrepreneur
+                                ?.name ||
+                              "Unknown Entrepreneur"}
+                          </p>
+                        </td>
+
+                        {/* Email */}
+                        <td className="whitespace-nowrap px-6 py-5 text-sm text-[#667085]">
+                          {application
+                            ?.Entrepreneur
+                            ?.email ||
+                            application
+                              ?.entrepreneur
+                              ?.email ||
+                            "N/A"}
+                        </td>
+
+                        {/* Status */}
+                        <td className="whitespace-nowrap px-6 py-5">
+                          {getStatusBadge(
+                            application.status
                           )}
-                      </p>
-                      <p className="text-xs text-gray-500 dark:text-gray-400">
-                        {application.Entrepreneur?.email || ""}
-                      </p>
-                    </div>
-                  </div>
+                        </td>
 
-                  {/* Amount */}
-                  <div className="col-span-1 md:col-span-2 flex items-center">
-                    <p className="text-sm font-semibold text-primary">
-                      {formatCurrency(application.amount)}
-                    </p>
-                  </div>
+                        {/* Date */}
+                        <td className="whitespace-nowrap px-6 py-5 text-sm text-[#667085]">
+                          {timeAgo(
+                            application.createdAt
+                          )}
+                        </td>
 
-                  {/* Purpose */}
-                  <div className="col-span-1 md:col-span-3 flex items-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
-                      {application.purposeOfInvestment ||
-                        t("investment.noPurpose", "No purpose provided")}
-                    </p>
-                  </div>
-
-                  {/* Date */}
-                  <div className="col-span-1 md:col-span-1 flex items-center">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      {timeAgo(application.createdAt)}
-                    </p>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="col-span-1 md:col-span-1 flex items-center justify-end">
-                    <Link
-                      href={`/dashboard/investmentApplications/${application.uuid}`}
-                      className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all duration-200"
-                    >
-                      <HiOutlineEye className="w-5 h-5" />
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                        {/* Action */}
+                        <td className="whitespace-nowrap px-6 py-5 text-right">
+                          <Link
+                            href={`/dashboard/investmentApplications/${application.uuid}`}
+                            className="inline-flex items-center justify-center rounded-xl bg-[#2563EB] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                          >
+                            View details
+                          </Link>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                </tbody>
+              </table>
             </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="flex items-center justify-between mt-6 pt-6 border-t border-stroke dark:border-strokedark">
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  {t("investment.showing", "Showing")}{" "}
-                  {(currentPage - 1) * itemsPerPage + 1} -{" "}
-                  {Math.min(currentPage * itemsPerPage, totalCount)}{" "}
-                  {t("investment.of", "of")} {totalCount}{" "}
-                  {t("investment.applications", "applications")}
-                </p>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.max(1, prev - 1))
-                    }
-                    disabled={currentPage === 1}
-                    className="px-4 py-2 rounded-lg border border-stroke dark:border-strokedark bg-white dark:bg-boxdark text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-1 dark:hover:bg-meta-4 transition-all"
-                  >
-                    {t("investment.previous", "Previous")}
-                  </button>
-                  {[...Array(totalPages)].map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setCurrentPage(i + 1)}
-                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        currentPage === i + 1
-                          ? "bg-primary text-white"
-                          : "border border-stroke dark:border-strokedark bg-white dark:bg-boxdark hover:bg-gray-1 dark:hover:bg-meta-4"
-                      }`}
-                    >
-                      {i + 1}
-                    </button>
-                  ))}
-                  <button
-                    onClick={() =>
-                      setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                    }
-                    disabled={currentPage === totalPages}
-                    className="px-4 py-2 rounded-lg border border-stroke dark:border-strokedark bg-white dark:bg-boxdark text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-1 dark:hover:bg-meta-4 transition-all"
-                  >
-                    {t("investment.next", "Next")}
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         )}
       </div>
