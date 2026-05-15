@@ -84,6 +84,8 @@ import CratReviews from "./pages/reviewer/cratReviews/CratReviews";
 // Application Pages
 import CratReviewApplications from "./pages/applications/cratReviewApplications/CratReviewApplications";
 import CratCatalogManager from "./pages/admin/CratCatalogManager";
+import AnzabooksBusinesses from "./pages/admin/anzabooksBusinesses/AnzabooksBusinesses";
+import AnzabooksBusinessReport from "./pages/admin/anzabooksBusinesses/AnzabooksBusinessReport";
 
 // Stories Pages
 import SuccessStories from "./pages/stories/successStories/SuccessStories";
@@ -614,6 +616,14 @@ function App() {
               element={<CratReviewApplications />}
             />
             <Route path="cratCatalogManager" element={<CratCatalogManager />} />
+            <Route
+              path="anzabooks-businesses"
+              element={<AnzabooksBusinesses />}
+            />
+            <Route
+              path="anzabooks-businesses/:storeId/report"
+              element={<AnzabooksBusinessReport />}
+            />
 
             {/* Stories Routes */}
             <Route path="successStories" element={<SuccessStories />} />

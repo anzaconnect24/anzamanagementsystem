@@ -13,6 +13,7 @@ import {
   MdOutlineDashboard,
   MdBusinessCenter,
   MdAssignment,
+  MdStorefront,
 } from "react-icons/md";
 import { TbLogout } from "react-icons/tb";
 import { SlPeople } from "react-icons/sl";
@@ -287,6 +288,18 @@ const Sidebar = ({
           {
             name: t("navigation.rejectedApplications", "Rejected Applications"),
             path: "/dashboard/rejectedApplications",
+          },
+        ],
+      });
+
+      businessItems.push({
+        name: t("navigation.anzabooksShops", "AnzaBooks Shops"),
+        path: "/dashboard/anzabooks-businesses",
+        icon: <MdStorefront className="text-xl" />,
+        submenu: [
+          {
+            name: t("navigation.shopOverview", "Shops Overview"),
+            path: "/dashboard/anzabooks-businesses",
           },
         ],
       });
