@@ -100,6 +100,7 @@ import MarketDomainPage from "./pages/cratSystem/marketDomain/MarketDomain";
 import FinancialDomain from "./pages/cratSystem/financialDomain/FinancialDomain";
 import Report from "./pages/cratSystem/report/Report";
 import CratSubmissionReviewPage from "./pages/cratSystem/reviewAssessment/CratSubmissionReviewPage";
+import DomainAssessmentPage from "./pages/cratSystem/domain/DomainAssessmentPage";
 
 // Dynamic route components
 import MyMentorDetailsWithUuid from "./pages/mentor/myMentorDetails/MyMentorDetailsWithUuid";
@@ -623,6 +624,10 @@ function App() {
             {/* CRAT System nested routes */}
             <Route path="crat-system">
               <Route path="introduction" element={<IntroductionPage />} />
+              <Route
+                path="domain/:domainKey"
+                element={<DomainAssessmentPage />}
+              />
               <Route path="marketDomain" element={<MarketDomainPage />} />
               <Route path="financialDomain" element={<FinancialDomain />} />
               <Route path="operationsDomain" element={<OperationsDomain />} />

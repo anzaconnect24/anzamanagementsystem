@@ -2,18 +2,27 @@ import React, { useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import Breadcrumb from "@/component/Breadcrumb";
 import { UserContext } from "@/layouts/DashboardLayout";
+import { useTranslation } from "@/locales";
 import {
   getAdminCatalog,
   createCatalogQuestion,
   updateCatalogQuestion,
   toggleCatalogQuestion,
+  deleteCatalogQuestion,
 } from "@/controllers/crat_controller";
 
-const DOMAIN_LABELS = {
+const DOMAIN_LABELS_EN = {
   commercial_marketing: "Commercial & Marketing",
   financial: "Financial",
   legal_compliance: "Legal & Compliance",
   operations: "Operations",
+};
+
+const DOMAIN_LABELS_SW = {
+  commercial_marketing: "Biashara na Masoko",
+  financial: "Fedha",
+  legal_compliance: "Sheria na Uzingatiaji",
+  operations: "Uendeshaji",
 };
 
 const emptyForm = {
@@ -32,6 +41,7 @@ const emptyForm = {
 
 const CratCatalogManager = () => {
   const { userDetails } = useContext(UserContext);
+  const { isSwahili } = useTranslation();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDomain, setFilterDomain] = useState("");
@@ -43,23 +53,177 @@ const CratCatalogManager = () => {
   const [expandedAiPrompt, setExpandedAiPrompt] = useState(null);
   const [domainOptions, setDomainOptions] = useState([]);
   const [variantOptions, setVariantOptions] = useState(["default"]);
+  const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
+  const [categoryType, setCategoryType] = useState(""); // "domain" or "variant"
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [addingCategory, setAddingCategory] = useState(false);
+
+  const labels = {
+    pageTitle: isSwahili
+      ? "Meneja wa Katalogi ya CRAT"
+      : "CRAT Catalog Manager",
+    cardTitle: isSwahili
+      ? "Katalogi ya Maswali ya CRAT"
+      : "CRAT Question Catalog",
+    cardDescription: isSwahili
+      ? "Dhibiti maswali, maelezo ya mwongozo, na maelekezo ya AI kwa kila swali."
+      : "Manage questions, guidance notes, and per-question AI evaluation prompts.",
+    newQuestion: isSwahili ? "+ Swali Jipya" : "+ New Question",
+    allDomains: isSwahili ? "Maeneo Yote" : "All Domains",
+    allCategories: isSwahili ? "Kategoria Zote" : "All Categories",
+    loadingCatalog: isSwahili ? "Inapakia katalogi..." : "Loading catalog...",
+    noQuestionsFound: isSwahili
+      ? "Hakuna maswali yaliyopatikana."
+      : "No questions found.",
+    code: isSwahili ? "Msimbo" : "Code",
+    domainVariant: isSwahili ? "Eneo / Kategoria" : "Domain / Variant",
+    questionHeader: isSwahili ? "Swali" : "Question (EN)",
+    aiPrompt: isSwahili ? "Maelekezo ya AI" : "AI Prompt",
+    order: isSwahili ? "Mpangilio" : "Order",
+    status: isSwahili ? "Hali" : "Status",
+    actions: isSwahili ? "Vitendo" : "Actions",
+    showLess: isSwahili ? "Onyesha kidogo" : "Show less",
+    showMore: isSwahili ? "Onyesha zaidi" : "Show more",
+    notSet: isSwahili ? "Haijawekwa" : "Not set",
+    active: isSwahili ? "Hai" : "Active",
+    inactive: isSwahili ? "Haifanyi kazi" : "Inactive",
+    edit: isSwahili ? "Hariri" : "Edit",
+    deactivate: isSwahili ? "Zima" : "Deactivate",
+    activate: isSwahili ? "Washa" : "Activate",
+    delete: isSwahili ? "Futa" : "Delete",
+    editQuestion: isSwahili ? "Hariri Swali" : "Edit Question",
+    newQuestionModal: isSwahili ? "Swali Jipya" : "New Question",
+    domain: isSwahili ? "Eneo" : "Domain",
+    selectDomain: isSwahili ? "Chagua Eneo" : "Select Domain",
+    category: isSwahili ? "Kategoria" : "Category",
+    addNewDomain: isSwahili ? "Ongeza eneo jipya" : "Add new domain",
+    addNewCategory: isSwahili ? "Ongeza kategoria mpya" : "Add new category",
+    questionCode: isSwahili ? "Msimbo wa Swali" : "Question Code",
+    sortOrder: isSwahili ? "Mpangilio" : "Sort Order",
+    questionTextEn: isSwahili
+      ? "Maandishi ya Swali (Kiingereza)"
+      : "Question Text (English)",
+    questionTextSw: isSwahili
+      ? "Maandishi ya Swali (Kiswahili)"
+      : "Question Text (Swahili)",
+    enterQuestionEn: isSwahili
+      ? "Ingiza swali kwa Kiingereza"
+      : "Enter question in English",
+    enterQuestionSw: isSwahili
+      ? "Tafsiri ya Kiswahili (hiari)"
+      : "Swahili translation (optional)",
+    guidanceEn: isSwahili ? "Mwongozo (Kiingereza)" : "Guidance (English)",
+    guidanceSw: isSwahili ? "Mwongozo (Kiswahili)" : "Guidance (Swahili)",
+    guidancePlaceholder: isSwahili
+      ? "Maelezo ya mwongozo kwa wajasiriamali"
+      : "Guidance notes for entrepreneurs",
+    guidanceSwPlaceholder: isSwahili
+      ? "Mwongozo wa Kiswahili (hiari)"
+      : "Swahili guidance (optional)",
+    requiredAttachmentEn: isSwahili
+      ? "Kiambatisho Kinachohitajika (Kiingereza)"
+      : "Required Attachment (English)",
+    requiredAttachmentSw: isSwahili
+      ? "Kiambatisho Kinachohitajika (Kiswahili)"
+      : "Required Attachment (Swahili)",
+    requiredAttachmentPlaceholder: isSwahili
+      ? "mf. Taarifa za fedha zilizokaguliwa (hiari)"
+      : "e.g. Audited financial statements (optional)",
+    requiredAttachmentSwPlaceholder: isSwahili
+      ? "Tafsiri ya Kiswahili (hiari)"
+      : "Swahili translation (optional)",
+    aiEvaluationPrompt: isSwahili
+      ? "Maelekezo ya Tathmini ya AI"
+      : "AI Evaluation Prompt",
+    aiPromptHint: isSwahili
+      ? "(hutumiwa na AI inapopima swali hili)"
+      : "(used by AI when scoring this question)",
+    aiPromptPlaceholder: isSwahili
+      ? "Eleza AI inapaswa kuangalia nini inapopima majibu ya swali hili."
+      : "Describe what the AI should look for when evaluating answers to this question. E.g. 'Assess whether the business has a documented go-to-market strategy with clear customer segments...'",
+    cancel: isSwahili ? "Ghairi" : "Cancel",
+    saving: isSwahili ? "Inahifadhi..." : "Saving...",
+    update: isSwahili ? "Sasisha" : "Update",
+    create: isSwahili ? "Tengeneza" : "Create",
+    addNew: isSwahili ? "Ongeza" : "Add New",
+    domainName: isSwahili ? "Jina la Eneo" : "Domain Name",
+    categoryName: isSwahili ? "Jina la Kategoria" : "Category Name",
+    domainCategoryPlaceholder: isSwahili
+      ? "mf. teknolojia, uchumi wa bluu"
+      : "e.g. technology, blue economy",
+    categoryPlaceholder: isSwahili
+      ? "mf. fintech, agritech"
+      : "e.g. fintech, agritech",
+    adding: isSwahili ? "Inaongeza..." : "Adding...",
+    add: isSwahili ? "Ongeza" : "Add",
+    restricted: isSwahili
+      ? "Ukurasa huu ni wa wasimamizi pekee."
+      : "This page is restricted to admin users.",
+    failedToLoadCatalog: isSwahili
+      ? "Imeshindikana kupakia katalogi."
+      : "Failed to load catalog.",
+    requiredFieldsError: isSwahili
+      ? "Eneo, msimbo wa swali, na maandishi ya Kiingereza yanahitajika."
+      : "Domain, question code, and English text are required.",
+    questionUpdated: isSwahili ? "Swali limesasishwa." : "Question updated.",
+    questionCreated: isSwahili ? "Swali limetengenezwa." : "Question created.",
+    failedToSaveQuestion: isSwahili
+      ? "Imeshindikana kuhifadhi swali."
+      : "Failed to save question.",
+    questionDeactivated: isSwahili
+      ? "Swali limezimwa."
+      : "Question deactivated.",
+    questionActivated: isSwahili ? "Swali limewashwa." : "Question activated.",
+    failedToToggleStatus: isSwahili
+      ? "Imeshindikana kubadili hali ya swali."
+      : "Failed to toggle question status.",
+    deleteConfirm: isSwahili
+      ? 'Futa swali "{{code}}"? Hii haiwezi kutenduliwa.'
+      : 'Delete question "{{code}}"? This cannot be undone.',
+    questionDeleted: isSwahili ? "Swali limefutwa." : "Question deleted.",
+    failedToDeleteQuestion: isSwahili
+      ? "Imeshindikana kufuta swali."
+      : "Failed to delete question.",
+    enterCategoryName: isSwahili
+      ? `Tafadhali andika jina la ${categoryType === "domain" ? "eneo" : "kategoria"}.`
+      : `Please enter a ${categoryType === "domain" ? "domain" : "category"} name.`,
+    domainAdded: isSwahili
+      ? `Eneo "{{name}}" limeongezwa.`
+      : `Domain "{{name}}" added successfully.`,
+    categoryAdded: isSwahili
+      ? `Kategoria "{{name}}" imeongezwa.`
+      : `Category "{{name}}" added successfully.`,
+    domainExists: isSwahili
+      ? "Eneo hili tayari lipo."
+      : "This domain already exists.",
+    categoryExists: isSwahili
+      ? "Kategoria hii tayari ipo."
+      : "This category already exists.",
+  };
+
+  const domainLabels = isSwahili ? DOMAIN_LABELS_SW : DOMAIN_LABELS_EN;
+
+  const getLocalizedQuestionText = (question) => {
+    if (isSwahili) {
+      return question.question_text_sw || question.question_text_en || "";
+    }
+    return question.question_text_en || question.question_text_sw || "";
+  };
 
   const isAdmin = userDetails?.role === "Admin";
 
   const load = async () => {
     try {
       setLoading(true);
-      const params = {};
-      if (filterDomain) params.domain = filterDomain;
-      if (filterVariant) params.variant = filterVariant;
-      const data = await getAdminCatalog(params);
-      setQuestions(data || []);
+      // Always fetch all questions to populate filter options
+      const allData = await getAdminCatalog();
 
-      const nextDomains = [...new Set((data || []).map((q) => q.domain))]
+      // Extract all available domains and variants from all questions
+      const nextDomains = [...new Set((allData || []).map((q) => q.domain))]
         .filter(Boolean)
         .sort();
       const nextVariants = [
-        ...new Set((data || []).map((q) => q.variant || "default")),
+        ...new Set((allData || []).map((q) => q.variant || "default")),
       ]
         .filter(Boolean)
         .sort();
@@ -70,8 +234,19 @@ const CratCatalogManager = () => {
           ? nextVariants
           : ["default", ...nextVariants],
       );
+
+      // Apply filters to the display data
+      let filteredData = allData;
+      if (filterDomain) {
+        filteredData = filteredData.filter((q) => q.domain === filterDomain);
+      }
+      if (filterVariant) {
+        filteredData = filteredData.filter((q) => q.variant === filterVariant);
+      }
+
+      setQuestions(filteredData || []);
     } catch (err) {
-      toast.error("Failed to load catalog.");
+      toast.error(labels.failedToLoadCatalog);
     } finally {
       setLoading(false);
     }
@@ -121,7 +296,7 @@ const CratCatalogManager = () => {
       !form.question_code.trim() ||
       !form.question_text_en.trim()
     ) {
-      toast.error("Domain, question code, and English text are required.");
+      toast.error(labels.requiredFieldsError);
       return;
     }
     try {
@@ -134,15 +309,15 @@ const CratCatalogManager = () => {
       };
       if (editingQuestion) {
         await updateCatalogQuestion(editingQuestion.id, payload);
-        toast.success("Question updated.");
+        toast.success(labels.questionUpdated);
       } else {
         await createCatalogQuestion(payload);
-        toast.success("Question created.");
+        toast.success(labels.questionCreated);
       }
       closeModal();
       await load();
     } catch (err) {
-      const msg = err?.response?.data?.message || "Failed to save question.";
+      const msg = err?.response?.data?.message || labels.failedToSaveQuestion;
       toast.error(msg);
     } finally {
       setSaving(false);
@@ -153,11 +328,75 @@ const CratCatalogManager = () => {
     try {
       await toggleCatalogQuestion(q.id);
       toast.success(
-        q.is_active ? "Question deactivated." : "Question activated.",
+        q.is_active ? labels.questionDeactivated : labels.questionActivated,
       );
       await load();
     } catch {
-      toast.error("Failed to toggle question status.");
+      toast.error(labels.failedToToggleStatus);
+    }
+  };
+
+  const handleDelete = async (q) => {
+    if (
+      !window.confirm(labels.deleteConfirm.replace("{{code}}", q.question_code))
+    ) {
+      return;
+    }
+    try {
+      await deleteCatalogQuestion(q.id);
+      toast.success(labels.questionDeleted);
+      await load();
+    } catch (err) {
+      const msg = err?.response?.data?.message || labels.failedToDeleteQuestion;
+      toast.error(msg);
+    }
+  };
+
+  const openAddCategoryModal = (type) => {
+    setCategoryType(type);
+    setNewCategoryName("");
+    setShowAddCategoryModal(true);
+  };
+
+  const closeAddCategoryModal = () => {
+    setShowAddCategoryModal(false);
+    setCategoryType("");
+    setNewCategoryName("");
+  };
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+    if (!newCategoryName.trim()) {
+      toast.error(labels.enterCategoryName);
+      return;
+    }
+
+    try {
+      setAddingCategory(true);
+      const normalizedName = newCategoryName.trim().toLowerCase();
+
+      if (categoryType === "domain") {
+        if (!domainOptions.includes(normalizedName)) {
+          setDomainOptions([...domainOptions, normalizedName]);
+          toast.success(
+            labels.domainAdded.replace("{{name}}", newCategoryName),
+          );
+        } else {
+          toast.error(labels.domainExists);
+        }
+      } else if (categoryType === "variant") {
+        if (!variantOptions.includes(normalizedName)) {
+          setVariantOptions([...variantOptions, normalizedName]);
+          toast.success(
+            labels.categoryAdded.replace("{{name}}", newCategoryName),
+          );
+        } else {
+          toast.error(labels.categoryExists);
+        }
+      }
+      closeAddCategoryModal();
+    } finally {
+      setAddingCategory(false);
     }
   };
 
@@ -165,7 +404,7 @@ const CratCatalogManager = () => {
     return (
       <div className="p-6">
         <div className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
-          This page is restricted to admin users.
+          {labels.restricted}
         </div>
       </div>
     );
@@ -173,24 +412,23 @@ const CratCatalogManager = () => {
 
   return (
     <div className="w-full p-4 md:p-6">
-      <Breadcrumb pageName="CRAT Catalog Manager" />
+      <Breadcrumb pageName={labels.pageTitle} />
 
       <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm md:p-7">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="text-xl font-semibold text-slate-900 md:text-2xl">
-              CRAT Question Catalog
+              {labels.cardTitle}
             </h1>
             <p className="mt-1 text-sm text-slate-500">
-              Manage questions, guidance notes, and per-question AI evaluation
-              prompts.
+              {labels.cardDescription}
             </p>
           </div>
           <button
             onClick={openCreate}
             className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90"
           >
-            + New Question
+            {labels.newQuestion}
           </button>
         </div>
 
@@ -202,10 +440,10 @@ const CratCatalogManager = () => {
             className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
           >
             {[
-              { value: "", label: "All Domains" },
+              { value: "", label: labels.allDomains },
               ...domainOptions.map((d) => ({
                 value: d,
-                label: DOMAIN_LABELS[d] || d,
+                label: domainLabels[d] || d,
               })),
             ].map((d) => (
               <option key={d.value} value={d.value}>
@@ -218,7 +456,7 @@ const CratCatalogManager = () => {
             onChange={(e) => setFilterVariant(e.target.value)}
             className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
           >
-            <option value="">All Categories</option>
+            <option value="">{labels.allCategories}</option>
             {variantOptions.map((v) => (
               <option key={v} value={v}>
                 {v}
@@ -230,34 +468,38 @@ const CratCatalogManager = () => {
         {/* Table */}
         <div className="mt-5 overflow-hidden rounded-xl border border-black/10">
           {loading ? (
-            <p className="p-5 text-sm text-slate-600">Loading catalog...</p>
+            <p className="p-5 text-sm text-slate-600">
+              {labels.loadingCatalog}
+            </p>
           ) : questions.length === 0 ? (
-            <p className="p-5 text-sm text-slate-600">No questions found.</p>
+            <p className="p-5 text-sm text-slate-600">
+              {labels.noQuestionsFound}
+            </p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full min-w-[900px]">
                 <thead className="bg-slate-100">
                   <tr>
                     <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                      Code
+                      {labels.code}
                     </th>
                     <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                      Domain / Variant
+                      {labels.domainVariant}
                     </th>
                     <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700 w-72">
-                      Question (EN)
+                      {labels.questionHeader}
                     </th>
                     <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                      AI Prompt
+                      {labels.aiPrompt}
                     </th>
                     <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                      Order
+                      {labels.order}
                     </th>
                     <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                      Status
+                      {labels.status}
                     </th>
                     <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                      Actions
+                      {labels.actions}
                     </th>
                   </tr>
                 </thead>
@@ -272,14 +514,14 @@ const CratCatalogManager = () => {
                       </td>
                       <td className="border-b border-black/10 px-3 py-3">
                         <p className="text-xs font-semibold text-slate-800">
-                          {DOMAIN_LABELS[q.domain] || q.domain}
+                          {domainLabels[q.domain] || q.domain}
                         </p>
                         <p className="text-xs text-slate-500 capitalize">
                           {q.variant}
                         </p>
                       </td>
                       <td className="border-b border-black/10 px-3 py-3 text-xs text-slate-700">
-                        {q.question_text_en}
+                        {getLocalizedQuestionText(q)}
                       </td>
                       <td className="border-b border-black/10 px-3 py-3 text-xs text-slate-600 max-w-xs">
                         {q.ai_prompt ? (
@@ -300,13 +542,15 @@ const CratCatalogManager = () => {
                                 className="mt-1 text-primary text-xs underline"
                               >
                                 {expandedAiPrompt === q.id
-                                  ? "Show less"
-                                  : "Show more"}
+                                  ? labels.showLess
+                                  : labels.showMore}
                               </button>
                             )}
                           </>
                         ) : (
-                          <span className="text-slate-400 italic">Not set</span>
+                          <span className="text-slate-400 italic">
+                            {labels.notSet}
+                          </span>
                         )}
                       </td>
                       <td className="border-b border-black/10 px-3 py-3 text-xs text-slate-700 text-center">
@@ -320,26 +564,32 @@ const CratCatalogManager = () => {
                               : "border-slate-200 bg-slate-100 text-slate-600"
                           }`}
                         >
-                          {q.is_active ? "Active" : "Inactive"}
+                          {q.is_active ? labels.active : labels.inactive}
                         </span>
                       </td>
                       <td className="border-b border-black/10 px-3 py-3">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1 flex-nowrap">
                           <button
                             onClick={() => openEdit(q)}
-                            className="rounded-lg border border-black/15 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:border-primary/40 hover:text-primary"
+                            className="rounded-lg border border-black/15 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 hover:border-primary/40 hover:text-primary whitespace-nowrap"
                           >
-                            Edit
+                            {labels.edit}
                           </button>
                           <button
                             onClick={() => handleToggle(q)}
-                            className={`rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+                            className={`rounded-lg border px-2 py-1.5 text-xs font-semibold transition whitespace-nowrap ${
                               q.is_active
                                 ? "border-red-200 text-red-600 hover:bg-red-50"
                                 : "border-emerald-200 text-emerald-600 hover:bg-emerald-50"
                             }`}
                           >
-                            {q.is_active ? "Deactivate" : "Activate"}
+                            {q.is_active ? labels.deactivate : labels.activate}
+                          </button>
+                          <button
+                            onClick={() => handleDelete(q)}
+                            className="rounded-lg border border-red-300 bg-white px-2 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-50 whitespace-nowrap"
+                          >
+                            {labels.delete}
                           </button>
                         </div>
                       </td>
@@ -358,7 +608,9 @@ const CratCatalogManager = () => {
           <div className="my-8 w-full max-w-2xl rounded-2xl border border-black/10 bg-white shadow-xl">
             <div className="border-b border-black/10 px-6 py-4 flex items-center justify-between">
               <h2 className="text-base font-semibold text-slate-900">
-                {editingQuestion ? "Edit Question" : "New Question"}
+                {editingQuestion
+                  ? labels.editQuestion
+                  : labels.newQuestionModal}
               </h2>
               <button
                 onClick={closeModal}
@@ -371,48 +623,67 @@ const CratCatalogManager = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
-                    Domain *
+                    {labels.domain} *
                   </label>
-                  <input
-                    list="crat-domain-options"
-                    value={form.domain}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, domain: e.target.value }))
-                    }
-                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                    placeholder="e.g. financial, operations, technology"
-                  />
-                  <datalist id="crat-domain-options">
-                    {domainOptions.map((domain) => (
-                      <option key={domain} value={domain} />
-                    ))}
-                  </datalist>
+                  <div className="flex gap-2">
+                    <select
+                      value={form.domain}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, domain: e.target.value }))
+                      }
+                      className="flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                    >
+                      <option value="">{labels.selectDomain}</option>
+                      {domainOptions.map((domain) => (
+                        <option key={domain} value={domain}>
+                          {domainLabels[domain] || domain}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => openAddCategoryModal("domain")}
+                      className="rounded-lg border border-black/15 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 hover:text-primary"
+                      title={labels.addNewDomain}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
-                    Category
+                    {labels.category}
                   </label>
-                  <input
-                    list="crat-variant-options"
-                    value={form.variant}
-                    onChange={(e) =>
-                      setForm((f) => ({ ...f, variant: e.target.value }))
-                    }
-                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                    placeholder="e.g. default, fintech, blue economy"
-                  />
-                  <datalist id="crat-variant-options">
-                    {variantOptions.map((variant) => (
-                      <option key={variant} value={variant} />
-                    ))}
-                  </datalist>
+                  <div className="flex gap-2">
+                    <select
+                      value={form.variant}
+                      onChange={(e) =>
+                        setForm((f) => ({ ...f, variant: e.target.value }))
+                      }
+                      className="flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                    >
+                      {variantOptions.map((variant) => (
+                        <option key={variant} value={variant}>
+                          {variant}
+                        </option>
+                      ))}
+                    </select>
+                    <button
+                      type="button"
+                      onClick={() => openAddCategoryModal("variant")}
+                      className="rounded-lg border border-black/15 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 hover:text-primary"
+                      title={labels.addNewCategory}
+                    >
+                      +
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
-                    Question Code *
+                    {labels.questionCode} *
                   </label>
                   <input
                     type="text"
@@ -426,7 +697,7 @@ const CratCatalogManager = () => {
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
-                    Sort Order
+                    {labels.sortOrder}
                   </label>
                   <input
                     type="number"
@@ -442,7 +713,7 @@ const CratCatalogManager = () => {
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Question Text (English) *
+                  {labels.questionTextEn} *
                 </label>
                 <textarea
                   value={form.question_text_en}
@@ -451,13 +722,13 @@ const CratCatalogManager = () => {
                   }
                   rows={3}
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder="Enter question in English"
+                  placeholder={labels.enterQuestionEn}
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Question Text (Swahili)
+                  {labels.questionTextSw}
                 </label>
                 <textarea
                   value={form.question_text_sw}
@@ -466,13 +737,13 @@ const CratCatalogManager = () => {
                   }
                   rows={2}
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder="Swahili translation (optional)"
+                  placeholder={labels.requiredAttachmentSwPlaceholder}
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Guidance (English)
+                  {labels.guidanceEn}
                 </label>
                 <textarea
                   value={form.guidance_en}
@@ -481,13 +752,13 @@ const CratCatalogManager = () => {
                   }
                   rows={2}
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder="Guidance notes for entrepreneurs"
+                  placeholder={labels.guidancePlaceholder}
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Guidance (Swahili)
+                  {labels.guidanceSw}
                 </label>
                 <textarea
                   value={form.guidance_sw}
@@ -496,13 +767,13 @@ const CratCatalogManager = () => {
                   }
                   rows={2}
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder="Swahili guidance (optional)"
+                  placeholder={labels.guidanceSwPlaceholder}
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Required Attachment (English)
+                  {labels.requiredAttachmentEn}
                 </label>
                 <input
                   type="text"
@@ -514,13 +785,13 @@ const CratCatalogManager = () => {
                     }))
                   }
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder="e.g. Audited financial statements (optional)"
+                  placeholder={labels.requiredAttachmentPlaceholder}
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  Required Attachment (Swahili)
+                  {labels.requiredAttachmentSw}
                 </label>
                 <input
                   type="text"
@@ -532,15 +803,15 @@ const CratCatalogManager = () => {
                     }))
                   }
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder="Tafsiri ya Kiswahili (hiari)"
+                  placeholder={labels.enterQuestionSw}
                 />
               </div>
 
               <div>
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
-                  AI Evaluation Prompt
+                  {labels.aiEvaluationPrompt}
                   <span className="ml-1 font-normal text-slate-400">
-                    (used by AI when scoring this question)
+                    {labels.aiPromptHint}
                   </span>
                 </label>
                 <textarea
@@ -550,7 +821,7 @@ const CratCatalogManager = () => {
                   }
                   rows={4}
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder="Describe what the AI should look for when evaluating answers to this question. E.g. 'Assess whether the business has a documented go-to-market strategy with clear customer segments...'"
+                  placeholder={labels.aiPromptPlaceholder}
                 />
               </div>
 
@@ -560,14 +831,76 @@ const CratCatalogManager = () => {
                   onClick={closeModal}
                   className="rounded-lg border border-black/15 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
                 >
-                  Cancel
+                  {labels.cancel}
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
                   className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
                 >
-                  {saving ? "Saving…" : editingQuestion ? "Update" : "Create"}
+                  {saving
+                    ? labels.saving
+                    : editingQuestion
+                      ? labels.update
+                      : labels.create}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Add Category Modal */}
+      {showAddCategoryModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-black/10 bg-white shadow-xl">
+            <div className="border-b border-black/10 px-6 py-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-slate-900">
+                {labels.addNew}{" "}
+                {categoryType === "domain" ? labels.domain : labels.category}
+              </h2>
+              <button
+                onClick={closeAddCategoryModal}
+                className="text-slate-500 hover:text-slate-800 text-lg font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <form onSubmit={handleAddCategory} className="p-6 space-y-4">
+              <div>
+                <label className="mb-2 block text-xs font-semibold text-slate-700">
+                  {categoryType === "domain"
+                    ? labels.domainName
+                    : labels.categoryName}{" "}
+                  *
+                </label>
+                <input
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  placeholder={
+                    categoryType === "domain"
+                      ? labels.domainCategoryPlaceholder
+                      : labels.categoryPlaceholder
+                  }
+                  className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                  autoFocus
+                />
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={closeAddCategoryModal}
+                  className="rounded-lg border border-black/15 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+                >
+                  {labels.cancel}
+                </button>
+                <button
+                  type="submit"
+                  disabled={addingCategory}
+                  className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {addingCategory ? labels.adding : labels.add}
                 </button>
               </div>
             </form>

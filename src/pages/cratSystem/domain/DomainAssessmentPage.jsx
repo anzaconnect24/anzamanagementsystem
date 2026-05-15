@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import Breadcrumb from "@/component/Breadcrumb";
 import { UserContext } from "@/layouts/DashboardLayout";
@@ -58,7 +59,10 @@ const getQuestionState = (question, answer = {}, isSwahili = false) => {
   };
 };
 
-const DomainAssessmentPage = ({ domainKey }) => {
+const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
+  const { domainKey: urlDomainKey } = useParams();
+  const domainKey = urlDomainKey || propDomainKey;
+
   const { userDetails } = useContext(UserContext);
   const { isSwahili } = useTranslation();
   const [loading, setLoading] = useState(true);

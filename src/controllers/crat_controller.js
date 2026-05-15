@@ -217,6 +217,26 @@ export const toggleCatalogQuestion = async (questionId) => {
   return unwrap(response);
 };
 
+export const deleteCatalogQuestion = async (questionId) => {
+  const response = await axios.delete(
+    `${server_url}/crat/admin/catalog-mgmt/${questionId}`,
+    { headers },
+  );
+  return unwrap(response);
+};
+
+export const getAvailableDomains = async () => {
+  try {
+    const response = await axios.get(`${server_url}/crat/available-domains`, {
+      headers,
+    });
+    return unwrap(response) || [];
+  } catch (error) {
+    console.error("Failed to fetch available domains:", error);
+    return [];
+  }
+};
+
 // ─── Backend AI Review ────────────────────────────────────────────────────────
 
 export const runAiReview = async (assessmentId) => {
