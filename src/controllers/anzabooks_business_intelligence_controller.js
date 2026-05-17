@@ -1,8 +1,13 @@
 import axios from "axios";
 
-const anzabooksApiBase =
+const rawAnzabooksApiBase =
   import.meta.env.VITE_ANZABOOKS_API_URL ||
-  "https://anzabooks.anzaconnect.co.tz";
+  "https://anzabooksapi.anzaconnect.co.tz";
+
+const anzabooksApiBase = rawAnzabooksApiBase.replace(/\/+$/, "");
+const anzabooksApiRoot = anzabooksApiBase.endsWith("/api")
+  ? anzabooksApiBase
+  : `${anzabooksApiBase}/api`;
 
 export const getAnzabooksBusinesses = async ({
   page = 1,
@@ -13,7 +18,7 @@ export const getAnzabooksBusinesses = async ({
 } = {}) => {
   try {
     const response = await axios.get(
-      `${anzabooksApiBase}/api/public/business-intelligence/businesses`,
+      `${anzabooksApiRoot}/public/business-intelligence/businesses`,
       {
         params: {
           page,
@@ -38,7 +43,7 @@ export const getAnzabooksBusinessReport = async (
 ) => {
   try {
     const response = await axios.get(
-      `${anzabooksApiBase}/api/public/business-intelligence/businesses/${storeId}/report`,
+      `${anzabooksApiRoot}/public/business-intelligence/businesses/${storeId}/report`,
       {
         params: {
           from,

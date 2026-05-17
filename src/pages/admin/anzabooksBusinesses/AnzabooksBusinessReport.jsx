@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import Link from "@/utils/link";
+import dynamic from "@/utils/dynamic";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Loader from "@/components/common/Loader";
 import { getAnzabooksBusinessReport } from "@/controllers/anzabooks_business_intelligence_controller";
+
+const ReactApexChart = dynamic(() => import("react-apexcharts"), {
+  ssr: false,
+});
 
 const currency = new Intl.NumberFormat("en-US", {
   style: "currency",
@@ -12,6 +17,12 @@ const currency = new Intl.NumberFormat("en-US", {
 });
 
 const numberFmt = new Intl.NumberFormat("en-US");
+const compactNumberFmt = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 1,
+});
+
+const compactValue = (value) => compactNumberFmt.format(Number(value) || 0);
 
 const formatDate = (value, withTime = false) => {
   if (!value) return "-";
@@ -36,6 +47,15 @@ const MetricCard = ({ title, value, hint }) => (
       {value}
     </p>
     {hint ? <p className="mt-1 text-xs text-slate-500">{hint}</p> : null}
+  </div>
+);
+
+const ChartCard = ({ title, children }) => (
+  <div className="rounded-lg border border-stroke bg-white px-4 py-4 shadow-sm dark:border-strokedark dark:bg-boxdark">
+    <h4 className="text-base font-semibold text-black dark:text-white">
+      {title}
+    </h4>
+    <div className="mt-3">{children}</div>
   </div>
 );
 
@@ -81,6 +101,46 @@ const ReportPage = () => {
   const rankings = payload?.rankings;
   const riskFlags = payload?.riskFlags || [];
   const feed = payload?.activityFeed || [];
+
+  const chartSource = useMemo(() => {
+    const monthLabels = trends.map((item) => item.month || "-");
+
+    const salesSeries = trends.map((item) => Number(item.sales) || 0);
+    const collectedSeries = trends.map((item) => Number(item.collected) || 0);
+    const purchaseSeries = trends.map((item) => Number(item.purchases) || 0);
+    const expenseSeries = trends.map((item) => Number(item.expenses) || 0);
+    const cashContributionSeries = trends.map(
+      (item) => Number(item.grossCashContribution) || 0,
+    );
+
+    const topProducts = (rankings?.topProducts || []).slice(0, 6);
+    const topCustomers = (rankings?.topCustomers || []).slice(0, 6);
+    const topSuppliers = (rankings?.topSuppliers || []).slice(0, 6);
+
+    return {
+      monthLabels,
+      salesSeries,
+      collectedSeries,
+      purchaseSeries,
+      expenseSeries,
+      cashContributionSeries,
+      topProducts,
+      topCustomers,
+      topSuppliers,
+    };
+  }, [trends, rankings]);
+
+  const commonMoneyYAxis = {
+    labels: {
+      formatter: (value) => compactValue(value),
+    },
+  };
+
+  const commonTooltip = {
+    y: {
+      formatter: (value) => currency.format(value || 0),
+    },
+  };
 
   const allTimeCards = useMemo(
     () => [
@@ -251,6 +311,157 @@ const ReportPage = () => {
               value={item.value}
             />
           ))}
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <h4 className="text-base font-semibold text-black dark:text-white">
+          Visual Performance Insights
+        </h4>
+        <div className="grid gap-4 xl:grid-cols-2">
+          <ChartCard title="Sales vs Collected (Monthly)">
+            <ReactApexChart
+              type="line"
+              height={300}
+              series={[
+                { name: "Sales", data: chartSource.salesSeries },
+                { name: "Collected", data: chartSource.collectedSeries },
+              ]}
+              options={{
+                chart: { toolbar: { show: false }, zoom: { enabled: false } },
+                stroke: { curve: "smooth", width: 3 },
+                colors: ["#1d4ed8", "#0891b2"],
+                xaxis: { categories: chartSource.monthLabels },
+                yaxis: commonMoneyYAxis,
+                tooltip: commonTooltip,
+              }}
+            />
+          </ChartCard>
+
+          <ChartCard title="Purchases vs Expenses (Monthly)">
+            <ReactApexChart
+              type="bar"
+              height={300}
+              series={[
+                { name: "Purchases", data: chartSource.purchaseSeries },
+                { name: "Expenses", data: chartSource.expenseSeries },
+              ]}
+              options={{
+                chart: { stacked: true, toolbar: { show: false } },
+                plotOptions: {
+                  bar: { borderRadius: 6, columnWidth: "45%" },
+                },
+                colors: ["#f59e0b", "#ef4444"],
+                xaxis: { categories: chartSource.monthLabels },
+                yaxis: commonMoneyYAxis,
+                tooltip: commonTooltip,
+              }}
+            />
+          </ChartCard>
+
+          <ChartCard title="Gross Cash Contribution Trend">
+            <ReactApexChart
+              type="area"
+              height={300}
+              series={[
+                {
+                  name: "Cash Contribution",
+                  data: chartSource.cashContributionSeries,
+                },
+              ]}
+              options={{
+                chart: { toolbar: { show: false } },
+                stroke: { curve: "smooth", width: 2 },
+                fill: {
+                  type: "gradient",
+                  gradient: { opacityFrom: 0.35, opacityTo: 0.05 },
+                },
+                colors: ["#2563eb"],
+                xaxis: { categories: chartSource.monthLabels },
+                yaxis: commonMoneyYAxis,
+                tooltip: commonTooltip,
+              }}
+            />
+          </ChartCard>
+
+          <ChartCard title="Receivables Status (All-Time)">
+            <ReactApexChart
+              type="donut"
+              height={300}
+              series={[
+                Number(allTime?.salesCollected) || 0,
+                Number(allTime?.salesOutstanding) || 0,
+              ]}
+              options={{
+                labels: ["Collected", "Outstanding"],
+                colors: ["#10b981", "#f97316"],
+                legend: { position: "bottom" },
+                dataLabels: { enabled: true },
+                tooltip: commonTooltip,
+              }}
+            />
+          </ChartCard>
+
+          <ChartCard title="Top 6 Products by Sales">
+            <ReactApexChart
+              type="bar"
+              height={300}
+              series={[
+                {
+                  name: "Sales",
+                  data: chartSource.topProducts.map(
+                    (item) => Number(item.salesValue) || 0,
+                  ),
+                },
+              ]}
+              options={{
+                chart: { toolbar: { show: false } },
+                plotOptions: { bar: { borderRadius: 5, horizontal: true } },
+                colors: ["#3b82f6"],
+                xaxis: {
+                  categories: chartSource.topProducts.map((item) => item.name),
+                  labels: {
+                    formatter: (value) => compactValue(value),
+                  },
+                },
+                tooltip: commonTooltip,
+              }}
+            />
+          </ChartCard>
+
+          <ChartCard title="Top Customers vs Suppliers (Outstanding)">
+            <ReactApexChart
+              type="bar"
+              height={300}
+              series={[
+                {
+                  name: "Customers",
+                  data: chartSource.topCustomers.map(
+                    (item) => Number(item.outstandingTotal) || 0,
+                  ),
+                },
+                {
+                  name: "Suppliers",
+                  data: chartSource.topSuppliers.map(
+                    (item) => Number(item.outstandingTotal) || 0,
+                  ),
+                },
+              ]}
+              options={{
+                chart: { toolbar: { show: false } },
+                plotOptions: { bar: { borderRadius: 5, columnWidth: "45%" } },
+                colors: ["#0ea5e9", "#6366f1"],
+                xaxis: {
+                  categories: Array.from(
+                    { length: 6 },
+                    (_, idx) => `Rank ${idx + 1}`,
+                  ),
+                },
+                yaxis: commonMoneyYAxis,
+                tooltip: commonTooltip,
+              }}
+            />
+          </ChartCard>
         </div>
       </div>
 

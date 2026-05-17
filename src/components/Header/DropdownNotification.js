@@ -49,7 +49,7 @@ const DropdownNotification = () => {
           } catch (error) {
             console.error(
               "Invalid JSON in localStorage, using empty array",
-              error
+              error,
             );
             // Optionally clear the invalid data from localStorage
             localStorage.removeItem("notifications");
@@ -93,19 +93,19 @@ const DropdownNotification = () => {
 
   return (
     <li className="relative">
-      <Link
+      <button
+        type="button"
         ref={trigger}
         onClick={() => {
           setNotifying(false);
           setDropdownOpen(!dropdownOpen);
           if (dropdownOpen) {
             const promises = notifications.map((item) =>
-              addNotificationViewer(item.id)
+              addNotificationViewer(item.id),
             );
             Promise.all(promises);
           }
         }}
-        href="#"
         className="relative flex h-8.5 w-8.5 items-center justify-center rounded-full border-[0.5px] border-stroke bg-gray hover:text-primary dark:border-strokedark dark:bg-meta-4 dark:text-white"
       >
         <span
@@ -129,7 +129,7 @@ const DropdownNotification = () => {
             fill=""
           />
         </svg>
-      </Link>
+      </button>
 
       <div
         ref={dropdown}
