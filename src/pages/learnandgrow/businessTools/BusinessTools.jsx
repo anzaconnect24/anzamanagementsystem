@@ -10,10 +10,10 @@ import {
 } from "@/controllers/business_tools_controller";
 import toast from "react-hot-toast";
 import { UserContext } from "../../../layouts/DashboardLayout";
+
 import {
   FaEdit,
   FaTrash,
-  FaStar,
   FaDownload,
   FaLayerGroup,
   FaClock,
@@ -59,7 +59,10 @@ const BusinessTools = () => {
   const formatFileType = (type) => {
     if (!type) return "File";
 
-    return type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+    return (
+      type.charAt(0).toUpperCase() +
+      type.slice(1).toLowerCase()
+    );
   };
 
   const handleDelete = async (tool) => {
@@ -103,7 +106,10 @@ const BusinessTools = () => {
       {tools[0] && (
         <div
           onClick={() =>
-            handleDownload(tools[0].fileUrl, tools[0].fileName)
+            handleDownload(
+              tools[0].fileUrl,
+              tools[0].fileName
+            )
           }
           className="relative mb-10 min-h-[320px] cursor-pointer overflow-hidden rounded-2xl bg-black shadow-sm"
         >
@@ -130,9 +136,10 @@ const BusinessTools = () => {
             </h2>
 
             <p className="mb-6 text-lg text-white/85 drop-shadow-md">
-              Download ready-to-use templates, documents, and tools
-              to help you manage, structure, and grow your business
-              more effectively.
+              Download ready-to-use templates,
+              documents, and tools to help you
+              manage, structure, and grow your
+              business more effectively.
             </p>
 
             <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
@@ -178,7 +185,10 @@ const BusinessTools = () => {
           <div
             key={tool.uuid}
             onClick={() =>
-              handleDownload(tool.fileUrl, tool.fileName)
+              handleDownload(
+                tool.fileUrl,
+                tool.fileName
+              )
             }
             className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
           >
@@ -205,13 +215,18 @@ const BusinessTools = () => {
               </h3>
 
               <p className="mb-6 line-clamp-2 text-sm text-[#6f6f72]">
-                {tool.description || "No description available"}
+                {tool.description ||
+                  "No description available"}
               </p>
 
               <div className="mb-3 flex items-center justify-between text-xs text-[#8a8f98]">
-                <span>{formatFileSize(tool.fileSize)}</span>
+                <span>
+                  {formatFileSize(tool.fileSize)}
+                </span>
 
-                <span>{formatFileType(tool.fileType)}</span>
+                <span>
+                  {formatFileType(tool.fileType)}
+                </span>
               </div>
 
               <div className="flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
@@ -220,7 +235,9 @@ const BusinessTools = () => {
                   Downloadable
                 </span>
 
-                {["Admin"].includes(userDetails.role) ? (
+                {["Admin"].includes(
+                  userDetails.role
+                ) ? (
                   <div className="flex items-center gap-4">
                     <button
                       type="button"
@@ -250,10 +267,21 @@ const BusinessTools = () => {
                     </button>
                   </div>
                 ) : (
-                  <span className="flex items-center gap-1 text-[#f6b800]">
-                    <FaStar />
-                    0.0
-                  </span>
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+
+                      handleDownload(
+                        tool.fileUrl,
+                        tool.fileName
+                      );
+                    }}
+                    className="flex items-center gap-2 font-medium text-[#f08a3c] transition hover:text-[#d97706]"
+                  >
+                    <FaDownload />
+                    Download
+                  </button>
                 )}
               </div>
             </div>

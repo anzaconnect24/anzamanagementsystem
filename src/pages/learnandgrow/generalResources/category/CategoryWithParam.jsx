@@ -17,10 +17,8 @@ import {
 import toast from "react-hot-toast";
 
 import {
-  FaArrowLeft,
   FaBookOpen,
   FaFilePdf,
-  FaStar,
 } from "react-icons/fa";
 
 import { BsTrash } from "react-icons/bs";
@@ -29,45 +27,36 @@ import { useTranslation } from "../../../../locales";
 
 const CategoryResourcesPage = () => {
   const { t } = useTranslation();
-
   const { category } = useParams();
-
   const router = useRouter();
-
   const { userDetails } = useContext(UserContext);
 
   const [loading, setLoading] = useState(false);
-
   const [documents, setDocuments] = useState([]);
 
   const decodedCategory = decodeURIComponent(category);
 
   const categoryMapping = {
-    "Finance and Fundraising": t(
+    "Finance & Fundraising": t(
       "learnAndGrow.financeAndFundraising",
       "Finance & Fundraising"
     ),
-
     "Marketing & Sales": t(
       "learnAndGrow.marketingAndSales",
       "Marketing & Sales"
     ),
-
     "Technology & Innovation": t(
       "learnAndGrow.technologyAndInnovation",
       "Technology & Innovation"
     ),
-
     "Leadership & Personal Development": t(
       "learnAndGrow.leadershipAndPersonalDevelopment",
       "Leadership & Personal Development"
     ),
-
     "Impact & Sustainability": t(
       "learnAndGrow.impactAndSustainability",
       "Impact & Sustainability"
     ),
-
     "Legal & Compliance": t(
       "learnAndGrow.legalAndCompliance",
       "Legal & Compliance"
@@ -75,41 +64,31 @@ const CategoryResourcesPage = () => {
   };
 
   const categoryDescriptions = {
-    "Finance and Fundraising":
+    "Finance & Fundraising":
       "Practical templates, guides, and tools for budgeting, financial planning, investor readiness, and raising capital.",
-
     "Marketing & Sales":
       "Resources to help you attract customers, build visibility, improve sales execution, and grow revenue.",
-
     "Technology & Innovation":
       "Tools and materials for product development, digital transformation, systems design, and innovation.",
-
     "Leadership & Personal Development":
       "Guides to strengthen leadership, productivity, communication, decision-making, and personal growth.",
-
     "Impact & Sustainability":
       "Resources focused on social impact, ESG practices, sustainability, and responsible business models.",
-
     "Legal & Compliance":
       "Templates and guidance for legal setup, compliance, governance, contracts, and regulatory requirements.",
   };
 
   const categoryImages = {
-    "Finance and Fundraising":
+    "Finance & Fundraising":
       "/images/finance_fundraising_card.svg",
-
     "Marketing & Sales":
       "/images/marketing_sales_card.svg",
-
     "Technology & Innovation":
       "/images/technology_innovation_card.svg",
-
     "Leadership & Personal Development":
       "/images/leadership_personal_development_card.svg",
-
     "Impact & Sustainability":
       "/images/impact_sustainability_card.svg",
-
     "Legal & Compliance":
       "/images/legal_compliance_card.svg",
   };
@@ -231,29 +210,6 @@ const CategoryResourcesPage = () => {
   ) : (
     <div className="min-h-screen bg-[#f5f7fb] px-3 py-6 lg:px-6">
       <div className="mx-auto w-full max-w-[1600px]">
-        {/* TOP BAR */}
-        <div className="mb-6 flex items-center justify-between">
-          <button
-            onClick={() => router.back()}
-            className="inline-flex items-center gap-2 text-sm font-medium text-[#4b5563] transition hover:text-black"
-          >
-            <FaArrowLeft />
-            Back
-          </button>
-
-          <div className="text-sm font-medium text-[#111827]">
-            General Resources
-
-            <span className="mx-2 text-[#9ca3af]">
-              /
-            </span>
-
-            <span className="text-blue-600">
-              {displayCategoryName}
-            </span>
-          </div>
-        </div>
-
         {/* HERO */}
         <div className="relative mb-12 overflow-hidden rounded-3xl bg-black shadow-lg">
           <div className="absolute inset-0">
@@ -288,6 +244,16 @@ const CategoryResourcesPage = () => {
                   <FaBookOpen />
                   {documents.length} Resources
                 </span>
+
+                <span className="inline-flex items-center gap-2">
+                  <FaFilePdf />
+                  Downloadable
+                </span>
+
+                <span className="inline-flex items-center gap-2">
+                  <FaBookOpen />
+                  Flexible Learning
+                </span>
               </div>
             </div>
           </div>
@@ -303,29 +269,24 @@ const CategoryResourcesPage = () => {
         {/* EMPTY STATE */}
         {documents.length === 0 ? (
           <div className="rounded-3xl bg-white p-16 text-center shadow-sm">
-            <div className="mb-5 text-6xl">
-              📚
-            </div>
+            <div className="mb-5 text-6xl">📚</div>
 
             <h3 className="mb-2 text-2xl font-bold text-[#111827]">
               No Resources Found
             </h3>
 
             <p className="text-[#6b7280]">
-              No materials have been uploaded
-              for this category yet.
+              No materials have been uploaded for this category yet.
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
             {documents.map((doc, index) => {
-              const fileType =
-                getFileType(doc);
+              const fileType = getFileType(doc);
 
               const cardImage =
                 resourceImages[
-                  index %
-                    resourceImages.length
+                  index % resourceImages.length
                 ];
 
               return (
@@ -344,10 +305,7 @@ const CategoryResourcesPage = () => {
                   <div className="relative h-44 overflow-hidden bg-black">
                     <Image
                       src={cardImage}
-                      alt={
-                        doc.fileName ||
-                        "Resource"
-                      }
+                      alt={doc.fileName || "Resource"}
                       width={700}
                       height={260}
                       className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
@@ -381,19 +339,16 @@ const CategoryResourcesPage = () => {
                     {/* FOOTER */}
                     <div className="border-t border-black/10 pt-5">
                       <div className="grid grid-cols-3 items-center text-xs text-[#6b7280]">
-                        {/* LEFT */}
                         <div className="flex items-center gap-2">
                           <FaBookOpen />
                           <span>Resource</span>
                         </div>
 
-                        {/* CENTER */}
                         <div className="flex items-center justify-center gap-2">
                           <FaFilePdf />
                           <span>{fileType}</span>
                         </div>
 
-                        {/* RIGHT */}
                         <div className="flex justify-end">
                           {["Admin"].includes(
                             userDetails?.role
@@ -401,10 +356,7 @@ const CategoryResourcesPage = () => {
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
-
-                                handleDeleteDoc(
-                                  doc
-                                );
+                                handleDeleteDoc(doc);
                               }}
                               className="inline-flex items-center gap-1 text-red-500 transition hover:text-red-600"
                             >
@@ -412,9 +364,9 @@ const CategoryResourcesPage = () => {
                               <span>Delete</span>
                             </button>
                           ) : (
-                            <div className="flex items-center gap-1 text-yellow-500">
-                              <FaStar className="text-xs" />
-                              <span>0.0</span>
+                            <div className="flex items-center gap-1 text-[#6b7280]">
+                              <FaBookOpen className="text-xs" />
+                              <span>View Resource</span>
                             </div>
                           )}
                         </div>

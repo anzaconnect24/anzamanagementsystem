@@ -13,7 +13,6 @@ import {
   FaFolderOpen,
   FaLayerGroup,
   FaClock,
-  FaStar,
 } from "react-icons/fa";
 
 const Page = () => {
@@ -46,7 +45,7 @@ const Page = () => {
   };
 
   const categoryMapping = {
-    "Finance and Fundraising": t(
+    "Finance & Fundraising": t(
       "learnAndGrow.financeAndFundraising",
       "Finance & Fundraising"
     ),
@@ -73,7 +72,7 @@ const Page = () => {
   };
 
   const categoryDescriptions = {
-    "Finance and Fundraising":
+    "Finance & Fundraising":
       "Templates and guides for budgeting, financial planning, and raising capital.",
 
     "Marketing & Sales":
@@ -284,9 +283,9 @@ const Page = () => {
                     Flexible Learning
                   </span>
 
-                  <span className="flex items-center gap-1 text-[#f6b800]">
-                    <FaStar />
-                    0.0
+                  <span className="flex items-center gap-1">
+                    <FaFolderOpen />
+                    View Resources
                   </span>
                 </div>
               </div>

@@ -8,12 +8,14 @@ import {
   getSlides,
   markRead,
 } from "@/controllers/slides_controller";
+
 import {
   BsTrash,
   BsCheckCircle,
   BsPlus,
   BsArrowRight,
 } from "react-icons/bs";
+
 import Loader from "@/components/common/Loader";
 import toast from "react-hot-toast";
 import { useTranslation } from "../../../locales";
@@ -41,14 +43,20 @@ const Page = () => {
 
     getSlides({ module_uuid: uuid })
       .then((res) => {
-        const slides = Array.isArray(res.data) ? res.data : [];
+        const slides = Array.isArray(res.data)
+          ? res.data
+          : [];
 
         setModules(slides);
         setModule(res.module || null);
 
         setProgress(
           slides.reduce(
-            (prev, curr) => prev + (curr.SlideReaders?.length > 0 ? 1 : 0),
+            (prev, curr) =>
+              prev +
+              (curr.SlideReaders?.length > 0
+                ? 1
+                : 0),
             0
           )
         );
@@ -62,9 +70,13 @@ const Page = () => {
   };
 
   const progressPercentage =
-    modules.length > 0 ? (progress / modules.length) * 100 : 0;
+    modules.length > 0
+      ? (progress / modules.length) * 100
+      : 0;
 
-  const isModuleCompleted = modules.length > 0 && progress >= modules.length;
+  const isModuleCompleted =
+    modules.length > 0 &&
+    progress >= modules.length;
 
   const courseImage =
     module?.Program?.image ||
@@ -76,7 +88,9 @@ const Page = () => {
 
   const handleSlideClick = (index) => {
     const selectedSlide = modules[index];
-    const isRead = selectedSlide.SlideReaders?.length > 0;
+
+    const isRead =
+      selectedSlide.SlideReaders?.length > 0;
 
     if (isRead || index === currentSlide) {
       setCurrentSlide(index);
@@ -84,11 +98,15 @@ const Page = () => {
     }
 
     if (index === currentSlide + 1) {
-      if (modules[currentSlide].SlideReaders?.length === 0) {
+      if (
+        modules[currentSlide].SlideReaders
+          ?.length === 0
+      ) {
         setCurrentSlide(index);
 
         markRead({
-          slide_uuid: modules[currentSlide].uuid,
+          slide_uuid:
+            modules[currentSlide].uuid,
         }).then(() => {
           loadData();
         });
@@ -99,29 +117,44 @@ const Page = () => {
       return;
     }
 
-    toast.error(t("learnAndGrow.readInOrder", "You need to read in order"));
+    toast.error(
+      t(
+        "learnAndGrow.readInOrder",
+        "You need to read in order"
+      )
+    );
   };
 
   const handleNext = () => {
-    if (modules[currentSlide].SlideReaders?.length === 0) {
+    if (
+      modules[currentSlide].SlideReaders
+        ?.length === 0
+    ) {
       markRead({
-        slide_uuid: modules[currentSlide].uuid,
+        slide_uuid:
+          modules[currentSlide].uuid,
       }).then(() => {
         loadData();
       });
     }
 
     setCurrentSlide((prev) =>
-      prev < modules.length - 1 ? prev + 1 : prev
+      prev < modules.length - 1
+        ? prev + 1
+        : prev
     );
   };
 
   const handleCompleteModule = () => {
     markRead({
-      slide_uuid: modules[currentSlide].uuid,
+      slide_uuid:
+        modules[currentSlide].uuid,
     }).then(() => {
       toast.success(
-        t("learnAndGrow.completedSuccessfully", "Completed successfully")
+        t(
+          "learnAndGrow.completedSuccessfully",
+          "Completed successfully"
+        )
       );
 
       loadData();
@@ -133,10 +166,14 @@ const Page = () => {
   return (
     <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
       <div className="mx-auto w-full max-w-none">
+        {/* HERO */}
         <section className="relative mb-8 min-h-[300px] overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
           <img
             src={courseImage}
-            alt={module?.title || "Learning module"}
+            alt={
+              module?.title ||
+              "Learning module"
+            }
             className="absolute inset-0 h-full w-full object-cover"
           />
 
@@ -158,22 +195,31 @@ const Page = () => {
             </p>
 
             <div className="mt-6 flex flex-wrap items-center gap-5 text-xs font-medium text-white/90 md:text-sm">
-              <span>📚 {modules.length} Slides</span>
+              <span>
+                📚 {modules.length} Slides
+              </span>
 
               <span>
                 ✅ {progress}/{modules.length} Completed
               </span>
 
               <span>
-                📈 {Math.round(progressPercentage)}% Progress
+                📈{" "}
+                {Math.round(
+                  progressPercentage
+                )}
+                % Progress
               </span>
             </div>
           </div>
         </section>
 
+        {/* PROGRESS */}
         <section className="mb-6 rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm">
           <div className="mb-2 flex items-center justify-between text-sm">
-            <span className="font-medium text-[#667085]">Progress</span>
+            <span className="font-medium text-[#667085]">
+              Progress
+            </span>
 
             <span className="font-bold text-[#101828]">
               {progress}/{modules.length}
@@ -183,27 +229,37 @@ const Page = () => {
           <div className="h-2.5 overflow-hidden rounded-full bg-[#EAECF0]">
             <div
               className="h-full rounded-full bg-[#22C55E] transition-all duration-300"
-              style={{ width: `${progressPercentage}%` }}
+              style={{
+                width: `${progressPercentage}%`,
+              }}
             />
           </div>
 
           <p className="mt-3 text-xs font-medium text-[#667085]">
-            {Math.round(progressPercentage)}% completed
+            {Math.round(progressPercentage)}%
+            completed
           </p>
         </section>
 
+        {/* CONTENT */}
         <section className="grid min-h-[72vh] grid-cols-1 gap-6 lg:grid-cols-[25%_75%]">
+          {/* SIDEBAR */}
           <aside className="rounded-3xl border border-[#EAECF0] bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[#101828]">
                 Slides
               </h2>
 
-              {["Admin"].includes(userDetails?.role) && (
+              {["Admin"].includes(
+                userDetails?.role
+              ) && (
                 <Link
                   href={`/dashboard/slides/add/?uuid=${uuid}`}
                   className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2563EB] text-white transition hover:bg-[#1D4ED8]"
-                  title={t("learnAndGrow.addSlide", "Add Slide")}
+                  title={t(
+                    "learnAndGrow.addSlide",
+                    "Add Slide"
+                  )}
                 >
                   <BsPlus className="text-xl" />
                 </Link>
@@ -212,14 +268,19 @@ const Page = () => {
 
             <div className="space-y-3">
               {modules.map((item, index) => {
-                const isRead = item.SlideReaders?.length > 0;
-                const isActive = index === currentSlide;
+                const isRead =
+                  item.SlideReaders?.length > 0;
+
+                const isActive =
+                  index === currentSlide;
 
                 return (
                   <button
                     key={item.uuid}
                     type="button"
-                    onClick={() => handleSlideClick(index)}
+                    onClick={() =>
+                      handleSlideClick(index)
+                    }
                     className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
                       isActive
                         ? "border-[#2563EB] bg-[#EEF4FF]"
@@ -235,7 +296,11 @@ const Page = () => {
                           : "bg-[#F2F4F7] text-[#667085]"
                       }`}
                     >
-                      {isRead ? <BsCheckCircle /> : index + 1}
+                      {isRead ? (
+                        <BsCheckCircle />
+                      ) : (
+                        index + 1
+                      )}
                     </span>
 
                     <span className="min-w-0 flex-1">
@@ -244,12 +309,16 @@ const Page = () => {
                       </span>
                     </span>
 
-                    {["Admin"].includes(userDetails?.role) && (
+                    {["Admin"].includes(
+                      userDetails?.role
+                    ) && (
                       <span
                         onClick={(e) => {
                           e.stopPropagation();
 
-                          deleteSlide(item.uuid).then(() => {
+                          deleteSlide(
+                            item.uuid
+                          ).then(() => {
                             loadData();
                           });
                         }}
@@ -263,18 +332,9 @@ const Page = () => {
                 );
               })}
             </div>
-
-            {isModuleCompleted && (
-              <Link
-                href={`/dashboard/learn-and-grow/quizzes/${uuid}`}
-                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
-              >
-                Take Quiz
-                <BsArrowRight />
-              </Link>
-            )}
           </aside>
 
+          {/* MAIN CONTENT */}
           <main className="flex min-h-[72vh] flex-col overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-sm">
             <div className="px-8 py-5">
               <h2 className="mt-1 text-2xl font-bold text-[#101828]">
@@ -283,17 +343,22 @@ const Page = () => {
             </div>
 
             <div className="flex-1 overflow-y-auto px-10 py-8">
-              {modules[currentSlide]?.type === "file" ? (
+              {modules[currentSlide]?.type ===
+              "file" ? (
                 <iframe
                   src={`https://docs.google.com/gview?url=${encodeURIComponent(
-                    modules[currentSlide]?.file
+                    modules[currentSlide]
+                      ?.file
                   )}&embedded=true`}
                   className="h-full min-h-[560px] w-full rounded-2xl border border-[#EAECF0] bg-white"
                   frameBorder="0"
                 />
               ) : (
                 <div className="mx-auto w-full max-w-5xl text-[16px] leading-8 text-[#344054]">
-                  {modules[currentSlide]?.content}
+                  {
+                    modules[currentSlide]
+                      ?.content
+                  }
                 </div>
               )}
             </div>
@@ -307,9 +372,12 @@ const Page = () => {
                   Take Quiz
                   <BsArrowRight />
                 </Link>
-              ) : modules.length === currentSlide + 1 ? (
+              ) : modules.length ===
+                currentSlide + 1 ? (
                 <button
-                  onClick={handleCompleteModule}
+                  onClick={
+                    handleCompleteModule
+                  }
                   className="inline-flex items-center gap-2 rounded-2xl bg-[#22C55E] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#16A34A]"
                 >
                   {t(
@@ -322,10 +390,16 @@ const Page = () => {
               ) : (
                 <button
                   onClick={handleNext}
-                  disabled={currentSlide === modules.length - 1}
+                  disabled={
+                    currentSlide ===
+                    modules.length - 1
+                  }
                   className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
                 >
-                  {t("common.next", "Next")}
+                  {t(
+                    "common.next",
+                    "Next"
+                  )}
 
                   <BsArrowRight />
                 </button>
@@ -337,5 +411,4 @@ const Page = () => {
     </div>
   );
 };
-
 export default Page;
