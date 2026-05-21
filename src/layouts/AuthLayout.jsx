@@ -80,7 +80,7 @@ const AuthLayout = ({ children }) => {
             "url('/images/business-class-hero.svg')",
         }}
       >
-        {/* LIGHTER OVERLAYS */}
+        {/* OVERLAYS */}
         <div className="absolute inset-0 bg-black/50" />
 
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent" />
@@ -92,11 +92,11 @@ const AuthLayout = ({ children }) => {
             key={activeFeature}
             className="transition-all duration-500 ease-in-out"
           >
-            <h1 className="max-w-2xl text-5xl font-bold leading-tight tracking-tight">
+            <h1 className="max-w-2xl text-3xl font-bold leading-snug tracking-tight lg:text-4xl">
               {active.title}
             </h1>
 
-            <p className="mt-8 max-w-xl text-2xl font-light leading-relaxed text-white/90">
+            <p className="mt-6 max-w-xl text-lg font-light leading-relaxed text-white/90 lg:text-xl">
               {active.description}
             </p>
           </div>

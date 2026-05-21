@@ -36,12 +36,12 @@ module.exports = {
 
         // Brand core: blue from your toggle button
         primary: {
-          DEFAULT: "#2F6BFF",
-          light: "#4A8CFF",
-          hover: "#1E5AE0",
+          DEFAULT: "#082d77",
+          light: "#1D4E9E",
+          hover: "#061f52",
           soft: "#EAF1FF",
           softer: "#F3F7FF",
-          dark: "#1A3FB8",
+          dark: "#041533",
         },
 
         // Harmonized interaction layer

@@ -91,12 +91,12 @@ const SignUp = () => {
       : ["User Information", "Profile Information", "Profile Image"];
 
   const inputClass =
-    "h-12 w-full rounded-md border border-gray-200 bg-gray-50 px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20";
+    "h-[40px] w-full rounded-lg border border-gray-300 bg-[#ffffff] px-5 text-[16px] text-black outline-none focus:border-[#082d77] focus:ring-2 focus:ring-[#082d77]/20";
 
   const textareaClass =
-    "w-full rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20";
+    "w-full rounded-lg border border-gray-300 bg-[#ffffff] px-5 py-4 text-[16px] text-black outline-none focus:border-[#082d77] focus:ring-2 focus:ring-[#082d77]/20";
 
-  const labelClass = "mb-2 block text-sm font-semibold text-gray-800";
+  const labelClass = "mb-3 block text-[16px] font-medium text-gray-800";
 
   useEffect(() => {
     getSectors().then((data) => {
@@ -164,7 +164,7 @@ const SignUp = () => {
   };
 
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen">
       <div className="flex min-h-screen items-center justify-center">
         <section className="relative flex w-full items-center justify-center px-6 py-10">
           <form
@@ -243,7 +243,8 @@ const SignUp = () => {
                   industries: formValues.mentorIndustries,
                   mentorshipFocus: formValues.mentorMentorshipFocus,
                   mentorAvailability: formValues.mentorAvailability,
-                  mentorPreviousExperience: formValues.mentorPreviousExperience,
+                  mentorPreviousExperience:
+                    formValues.mentorPreviousExperience,
                   mentorMotivation: formValues.mentorMotivation,
                 };
               }
@@ -300,14 +301,14 @@ const SignUp = () => {
                 }
               });
             }}
-            className="w-full max-w-[420px] text-left"
+            className="w-full max-w-[620px] text-left"
           >
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold leading-tight text-blue-600 dark:text-blue-400">
+            <div className="mb-8 text-left">
+              <h1 className="text-[34px] font-bold leading-tight text-[#082d77]">
                 {getTitle()}
               </h1>
 
-              <p className="mt-3 text-base text-gray-500">
+              <p className="mt-3 text-[20px] text-gray-600">
                 {getDescription()}
               </p>
             </div>
@@ -425,9 +426,9 @@ const SignUp = () => {
                     <button
                       type="button"
                       onClick={() => setshowPassword(!showPassword)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#082d77] hover:text-[#06245f]"
                     >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword ? <EyeOff size={22} /> : <Eye size={22} />}
                     </button>
                   </div>
                 </div>
@@ -451,9 +452,13 @@ const SignUp = () => {
                     <button
                       type="button"
                       onClick={() => setshowPassword2(!showPassword2)}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-blue-600 hover:text-blue-700"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-[#082d77] hover:text-[#06245f]"
                     >
-                      {showPassword2 ? <EyeOff size={20} /> : <Eye size={20} />}
+                      {showPassword2 ? (
+                        <EyeOff size={22} />
+                      ) : (
+                        <Eye size={22} />
+                      )}
                     </button>
                   </div>
                 </div>
@@ -591,19 +596,23 @@ const SignUp = () => {
                     }
                     required
                     className={`${textareaClass} min-h-[80px]`}
-                    placeholder="(Preferred days, hours per month, virtual or physical meetings, etc.)"
+                    placeholder="Preferred days, hours per month, virtual or physical meetings, etc."
                   />
                 </div>
 
                 <div>
                   <label className={labelClass}>
-                    Have you mentored entrepreneurs before? Please describe your experience. *
+                    Have you mentored entrepreneurs before? Please describe your
+                    experience. *
                   </label>
                   <textarea
                     name="mentorPreviousExperience"
                     value={formValues.mentorPreviousExperience || ""}
                     onChange={(e) =>
-                      updateFormValue("mentorPreviousExperience", e.target.value)
+                      updateFormValue(
+                        "mentorPreviousExperience",
+                        e.target.value
+                      )
                     }
                     required
                     className={`${textareaClass} min-h-[110px]`}
@@ -613,7 +622,8 @@ const SignUp = () => {
 
                 <div>
                   <label className={labelClass}>
-                    Why do you want to join this mentorship platform as a mentor? *
+                    Why do you want to join this mentorship platform as a
+                    mentor? *
                   </label>
                   <textarea
                     name="mentorMotivation"
@@ -698,7 +708,7 @@ const SignUp = () => {
             )}
 
             {isLastStep && (
-              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50 p-10">
+              <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-[#ffffff] p-10">
                 <label
                   htmlFor="file"
                   className="flex cursor-pointer flex-col items-center justify-center"
@@ -708,16 +718,16 @@ const SignUp = () => {
                       width={1000}
                       height={1000}
                       alt=""
-                      className="h-44 w-44 rounded-full border border-gray-200 object-cover"
+                      className="h-44 w-44 rounded-full object-cover"
                       src={URL.createObjectURL(file)}
                     />
                   ) : (
-                    <div className="flex h-44 w-44 items-center justify-center rounded-full border border-dashed border-gray-300 bg-white">
-                      <UserRound size={64} className="text-blue-600" />
+                    <div className="flex h-44 w-44 items-center justify-center rounded-full bg-white">
+                      <UserRound size={64} className="text-[#082d77]" />
                     </div>
                   )}
 
-                  <p className="mt-4 text-sm text-gray-500">
+                  <p className="mt-4 text-sm text-gray-600">
                     {t("auth.uploadProfileImage", "Upload profile image")} *
                   </p>
                 </label>
@@ -740,7 +750,7 @@ const SignUp = () => {
                   setSelectedIndex((prev) => Math.max(prev - 1, 0))
                 }
                 disabled={selectedIndex === 0}
-                className="h-12 w-full rounded-md bg-blue-50 px-6 text-sm font-semibold text-blue-600 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="h-12 w-full rounded-lg bg-[#e6ecf8] px-6 text-sm font-semibold text-[#082d77] transition hover:bg-[#d0dcf5] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 Back
               </button>
@@ -749,14 +759,14 @@ const SignUp = () => {
                 <button
                   type="button"
                   onClick={goNext}
-                  className="h-12 w-full rounded-md bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  className="h-12 w-full rounded-lg bg-[#082d77] px-6 text-sm font-semibold text-white transition hover:bg-[#06245f]"
                 >
                   Continue
                 </button>
               ) : (
                 <button
                   type="submit"
-                  className="flex h-12 w-full items-center justify-center rounded-md bg-blue-600 px-6 text-sm font-semibold text-white transition hover:bg-blue-700"
+                  className="flex min-w-[220px] h-12 w-full items-center justify-center rounded-lg bg-[#082d77] px-8 whitespace-nowrap text-sm font-semibold text-white transition hover:bg-[#06245f]"
                 >
                   {loading ? (
                     <Spinner />
@@ -773,8 +783,8 @@ const SignUp = () => {
                   key={index}
                   className={`h-3 rounded-full transition-all duration-300 ${
                     selectedIndex === index
-                      ? "w-8 bg-blue-600 blur-0 opacity-100"
-                      : "w-3 bg-blue-300 blur-[1px] opacity-40"
+                      ? "w-8 bg-[#082d77] blur-0 opacity-100"
+                      : "w-3 bg-[#9bb2df] blur-[1px] opacity-40"
                   }`}
                 />
               ))}
@@ -784,7 +794,7 @@ const SignUp = () => {
               Already have an account?{" "}
               <Link
                 href="/auth/signin"
-                className="font-semibold text-blue-600 hover:underline"
+                className="font-semibold text-[#082d77] hover:underline"
               >
                 Sign in
               </Link>

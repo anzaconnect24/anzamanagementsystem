@@ -103,12 +103,12 @@ const DashboardHero = ({ userDetails, data }) => {
           </p>
         </div>
 
-        <Link
-          href="/dashboard"
-          className="rounded-2xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700"
-        >
-          Complete Profile
-        </Link>
+       <Link
+  href="/dashboard"
+  className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
+>
+  Complete Profile
+</Link>
       </div>
 
       <div
@@ -119,7 +119,7 @@ const DashboardHero = ({ userDetails, data }) => {
       >
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/50" />
 
-        <div className="absolute -right-20 top-0 h-72 w-72 rounded-full bg-blue-500/20 blur-3xl" />
+        <div className="absolute -right-20 top-0 h-72 w-72 rounded-full bg [#082d77] blur-3xl" />
         <div className="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-cyan-500/10 blur-3xl" />
 
         <div className="relative z-10">
@@ -142,7 +142,7 @@ const DashboardHero = ({ userDetails, data }) => {
 
             <div className="mt-8 flex flex-wrap items-center gap-6 text-sm font-medium text-white/90">
               <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 backdrop-blur-sm">
-                <SlPeople className="text-xl text-blue-400" />
+                <SlPeople className="text-xl text-#082d77" />
                 <span>{content.statOne}</span>
               </div>
 
