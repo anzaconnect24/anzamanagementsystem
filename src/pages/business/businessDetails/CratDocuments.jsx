@@ -100,7 +100,7 @@ const CratDocumentsPage = ({ params }) => {
       key: "legal",
       label: t("business.legal", "Legal"),
       icon: "⚖️",
-      color: "bg-blue-500",
+      color: "bg-[#082d77]",
     },
     {
       key: "operations",

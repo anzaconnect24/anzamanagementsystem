@@ -432,7 +432,7 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
                 className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm transition md:p-6"
               >
                 <div className="space-y-3">
-                  <span className="inline-flex rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white">
+                  <span className="inline-flex rounded-full bg-[#082d77] px-3 py-1 text-xs font-semibold text-white">
                     {index + 1}
                   </span>
 
@@ -507,7 +507,7 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
                 return (
                   <div
                     key={question.id}
-                    className="rounded-2xl border border-blue-100 bg-blue-50/30 p-3 transition hover:border-blue-200 hover:bg-blue-50/60"
+                    className="rounded-2xl border border-blue-100 bg-[#082d77]50/30 p-3 transition hover:border-blue-200 hover:bg-blue-50/60"
                   >
                     <div className="flex items-center gap-3">
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-white text-blue-600 shadow-sm">

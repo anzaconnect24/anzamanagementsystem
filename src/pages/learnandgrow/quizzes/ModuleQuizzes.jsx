@@ -427,7 +427,7 @@ const ModuleQuizzesPage = () => {
                                 `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`
                               )
                             }
-                            className="inline-flex items-center rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                            className="inline-flex items-center rounded-xl bg-[#082d77] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#082d77]"
                           >
                             Start Quiz
                           </button>

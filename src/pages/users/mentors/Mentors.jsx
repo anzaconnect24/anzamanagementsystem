@@ -661,7 +661,7 @@ const Mentors = () => {
                   onClick={() => setCurrentPage(pageNum)}
                   className={`rounded-md px-3 py-2 text-sm transition ${
                     currentPage === pageNum
-                      ? "bg-primary-gradient text-white"
+                    ? "bg-[#082d77] text-white"
                       : "border border-black/10 bg-white text-[#6f6f72] hover:border-primary hover:text-primary"
                   }`}
                 >

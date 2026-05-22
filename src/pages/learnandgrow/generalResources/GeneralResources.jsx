@@ -195,7 +195,7 @@ const Page = () => {
         {userDetails?.role === "Admin" && (
           <Link
             href="/dashboard/uploadMaterial/document"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
           >
             <FaFolderOpen className="text-lg text-blue-200" />
             Add Resources

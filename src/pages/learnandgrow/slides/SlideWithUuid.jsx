@@ -367,7 +367,7 @@ const Page = () => {
               {isModuleCompleted ? (
                 <Link
                   href={`/dashboard/learn-and-grow/quizzes/${uuid}`}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#082d77]"
                 >
                   Take Quiz
                   <BsArrowRight />
