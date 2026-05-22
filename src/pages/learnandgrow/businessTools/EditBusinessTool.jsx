@@ -1,4 +1,5 @@
 "use client";
+
 import {
   updateBusinessTool,
   getBusinessTool,
@@ -17,6 +18,7 @@ const EditBusinessTool = () => {
   const { uuid } = useParams();
   const router = useRouter();
   const { t } = useTranslation();
+
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
   const [toolData, setToolData] = useState(null);
@@ -34,14 +36,14 @@ const EditBusinessTool = () => {
 
   const loadToolData = async () => {
     setInitialLoading(true);
+
     try {
       const response = await getBusinessTool(uuid);
-      console.log("Edit page response:", response);
       setToolData(response.body || response.data);
     } catch (error) {
       console.error(error);
       toast.error(
-        t("businessTools.failedToLoad", "Failed to load business tool"),
+        t("businessTools.failedToLoad", "Failed to load business tool")
       );
       router.push("/dashboard/businessTools");
     } finally {
@@ -71,50 +73,53 @@ const EditBusinessTool = () => {
     try {
       const fileType = e.target.fileType.value;
       const file = e.target.file.files[0];
+      const thumbnail = e.target.thumbnail.files[0];
 
       let fileUrl = toolData.fileUrl;
       let fileSize = toolData.fileSize;
+      let thumbnailUrl = toolData.thumbnailUrl;
 
-      // If a new file is uploaded, upload it
       if (file) {
-        let formData = new FormData();
+        const formData = new FormData();
         formData.append("file", file);
         fileUrl = await uploadFile(formData);
         fileSize = file.size;
       }
 
-      // Prepare payload
+      if (thumbnail) {
+        const thumbnailFormData = new FormData();
+        thumbnailFormData.append("file", thumbnail);
+        thumbnailUrl = await uploadFile(thumbnailFormData);
+      }
+
       const payload = {
         fileName: e.target.fileName.value,
         description: e.target.description.value,
         fileType,
         fileUrl,
         fileSize,
+        thumbnailUrl,
       };
 
-      // Update business tool record
       await updateBusinessTool(uuid, payload);
+
       toast.success(
-        t("businessTools.updateSuccess", "Business tool updated successfully"),
+        t("businessTools.updateSuccess", "Business tool updated successfully")
       );
+
       router.push("/dashboard/businessTools");
     } catch (error) {
       console.error("Error updating business tool:", error);
       toast.error(
-        t("businessTools.errorUpdating", "Error updating business tool"),
+        t("businessTools.errorUpdating", "Error updating business tool")
       );
     } finally {
       setLoading(false);
     }
   };
 
-  if (initialLoading) {
-    return <Loader />;
-  }
-
-  if (!toolData) {
-    return null;
-  }
+  if (initialLoading) return <Loader />;
+  if (!toolData) return null;
 
   return (
     <div>
@@ -123,13 +128,14 @@ const EditBusinessTool = () => {
         prevPage={t("common.back", "Back")}
         pageName={t("businessTools.editTool", "Edit Business Tool")}
       />
+
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-        <form onSubmit={handleSubmit} className="py-6 px-4 md:px-6 xl:px-7.5">
+        <form onSubmit={handleSubmit} className="px-4 py-6 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">
             {t("businessTools.editTool", "Edit business tool")}
           </h4>
 
-          <div className="grid grid-cols-2 gap-y-3 gap-x-3 mt-4">
+          <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2.5 block font-medium text-black dark:text-white">
                 {t("businessTools.fileName", "File Name")}
@@ -139,10 +145,7 @@ const EditBusinessTool = () => {
                 required
                 defaultValue={toolData.fileName}
                 className="form-style disabled:opacity-75"
-                placeholder={t(
-                  "businessTools.enterFileName",
-                  "Enter file name",
-                )}
+                placeholder={t("businessTools.enterFileName", "Enter file name")}
                 type="text"
               />
             </div>
@@ -157,18 +160,16 @@ const EditBusinessTool = () => {
                 defaultValue={toolData.fileType}
                 className="form-style disabled:opacity-75"
                 onChange={(e) => {
-                  const fileInput =
-                    document.querySelector('input[name="file"]');
+                  const fileInput = document.querySelector('input[name="file"]');
                   if (fileInput) {
-                    fileInput.accept = getAcceptedFileExtensions(
-                      e.target.value,
-                    );
+                    fileInput.accept = getAcceptedFileExtensions(e.target.value);
                   }
                 }}
               >
                 <option value="">
                   {t("businessTools.selectFileType", "Select file type")}
                 </option>
+
                 {fileTypes.map((type) => (
                   <option key={type.value} value={type.value}>
                     {type.label}
@@ -177,11 +178,44 @@ const EditBusinessTool = () => {
               </select>
             </div>
 
-            <div className="col-span-2">
+            <div className="md:col-span-2">
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                {t(
+                  "businessTools.thumbnailImage",
+                  "Thumbnail Image"
+                )}
+              </label>
+
+              {toolData.thumbnailUrl && (
+                <div className="mb-3 h-40 w-full max-w-sm overflow-hidden rounded-lg bg-black">
+                  <img
+                    src={toolData.thumbnailUrl}
+                    alt={toolData.fileName}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              )}
+
+              <input
+                name="thumbnail"
+                className="form-style disabled:opacity-75"
+                type="file"
+                accept="image/png,image/jpeg,image/jpg,image/webp"
+              />
+
+              <p className="mt-1 text-sm text-gray-500">
+                {t(
+                  "businessTools.thumbnailHelp",
+                  "Upload a new image only if you want to replace the current card image."
+                )}
+              </p>
+            </div>
+
+            <div className="md:col-span-2">
               <label className="mb-2.5 block font-medium text-black dark:text-white">
                 {t(
                   "businessTools.uploadFile",
-                  "Upload File (Optional - leave empty to keep current file)",
+                  "Upload File (Optional - leave empty to keep current file)"
                 )}
               </label>
               <input
@@ -190,7 +224,8 @@ const EditBusinessTool = () => {
                 type="file"
                 accept={getAcceptedFileExtensions(toolData.fileType)}
               />
-              <p className="text-sm text-gray-500 mt-1">
+
+              <p className="mt-1 text-sm text-gray-500">
                 {t("businessTools.currentFile", "Current file:")}{" "}
                 <a
                   href={toolData.fileUrl}
@@ -204,7 +239,7 @@ const EditBusinessTool = () => {
             </div>
           </div>
 
-          <div className="mt-3">
+          <div className="mt-4">
             <label className="mb-2.5 block font-medium text-black dark:text-white">
               {t("businessTools.description", "Description")}
             </label>
@@ -215,26 +250,25 @@ const EditBusinessTool = () => {
               className="form-style"
               placeholder={t(
                 "businessTools.writeDescription",
-                "Write a brief description of this tool",
+                "Write a brief description of this tool"
               )}
               rows={4}
             />
           </div>
 
-          <div className="flex gap-4 mt-6">
+          <div className="mt-6 flex gap-4">
             <button
               type="submit"
               disabled={loading}
-              className="py-3 px-4 w-40 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="flex w-40 cursor-pointer justify-center rounded bg-primary px-4 py-3 text-white hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <div>
-                {loading ? <Spinner /> : t("businessTools.update", "Update")}
-              </div>
+              {loading ? <Spinner /> : t("businessTools.update", "Update")}
             </button>
+
             <button
               type="button"
               onClick={() => router.push("/dashboard/businessTools")}
-              className="py-3 px-4 w-40 flex justify-center bg-gray-500 cursor-pointer text-white rounded hover:opacity-95"
+              className="flex w-40 cursor-pointer justify-center rounded bg-gray-500 px-4 py-3 text-white hover:opacity-95"
             >
               {t("common.cancel", "Cancel")}
             </button>

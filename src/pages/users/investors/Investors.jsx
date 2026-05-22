@@ -1,13 +1,21 @@
 "use client";
+
 import { useContext, useEffect, useState, useCallback } from "react";
 import { getInvestors } from "@/controllers/user_controller";
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
 import Image from "@/utils/image";
 import { useRouter } from "@/utils/navigation";
-import Pagination from "@/component/pagination";
 import { useTranslation } from "../../../locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import {
+  FaLayerGroup,
+  FaSearch,
+  FaMoneyBillWave,
+  FaFileContract,
+  FaMapMarkerAlt,
+  FaArrowRight,
+} from "react-icons/fa";
 
 const Page = () => {
   const { t, isSwahili } = useTranslation();
@@ -17,19 +25,21 @@ const Page = () => {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [refresh, setRefresh] = useState(0);
+
   const [keyword, setKeyword] = useState("");
   const [filters, setFilters] = useState({
     sector: "All Sectors",
     ticketSize: "All Ticket Sizes",
     structure: "All Structures",
   });
+
   const [sortConfig, setSortConfig] = useState({
     key: "name",
     direction: "asc",
   });
+
   const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState(12);
+  const [limit] = useState(12);
   const [count, setCount] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
   const [openDropdown, setOpenDropdown] = useState(null);
@@ -91,17 +101,22 @@ const Page = () => {
           "Clean Energy": t("users.cleanEnergy", "Clean Energy"),
           "Water Sanitation and Hygiene": t(
             "users.waterSanitationHygiene",
-            "Water Sanitation and Hygiene",
+            "Water Sanitation and Hygiene"
           ),
           Fintech: t("users.fintech", "Fintech"),
         };
+
         return map[value] || value;
       }
+
       if (type === "ticketSize") {
-        if (value === "All Ticket Sizes")
+        if (value === "All Ticket Sizes") {
           return t("users.allTicketSizes", "All Ticket Sizes");
+        }
+
         return value;
       }
+
       if (type === "structure") {
         const map = {
           "All Structures": t("users.allStructures", "All Structures"),
@@ -111,71 +126,80 @@ const Page = () => {
           "Convertible Note": t("users.convertibleNote", "Convertible Note"),
           "Revenue Share": t("users.revenueShare", "Revenue Share"),
         };
+
         return map[value] || value;
       }
+
       return value;
     },
-    [t],
+    [t]
   );
-  // Fetch investors
+
+  const getDefaultFilterValue = (key) => {
+    return filterOptions[key]?.options?.[0] || "";
+  };
+
+  const isFiltering =
+    Object.values(filters).some((value) => !value.startsWith("All")) || keyword;
+
   const fetchData = async () => {
     setLoading(true);
+
     try {
       setError(null);
+
       const response = await getInvestors(limit, page, keyword);
+
       if (!response || !response.data) {
         throw new Error("Failed to fetch investors data");
       }
-      const isFiltering =
-        Object.values(filters).some((v) => !v.startsWith("All")) || keyword;
+
       let processedData = [...response.data];
 
-      // Apply client-side filters
       if (isFiltering) {
         if (filters.sector !== "All Sectors") {
           processedData = processedData.filter(
-            (item) => item.sector === filters.sector,
+            (item) => item.sector === filters.sector
           );
         }
 
         if (filters.ticketSize !== "All Ticket Sizes") {
           processedData = processedData.filter(
-            (item) => item.ticketSize === filters.ticketSize,
+            (item) => item.ticketSize === filters.ticketSize
           );
         }
 
         if (filters.structure !== "All Structures") {
           processedData = processedData.filter(
-            (item) => item.structure === filters.structure,
+            (item) => item.structure === filters.structure
           );
         }
       }
 
-      // Apply sorting
       processedData.sort((a, b) => {
         const direction = sortConfig.direction === "asc" ? 1 : -1;
 
         switch (sortConfig.key) {
           case "name":
-            return (
-              direction * ((a.name || "").localeCompare(b.name || "") || 0)
-            );
+            return direction * ((a.name || "").localeCompare(b.name || "") || 0);
 
           case "sector":
             return (
               direction * ((a.sector || "").localeCompare(b.sector || "") || 0)
             );
 
-          case "ticketSize":
-            // Extract numeric values from ticket size strings for better sorting
+          case "ticketSize": {
             const getTicketValue = (ticket) => {
               if (!ticket) return 0;
               const match = ticket.match(/(\d+)K/);
               return match ? parseInt(match[1], 10) : 0;
             };
-            const ticketA = getTicketValue(a.ticketSize);
-            const ticketB = getTicketValue(b.ticketSize);
-            return direction * (ticketA - ticketB);
+
+            return (
+              direction *
+              (getTicketValue(a.ticketSize) - getTicketValue(b.ticketSize))
+            );
+          }
 
           case "structure":
             return (
@@ -199,22 +223,10 @@ const Page = () => {
     }
   };
 
-  // Effect to fetch data when dependencies change
   useEffect(() => {
     fetchData();
-  }, [refresh, page, limit]);
+  }, [page, limit, filters, sortConfig, keyword]);
 
-  // Separate effect for filtering and sorting to avoid redundant fetches
-  useEffect(() => {
-    fetchData();
-  }, [filters, sortConfig, keyword]);
-
-  // Handle dropdown toggle
-  const toggleDropdown = (name) => {
-    setOpenDropdown(openDropdown === name ? null : name);
-  };
-
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (openDropdown && !event.target.closest(".dropdown-container")) {
@@ -226,40 +238,38 @@ const Page = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, [openDropdown]);
 
-  // Handle filter changes
+  const toggleDropdown = (name) => {
+    setOpenDropdown(openDropdown === name ? null : name);
+  };
+
   const handleFilterChange = (type, value) => {
     setFilters((prev) => ({
       ...prev,
       [type]: value,
     }));
-    // Reset to first page when filter changes
+
     setPage(1);
     setOpenDropdown(null);
   };
 
-  // Handle sort changes
   const handleSortChange = (key) => {
     setSortConfig((prev) => ({
       key,
       direction:
         prev.key === key ? (prev.direction === "asc" ? "desc" : "asc") : "asc",
     }));
+
     setOpenDropdown(null);
   };
 
-  // Handle search input
   const handleSearch = (e) => {
     setKeyword(e.target.value);
-    setPage(1); // Reset to first page on search
+    setPage(1);
   };
 
-  // Handle investor card click
   const handleInvestorClick = (uuid) => {
-    if (!uuid) {
-      console.error("Invalid investor UUID");
-      return;
-    }
-    console.log(userDetails.role);
+    if (!uuid) return;
+
     if (userDetails.role === "Enterprenuer") {
       router.push(`/dashboard/investors/details/${uuid}`);
     } else {
@@ -267,18 +277,29 @@ const Page = () => {
     }
   };
 
-  // Render error state
+  const getInvestmentType = (investor) => {
+    const values = Object.values(
+      investor?.InvestorProfile?.investmentType || {}
+    );
+
+    return values.length > 0
+      ? values.join(", ")
+      : t("users.structureNotSpecified", "Structure not specified");
+  };
+
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] p-4">
-        <div className="text-center mb-4">
-          <h3 className="text-xl font-semibold text-black dark:text-white mb-2">
+      <div className="flex min-h-screen items-center justify-center bg-[#ffffff] p-6">
+        <div className="rounded-2xl bg-white p-8 text-center shadow-md">
+          <h3 className="mb-2 text-xl font-bold text-[#172033]">
             Something went wrong
           </h3>
-          <p className="text-gray-500 dark:text-gray-400 mb-4">{error}</p>
+
+          <p className="mb-5 text-[#6f6f72]">{error}</p>
+
           <button
             onClick={fetchData}
-            className="px-4 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
+            className="rounded-lg bg-[#c9672b] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#b85a22]"
           >
             Try Again
           </button>
@@ -287,358 +308,230 @@ const Page = () => {
     );
   }
 
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">
-        {t("users.welcome", "Welcome")} {userDetails.name}!
-      </h1>
+  if (loading) return <Loader />;
 
-      {/* Search and Filter Bar */}
-      <div className="mb-8">
-        {/* Member Count and Search */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl text-gray-600 dark:text-gray-300">
-              {count} {t("users.investors", "Investors")}
+  const totalPaginationPages = Math.ceil(count / limit);
+
+  return (
+    <div className="min-h-screen px-6 py-4">
+      {/* HERO */}
+      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/investors_hero.svg')",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30" />
+
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Investor Network
+          </span>
+
+          <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            Investors
+          </h2>
+
+          <p className="mb-6 text-lg text-white/85 drop-shadow-md">
+            Discover investors supporting growth-focused businesses through
+            equity, debt, grants, convertible notes, and revenue-share financing.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaLayerGroup />
+              Investors
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaMoneyBillWave />
+              Funding Profiles
             </span>
           </div>
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={t("users.searchInvestors", "Search investors...")}
-              value={keyword}
-              onChange={handleSearch}
-              className="w-64 px-4 py-2 rounded-md  bg-white dark:bg-boxdark border border-white focus:outline-none focus:border-primary"
-            />
-          </div>
         </div>
+      </div>
 
-        <div className="flex flex-wrap gap-3">
-          {/* Filter Dropdowns */}
-          {Object.entries(filterOptions).map(([key, value]) => (
-            <div key={key} className="relative inline-block">
-              <button
-                onClick={() => toggleDropdown(key)}
-                className={`px-4 py-2 rounded-md  ${
-                  filters[key] !== `All ${value.label}`
-                    ? "border-primary bg-white "
-                    : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
-                } flex items-center gap-2 y transition-colors`}
+      <h2 className="mb-6 text-2xl font-bold text-[#172033]">
+        Available Investors
+      </h2>
+
+      <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            {Object.entries(filterOptions).map(([key, value]) => (
+              <div
+                key={key}
+                className="dropdown-container relative inline-block"
               >
-                <span>{displayFilterValue(key, filters[key])}</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    openDropdown === key ? "rotate-180" : ""
+                <button
+                  onClick={() => toggleDropdown(key)}
+                  className={`inline-flex items-center gap-2 rounded-md border px-4 py-3 text-sm transition-colors ${
+                    filters[key] !== getDefaultFilterValue(key)
+                      ? "border-green-600 bg-green-50 text-green-700"
+                      : "border-black/10 bg-white text-[#6f6f72] hover:border-green-600"
                   }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                  <span>{displayFilterValue(key, filters[key])}</span>
+                  <span>{openDropdown === key ? "⌃" : "⌄"}</span>
+                </button>
+
+                {openDropdown === key && (
+                  <div className="absolute z-20 mt-2 max-h-64 w-64 overflow-y-auto rounded-xl border border-black/10 bg-white shadow-lg">
+                    {value.options.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => handleFilterChange(key, option)}
+                        className={`block w-full px-4 py-2 text-left text-sm ${
+                          filters[key] === option
+                            ? "bg-green-50 text-green-700"
+                            : "text-[#6f6f72] hover:bg-[#ffffff]"
+                        }`}
+                      >
+                        {displayFilterValue(key, option)}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <div className="dropdown-container relative inline-block">
+              <button
+                onClick={() => toggleDropdown("sort")}
+                className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-3 text-sm text-[#6f6f72] transition-colors hover:border-green-600"
+              >
+                <span>
+                  {t("users.sortBy", "Sort By")}:{" "}
+                  {sortOptions.find((opt) => opt.value === sortConfig.key)
+                    ?.label || "Name"}
+                </span>
+                <span>{openDropdown === "sort" ? "⌃" : "⌄"}</span>
               </button>
 
-              {openDropdown === key && (
-                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
-                  {value.options.map((option) => (
+              {openDropdown === "sort" && (
+                <div className="absolute z-20 mt-2 w-56 rounded-xl border border-black/10 bg-white shadow-lg">
+                  {sortOptions.map((option) => (
                     <button
-                      key={option}
-                      onClick={() => handleFilterChange(key, option)}
-                      className={`block w-full text-left px-4 py-2 text-sm ${
-                        filters[key] === option
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
+                      key={option.value}
+                      onClick={() => handleSortChange(option.value)}
+                      className={`block w-full px-4 py-2 text-left text-sm ${
+                        sortConfig.key === option.value
+                          ? "bg-green-50 text-green-700"
+                          : "text-[#6f6f72] hover:bg-[#ffffff]"
                       }`}
                     >
-                      {displayFilterValue(key, option)}
+                      {option.label}
+
+                      {sortConfig.key === option.value && (
+                        <span className="float-right">
+                          {sortConfig.direction === "asc" ? "↑" : "↓"}
+                        </span>
+                      )}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-          ))}
+          </div>
 
-          {/* Sort Dropdown */}
-          <div className="relative inline-block">
-            <button
-              onClick={() => toggleDropdown("sort")}
-              className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
-            >
-              <span>
-                {t("users.sortBy", "Sort By")}:{" "}
-                {sortOptions.find((opt) => opt.value === sortConfig.key)?.label}
-              </span>
-              <svg
-                className={`w-4 h-4 transition-transform ${
-                  openDropdown === "sort" ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+          <div className="relative ml-auto w-full sm:w-72">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8f98]" />
 
-            {openDropdown === "sort" && (
-              <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSortChange(option.value)}
-                    className={`block w-full text-left px-4 py-2 text-sm ${
-                      sortConfig.key === option.value
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
-                    }`}
-                  >
-                    {option.label}{" "}
-                    {sortConfig.key === option.value && (
-                      <span className="float-right">
-                        {sortConfig.direction === "asc" ? "↑" : "↓"}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+            <input
+              type="text"
+              placeholder={t("users.searchInvestors", "Search investors...")}
+              value={keyword}
+              onChange={handleSearch}
+              className="w-full rounded-md border border-black/10 bg-[#ffffff] px-4 py-3 pl-10 text-sm text-[#172033] outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+            />
           </div>
         </div>
-
-        {/* Active Filters */}
-        {(Object.values(filters).some((v) => !v.startsWith("All")) ||
-          keyword) && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {Object.entries(filters).map(
-              ([key, value]) =>
-                value !== `All ${filterOptions[key].label}` && (
-                  <span
-                    key={key}
-                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
-                  >
-                    {displayFilterValue(key, value)}
-                    <button
-                      onClick={() =>
-                        handleFilterChange(
-                          key,
-                          `All ${filterOptions[key].label}`,
-                        )
-                      }
-                      className="hover:text-primary-dark"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ),
-            )}
-            {keyword && (
-              <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                {t("common.search", "Search")}: {keyword}
-                <button
-                  onClick={() => setKeyword("")}
-                  className="hover:text-primary-dark"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Grid Section - Lower z-index */}
       <div className="relative z-0">
         {users.length < 1 ? (
           <NoData />
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {users.map((investor, index) => (
               <div
                 key={investor.uuid || index}
                 onClick={() => handleInvestorClick(investor.uuid)}
-                className="group h-full cursor-pointer"
+                className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
               >
-                <div className="bg-white dark:bg-boxdark-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden h-full flex flex-col">
-                  {/* Card Image Header */}
-                  <div className="relative w-full h-48 overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent z-10" />
-                    <Image
-                      src={investor.image || "/images/default-avatar.png"}
-                      alt={investor.name || "Investor profile"}
-                      fill
-                      className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                      onError={(e) => {
-                        e.target.src =
-                          "https://ui-avatars.com/api/?name=" +
-                          encodeURIComponent(investor.name || "Investor") +
-                          "&background=6366f1&color=fff&size=400";
-                      }}
-                    />
-                    {/* Sector Badge */}
-                    <div className="absolute bottom-4 left-4">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                        {isSwahili
-                          ? investor?.InvestorProfile?.BusinessSector?.swName
-                          : investor?.InvestorProfile?.BusinessSector?.name ||
-                            t("users.noSector", "No Sector")}
+                <div className="relative h-56 overflow-hidden bg-black">
+                  <Image
+                    src={investor.image || "/images/default-avatar.png"}
+                    alt={investor.name || "Investor profile"}
+                    fill
+                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  />
+
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                  <div className="absolute bottom-4 left-4">
+                    <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
+                      {isSwahili
+                        ? investor?.InvestorProfile?.BusinessSector?.swName
+                        : investor?.InvestorProfile?.BusinessSector?.name ||
+                          t("users.noSector", "No Sector")}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex min-h-[250px] flex-col p-5">
+                  <h3 className="mb-2 line-clamp-2 text-lg font-bold text-[#111827]">
+                    {investor.name ||
+                      t("users.unnamedInvestor", "Unnamed Investor")}
+                  </h3>
+
+                  <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
+                    {investor.email ||
+                      t("users.noEmailProvided", "No email provided")}
+                  </p>
+
+                  <div className="space-y-3 text-sm text-[#6f6f72]">
+                    <div className="flex items-center gap-2">
+                      <FaMoneyBillWave className="shrink-0" />
+                      <span className="line-clamp-1">
+                        {investor?.InvestorProfile?.investmentSize ||
+                          t(
+                            "users.ticketSizeNotSpecified",
+                            "Ticket size not specified"
+                          )}
                       </span>
                     </div>
-                  </div>
 
-                  {/* Card Body */}
-                  <div className="p-6 flex-grow space-y-4">
-                    <div className="space-y-2">
-                      <h2 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-                        {investor.name ||
-                          t("users.unnamedInvestor", "Unnamed Investor")}
-                      </h2>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                        {investor.email ||
-                          t("users.noEmailProvided", "No email provided")}
-                      </p>
+                    <div className="flex items-center gap-2">
+                      <FaFileContract className="shrink-0" />
+                      <span className="line-clamp-1">
+                        {getInvestmentType(investor)}
+                      </span>
                     </div>
 
-                    {/* Details Section */}
-                    <div className="space-y-3 pt-2">
-                      {/* Ticket Size */}
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg
-                          className="w-4 h-4 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                          />
-                        </svg>
+                    {investor.location && (
+                      <div className="flex items-center gap-2">
+                        <FaMapMarkerAlt className="shrink-0" />
                         <span className="line-clamp-1">
-                          {investor?.InvestorProfile?.investmentSize ||
-                            t(
-                              "users.ticketSizeNotSpecified",
-                              "Ticket size not specified",
-                            )}
+                          {investor.location}
                         </span>
-                      </div>
-
-                      {/* Structure */}
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg
-                          className="w-4 h-4 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                          />
-                        </svg>
-                        <span className="line-clamp-1">
-                          {t(
-                            `investor.type.${Object.values(
-                              investor?.InvestorProfile?.investmentType || {},
-                            ).join(", ")}`,
-                            Object.values(
-                              investor?.InvestorProfile?.investmentType || {},
-                            ).join(", "),
-                          ) ||
-                            t(
-                              "users.structureNotSpecified",
-                              "Structure not specified",
-                            )}
-                        </span>
-                      </div>
-
-                      {/* Location if available */}
-                      {investor.location && (
-                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                          <svg
-                            className="w-4 h-4 flex-shrink-0"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
-                          <span className="line-clamp-1">
-                            {investor.location}
-                          </span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Social Links */}
-                    {investor.socialLinks?.length > 0 && (
-                      <div className="flex items-center gap-3 pt-3">
-                        {investor.socialLinks.map((link, i) => (
-                          <a
-                            key={i}
-                            href={link.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-gray-400 hover:text-primary transition-colors"
-                            onClick={(e) => e.stopPropagation()}
-                          >
-                            <Image
-                              height={20}
-                              width={20}
-                              alt={`${link.platform} profile`}
-                              className="w-5 h-5 opacity-75 hover:opacity-100 transition-opacity"
-                              src={`/${link.platform.toLowerCase()}.svg`}
-                            />
-                          </a>
-                        ))}
                       </div>
                     )}
                   </div>
 
-                  {/* Card Footer */}
-                  <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
-                    <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                      <span>{t("users.viewProfile", "View Profile")}</span>
-                      <svg
-                        className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 5l7 7-7 7"
-                        />
-                      </svg>
-                    </div>
+                  <div className="mt-auto flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                    <span className="flex items-center gap-1">
+                      <FaMoneyBillWave />
+                      Investor
+                    </span>
+
+                    <span className="flex items-center gap-1 font-medium text-green-600">
+                      {t("users.viewProfile", "View Profile")}
+                      <FaArrowRight />
+                    </span>
                   </div>
                 </div>
               </div>
@@ -646,7 +539,69 @@ const Page = () => {
           </div>
         )}
 
-        <Pagination limit={limit} count={count} setPage={setPage} page={page} />
+        {count > 0 && (
+          <div className="mt-10 rounded-2xl bg-white px-6 py-5 shadow-sm">
+            <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+              <p className="text-sm text-[#6f6f72]">
+                Showing {(page - 1) * limit + 1} -{" "}
+                {Math.min(page * limit, count)} of {count} Investors
+              </p>
+
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                  disabled={page === 1}
+                  className="rounded-lg border border-black/10 bg-white px-5 py-2.5 text-sm text-[#8a8f98] transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Previous
+                </button>
+
+                {[...Array(Math.min(10, totalPaginationPages))].map(
+                  (_, idx) => {
+                    let startPage = Math.max(1, page - 4);
+                    let endPage = Math.min(
+                      totalPaginationPages,
+                      startPage + 9
+                    );
+
+                    if (endPage - startPage < 9) {
+                      startPage = Math.max(1, endPage - 9);
+                    }
+
+                    const pageNum = startPage + idx;
+                    if (pageNum > totalPaginationPages) return null;
+
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setPage(pageNum)}
+                        className={`rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                          page === pageNum
+                            ? "bg-primary-gradient text-white"
+                            : "border border-black/10 bg-white text-[#6f6f72] hover:border-primary hover:text-primary"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  }
+                )}
+
+                <button
+                  onClick={() =>
+                    setPage((prev) =>
+                      Math.min(totalPaginationPages, prev + 1)
+                    )
+                  }
+                  disabled={page === totalPaginationPages}
+                  className="rounded-lg border border-black/10 bg-white px-5 py-2.5 text-sm text-[#6f6f72] transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

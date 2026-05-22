@@ -1,19 +1,28 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
 import { getEnterprenuers } from "@/controllers/user_controller";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
 import Image from "@/utils/image";
-import Pagination from "@/component/pagination";
 import { UserContext } from "../../../layouts/DashboardLayout";
-
 import { useTranslation } from "@/locales";
+import {
+  FaLayerGroup,
+  FaSearch,
+  FaBuilding,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaArrowRight,
+} from "react-icons/fa";
+
 const Enterprenuers = () => {
   const { t, isSwahili } = useTranslation();
+  const { userDetails } = useContext(UserContext);
+
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
-  const [refresh, setRefresh] = useState(0);
   const [keyword, setKeyword] = useState("");
   const [filters, setFilters] = useState({
     sector: "All Sectors",
@@ -25,17 +34,11 @@ const Enterprenuers = () => {
     key: "name",
     direction: "asc",
   });
-  const [currentPage, setcurrentPage] = useState(1);
-  const [totalPages, settotalPages] = useState(1);
-  const [limit, setLimit] = useState(8);
+  const [limit] = useState(12);
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
-  // Add states for dropdown visibility
   const [openDropdown, setOpenDropdown] = useState(null);
-  const [allUsers, setAllUsers] = useState([]); // New state for all users
-  const { userDetails } = useContext(UserContext);
 
-  // Define filter and sort options
   const filterOptions = {
     sector: {
       label: "Sector",
@@ -97,11 +100,9 @@ const Enterprenuers = () => {
   const getDefaultFilterValue = (filterKey) =>
     filterOptions[filterKey]?.options?.[0] || "";
 
-  // Check if any filters are active
   const isFiltering =
     Object.values(filters).some((value) => !value.startsWith("All")) || keyword;
 
-  // Helper function to convert revenue filter to API parameters
   const getRevenueParams = (revenueFilter) => {
     const params = {};
 
@@ -130,7 +131,6 @@ const Enterprenuers = () => {
         params.minRevenue = 1000001;
         break;
       default:
-        // "All Revenue" - no parameters needed
         break;
     }
 
@@ -138,29 +138,26 @@ const Enterprenuers = () => {
   };
 
   useEffect(() => {
-    // If filtering, get all data at once
-    const pageSize = isFiltering ? 1000 : limit;
-    const pageNumber = isFiltering ? 1 : currentPage;
-
-    // Build revenue parameters for API call
     const revenueParams = getRevenueParams(filters.revenue);
 
+    setloading(true);
+
     getEnterprenuers(limit, page, keyword, revenueParams).then((body) => {
-      console.log(body);
       let filteredData = [...body.data];
+
       applyFilters(filteredData);
+
       setCount(body.count);
       setUsers(filteredData);
-      settotalPages(isFiltering ? 1 : body.totalPages);
       setloading(false);
     });
-  }, [refresh, sortConfig, filters, page, keyword]);
+  }, [sortConfig, filters, page, keyword]);
 
   const applyFilters = (filteredData) => {
     if (isFiltering) {
       if (filters.sector !== "All Sectors") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.BusinessSector?.name === filters.sector,
+          (item) => item.Business?.BusinessSector?.name === filters.sector
         );
       }
 
@@ -168,20 +165,17 @@ const Enterprenuers = () => {
         filteredData = filteredData.filter(
           (item) =>
             new Date(item.Business?.createdAt).getFullYear().toString() ===
-            filters.year,
+            filters.year
         );
       }
 
       if (filters.program !== "All Programs") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.program === filters.program,
+          (item) => item.Business?.program === filters.program
         );
       }
-
-      // Revenue filtering is now handled by the backend, so we don't filter it here
     }
 
-    // Apply sorting
     filteredData.sort((a, b) => {
       const direction = sortConfig.direction === "asc" ? 1 : -1;
 
@@ -194,7 +188,7 @@ const Enterprenuers = () => {
           return (
             direction *
             (a.Business?.BusinessSector?.name?.localeCompare(
-              b.Business?.BusinessSector?.name,
+              b.Business?.BusinessSector?.name
             ) || 0)
           );
         case "date":
@@ -212,12 +206,11 @@ const Enterprenuers = () => {
       }
     });
   };
-  // Handle dropdown toggle
+
   const toggleDropdown = (name) => {
     setOpenDropdown(openDropdown === name ? null : name);
   };
 
-  // Handle filter changes
   const handleFilterChange = (type, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -226,7 +219,6 @@ const Enterprenuers = () => {
     setOpenDropdown(null);
   };
 
-  // Handle sort changes
   const handleSortChange = (key) => {
     setSortConfig((prev) => ({
       key,
@@ -236,422 +228,221 @@ const Enterprenuers = () => {
     setOpenDropdown(null);
   };
 
-  // Add this helper function at the top of the component
   const getBusinessName = (item) => {
     return (
       item?.Business?.name || t("users.unnamedBusiness", "Unnamed Business")
     );
   };
 
-  // Translate option/value for filters without changing internal values
-  const translateFilterValue = (value) => {
-    switch (value) {
-      // All*
-      case "All Sectors":
-        return t("users.allSectors", "All Sectors");
-      case "All Years":
-        return t("users.allYears", "All Years");
-      case "All Programs":
-        return t("users.allPrograms", "All Programs");
-      case "All Revenue":
-        return t("users.allRevenue", "All Revenue");
-      // Sectors
-      case "Technology":
-        return t("users.technology", "Technology");
-      case "Healthcare":
-        return t("users.healthcare", "Healthcare");
-      case "Education":
-        return t("users.education", "Education");
-      case "Agriculture":
-        return t("users.agriculture", "Agriculture");
-      case "Clean Energy":
-        return t("users.cleanEnergy", "Clean Energy");
-      case "Water Sanitation and Hygiene":
-        return t(
-          "users.waterSanitationHygiene",
-          "Water Sanitation and Hygiene",
-        );
-      case "Fintech":
-        return t("users.fintech", "Fintech");
-      // Programs
-      case "Investment Readiness":
-        return t("users.investmentReadiness", "Investment Readiness");
-      case "Business Foundation":
-        return t("users.businessFoundation", "Business Foundation");
-      case "Mentorship Program":
-        return t("users.mentorshipProgram", "Mentorship Program");
-      case "Accelerator":
-        return t("users.accelerator", "Accelerator");
-      default:
-        return value; // numbers & ranges
-    }
-  };
+  if (loading) return <Loader />;
 
-  const translateSortLabel = (key) => {
-    switch (key) {
-      case "name":
-        return t("common.name", "Name");
-      case "sector":
-        return t("users.sector", "Sector");
-      case "date":
-        return t("common.date", "Date");
-      case "program":
-        return t("users.program", "Program");
-      default:
-        return key;
-    }
-  };
+  const totalPages = Math.ceil(count / limit);
 
-  return loading ? (
-    <Loader />
-  ) : (
-    <div className="p-4 md:p-6 lg:p-8 bg-gray-50 dark:bg-boxdark min-h-screen">
-      <h1 className="text-2xl font-bold mb-4">
-        {t("users.welcome", "Welcome")} {userDetails.name}!
-      </h1>
+  return (
+    <div className="min-h-screen px-6 py-4">
+      {/* HERO */}
+      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/startups_hero_page.svg')",
+          }}
+        />
 
-      {/* Search and Filter Bar */}
-      <div className="mb-8">
-        {/* Member Count and Search */}
-        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl text-gray-600 dark:text-gray-300">
-              {count} {t("users.members", "members")}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30" />
+
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Entrepreneur Network
+          </span>
+
+          <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            Entrepreneurs
+          </h2>
+
+          <p className="mb-6 text-lg text-white/85 drop-shadow-md">
+            Explore a growing network of businesses and founders building
+            ventures across technology, agriculture, clean energy, education,
+            healthcare, and other high-impact sectors.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaLayerGroup />
+              Members
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaBuilding />
+              Business Profiles
             </span>
           </div>
-
-          <div className="relative">
-            <input
-              type="text"
-              placeholder={t(
-                "users.searchEntrepreneurs",
-                "Search entrepreneurs...",
-              )}
-              value={keyword}
-              onChange={(e) => setKeyword(e.target.value)}
-              className="w-64 px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 focus:outline-none focus:border-primary"
-            />
-          </div>
         </div>
+      </div>
 
-        {/* Filters and Sort */}
-        <div className="flex flex-wrap gap-3">
-          {/* Filter Dropdowns */}
-          {Object.entries(filterOptions).map(([key, value]) => (
-            <div key={key} className="relative inline-block">
-              <button
-                onClick={() => toggleDropdown(key)}
-                className={`px-4 py-2 rounded-md border ${
-                  filters[key] !== getDefaultFilterValue(key)
-                    ? "border-primary bg-primary/10 text-primary"
-                    : "border-white bg-white dark:bg-boxdark dark:border-gray-100"
-                } flex items-center gap-2 hover:border-primary transition-colors`}
-              >
-                <span>{translateFilterValue(filters[key])}</span>
-                <svg
-                  className={`w-4 h-4 transition-transform ${
-                    openDropdown === key ? "rotate-180" : ""
+      <h2 className="mb-6 text-2xl font-bold text-[#172033]">
+        Available Entrepreneurs
+      </h2>
+
+      <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex flex-1 flex-wrap items-center gap-3">
+            {Object.entries(filterOptions).map(([key, value]) => (
+              <div key={key} className="relative inline-block">
+                <button
+                  onClick={() => toggleDropdown(key)}
+                  className={`inline-flex items-center gap-2 rounded-md border px-4 py-3 text-sm transition-colors ${
+                    filters[key] !== getDefaultFilterValue(key)
+                      ? "border-green-600 bg-green-50 text-green-700"
+                      : "border-black/10 bg-white text-[#6f6f72] hover:border-green-600"
                   }`}
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
+                  <span>{filters[key]}</span>
+                  <span>{openDropdown === key ? "⌃" : "⌄"}</span>
+                </button>
+
+                {openDropdown === key && (
+                  <div className="absolute z-20 mt-2 max-h-64 w-64 overflow-y-auto rounded-xl border border-black/10 bg-white shadow-lg">
+                    {value.options.map((option) => (
+                      <button
+                        key={option}
+                        onClick={() => handleFilterChange(key, option)}
+                        className={`block w-full px-4 py-2 text-left text-sm ${
+                          filters[key] === option
+                            ? "bg-green-50 text-green-700"
+                            : "text-[#6f6f72] hover:bg-[#f8f8f6]"
+                        }`}
+                      >
+                        {option}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+
+            <div className="relative inline-block">
+              <button
+                onClick={() => toggleDropdown("sort")}
+                className="inline-flex items-center gap-2 rounded-md border border-black/10 bg-white px-4 py-3 text-sm text-[#6f6f72] transition-colors hover:border-green-600"
+              >
+                <span>Sort: {sortConfig.key}</span>
+                <span>{openDropdown === "sort" ? "⌃" : "⌄"}</span>
               </button>
 
-              {openDropdown === key && (
-                <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
-                  {value.options.map((option) => (
+              {openDropdown === "sort" && (
+                <div className="absolute z-20 mt-2 w-48 rounded-xl border border-black/10 bg-white shadow-lg">
+                  {sortOptions.map((option) => (
                     <button
-                      key={option}
-                      onClick={() => handleFilterChange(key, option)}
-                      className={`block w-full text-left px-4 py-2 text-sm ${
-                        filters[key] === option
-                          ? "bg-primary/10 text-primary"
-                          : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
+                      key={option.value}
+                      onClick={() => handleSortChange(option.value)}
+                      className={`block w-full px-4 py-2 text-left text-sm ${
+                        sortConfig.key === option.value
+                          ? "bg-green-50 text-green-700"
+                          : "text-[#6f6f72] hover:bg-[#f8f8f6]"
                       }`}
                     >
-                      {translateFilterValue(option)}
+                      {option.label}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-          ))}
+          </div>
 
-          {/* Sort Dropdown */}
-          <div className="relative inline-block">
-            <button
-              onClick={() => toggleDropdown("sort")}
-              className="px-4 py-2 rounded-md border border-white bg-white dark:bg-boxdark dark:border-gray-700 flex items-center gap-2 hover:border-primary transition-colors"
-            >
-              <span>
-                {t("users.sortBy", "Sort:")}{" "}
-                {translateSortLabel(sortConfig.key)}
-              </span>
-              <svg
-                className={`w-4 h-4 transition-transform ${
-                  openDropdown === "sort" ? "rotate-180" : ""
-                }`}
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </button>
+          <div className="relative ml-auto w-full sm:w-72">
+            <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8f98]" />
 
-            {openDropdown === "sort" && (
-              <div className="absolute z-10 mt-1 w-48 rounded-md shadow-lg bg-white dark:bg-boxdark border border-black/10 dark:border-gray-700">
-                {sortOptions.map((option) => (
-                  <button
-                    key={option.value}
-                    onClick={() => handleSortChange(option.value)}
-                    className={`block w-full text-left px-4 py-2 text-sm ${
-                      sortConfig.key === option.value
-                        ? "bg-primary/10 text-primary"
-                        : "text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-boxdark-2"
-                    }`}
-                  >
-                    {translateSortLabel(option.value)}{" "}
-                    {sortConfig.key === option.value && (
-                      <span className="float-right">
-                        {sortConfig.direction === "asc" ? "↑" : "↓"}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
+            <input
+              type="text"
+              placeholder="Search entrepreneurs..."
+              value={keyword}
+              onChange={(e) => setKeyword(e.target.value)}
+              className="w-full rounded-md border border-black/10 bg-[#ffffff] px-4 py-3 pl-10 text-sm text-[#172033] outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+            />
           </div>
         </div>
-
-        {/* Active Filters */}
-        {(Object.values(filters).some((v) => !v.startsWith("All")) ||
-          keyword) && (
-          <div className="mt-4 flex flex-wrap gap-2">
-            {Object.entries(filters).map(
-              ([key, value]) =>
-                value !== getDefaultFilterValue(key) && (
-                  <span
-                    key={key}
-                    className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2"
-                  >
-                    {translateFilterValue(value)}
-                    <button
-                      onClick={() =>
-                        handleFilterChange(key, getDefaultFilterValue(key))
-                      }
-                      className="hover:text-primary-dark"
-                    >
-                      ×
-                    </button>
-                  </span>
-                ),
-            )}
-            {keyword && (
-              <span className="px-3 py-1 rounded-full bg-primary/10 text-primary text-sm flex items-center gap-2">
-                {t("common.search", "Search")}: {keyword}
-                <button
-                  onClick={() => setKeyword("")}
-                  className="hover:text-primary-dark"
-                >
-                  ×
-                </button>
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
-      {/* Grid Section */}
       {users.length < 1 ? (
         <NoData />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {users.map((item, key) => (
             <Link
               href={`businessDetails/${item?.Business?.uuid || "#"}`}
               key={key}
-              className="group h-full"
+              className="group overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
             >
-              <div className="bg-white dark:bg-boxdark-2 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden h-full flex flex-col">
-                {/* Card Image Header - Full Width */}
-                <div className="relative w-full h-48 overflow-hidden">
-                  <Image
-                    src={item?.image || "/images/default-avatar.png"}
-                    alt={`${getBusinessName(item)} profile`}
-                    fill
-                    className="object-cover w-full h-full group-hover:scale-105 transition-transform duration-300"
-                  />
-                  {/* Sector Badge - Positioned over image */}
-                  <div className="absolute bottom-4 left-4">
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/90 dark:bg-boxdark/90 text-primary backdrop-blur-sm">
-                      {isSwahili
-                        ? item?.Business?.BusinessSector?.swName
-                        : item?.Business?.BusinessSector?.name ||
-                          t("users.noSector", "No Sector")}
+              <div className="relative h-56 overflow-hidden bg-black">
+                <Image
+                  src={item?.image || "/images/default-avatar.png"}
+                  alt={`${getBusinessName(item)} profile`}
+                  fill
+                  className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+
+                <div className="absolute bottom-4 left-4">
+                  <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
+                    {isSwahili
+                      ? item?.Business?.BusinessSector?.swName
+                      : item?.Business?.BusinessSector?.name || "No Sector"}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex min-h-[250px] flex-col p-5">
+                <h3 className="mb-2 line-clamp-2 text-lg font-bold text-[#111827]">
+                  {getBusinessName(item)}
+                </h3>
+
+                <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
+                  {item?.Business?.email || "No email provided"}
+                </p>
+
+                <div className="space-y-3 text-sm text-[#6f6f72]">
+                  {item?.Business?.program && (
+                    <div className="flex items-center gap-2">
+                      <FaBuilding className="shrink-0" />
+                      <span className="line-clamp-1">
+                        {item.Business.program}
+                      </span>
+                    </div>
+                  )}
+
+                  {item?.Business?.location && (
+                    <div className="flex items-center gap-2">
+                      <FaMapMarkerAlt className="shrink-0" />
+                      <span className="line-clamp-1">
+                        {item.Business.location}
+                      </span>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2">
+                    <FaCalendarAlt className="shrink-0" />
+                    <span>
+                      Joined{" "}
+                      {item?.Business?.createdAt
+                        ? new Date(item.Business.createdAt).getFullYear()
+                        : "N/A"}
                     </span>
                   </div>
                 </div>
 
-                {/* Card Body with Details */}
-                <div className="p-6 flex-grow space-y-4">
-                  <div className="space-y-2">
-                    <h2 className="text-lg font-semibold text-black dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-                      {getBusinessName(item)}
-                    </h2>
+                <div className="mt-auto flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                  <span className="flex items-center gap-1">
+                    <FaBuilding />
+                    Profile
+                  </span>
 
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1">
-                      {item?.Business?.email ||
-                        t("users.noEmailProvided", "No email provided")}
-                    </p>
-                  </div>
-
-                  {/* Details Section */}
-                  <div className="space-y-3 pt-2">
-                    {/* Program Details */}
-                    {item?.Business?.program && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg
-                          className="w-4 h-4 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-                          />
-                        </svg>
-                        <span className="line-clamp-1">
-                          {item.Business.program}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Location if available */}
-                    {item?.Business?.location && (
-                      <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                        <svg
-                          className="w-4 h-4 flex-shrink-0"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                          />
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                          />
-                        </svg>
-                        <span className="line-clamp-1">
-                          {item.Business.location}
-                        </span>
-                      </div>
-                    )}
-
-                    {/* Founding Date */}
-                    <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                      <svg
-                        className="w-4 h-4 flex-shrink-0"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                        />
-                      </svg>
-                      <span>
-                        {t("users.joined", "Joined")}{" "}
-                        {item?.Business?.createdAt
-                          ? new Date(item.Business.createdAt).getFullYear()
-                          : t("mentorHub.notAvailable", "N/A")}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Social Links */}
-                  <div className="flex items-center gap-3 pt-3">
-                    {item?.Business?.facebook && (
-                      <a
-                        href={item.Business.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-primary transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Image
-                          height={20}
-                          width={20}
-                          alt={`${getBusinessName(item)} Facebook profile`}
-                          className="w-5 h-5 opacity-75 hover:opacity-100 transition-opacity"
-                          src="/facebook.svg"
-                        />
-                      </a>
-                    )}
-                    {item?.Business?.linkedin && (
-                      <a
-                        href={item.Business.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-gray-400 hover:text-primary transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Image
-                          height={20}
-                          width={20}
-                          alt={`${getBusinessName(item)} LinkedIn profile`}
-                          className="w-5 h-5 opacity-75 hover:opacity-100 transition-opacity"
-                          src="/linkedin.png"
-                        />
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {/* Card Footer */}
-                <div className="px-6 py-4 border-t border-stroke dark:border-strokedark bg-gray-50 dark:bg-boxdark mt-auto">
-                  <div className="flex items-center justify-center text-sm font-medium text-primary group-hover:text-primary-dark transition-colors">
-                    <span>{t("programs.viewDetails", "View Details")}</span>
-                    <svg
-                      className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M9 5l7 7-7 7"
-                      />
-                    </svg>
-                  </div>
+                  <span className="flex items-center gap-1 font-medium text-green-600">
+                    View Details
+                    <FaArrowRight />
+                  </span>
                 </div>
               </div>
             </Link>
@@ -659,7 +450,63 @@ const Enterprenuers = () => {
         </div>
       )}
 
-      <Pagination limit={limit} count={count} setPage={setPage} page={page} />
+      {count > 0 && (
+        <div className="mt-10 rounded-2xl bg-white px-6 py-5 shadow-sm">
+          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+            <p className="text-sm text-[#6f6f72]">
+              Showing {(page - 1) * limit + 1} -{" "}
+              {Math.min(page * limit, count)} of {count} Entrepreneurs
+            </p>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => setPage((prev) => Math.max(1, prev - 1))}
+                disabled={page === 1}
+                className="rounded-lg border border-black/10 bg-white px-5 py-2.5 text-sm text-[#8a8f98] transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Previous
+              </button>
+
+              {[...Array(Math.min(10, totalPages))].map((_, idx) => {
+                let startPage = Math.max(1, page - 4);
+                let endPage = Math.min(totalPages, startPage + 9);
+
+                if (endPage - startPage < 9) {
+                  startPage = Math.max(1, endPage - 9);
+                }
+
+                const pageNum = startPage + idx;
+
+                if (pageNum > totalPages) return null;
+
+                return (
+                  <button
+                    key={pageNum}
+                    onClick={() => setPage(pageNum)}
+                    className={`rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                      page === pageNum
+                    ? "bg-[#082d77] text-white"
+                        : "border border-black/10 bg-white text-[#6f6f72] hover:border-primary hover:text-primary"
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                );
+              })}
+
+              <button
+                onClick={() =>
+                  setPage((prev) => Math.min(totalPages, prev + 1))
+                }
+                disabled={page === totalPages}
+                className="rounded-lg border border-black/10 bg-white px-5 py-2.5 text-sm text-[#6f6f72] transition hover:border-primary hover:text-primary disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

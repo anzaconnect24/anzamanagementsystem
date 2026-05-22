@@ -163,6 +163,7 @@ import EditProgramsApplicationsWithUuid from "./pages/learnandgrow/programsAppli
 import SlideWithUuid from "./pages/learnandgrow/slides/SlideWithUuid";
 import AddSlide from "./pages/learnandgrow/slides/add/AddSlide";
 import EditSlide from "./pages/learnandgrow/slides/edit/EditSlide";
+import CourseDetailsPage from "./pages/learnandgrow/programs/details/page";
 
 // Quiz Components
 import ModuleQuizzes from "./pages/learnandgrow/quizzes/ModuleQuizzes";
@@ -473,25 +474,41 @@ function App() {
 
             {/* Learn and Grow Routes - Additional */}
             <Route path="programs/:course" element={<Programs />} />
+
+            <Route
+              path="programs/details/:uuid"
+              element={<CourseDetailsPage />}
+            />
+
             <Route path="programs/add" element={<AddProgram />} />
+
             <Route path="programs/edit" element={<EditProgram />} />
+
             <Route path="modules/add" element={<AddModule />} />
+
             <Route path="modules/edit" element={<EditModule />} />
+
             <Route
               path="programsApplications/:uuid"
               element={<ProgramsApplicationsWithUuid />}
             />
+
             <Route
               path="programsApplications/:uuid/edit"
               element={<EditProgramsApplicationsWithUuid />}
             />
+
             <Route
               path="programsApplications/new"
               element={<NewProgramsApplication />}
             />
+
             <Route path="slides/:uuid" element={<SlideWithUuid />} />
+
             <Route path="slides/add" element={<AddSlide />} />
+
             <Route path="slides/edit" element={<EditSlide />} />
+          
 
             {/* Log Routes */}
             {/* <Route path="logs" element={<Logs />} /> */}

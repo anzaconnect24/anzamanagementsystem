@@ -18,7 +18,7 @@ const UploadMaterialWithType = () => {
   const [loading, setLoading] = useState(false);
 
   const categories = [
-    "Finance and Fundraising",
+    "Finance & Fundraising",
     "Marketing & Sales",
     "Technology & Innovation",
     "Leadership & Personal Development",

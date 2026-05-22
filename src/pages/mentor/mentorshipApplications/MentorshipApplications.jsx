@@ -1,4 +1,5 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
@@ -6,60 +7,85 @@ import Loader from "@/components/common/Loader";
 import { timeAgo } from "@/utils/time_ago";
 import NoData from "@/component/noData";
 import { useTranslation } from "../../../locales";
+
+import Image from "@/utils/image";
+
 import { getEntreprenuerMentorshipApplications } from "@/controllers/mentorship_applications_controllers";
+
+import {
+  FaUserTie,
+  FaClock,
+  FaCheckCircle,
+  FaHourglassHalf,
+  FaTimesCircle,
+} from "react-icons/fa";
 
 const MentorshipApplications = () => {
   const { t } = useTranslation();
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [page, setPage] = useState(1);
-  const [count, setCount] = useState(0);
-  const [limit] = useState(10);
-  const [keyword, setKeyword] = useState("");
+
   const { userDetails } = useContext(UserContext);
 
   useEffect(() => {
     getData();
-  }, [page, keyword]);
+  }, []);
 
   const getData = () => {
     setLoading(true);
+
     getEntreprenuerMentorshipApplications(
       userDetails.uuid,
-      page,
-      limit,
-      keyword,
+      1,
+      100,
+      "",
     ).then((res) => {
-      console.log(res);
       setData(res.data || []);
-      setCount(res.count || 0);
       setLoading(false);
     });
   };
+
+  const pendingCount = data.filter(
+    (item) => item.status === "PENDING",
+  ).length;
+
+  const acceptedCount = data.filter(
+    (item) => item.status === "ACCEPTED",
+  ).length;
+
+  const rejectedCount = data.filter(
+    (item) => item.status === "REJECTED",
+  ).length;
 
   const getStatusBadge = (status) => {
     const statusConfig = {
       PENDING: {
         bg: "bg-yellow-100",
         text: "text-yellow-800",
-        label: t("common.pending", "Pending"),
+        label: "Pending",
       },
+
       ACCEPTED: {
         bg: "bg-green-100",
         text: "text-green-800",
-        label: t("common.accepted", "Accepted"),
+        label: "Accepted",
       },
+
       REJECTED: {
         bg: "bg-red-100",
         text: "text-red-800",
-        label: t("common.rejected", "Rejected"),
+        label: "Rejected",
       },
     };
 
-    const config = statusConfig[status] || statusConfig.PENDING;
+    const config =
+      statusConfig[status] ||
+      statusConfig.PENDING;
+
     return (
       <span
-        className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${config.bg} ${config.text}`}
+        className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${config.bg} ${config.text}`}
       >
         {config.label}
       </span>
@@ -69,151 +95,200 @@ const MentorshipApplications = () => {
   return loading ? (
     <Loader />
   ) : (
-    <div className="bg-white py-6 shadow mt-6 px-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">
-            {t(
-              "mentorship.myMentorshipApplications",
-              "My Mentorship Applications",
-            )}
-          </h1>
-          <p className="text-gray-600 mt-1">
-            {t(
-              "mentorship.applicationDesc",
-              "Track the status of your mentorship requests",
-            )}
-          </p>
-        </div>
-        <input
-          onChange={(e) => {
-            setKeyword(e.target.value);
-          }}
-          className="py-2 px-4 rounded border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary"
-          placeholder={t("mentorship.searchMentor", "Search by mentor name...")}
-        />
-      </div>
-
-      {data.length < 1 ? (
-        <NoData />
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="mt-4 w-full">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">
-                  {t("mentorship.mentor", "Mentor")}
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">
-                  {t("mentorship.expertise", "Expertise")}
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">
-                  {t("mentorship.appliedOn", "Applied On")}
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">
-                  {t("common.status", "Status")}
-                </th>
-                <th className="text-left px-4 py-3 text-sm font-semibold text-gray-600">
-                  {t("mentorship.mentorshipAreas", "Mentorship Areas")}
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-black/10">
-              {data.map((application) => (
-                <tr key={application.uuid} className="hover:bg-gray-50">
-                  <td className="px-4 py-4">
-                    <div className="flex items-center">
-                      <div className="h-10 w-10 flex-shrink-0">
-                        <img
-                          className="h-10 w-10 rounded-full object-cover"
-                          src={
-                            application.mentor?.image ||
-                            `https://ui-avatars.com/api/?name=${encodeURIComponent(
-                              application.mentor?.name || "M",
-                            )}&background=6366f1&color=fff`
-                          }
-                          alt={application.mentor?.name}
-                        />
-                      </div>
-                      <div className="ml-4">
-                        <div className="font-medium text-gray-900">
-                          {application.mentor?.name ||
-                            t("common.notProvided", "N/A")}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {application.mentor?.email}
-                        </div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900">
-                      {application.mentor?.MentorProfile?.areasOfExperties
-                        ? Object.values(
-                            application.mentor.MentorProfile.areasOfExperties,
-                          )
-                            .slice(0, 2)
-                            .join(", ")
-                        : t("common.notProvided", "N/A")}
-                    </div>
-                  </td>
-                  <td className="px-4 py-4 text-sm text-gray-500">
-                    {timeAgo(application.createdAt)}
-                  </td>
-                  <td className="px-4 py-4">
-                    {getStatusBadge(application.status)}
-                  </td>
-                  <td className="px-4 py-4">
-                    <div className="text-sm text-gray-900">
-                      {application.mentorshipAreas
-                        ? Object.values(application.mentorshipAreas)
-                            .slice(0, 3)
-                            .join(", ")
-                        : t("common.notProvided", "N/A")}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Pagination */}
-      {count > limit && (
-        <div className="flex items-center justify-between mt-6 pt-4 border-t">
-          <div className="text-sm text-gray-600">
-            {t("common.showing", "Showing")} {(page - 1) * limit + 1}{" "}
-            {t("common.to", "to")} {Math.min(page * limit, count)}{" "}
-            {t("common.of", "of")} {count} {t("common.results", "results")}
+    <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
+      <div className="mx-auto max-w-7xl">
+        {/* HERO */}
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+          <div className="absolute inset-0">
+            <Image
+              src="/images/general_resources_hero.svg"
+              alt="Mentorship Applications"
+              width={1600}
+              height={900}
+              className="h-full w-full object-cover"
+            />
           </div>
 
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {t("common.previous", "Previous")}
-            </button>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
 
-            <span className="px-3 py-1">
-              {t("common.page", "Page")} {page} {t("common.of", "of")}{" "}
-              {Math.ceil(count / limit)}
+          <div className="relative z-10 flex min-h-[320px] max-w-3xl flex-col justify-center p-8 lg:p-12">
+            <span className="mb-6 inline-flex w-fit items-center gap-2 rounded-full bg-white/20 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+              Mentorship Applications
             </span>
 
-            <button
-              onClick={() =>
-                setPage(Math.min(Math.ceil(count / limit), page + 1))
-              }
-              disabled={page === Math.ceil(count / limit)}
-              className="px-3 py-1 rounded border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-            >
-              {t("common.next", "Next")}
-            </button>
+            <h1 className="mb-4 text-4xl font-bold leading-tight text-white md:text-4xl">
+              Track Your Mentorship Requests
+            </h1>
+
+            <p className="mb-8 max-w-2xl text-base leading-8 text-white/85 md:text-lg">
+              Monitor your mentorship
+              applications, view application
+              statuses, and stay updated on
+              your mentorship journey.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 text-sm font-medium text-white/90">
+              <span className="flex items-center gap-2">
+                <FaUserTie />
+                {data.length} Applications
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaCheckCircle />
+                {acceptedCount} Accepted
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaClock />
+                Ongoing Tracking
+              </span>
+            </div>
           </div>
+        </section>
+
+        {/* STATS */}
+        <section className="mb-8 grid grid-cols-1 gap-5 md:grid-cols-3">
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <FaHourglassHalf className="absolute right-5 top-5 text-xl text-yellow-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {pendingCount}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Pending Applications
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <FaCheckCircle className="absolute right-5 top-5 text-xl text-green-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {acceptedCount}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Accepted Applications
+            </p>
+          </div>
+
+          <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <FaTimesCircle className="absolute right-5 top-5 text-xl text-red-500" />
+
+            <h3 className="text-3xl font-bold text-[#101828]">
+              {rejectedCount}
+            </h3>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Rejected Applications
+            </p>
+          </div>
+        </section>
+
+        {/* HEADER */}
+        <div className="mb-8">
+          <h2 className="text-3xl font-bold text-[#101828]">
+            My Applications
+          </h2>
         </div>
-      )}
+
+        {/* TABLE */}
+        {data.length < 1 ? (
+          <NoData />
+        ) : (
+          <div className="overflow-hidden rounded-3xl border border-[#EAECF0] bg-white shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-[#EAECF0]">
+                <thead className="bg-[#F9FAFB]">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Mentor
+                    </th>
+
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Position
+                    </th>
+
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Status
+                    </th>
+
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-[#344054]">
+                      Applied
+                    </th>
+
+                    <th className="px-6 py-4 text-right text-sm font-semibold text-[#344054]">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+
+                <tbody className="divide-y divide-[#EAECF0] bg-white">
+                  {data.map((application) => (
+                    <tr
+                      key={application.uuid}
+                      className="transition hover:bg-[#F9FAFB]"
+                    >
+                      {/* Mentor */}
+                      <td className="whitespace-nowrap px-6 py-5">
+                        <div className="flex items-center gap-4">
+                          <img
+                            className="h-12 w-12 rounded-full object-cover"
+                            src={
+                              application.mentor?.image ||
+                              `https://ui-avatars.com/api/?name=${encodeURIComponent(
+                                application.mentor?.name || "M",
+                              )}&background=6366f1&color=fff`
+                            }
+                            alt={application.mentor?.name}
+                          />
+
+                          <div>
+                            <p className="text-sm font-semibold text-[#101828]">
+                              {application.mentor?.name ||
+                                "Unknown Mentor"}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+
+                      {/* Position */}
+                      <td className="whitespace-nowrap px-6 py-5 text-sm text-[#667085]">
+                        {application.mentor
+                          ?.MentorProfile
+                          ?.position ||
+                          "Business Mentor"}
+                      </td>
+
+                      {/* Status */}
+                      <td className="whitespace-nowrap px-6 py-5">
+                        {getStatusBadge(
+                          application.status,
+                        )}
+                      </td>
+
+                      {/* Applied */}
+                      <td className="whitespace-nowrap px-6 py-5 text-sm text-[#667085]">
+                        {timeAgo(
+                          application.createdAt,
+                        )}
+                      </td>
+
+                      {/* Action */}
+                      <td className="whitespace-nowrap px-6 py-5 text-right">
+                        <button className="rounded-xl bg-[#2563EB] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]">
+                          View Application
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -1,4 +1,5 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import Loader from "@/components/common/Loader";
@@ -6,16 +7,15 @@ import { timeAgo } from "@/utils/time_ago";
 import { getMentorEntrepreneurReports } from "@/controllers/mentorReportsController";
 import Link from "@/utils/link";
 import NoData from "@/component/noData";
-import { useTranslation } from "@/locales";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
 const EntrepreneurReportsPage = () => {
-  const { t } = useTranslation();
-  const { uuid } = useParams(); // This is the entrepreneur's user UUID
+  const { uuid } = useParams();
   const { userDetails } = useContext(UserContext);
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -27,7 +27,13 @@ const EntrepreneurReportsPage = () => {
     if (!userDetails?.uuid) return;
 
     setLoading(true);
-    getMentorEntrepreneurReports(userDetails.uuid, uuid, page, pagination.limit)
+
+    getMentorEntrepreneurReports(
+      userDetails.uuid,
+      uuid,
+      page,
+      pagination.limit,
+    )
       .then((res) => {
         setData(res.reports || []);
         setPagination(res.pagination || pagination);
@@ -55,87 +61,139 @@ const EntrepreneurReportsPage = () => {
     <Loader />
   ) : (
     <div>
-      <Breadcrumb
-        prevLink="/dashboard/mentorEntreprenuers"
-        prevPage={t("common.back", "Back")}
-        pageName={t("mentorship.entrepreneurReports", "Entrepreneur Reports")}
-      />
+      {/* Hero Section */}
+      <div className="relative overflow-hidden rounded-3xl min-h-[320px] shadow-xl">
+        <img
+          src="/images/mentor_hero.svg"
+          alt="Mentor Reports"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
 
-      <div className="bg-white min-h-[30vh] py-6 shadow mt-6 px-6">
-        <div className="flex justify-between items-center mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">
-              {t("mentorship.mentorReports", "Mentor Reports")}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/60 to-black/30" />
+
+        <div className="relative z-10 flex h-full items-center px-8 py-14 md:px-14">
+          <div className="max-w-3xl text-white">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium backdrop-blur-md">
+              <span className="h-2.5 w-2.5 rounded-full bg-orange-400" />
+              Mentor Management
+            </div>
+
+            <h1 className="mt-8 text-4xl font-bold tracking-tight leading-tight">
+              Mentor Reports
             </h1>
+
+            <p className="mt-6 text-lg md:text-xl leading-relaxed text-white/90 max-w-2xl">
+              Track entrepreneur progress, review mentorship engagement,
+              monitor submitted reports, and maintain visibility into mentoring
+              activities across the ecosystem.
+            </p>
+
+            <div className="mt-8 flex flex-wrap gap-6 text-sm md:text-base text-white/90">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📊</span>
+                <span>Entrepreneur Progress Tracking</span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📝</span>
+                <span>Mentorship Reporting</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <div className="bg-white min-h-[30vh] py-6 shadow mt-6 px-6 rounded-2xl">
+        <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Mentor Reports
+            </h1>
+
             {data.length > 0 && data[0]?.Entreprenuer && (
-              <p className="text-gray-600 mt-1">
-                {t("mentorship.reportsFor", "Reports for")}{" "}
-                <span className="font-semibold">
+              <p className="text-gray-600 mt-2">
+                Reports for{" "}
+                <span className="font-semibold text-gray-900">
                   {data[0].Entreprenuer.name}
                 </span>
+
                 {data[0].Entreprenuer.Business?.name && (
-                  <span> ({data[0].Entreprenuer.Business.name})</span>
+                  <span className="text-primary">
+                    {" "}
+                    ({data[0].Entreprenuer.Business.name})
+                  </span>
                 )}
               </p>
             )}
           </div>
+
           <Link
             href={`/dashboard/addEntreprenuerReport/${uuid}`}
-            className="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 transition-all duration-300"
+            className="inline-flex items-center justify-center px-5 py-3 bg-primary text-white rounded-xl hover:bg-primary/90 transition-all duration-300 font-medium shadow-md"
           >
-            {t("mentorship.submitNewReport", "Submit New Report")}
+            + Submit New Report
           </Link>
         </div>
 
         {data.length < 1 ? (
-          <NoData
-            message={t(
-              "mentorship.noReportsYet",
-              "No reports submitted for this entrepreneur yet",
-            )}
-          />
+          <NoData message="No reports submitted for this entrepreneur yet" />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="mt-8 w-full">
-              <thead>
-                <tr className="border-b border-black/10">
-                  <th className="text-left py-3 px-4">
-                    {t("mentorship.reported", "Reported")}
+          <div className="overflow-x-auto rounded-2xl shadow-sm">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">
+                    Reported
                   </th>
-                  <th className="text-left py-3 px-4">
-                    {t("mentorship.mentor", "Mentor")}
+
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">
+                    Mentor
                   </th>
-                  <th className="text-left py-3 px-4">
-                    {t("mentorship.reportTitle", "Report Title")}
+
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">
+                    Report Title
                   </th>
-                  <th className="text-left py-3 px-4">
-                    {t("mentorship.meetingDate", "Meeting Date")}
+
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">
+                    Meeting Date
                   </th>
-                  <th className="text-left py-3 px-4">
-                    {t("common.actions", "Actions")}
+
+                  <th className="text-left py-4 px-4 text-sm font-semibold text-gray-700">
+                    Actions
                   </th>
                 </tr>
               </thead>
+
               <tbody>
                 {data.map((item) => {
                   return (
-                    <tr key={item.uuid} className="border-b border-black/10">
-                      <td className="py-3 px-4">{timeAgo(item.createdAt)}</td>
-                      <td className="py-3 px-4">
-                        {item.Mentor?.name || t("common.notProvided", "N/A")}
+                    <tr
+                      key={item.uuid}
+                      className="hover:bg-gray-50/80 transition-all"
+                    >
+                      <td className="py-4 px-4 text-gray-700">
+                        {timeAgo(item.createdAt)}
                       </td>
-                      <td className="py-3 px-4">{item.title}</td>
-                      <td className="py-3 px-4">
-                        {item.meetingDate
-                          ? new Date(item.meetingDate).toLocaleDateString()
-                          : t("common.notProvided", "N/A")}
+
+                      <td className="py-4 px-4 text-gray-700">
+                        {item.Mentor?.name || "N/A"}
                       </td>
-                      <td className="py-3 px-4">
+
+                      <td className="py-4 px-4 font-medium text-gray-900">
+                        {item.title}
+                      </td>
+
+                      <td className="py-4 px-4 text-gray-700">
+                        Not Specified
+                      </td>
+
+                      <td className="py-4 px-4">
                         <Link
-                          className="text-primary font-bold hover:scale-105 transition-all"
+                          className="inline-flex items-center text-primary font-semibold hover:underline"
                           href={`/dashboard/mentorReport/${item.uuid}`}
                         >
-                          {t("mentorship.viewReport", "View Report")}
+                          View Report
                         </Link>
                       </td>
                     </tr>
@@ -146,38 +204,41 @@ const EntrepreneurReportsPage = () => {
           </div>
         )}
 
-        {/* Pagination Controls */}
+        {/* Pagination */}
         {data.length > 0 && (
-          <div className="flex items-center justify-between mt-6 pt-4 border-t border-black/10">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 pt-4">
             <div className="text-sm text-gray-600">
-              {t("common.showing", "Showing")}{" "}
-              {(pagination.page - 1) * pagination.limit + 1}{" "}
-              {t("common.to", "to")}{" "}
-              {Math.min(pagination.page * pagination.limit, pagination.total)}{" "}
-              {t("common.of", "of")} {pagination.total}{" "}
-              {t("common.results", "results")}
+              Showing {(pagination.page - 1) * pagination.limit + 1} to{" "}
+              {Math.min(
+                pagination.page * pagination.limit,
+                pagination.total,
+              )}{" "}
+              of {pagination.total} results
             </div>
 
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               <button
                 onClick={() => handlePageChange(1)}
                 disabled={pagination.page === 1}
-                className="px-3 py-1 rounded border border-black/10 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-3 py-2 rounded-lg bg-white shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {t("common.first", "First")}
+                First
               </button>
+
               <button
-                onClick={() => handlePageChange(pagination.page - 1)}
+                onClick={() =>
+                  handlePageChange(pagination.page - 1)
+                }
                 disabled={pagination.page === 1}
-                className="px-3 py-1 rounded border border-black/10 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                className="px-3 py-2 rounded-lg bg-white shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {t("common.previous", "Previous")}
+                Previous
               </button>
 
               <div className="flex items-center gap-1">
                 {[...Array(pagination.totalPages)].map((_, index) => {
                   const pageNumber = index + 1;
-                  // Show first page, last page, current page, and pages around current
+
                   if (
                     pageNumber === 1 ||
                     pageNumber === pagination.totalPages ||
@@ -187,17 +248,21 @@ const EntrepreneurReportsPage = () => {
                     return (
                       <button
                         key={pageNumber}
-                        onClick={() => handlePageChange(pageNumber)}
-                        className={`px-3 py-1 rounded transition-all ${
+                        onClick={() =>
+                          handlePageChange(pageNumber)
+                        }
+                        className={`px-4 py-2 rounded-lg transition-all ${
                           pagination.page === pageNumber
-                            ? "bg-primary text-white font-semibold"
-                            : "border border-black/10 hover:bg-gray-50"
+                            ? "bg-primary text-white font-semibold shadow"
+                            : "bg-white shadow-sm hover:bg-gray-50"
                         }`}
                       >
                         {pageNumber}
                       </button>
                     );
-                  } else if (
+                  }
+
+                  if (
                     pageNumber === pagination.page - 2 ||
                     pageNumber === pagination.page + 2
                   ) {
@@ -207,23 +272,33 @@ const EntrepreneurReportsPage = () => {
                       </span>
                     );
                   }
+
                   return null;
                 })}
               </div>
 
               <button
-                onClick={() => handlePageChange(pagination.page + 1)}
-                disabled={pagination.page === pagination.totalPages}
-                className="px-3 py-1 rounded border border-black/10 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                onClick={() =>
+                  handlePageChange(pagination.page + 1)
+                }
+                disabled={
+                  pagination.page === pagination.totalPages
+                }
+                className="px-3 py-2 rounded-lg bg-white shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {t("common.next", "Next")}
+                Next
               </button>
+
               <button
-                onClick={() => handlePageChange(pagination.totalPages)}
-                disabled={pagination.page === pagination.totalPages}
-                className="px-3 py-1 rounded border border-black/10 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                onClick={() =>
+                  handlePageChange(pagination.totalPages)
+                }
+                disabled={
+                  pagination.page === pagination.totalPages
+                }
+                className="px-3 py-2 rounded-lg bg-white shadow-sm hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
               >
-                {t("common.last", "Last")}
+                Last
               </button>
             </div>
           </div>

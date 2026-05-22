@@ -1,138 +1,101 @@
 "use client";
-import React, { useContext, useState } from "react";
+
+import React, { useState } from "react";
 import Link from "@/utils/link";
-import Loader from "@/components/common/Loader";
-import Image from "@/utils/image";
 import { Formik } from "formik";
 import * as yup from "yup";
 import toast from "react-hot-toast";
 import Spinner from "@/components/spinner";
-import {
-  login,
-  register,
-  resetPassword,
-} from "../../controllers/user_controller";
-import { useRouter } from "@/utils/navigation";
+import { resetPassword } from "../../controllers/user_controller";
 
 const Page = () => {
-  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+
   const validationSchema = yup.object().shape({
     email: yup.string().email("Invalid email").required("Email is required"),
-    // password: yup.string().required('Password is required'),
   });
-  const [isLoading, setisLoading] = useState(false);
 
-  // Handle form submission
   const handleSubmit = (values) => {
-    const data = { ...values };
-    setisLoading(true);
-    resetPassword(data).then((data) => {
-      if (data.status == false) {
+    setIsLoading(true);
+    toast.dismiss();
+
+    resetPassword(values).then((data) => {
+      if (!data.status) {
         toast.error(data.message);
       } else {
-        toast.success(
-          "We`ve sent you the link to your email to reset your password"
-        );
+        toast.success("We've sent a password reset link to your email");
       }
-      setisLoading(false);
+
+      setIsLoading(false);
     });
   };
 
   return (
-    <>
-      <div className="rounded-lg h-screen  min-w-screen ">
-        <div className="flex flex-col justify-center h-full">
-          <div className=" mx-auto  w-9/12 text-start ">
-            <div className="w-full p-4 sm:p-12.5 xl:p-17.5">
-              <div className=" px-8 py-10   rounded-lg">
-                {/* <span className="mb-1.5 block text-center text-primary font-bold">Forgot password ?</span> */}
-                <h2 className="mb-9 text-xl text-center font-bold text-primary dark:text-white sm:text-title-xl2">
-                  Get password reset link
-                </h2>
-                <Formik
-                  initialValues={{ email: "" }}
-                  validationSchema={validationSchema}
-                  onSubmit={handleSubmit}
-                >
-                  {({
-                    handleSubmit,
-                    handleChange,
-                    values,
-                    touched,
-                    errors,
-                  }) => (
-                    <form onSubmit={handleSubmit}>
-                      <div className="mb-4">
-                        <label className="mb-2.5 block font-medium text-black dark:text-white">
-                          Email
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="email"
-                            value={values.email}
-                            name="email"
-                            onChange={handleChange}
-                            // aria-invalid={touched.email && !!errors.email}
-                            placeholder="Enter your email"
-                            className="w-full rounded-lg border border-stroke bg-transparent py-4 pl-6 pr-10 outline-none focus:border-primary focus-visible:shadow-none dark:border-form-strokedark dark:bg-form-input dark:focus:border-primary"
-                          />
+    <main className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+      <div className="w-full max-w-md">
+        <div className="mb-3 text-center">
+          <h1 className="text-3xl font-bold text-[#10198f]">
+            Reset Password
+          </h1>
 
-                          <span className="absolute right-4 top-4">
-                            <svg
-                              className="fill-current"
-                              width="22"
-                              height="22"
-                              viewBox="0 0 22 22"
-                              fill="none"
-                              xmlns="http://www.w3.org/2000/svg"
-                            >
-                              <g opacity="0.5">
-                                <path
-                                  d="M19.2516 3.30005H2.75156C1.58281 3.30005 0.585938 4.26255 0.585938 5.46567V16.6032C0.585938 17.7719 1.54844 18.7688 2.75156 18.7688H19.2516C20.4203 18.7688 21.4172 17.8063 21.4172 16.6032V5.4313C21.4172 4.26255 20.4203 3.30005 19.2516 3.30005ZM19.2516 4.84692C19.2859 4.84692 19.3203 4.84692 19.3547 4.84692L11.0016 10.2094L2.64844 4.84692C2.68281 4.84692 2.71719 4.84692 2.75156 4.84692H19.2516ZM19.2516 17.1532H2.75156C2.40781 17.1532 2.13281 16.8782 2.13281 16.5344V6.35942L10.1766 11.5157C10.4172 11.6875 10.6922 11.7563 10.9672 11.7563C11.2422 11.7563 11.5172 11.6875 11.7578 11.5157L19.8016 6.35942V16.5688C19.8703 16.9125 19.5953 17.1532 19.2516 17.1532Z"
-                                  fill=""
-                                />
-                              </g>
-                            </svg>
-                          </span>
-                        </div>
-                        <p className="text-danger">{errors.email}</p>
-                      </div>
+          <p className="mt-1 text-gray-500">
+            Enter your email and we’ll send you a reset link
+          </p>
+        </div>
 
-                      <div className="mb-5">
-                        <button
-                          type="submit"
-                          className="w-full cursor-pointer rounded-lg border flex justify-center border-primary bg-primary p-4 text-white transition hover:bg-primary/90"
-                        >
-                          {isLoading ? <Spinner /> : "Send request"}
-                        </button>
-                      </div>
+        <div className="rounded-2xl bg-white p-6">
+          <Formik
+            initialValues={{ email: "" }}
+            validationSchema={validationSchema}
+            onSubmit={handleSubmit}
+          >
+            {({ handleSubmit, handleChange, values, errors, touched }) => (
+              <form onSubmit={handleSubmit} className="space-y-3">
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-black">
+                    Email <span className="text-black">*</span>
+                  </label>
 
-                      <div className="mt-6 text-center">
-                        <p>
-                          <div className="flex justify-center space-x-2">
-                            I will do it later ?{" "}
-                            <Link
-                              href="/signin"
-                              className="text-primary font-bold"
-                            >
-                              Go back
-                            </Link>
-                          </div>
-                        </p>
-                      </div>
-                    </form>
+                  <input
+                    type="email"
+                    name="email"
+                    value={values.email}
+                    onChange={handleChange}
+                    placeholder="Enter your email"
+                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-black outline-none transition focus:border-transparent focus:ring-2 focus:ring-[#10198f]"
+                  />
+
+                  {errors.email && touched.email && (
+                    <p className="mt-1 text-sm text-red-500">
+                      {errors.email}
+                    </p>
                   )}
-                </Formik>
-              </div>
-            </div>
-          </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="flex w-full items-center justify-center rounded-lg bg-[#10198f] py-2.5 font-medium text-white transition-colors hover:bg-[#0c147a] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isLoading ? <Spinner /> : "Send Reset Link"}
+                </button>
+              </form>
+            )}
+          </Formik>
+
+          <p className="mt-4 text-center text-sm text-gray-500">
+            Remember your password?{" "}
+            <Link
+              href="/auth/signin"
+              className="font-medium text-[#10198f] hover:underline"
+            >
+              Sign in
+            </Link>
+          </p>
         </div>
       </div>
-    </>
+    </main>
   );
 };
 
-Page.getLayout = function getLayout(page) {
-  return <div>{page}</div>;
-};
 export default Page;

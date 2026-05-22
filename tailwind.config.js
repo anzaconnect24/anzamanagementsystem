@@ -21,31 +21,55 @@ module.exports = {
       "3xl": "2000px",
       ...defaultTheme.screens,
     },
+
     extend: {
       colors: {
         current: "currentColor",
         transparent: "transparent",
         white: "#FFFFFF",
         black: "#000000",
-        "black-2": "#010101",
+
         body: "#64748B",
         bodydark: "#AEB7C0",
         bodydark1: "#DEE4EE",
         bodydark2: "#8A99AF",
-        primary: "#0e197c",
-        secondary: "#80CAEE",
-        stroke: "#E2E8F0",
+
+        // Brand core: blue from your toggle button
+        primary: {
+          DEFAULT: "#082d77",
+          light: "#1D4E9E",
+          hover: "#061f52",
+          soft: "#EAF1FF",
+          softer: "#F3F7FF",
+          dark: "#041533",
+        },
+
+        // Harmonized interaction layer
+        secondary: "#6C9BFF",
+        "secondary-soft": "#DCE7FF",
+
+        // Soft SaaS accent layer
+        accent: "#5AD7E8",
+        "accent-soft": "#E8FBFE",
+
+        stroke: "#E6EAF2",
+        strokedark: "#1F2A44",
+
         gray: "#EFF4FB",
         graydark: "#333A48",
         "gray-2": "#F7F9FC",
         "gray-3": "#FAFAFA",
+
         whiten: "#F1F5F9",
-        whiter: "#F5F7FD",
-        boxdark: "#24303F",
-        "boxdark-2": "#1A222C",
-        strokedark: "#2E3A47",
-        "form-strokedark": "#3d4d60",
-        "form-input": "#1d2a39",
+        whiter: "#F8FAFF",
+
+        boxdark: "#14243F",
+        "boxdark-2": "#0F1F3A",
+
+        "form-strokedark": "#3D4D60",
+        "form-input": "#1A2E4A",
+
+        // Status colors
         "meta-1": "#DC3545",
         "meta-2": "#EFF2F7",
         "meta-3": "#219654",
@@ -55,10 +79,12 @@ module.exports = {
         "meta-7": "#FF6766",
         "meta-8": "#F0950C",
         "meta-9": "#E5E7EB",
-        success: "#219653",
-        danger: "#D34053",
-        warning: "#FFA70B",
+
+        success: "#22C55E",
+        danger: "#EF4444",
+        warning: "#F59E0B",
       },
+
       fontSize: {
         "title-xxl": ["44px", "55px"],
         "title-xl": ["36px", "45px"],
@@ -69,6 +95,7 @@ module.exports = {
         "title-sm": ["20px", "26px"],
         "title-xsm": ["18px", "24px"],
       },
+
       spacing: {
         4.5: "1.125rem",
         5.5: "1.375rem",
@@ -155,6 +182,7 @@ module.exports = {
         230: "57.5rem",
         242.5: "60.625rem",
       },
+
       maxWidth: {
         2.5: "0.625rem",
         3: "0.75rem",
@@ -187,6 +215,7 @@ module.exports = {
         280: "70rem",
         292.5: "73.125rem",
       },
+
       maxHeight: {
         35: "8.75rem",
         70: "17.5rem",
@@ -194,12 +223,14 @@ module.exports = {
         550: "34.375rem",
         300: "18.75rem",
       },
+
       minWidth: {
         22.5: "5.625rem",
         42.5: "10.625rem",
         47.5: "11.875rem",
         75: "18.75rem",
       },
+
       zIndex: {
         999999: "999999",
         99999: "99999",
@@ -209,45 +240,78 @@ module.exports = {
         9: "9",
         1: "1",
       },
+
       opacity: {
         65: ".65",
       },
+
       backgroundImage: {
         video: "url('../images/video/video.png')",
+
+        // Main reusable brand gradient
+        "primary-gradient":
+          "linear-gradient(90deg, #2F6BFF 0%, #4A8CFF 100%)",
+
+        // Soft dashboard/profile banner gradient
+        "profile-gradient":
+          "linear-gradient(135deg, #EAF1FF 0%, #DCE7FF 45%, #F8FAFF 100%)",
+
+        // Sidebar/active item effect
+        "active-gradient":
+          "linear-gradient(90deg, #2F6BFF 0%, #4A8CFF 100%)",
       },
+
       content: {
         "icon-copy": 'url("../images/icon/icon-copy-alt.svg")',
       },
-      transitionProperty: { width: "width", stroke: "stroke" },
+
+      transitionProperty: {
+        width: "width",
+        stroke: "stroke",
+      },
+
       borderWidth: {
         6: "6px",
       },
+
       boxShadow: {
-        default: "0px 8px 13px -3px rgba(0, 0, 0, 0.07)",
-        card: "0px 1px 3px rgba(0, 0, 0, 0.12)",
-        "card-2": "0px 1px 2px rgba(0, 0, 0, 0.05)",
+        default: "0px 8px 13px -3px rgba(47, 107, 255, 0.08)",
+        card: "0px 8px 24px rgba(15, 23, 42, 0.06)",
+        "card-2": "0px 4px 14px rgba(15, 23, 42, 0.05)",
+
+        // Blue active button/toggle shadow
+        primary: "0px 8px 18px rgba(47, 107, 255, 0.28)",
+
+        // Soft floating cards like the reference dashboard
+        soft: "0px 12px 30px rgba(15, 23, 42, 0.08)",
+
         switcher:
-          "0px 2px 4px rgba(0, 0, 0, 0.2), inset 0px 2px 2px #FFFFFF, inset 0px -1px 1px rgba(0, 0, 0, 0.1)",
-        "switch-1": "0px 0px 5px rgba(0, 0, 0, 0.15)",
+          "0px 6px 18px rgba(15, 23, 42, 0.12), inset 0px 2px 2px #FFFFFF, inset 0px -1px 1px rgba(15, 23, 42, 0.08)",
+        "switch-1": "0px 0px 8px rgba(47, 107, 255, 0.22)",
+
         1: "0px 1px 3px rgba(0, 0, 0, 0.08)",
         2: "0px 1px 4px rgba(0, 0, 0, 0.12)",
         3: "0px 1px 5px rgba(0, 0, 0, 0.14)",
-        4: "0px 4px 10px rgba(0, 0, 0, 0.12)",
+        4: "0px 4px 10px rgba(47, 107, 255, 0.24)",
         5: "0px 1px 1px rgba(0, 0, 0, 0.15)",
         6: "0px 3px 15px rgba(0, 0, 0, 0.1)",
         7: "-5px 0 0 #313D4A, 5px 0 0 #313D4A",
         8: "1px 0 0 #313D4A, -1px 0 0 #313D4A, 0 1px 0 #313D4A, 0 -1px 0 #313D4A, 0 3px 13px rgb(0 0 0 / 8%)",
       },
+
       dropShadow: {
         1: "0px 1px 0px #E2E8F0",
         2: "0px 1px 4px rgba(0, 0, 0, 0.12)",
+        primary: "0px 8px 16px rgba(47, 107, 255, 0.26)",
       },
+
       keyframes: {
         rotating: {
           "0%, 100%": { transform: "rotate(360deg)" },
           "50%": { transform: "rotate(0deg)" },
         },
       },
+
       animation: {
         "ping-once": "ping 5s cubic-bezier(0, 0, 0.2, 1)",
         rotating: "rotating 30s linear infinite",
@@ -257,5 +321,6 @@ module.exports = {
       },
     },
   },
+
   plugins: [require("@tailwindcss/forms")],
 };

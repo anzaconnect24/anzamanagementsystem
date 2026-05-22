@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import Breadcrumb from "@/component/Breadcrumb";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { useTranslation } from "@/locales";
 import {
@@ -11,11 +10,21 @@ import {
   saveAssessmentAnswers,
   uploadAssessmentAttachment,
 } from "@/controllers/crat_controller";
+import {
+  FaCloudUploadAlt,
+  FaEye,
+  FaFileAlt,
+  FaSyncAlt,
+  FaCheckCircle,
+  FaClock,
+  FaPenAlt,
+  FaFolderOpen,
+} from "react-icons/fa";
 
 const DOMAIN_LABELS = {
-  commercial_marketing: "Commercial & Market",
+  commercial_marketing: "Commercial & Market Domain",
   financial: "Financial Domain",
-  legal_compliance: "Legal Domain",
+  legal_compliance: "Legal & Compliance Domain",
   operations: "Operations Domain",
 };
 
@@ -33,9 +42,9 @@ const getWordCount = (text = "") => {
   return trimmed ? trimmed.split(/\s+/).length : 0;
 };
 
-const getProgressBarColor = (completion = 0) => {
-  if (completion < 40) return "#ef4444";
-  if (completion < 70) return "#f59e0b";
+const getProgressBarColor = (progress = 0) => {
+  if (progress < 40) return "#ef4444";
+  if (progress < 70) return "#f59e0b";
   return "#10b981";
 };
 
@@ -43,19 +52,17 @@ const getQuestionState = (question, answer = {}, isSwahili = false) => {
   const requiredAttachmentText = isSwahili
     ? question.requiredAttachmentSw || question.requiredAttachment || ""
     : question.requiredAttachment || question.requiredAttachmentSw || "";
-  const needsAttachment = Boolean(requiredAttachmentText.trim());
+
   const hasAttachment = Boolean((answer.attachment || "").trim());
   const hasComment = Boolean((answer.entrepreneurComment || "").trim());
-  const isComplete = hasAttachment || hasComment;
-  const isStarted = hasAttachment || hasComment;
 
   return {
     requiredAttachmentText,
-    needsAttachment,
+    needsAttachment: Boolean(requiredAttachmentText.trim()),
     hasAttachment,
     hasComment,
-    isComplete,
-    isStarted,
+    isComplete: hasAttachment || hasComment,
+    isStarted: hasAttachment || hasComment,
   };
 };
 
@@ -65,6 +72,7 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
 
   const { userDetails } = useContext(UserContext);
   const { isSwahili } = useTranslation();
+
   const [loading, setLoading] = useState(true);
   const [assessment, setAssessment] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -74,26 +82,19 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const title = DOMAIN_LABELS[domainKey] || "CRAT Domain";
+
   const labels = {
-    assessmentScope: isSwahili ? "Eneo la Tathmini" : "Assessment Scope",
-    requiredAttachment: isSwahili
-      ? "Kiambatisho Kinachohitajika"
-      : "Required Attachment",
-    attachment: isSwahili ? "Kiambatisho" : "Attachment",
-    remarks: isSwahili ? "Maoni" : "Remarks",
-    uploaded: isSwahili ? "Imepakiwa" : "Uploaded",
+    requiredDocuments: isSwahili
+      ? "Nyaraka Zinazohitajika"
+      : "Required Documents",
+    requiredDocumentsHint: isSwahili
+      ? "Pakia ushahidi unaohitajika kwa eneo hili la tathmini."
+      : "Upload supporting evidence required for this assessment domain.",
+    attached: isSwahili ? "Imeambatishwa" : "Attached",
+    missing: isSwahili ? "Haijapakiwa" : "Missing",
     pending: isSwahili ? "Zinazosubiri" : "Pending",
-    completion: isSwahili ? "Ukamilifu" : "Completion",
+    progress: isSwahili ? "Maendeleo" : "Progress",
     saving: isSwahili ? "Inahifadhi..." : "Saving...",
-    loading: isSwahili ? "Inapakia taarifa za eneo" : "Loading domain data",
-    missingAttachment: isSwahili ? "Kiambatisho hakipo" : "Missing Attachment",
-    noAttachmentNeeded: isSwahili
-      ? "Hakuna kiambatisho"
-      : "No Attachment Needed",
-    notRequired: isSwahili ? "Haihitajiki" : "Not required",
-    noAttachmentUploaded: isSwahili
-      ? "Hakuna kiambatisho kilichopakiwa."
-      : "No attachment uploaded.",
     chooseFileFirst: isSwahili
       ? "Tafadhali chagua faili kwanza."
       : "Please choose a file first.",
@@ -103,43 +104,35 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
     uploadFailed: isSwahili
       ? "Imeshindikana kupakia kiambatisho."
       : "Failed to upload attachment.",
-    uploading: isSwahili ? "Inapakia..." : "Uploading...",
     view: isSwahili ? "Tazama" : "View",
-    question: isSwahili ? "Swali" : "Question",
     notes: isSwahili ? "Maelezo" : "Notes",
     notesHint: isSwahili
       ? "Andika maelezo mafupi yanayoonyesha hali ya sasa ya biashara yako."
       : "Add concise context that helps explain your current business position.",
-    uploadAttachment: isSwahili ? "Pakia Kiambatisho" : "Upload Attachment",
-    replaceAttachment: isSwahili
-      ? "Badilisha Kiambatisho"
-      : "Replace Attachment",
-    evidenceNeeded: isSwahili ? "Ushahidi unaohitajika" : "Evidence needed",
+    uploadAttachment: isSwahili ? "Pakia" : "Upload",
+    replaceAttachment: isSwahili ? "Badilisha" : "Replace",
     completed: isSwahili ? "Imekamilika" : "Completed",
     answered: isSwahili ? "Imejibiwa" : "Answered",
-    notesRequired: isSwahili ? "Maelezo yanahitajika" : "Notes required",
-    responseRequired: isSwahili
-      ? "Maelezo au kiambatisho kinahitajika"
-      : "Notes or attachment required",
-    answerInProgress: isSwahili ? "Inaendelea" : "In progress",
-    optionalEvidence: isSwahili
-      ? "Hakuna ushahidi wa lazima kwa swali hili."
-      : "This question does not require a mandatory attachment.",
     evidenceUploaded: isSwahili ? "Ushahidi" : "Evidence uploaded",
     words: isSwahili ? "maneno" : "words",
     noQuestions: isSwahili
       ? "Hakuna maswali hai yaliyopatikana kwa eneo hili."
       : "No active questions found for this domain.",
+    noRequiredDocuments: isSwahili
+      ? "Hakuna nyaraka za lazima kwa eneo hili."
+      : "No required documents for this domain.",
   };
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
+
         const userUuid = userDetails?.uuid;
         if (!userUuid) return;
 
         const business = await getUserBusiness(userUuid);
+
         if (!business?.id) {
           toast.error("No business profile found for CRAT.");
           return;
@@ -154,12 +147,14 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
         setAssessment(current?.assessment || null);
 
         const mapped = {};
+
         (current?.answers || []).forEach((answer) => {
           mapped[answer.questionId] = {
             attachment: answer.attachment || answer.evidence || "",
             entrepreneurComment: answer.entrepreneurComment || "",
           };
         });
+
         setAnswers(mapped);
       } catch (error) {
         console.error(error);
@@ -174,34 +169,58 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
 
   const preparedAnswers = useMemo(
     () =>
-      questions.map((q) => ({
-        questionId: q.id,
-        evidence: answers[q.id]?.attachment || "",
-        entrepreneurComment: answers[q.id]?.entrepreneurComment || "",
+      questions.map((question) => ({
+        questionId: question.id,
+        evidence: answers[question.id]?.attachment || "",
+        entrepreneurComment:
+          answers[question.id]?.entrepreneurComment || "",
       })),
-    [answers, questions],
+    [answers, questions]
+  );
+
+  const requiredDocuments = useMemo(
+    () =>
+      questions.filter(
+        (question) =>
+          getQuestionState(question, answers[question.id], isSwahili)
+            .needsAttachment
+      ),
+    [questions, answers, isSwahili]
   );
 
   const progressStats = useMemo(() => {
     const total = questions.length;
+
     const evidenceUploaded = questions.filter((question) =>
-      Boolean((answers[question.id]?.attachment || "").trim()),
+      Boolean((answers[question.id]?.attachment || "").trim())
     ).length;
+
     const completed = questions.filter(
       (question) =>
-        getQuestionState(question, answers[question.id], isSwahili).isComplete,
+        getQuestionState(question, answers[question.id], isSwahili).isComplete
     ).length;
+
     const started = questions.filter(
       (question) =>
-        getQuestionState(question, answers[question.id], isSwahili).isStarted,
+        getQuestionState(question, answers[question.id], isSwahili).isStarted
     ).length;
-    const pending = total - completed;
-    const completion = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-    return { total, evidenceUploaded, completed, started, pending, completion };
-  }, [answers, questions]);
+    const pending = total - completed;
+    const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+    return {
+      total,
+      evidenceUploaded,
+      completed,
+      started,
+      pending,
+      progress,
+    };
+  }, [answers, questions, isSwahili]);
 
   const setAnswerValue = (questionId, field, value) => {
+    setHasInteracted(true);
+
     setAnswers((prev) => ({
       ...prev,
       [questionId]: {
@@ -220,6 +239,7 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
     try {
       setIsAutosaving(true);
       await saveAssessmentAnswers(assessment.id, preparedAnswers);
+
       if (showSuccess) {
         toast.success("Draft saved.");
       }
@@ -253,12 +273,15 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
     }
 
     try {
-      setUploadingByQuestion((prev) => ({ ...prev, [questionId]: true }));
+      setUploadingByQuestion((prev) => ({
+        ...prev,
+        [questionId]: true,
+      }));
 
       const payload = await uploadAssessmentAttachment(
         assessment.id,
         questionId,
-        selectedFile,
+        selectedFile
       );
 
       setAnswerValue(questionId, "attachment", payload?.attachment || "");
@@ -267,280 +290,310 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
       console.error(error);
       toast.error(labels.uploadFailed);
     } finally {
-      setUploadingByQuestion((prev) => ({ ...prev, [questionId]: false }));
+      setUploadingByQuestion((prev) => ({
+        ...prev,
+        [questionId]: false,
+      }));
     }
   };
 
   if (loading) {
     return (
-      <div className="w-full p-4 md:p-6">
-        <Breadcrumb pageName={title} />
-
-        <div className="space-y-4 rounded-[28px] border border-black/10 bg-white/95 p-4 shadow-sm md:p-6">
-          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-            <div className="space-y-3">
-              <div className="h-8 w-64 animate-pulse rounded-full bg-slate-200" />
-              <div className="h-4 w-96 animate-pulse rounded-full bg-slate-200" />
-            </div>
-            <div className="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-medium text-slate-700">
-              <span className="h-2.5 w-2.5 animate-pulse rounded-full bg-sky-500" />
-              {labels.loading}
-            </div>
-          </div>
-
-          <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100">
-            <div className="h-full w-1/3 animate-pulse rounded-full bg-slate-300" />
-          </div>
-
-          <div className="space-y-4">
-            {Array.from({ length: 4 }).map((_, idx) => (
-              <div
-                key={idx}
-                className="rounded-[24px] border border-black/10 bg-slate-50/70 p-5"
-              >
-                <div className="mb-4 flex items-center justify-between gap-3">
-                  <div className="h-6 w-28 animate-pulse rounded-full bg-slate-200" />
-                  <div className="h-6 w-24 animate-pulse rounded-full bg-slate-200" />
-                </div>
-                <div className="space-y-3">
-                  <div className="h-4 w-full animate-pulse rounded-full bg-slate-200" />
-                  <div className="h-4 w-10/12 animate-pulse rounded-full bg-slate-200" />
-                </div>
-                <div className="mt-5 grid gap-4 lg:grid-cols-[1.1fr_1.4fr]">
-                  <div className="rounded-2xl border border-black/10 bg-white p-4">
-                    <div className="h-4 w-32 animate-pulse rounded-full bg-slate-200" />
-                    <div className="mt-3 h-4 w-full animate-pulse rounded-full bg-slate-200" />
-                    <div className="mt-2 h-10 w-36 animate-pulse rounded-xl bg-slate-200" />
-                  </div>
-                  <div className="rounded-2xl border border-black/10 bg-white p-4">
-                    <div className="h-4 w-24 animate-pulse rounded-full bg-slate-200" />
-                    <div className="mt-3 h-28 w-full animate-pulse rounded-2xl bg-slate-200" />
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+      <div className="w-full p-4 md:px-6 md:pb-6">
+        <div className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="h-8 w-64 animate-pulse rounded-full bg-slate-200" />
+          <div className="mt-3 h-4 w-96 animate-pulse rounded-full bg-slate-200" />
         </div>
       </div>
     );
   }
 
   return (
-    <div className="w-full p-4 md:p-6">
-      <Breadcrumb pageName={title} />
+    <div className="w-full p-4 md:px-6 md:pb-6">
+      {/* HERO */}
+      <div className="relative mb-5 h-[240px] overflow-hidden rounded-[28px] border border-slate-200 bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/business_tools_hero.svg')",
+          }}
+        />
 
-      <div className="space-y-4">
-        <div className="rounded-[28px] border border-black/10 bg-white p-5 shadow-sm md:p-6">
-          <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl space-y-2">
-              <h1 className="text-2xl font-semibold tracking-tight text-slate-900 md:text-3xl">
-                {title}
-              </h1>
-              <p className="text-sm leading-6 text-slate-600 md:text-[15px]">
-                {labels.notesHint}
-              </p>
-            </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
 
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-                {labels.completed}: {progressStats.completed}
-              </span>
-              <span className="rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                {labels.pending}: {progressStats.pending}
-              </span>
-              <span className="rounded-full bg-sky-100 px-3 py-1 text-xs font-semibold text-sky-800">
-                {labels.answered}: {progressStats.started}/{questions.length}
-              </span>
-              <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-                {labels.evidenceUploaded}: {progressStats.evidenceUploaded}
-              </span>
-              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                {labels.completion}: {progressStats.completion}%
-              </span>
-            </div>
-          </div>
+        <div className="relative z-10 flex h-full items-end p-8 text-white">
+          <div className="max-w-3xl">
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+              CRAT Assessment Domain
+            </span>
 
-          <div className="mt-5">
-            <div className="mb-2 flex items-center justify-between gap-3 text-xs font-medium text-slate-500">
-              <span>{labels.completion}</span>
-              <span>{progressStats.completion}%</span>
-            </div>
-            <div className="h-3 overflow-hidden rounded-full bg-slate-100">
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{
-                  width: `${progressStats.completion}%`,
-                  backgroundColor: getProgressBarColor(
-                    progressStats.completion,
-                  ),
-                }}
-              />
-            </div>
-          </div>
+            <h2 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">
+              {title}
+            </h2>
 
-          {isAutosaving && (
-            <p className="mt-3 text-xs font-medium text-slate-600">
-              {labels.saving}
+            <p className="max-w-2xl text-sm leading-6 text-white/85 md:text-base">
+              {labels.notesHint}
             </p>
-          )}
+          </div>
+        </div>
+      </div>
+
+      {/* STATUS CARDS */}
+      <div className="mb-5 grid grid-cols-2 gap-4 md:grid-cols-4">
+        <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <FaCheckCircle className="absolute right-5 top-5 text-xl text-emerald-500" />
+
+          <p className="text-3xl font-bold text-slate-900">
+            {progressStats.completed}
+          </p>
+
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            {labels.completed}
+          </p>
         </div>
 
-        <div className="space-y-4">
-          {questions.map((question, idx) => {
+        <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <FaClock className="absolute right-5 top-5 text-xl text-amber-500" />
+
+          <p className="text-3xl font-bold text-slate-900">
+            {progressStats.pending}
+          </p>
+
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            {labels.pending}
+          </p>
+        </div>
+
+        <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <FaPenAlt className="absolute right-5 top-5 text-xl text-sky-500" />
+
+          <p className="text-3xl font-bold text-slate-900">
+            {progressStats.started}/{questions.length}
+          </p>
+
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            {labels.answered}
+          </p>
+        </div>
+
+        <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+          <FaFolderOpen className="absolute right-5 top-5 text-xl text-blue-500" />
+
+          <p className="text-3xl font-bold text-slate-900">
+            {progressStats.evidenceUploaded}
+          </p>
+
+          <p className="mt-2 text-sm font-medium text-slate-500">
+            {labels.evidenceUploaded}
+          </p>
+        </div>
+      </div>
+
+      {/* PROGRESS BAR */}
+      <div className="mb-6 rounded-[24px] border border-slate-200 bg-white px-5 py-4 shadow-sm md:px-6">
+        <div className="mb-2 flex items-center justify-between text-xs font-medium text-slate-500">
+          <span>{labels.progress}</span>
+          <span>{progressStats.progress}%</span>
+        </div>
+
+        <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+          <div
+            className="h-full rounded-full transition-all duration-300"
+            style={{
+              width: `${progressStats.progress}%`,
+              backgroundColor: getProgressBarColor(progressStats.progress),
+            }}
+          />
+        </div>
+
+        {isAutosaving && (
+          <p className="mt-3 text-xs font-medium text-slate-600">
+            {labels.saving}
+          </p>
+        )}
+      </div>
+
+      <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-4">
+        <main className="space-y-4 xl:col-span-3">
+          {questions.map((question, index) => {
             const commentValue =
               answers[question.id]?.entrepreneurComment || "";
+
             const wordCount = getWordCount(commentValue);
+
             const questionText = isSwahili
               ? question.questionTextSw || question.questionTextEn
               : question.questionTextEn || question.questionTextSw;
-            const {
-              requiredAttachmentText,
-              needsAttachment,
-              hasAttachment,
-              hasComment,
-              isComplete,
-              isStarted,
-            } = getQuestionState(question, answers[question.id], isSwahili);
 
             return (
               <section
                 key={question.id}
-                className="rounded-[26px] border border-black/10 bg-white p-5 shadow-sm transition-colors md:p-6"
+                className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm transition md:p-6"
               >
-                <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold text-white">
-                        {labels.question} {idx + 1}
-                      </span>
-                      {isComplete ? (
-                        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-800">
-                          {labels.completed}
-                        </span>
-                      ) : needsAttachment ? (
-                        <span className="rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold text-rose-700">
-                          {labels.responseRequired}
-                        </span>
-                      ) : (
-                        <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
-                          {labels.notesRequired}
-                        </span>
-                      )}
-                    </div>
+                <div className="space-y-3">
+                  <span className="inline-flex rounded-full bg-blue-600 px-3 py-1 text-xs font-semibold text-white">
+                    {index + 1}
+                  </span>
 
-                    <p className="max-w-4xl text-sm leading-7 text-slate-800 md:text-[15px]">
-                      {questionText}
-                    </p>
-                  </div>
+                  <p className="max-w-4xl text-sm leading-7 text-slate-800 md:text-[15px]">
+                    {questionText}
+                  </p>
                 </div>
 
-                <div className="mt-5 space-y-3">
-                  <div className="rounded-2xl border border-black/10 bg-white p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <h2 className="text-sm font-semibold text-slate-900">
-                        {labels.notes}
-                      </h2>
-                      <span className="text-xs font-medium text-slate-400">
-                        {wordCount} {labels.words}
-                      </span>
-                    </div>
+                <div className="mt-5 rounded-2xl border border-slate-200 bg-slate-50/70 p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <h2 className="text-sm font-semibold text-slate-900">
+                      {labels.notes}
+                    </h2>
 
-                    <textarea
-                      rows={6}
-                      className="mt-3 w-full rounded-2xl border border-black/10 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-emerald-300 focus:bg-white"
-                      placeholder={labels.notesHint}
-                      value={commentValue}
-                      onChange={(e) => {
-                        setHasInteracted(true);
-                        setAnswerValue(
-                          question.id,
-                          "entrepreneurComment",
-                          e.target.value,
-                        );
-                      }}
-                      onBlur={() => onSave(false)}
-                    />
+                    <span className="text-xs font-medium text-slate-400">
+                      {wordCount} {labels.words}
+                    </span>
                   </div>
 
-                  {needsAttachment && (
-                    <div className="rounded-2xl border border-black/10 bg-slate-50/80 p-3">
-                      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                        <div className="min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-semibold text-slate-900">
-                              {labels.attachment}
-                            </h2>
-                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800">
-                              {labels.evidenceNeeded}
-                            </span>
-                          </div>
-                          <p className="mt-1 truncate text-xs text-slate-600">
-                            {requiredAttachmentText}
-                          </p>
-                        </div>
-
-                        <div className="flex flex-wrap items-center gap-2">
-                          <label
-                            htmlFor={`attachment-${question.id}`}
-                            className="inline-flex cursor-pointer items-center justify-center rounded-lg bg-emerald-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-600"
-                          >
-                            {hasAttachment
-                              ? labels.replaceAttachment
-                              : labels.uploadAttachment}
-                          </label>
-                          <input
-                            id={`attachment-${question.id}`}
-                            type="file"
-                            className="hidden"
-                            onChange={(e) =>
-                              onUploadAttachment(
-                                question.id,
-                                e.target.files?.[0] || null,
-                              )
-                            }
-                          />
-
-                          {uploadingByQuestion[question.id] && (
-                            <p className="text-xs font-medium text-slate-600">
-                              {labels.uploading}
-                            </p>
-                          )}
-
-                          {answers[question.id]?.attachment ? (
-                            <a
-                              href={answers[question.id]?.attachment}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="max-w-full truncate rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-medium text-emerald-800 hover:underline"
-                              title={getFileNameFromUrl(
-                                answers[question.id]?.attachment,
-                              )}
-                            >
-                              {labels.view}:{" "}
-                              {getFileNameFromUrl(
-                                answers[question.id]?.attachment,
-                              )}
-                            </a>
-                          ) : (
-                            <p className="text-xs text-slate-500">
-                              {labels.noAttachmentUploaded}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  )}
+                  <textarea
+                    rows={6}
+                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                    placeholder={labels.notesHint}
+                    value={commentValue}
+                    onChange={(event) =>
+                      setAnswerValue(
+                        question.id,
+                        "entrepreneurComment",
+                        event.target.value
+                      )
+                    }
+                    onBlur={() => onSave(false)}
+                  />
                 </div>
               </section>
             );
           })}
-        </div>
 
-        {questions.length === 0 && (
-          <p className="mt-4 rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
-            {labels.noQuestions}
-          </p>
-        )}
+          {questions.length === 0 && (
+            <p className="rounded-lg border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-800">
+              {labels.noQuestions}
+            </p>
+          )}
+        </main>
+
+        <aside className="h-fit rounded-[28px] border border-slate-200 bg-white p-5 shadow-sm xl:sticky xl:top-6 xl:col-span-1">
+          <div className="mb-5">
+            <h2 className="text-xl font-semibold text-slate-900">
+              {labels.requiredDocuments}
+            </h2>
+
+            <p className="mt-2 text-sm leading-6 text-slate-500">
+              {labels.requiredDocumentsHint}
+            </p>
+          </div>
+
+          {requiredDocuments.length === 0 ? (
+            <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">
+              {labels.noRequiredDocuments}
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {requiredDocuments.map((question) => {
+                const state = getQuestionState(
+                  question,
+                  answers[question.id],
+                  isSwahili
+                );
+
+                const attachmentUrl = answers[question.id]?.attachment || "";
+
+                return (
+                  <div
+                    key={question.id}
+                    className="rounded-2xl border border-blue-100 bg-blue-50/30 p-3 transition hover:border-blue-200 hover:bg-blue-50/60"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-white text-blue-600 shadow-sm">
+                        <FaFileAlt />
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className="truncate text-sm font-semibold text-slate-900"
+                          title={state.requiredAttachmentText}
+                        >
+                          {state.requiredAttachmentText}
+                        </p>
+
+                        <p
+                          className={`mt-1 text-[11px] font-semibold ${
+                            state.hasAttachment
+                              ? "text-emerald-600"
+                              : "text-amber-600"
+                          }`}
+                        >
+                          {state.hasAttachment
+                            ? labels.attached
+                            : labels.missing}
+                        </p>
+                      </div>
+
+                      <div className="flex shrink-0 items-center gap-3">
+                        <label
+                          htmlFor={`sidebar-attachment-${question.id}`}
+                          className="cursor-pointer text-blue-600 transition hover:text-blue-700"
+                          title={
+                            state.hasAttachment
+                              ? labels.replaceAttachment
+                              : labels.uploadAttachment
+                          }
+                        >
+                          {uploadingByQuestion[question.id] ? (
+                            <FaSyncAlt className="animate-spin" />
+                          ) : (
+                            <FaCloudUploadAlt />
+                          )}
+                        </label>
+
+                        <input
+                          id={`sidebar-attachment-${question.id}`}
+                          type="file"
+                          className="hidden"
+                          onChange={(event) =>
+                            onUploadAttachment(
+                              question.id,
+                              event.target.files?.[0] || null
+                            )
+                          }
+                        />
+
+                        {attachmentUrl && (
+                          <a
+                            href={attachmentUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-emerald-600 transition hover:text-emerald-700"
+                            title={`${labels.view}: ${getFileNameFromUrl(
+                              attachmentUrl
+                            )}`}
+                          >
+                            <FaEye />
+                          </a>
+                        )}
+                      </div>
+                    </div>
+
+                    {attachmentUrl && (
+                      <p
+                        className="mt-2 truncate pl-[60px] text-xs text-slate-500"
+                        title={getFileNameFromUrl(attachmentUrl)}
+                      >
+                        {getFileNameFromUrl(attachmentUrl)}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </aside>
       </div>
     </div>
   );

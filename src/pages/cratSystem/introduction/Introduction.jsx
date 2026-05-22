@@ -1,100 +1,178 @@
 import React from "react";
-import Breadcrumb from "@/component/Breadcrumb";
+import {
+  FaChartLine,
+  FaBalanceScale,
+  FaCogs,
+  FaFileAlt,
+  FaCheckCircle,
+} from "react-icons/fa";
+
+const domainCards = [
+  {
+    title: "Commercial & Market Domain",
+    weight: "25%",
+    icon: FaFileAlt,
+    note: "Market position, customer demand, growth evidence, and competitive advantage.",
+  },
+  {
+    title: "Financial Domain",
+    weight: "35%",
+    icon: FaChartLine,
+    note: "Revenue quality, financial controls, forecasts, and funding readiness.",
+  },
+  {
+    title: "Operations Domain",
+    weight: "15%",
+    icon: FaCogs,
+    note: "Systems, governance, operational resilience, and execution capability.",
+  },
+  {
+    title: "Legal & Compliance Domain",
+    weight: "25%",
+    icon: FaBalanceScale,
+    note: "Corporate records, contracts, regulatory exposure, and compliance posture.",
+  },
+];
+
+const steps = [
+  "Complete focused questions across each readiness domain.",
+  "Upload supporting evidence and documentation.",
+  "Submit your completed assessment for reviewer evaluation and scoring.",
+  "Receive your Capital Readiness results, scores, and tailored recommendations.",
+];
 
 const IntroductionPage = () => {
   return (
-    <div>
-      <Breadcrumb pageName="CRAT Introduction" />
-      <div className="w-full ">
-        <div className="rounded-xl bg-primary px-5 py-6 text-white mb-4">
-          <p className="mt-2 text-sm leading-6 text-slate-100 md:text-base">
-            The tool seeks to assess the status of target investees on four key
-            due diligence domains:{" "}
-            <span className="capitalize">
-              Market, Financials, Operations,{" "}
-              <span className="lowercase">and</span> Legal.
+    <div className="min-h-screen p-4 md:px-6 md:pb-6">
+      {/* HERO SECTION */}
+      <div className="relative overflow-hidden rounded-[28px] shadow-sm">
+        {/* Background Image */}
+        <img
+          src="/images/general_resources_hero.svg"
+          alt="Capital readiness"
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+
+        {/* Dark Overlay */}
+        <div className="absolute inset-0 bg-black/70" />
+
+        {/* Hero Content */}
+        <div className="relative z-10 px-5 py-7 lg:px-8 lg:py-10">
+          <div className="max-w-3xl">
+            <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-white backdrop-blur">
+              <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+              Capital Readiness Framework
             </span>
-          </p>
+
+            <h1 className="text-3xl font-bold leading-tight tracking-tight text-white lg:text-5xl">
+              Welcome to the Capital Readiness Assessment Tool
+            </h1>
+
+            <p className="mt-4 max-w-2xl text-sm leading-7 text-white/85 lg:text-base">
+              The Capital Readiness Assessment Tool (CRAT) helps startups and
+              growth-stage businesses evaluate their preparedness to access
+              financing and investment opportunities.
+            </p>
+          </div>
         </div>
-        <div className="bg-white px-1 py-2 md:px-2">
-          <div className="mt-6 px-1">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Assessment Structure
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  ✓
-                </span>
-                The domains are each subdivided into sub-domains, each focusing
-                on one particular area.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  ✓
-                </span>
-                Scores are binary: assess whether the company is strong or weak
-                on any particular element investigated.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  ✓
-                </span>
-                The assessment is organised across four weighted domains:
-                Financial (35%), Commercial & Market (25%), Legal & Compliance
-                (25%), and Operations (15%).
-              </li>
-            </ul>
-          </div>
+      </div>
 
-          <div className="mt-6 px-1">
-            <h2 className="text-lg font-semibold text-slate-900">
-              How it Works
-            </h2>
-            <ul className="mt-3 space-y-2 text-sm leading-6 text-slate-700">
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  ✓
-                </span>
-                Under each domain, you will encounter a set of focused questions
-                that probe the depth and maturity of your business in that area.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  ✓
-                </span>
-                For each question, you are required to upload the corresponding
-                supporting document that evidences your current position.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  ✓
-                </span>
-                You are also invited to provide a brief commentary to
-                contextualise the materials submitted.
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1 inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-bold text-primary">
-                  ✓
-                </span>
-                Upon completion, a qualified reviewer will conduct a thorough
-                evaluation of all submitted documentation and generate a
-                comprehensive Capital Readiness Report.
-              </li>
-            </ul>
-          </div>
+      {/* DOMAIN CARDS */}
+      <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-4">
+        {domainCards.map(({ title, weight, icon: Icon, note }) => (
+          <div
+            key={title}
+            className="rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-lg text-blue-600">
+                <Icon />
+              </div>
 
-          <div className="mt-6  bg-primary/10  p-5 rounded-lg ">
-            <p className="text-sm leading-6 text-slate-700">
-              The report provides a weighted score across all four domains,
-              identifies material gaps in your business, and outlines a
-              prioritised path to investment readiness.
-            </p>
-            <p className="mt-3 text-sm font-semibold text-slate-900">
-              A business is considered Investment Ready upon achieving an
-              overall weighted score of 70% or above across all four domains.
-            </p>
+              <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+                {weight}
+              </span>
+            </div>
+
+            <h3 className="text-base font-semibold text-[#172033]">
+              {title}
+            </h3>
+
+            <p className="mt-2 text-sm leading-6 text-[#6f6f72]">{note}</p>
           </div>
+        ))}
+      </div>
+
+      {/* ASSESSMENT MODEL */}
+      <div className="mt-6 rounded-[24px] border border-[#e8edf5] bg-white p-6 shadow-sm">
+        <p className="text-xs font-semibold tracking-wide text-blue-600">
+          Assessment Model
+        </p>
+
+        <h2 className="mt-2 text-2xl font-bold text-[#172033]">
+          Structured, weighted, and evidence-based.
+        </h2>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-3">
+          {[
+            "Each domain is divided into focused sub-domains aligned to investor due diligence.",
+            "Reviewer scoring validates each submission against consistent capital readiness criteria.",
+            "Weighted scoring provides visibility into readiness gaps and priority actions.",
+          ].map((item) => (
+            <div
+              key={item}
+              className="flex gap-4 rounded-2xl bg-[#f7f9fc] p-5"
+            >
+              <FaCheckCircle className="mt-1 shrink-0 text-blue-600" />
+
+              <p className="text-sm leading-6 text-[#6f6f72]">{item}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* HOW IT WORKS */}
+      <div className="mt-6 rounded-[24px] border border-[#e8edf5] bg-white p-6 shadow-sm">
+        <p className="text-xs font-semibold tracking-wide text-blue-600">
+          Process
+        </p>
+
+        <h2 className="mt-2 text-2xl font-bold text-[#172033]">
+          How it works
+        </h2>
+
+        <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {steps.map((step, index) => (
+            <div
+              key={step}
+              className="flex gap-4 rounded-2xl bg-[#f7f9fc] p-5"
+            >
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+                {index + 1}
+              </span>
+
+              <p className="text-sm leading-6 text-[#6f6f72]">{step}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* READINESS SECTION */}
+      <div className="mt-6 rounded-[24px] border border-[#e8edf5] bg-white p-6 shadow-sm">
+        <div>
+          <p className="text-xs font-semibold tracking-wide text-blue-600">
+            Readiness Threshold
+          </p>
+
+          <h2 className="mt-2 text-2xl font-bold text-[#172033]">
+            Startups scoring above 70% are considered Investment Ready.
+          </h2>
+
+          <p className="mt-3 max-w-3xl text-sm leading-7 text-[#6f6f72]">
+            The final report consolidates weighted scoring, highlights
+            material business gaps, and recommends priority actions before
+            investor engagement.
+          </p>
         </div>
       </div>
     </div>

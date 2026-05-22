@@ -3,36 +3,43 @@
 import { useContext, useEffect, useState } from "react";
 import { useRouter } from "@/utils/navigation";
 import { useParams } from "react-router-dom";
-import Link from "@/utils/link";
+
 import Loader from "@/components/common/Loader";
+import Image from "@/utils/image";
+
 import { UserContext } from "@/layouts/DashboardLayout";
+
 import {
   deletePitchMaterial,
   getDocuments,
 } from "@/controllers/pitch_material_controller";
-import Image from "@/utils/image";
-import { BsTrash } from "react-icons/bs";
+
 import toast from "react-hot-toast";
-import { FaFilePdf, FaArrowLeft } from "react-icons/fa";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+
+import {
+  FaBookOpen,
+  FaFilePdf,
+} from "react-icons/fa";
+
+import { BsTrash } from "react-icons/bs";
+
 import { useTranslation } from "../../../../locales";
 
 const CategoryResourcesPage = () => {
   const { t } = useTranslation();
   const { category } = useParams();
-  const { userDetails } = useContext(UserContext);
   const router = useRouter();
+  const { userDetails } = useContext(UserContext);
+
   const [loading, setLoading] = useState(false);
   const [documents, setDocuments] = useState([]);
 
-  // Decode the category from URL (this will be in English)
   const decodedCategory = decodeURIComponent(category);
 
-  // Category mapping for display names
   const categoryMapping = {
-    "Finance and Fundraising": t(
+    "Finance & Fundraising": t(
       "learnAndGrow.financeAndFundraising",
-      "Finance and Fundraising"
+      "Finance & Fundraising"
     ),
     "Marketing & Sales": t(
       "learnAndGrow.marketingAndSales",
@@ -56,9 +63,55 @@ const CategoryResourcesPage = () => {
     ),
   };
 
-  // Get translated category name for display
+  const categoryDescriptions = {
+    "Finance & Fundraising":
+      "Practical templates, guides, and tools for budgeting, financial planning, investor readiness, and raising capital.",
+    "Marketing & Sales":
+      "Resources to help you attract customers, build visibility, improve sales execution, and grow revenue.",
+    "Technology & Innovation":
+      "Tools and materials for product development, digital transformation, systems design, and innovation.",
+    "Leadership & Personal Development":
+      "Guides to strengthen leadership, productivity, communication, decision-making, and personal growth.",
+    "Impact & Sustainability":
+      "Resources focused on social impact, ESG practices, sustainability, and responsible business models.",
+    "Legal & Compliance":
+      "Templates and guidance for legal setup, compliance, governance, contracts, and regulatory requirements.",
+  };
+
+  const categoryImages = {
+    "Finance & Fundraising":
+      "/images/finance_fundraising_card.svg",
+    "Marketing & Sales":
+      "/images/marketing_sales_card.svg",
+    "Technology & Innovation":
+      "/images/technology_innovation_card.svg",
+    "Leadership & Personal Development":
+      "/images/leadership_personal_development_card.svg",
+    "Impact & Sustainability":
+      "/images/impact_sustainability_card.svg",
+    "Legal & Compliance":
+      "/images/legal_compliance_card.svg",
+  };
+
+  const resourceImages = [
+    "/images/finance_fundraising_card.svg",
+    "/images/marketing_sales_card.svg",
+    "/images/technology_innovation_card.svg",
+    "/images/leadership_personal_development_card.svg",
+    "/images/impact_sustainability_card.svg",
+    "/images/legal_compliance_card.svg",
+  ];
+
   const displayCategoryName =
     categoryMapping[decodedCategory] || decodedCategory;
+
+  const categoryDescription =
+    categoryDescriptions[decodedCategory] ||
+    "Explore practical business resources, templates, and guides.";
+
+  const categoryImage =
+    categoryImages[decodedCategory] ||
+    "/images/finance_fundraising_card.svg";
 
   useEffect(() => {
     loadData();
@@ -66,25 +119,57 @@ const CategoryResourcesPage = () => {
 
   const loadData = () => {
     setLoading(true);
+
     getDocuments()
       .then((res) => {
-        // Filter documents by category
-        const categoryDocs = res.filter(
+        const categoryDocs = (res || []).filter(
           (doc) => doc.category === decodedCategory
         );
+
         setDocuments(categoryDocs);
+      })
+      .catch((error) => {
+        console.error(error);
+
+        toast.error(
+          t(
+            "learnAndGrow.failedToLoad",
+            "Failed to load resources"
+          )
+        );
       })
       .finally(() => setLoading(false));
   };
 
-  // Helper to determine if a doc/url is a PDF
   const isPdf = (doc) => {
     if (!doc) return false;
-    if (doc.type && doc.type.toLowerCase() === "document") return true;
-    return /\.pdf(\?.*)?$/i.test(doc.materialUrl || "");
+
+    if (
+      doc.type &&
+      doc.type.toLowerCase() === "document"
+    ) {
+      return true;
+    }
+
+    return /\.pdf(\?.*)?$/i.test(
+      doc.materialUrl || ""
+    );
   };
 
-  // Admin: delete a resource and update lists
+  const getFileType = (doc) => {
+    if (isPdf(doc)) return "PDF";
+
+    const url = doc?.materialUrl || "";
+
+    const extension = url
+      .split(".")
+      .pop()
+      ?.split("?")[0]
+      ?.toUpperCase();
+
+    return extension || "Document";
+  };
+
   const handleDeleteDoc = async (doc) => {
     const confirmed = confirm(
       t(
@@ -92,16 +177,30 @@ const CategoryResourcesPage = () => {
         "Delete this resource? This action cannot be undone."
       )
     );
+
     if (!confirmed) return;
+
     try {
       await deletePitchMaterial(doc.uuid);
-      toast.success(t("learnAndGrow.resourceDeleted", "Resource deleted"));
-      // Remove from documents list
-      setDocuments((prev) => prev.filter((d) => d.uuid !== doc.uuid));
+
+      toast.success(
+        t(
+          "learnAndGrow.resourceDeleted",
+          "Resource deleted"
+        )
+      );
+
+      setDocuments((prev) =>
+        prev.filter((d) => d.uuid !== doc.uuid)
+      );
     } catch (e) {
       console.error(e);
+
       toast.error(
-        t("learnAndGrow.failedToDelete", "Failed to delete resource")
+        t(
+          "learnAndGrow.failedToDelete",
+          "Failed to delete resource"
+        )
       );
     }
   };
@@ -109,138 +208,177 @@ const CategoryResourcesPage = () => {
   return loading ? (
     <Loader />
   ) : (
-    <div className="container mx-auto px-4 py-6">
-      {/* Breadcrumb */}
-      <div className="mb-6">
-        <Breadcrumb
-          prevLink=""
-          prevPage={t("learnAndGrow.generalResources", "General Resources")}
-          pageName={displayCategoryName}
-        />
-      </div>
+    <div className="min-h-screen bg-[#f5f7fb] px-3 py-6 lg:px-6">
+      <div className="mx-auto w-full max-w-[1600px]">
+        {/* HERO */}
+        <div className="relative mb-12 overflow-hidden rounded-3xl bg-black shadow-lg">
+          <div className="absolute inset-0">
+            <Image
+              src={categoryImage}
+              alt={displayCategoryName}
+              width={1800}
+              height={420}
+              className="h-full w-full object-cover opacity-70"
+            />
+          </div>
 
-      {/* Header */}
-      {/* <div className="rounded-xl border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark mb-6">
-        <div className="p-6 border-b border-stroke dark:border-strokedark">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.back()}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
-              >
-                <FaArrowLeft />
-                Back
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-black dark:text-white">
-                  {decodedCategory}
-                </h1>
-                <p className="mt-1 text-bodydark2">
-                  {documents.length} resource{documents.length !== 1 ? "s" : ""}{" "}
-                  available in this category
-                </p>
+          <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/70 to-black/30" />
+
+          <div className="relative z-10 flex min-h-[300px] items-center px-8 py-10 md:px-14">
+            <div className="max-w-4xl text-white">
+              <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium backdrop-blur-md">
+                <span className="h-2 w-2 rounded-full bg-orange-500" />
+                Featured Category
+              </span>
+
+              <h1 className="mb-5 text-4xl font-bold leading-tight md:text-5xl">
+                {displayCategoryName}
+              </h1>
+
+              <p className="mb-7 max-w-3xl text-base leading-7 text-white/85 md:text-lg">
+                {categoryDescription}
+              </p>
+
+              <div className="flex flex-wrap items-center gap-6 text-sm text-white/80">
+                <span className="inline-flex items-center gap-2">
+                  <FaBookOpen />
+                  {documents.length} Resources
+                </span>
+
+                <span className="inline-flex items-center gap-2">
+                  <FaFilePdf />
+                  Downloadable
+                </span>
+
+                <span className="inline-flex items-center gap-2">
+                  <FaBookOpen />
+                  Flexible Learning
+                </span>
               </div>
             </div>
-            {["Admin"].includes(userDetails.role) && (
-              <Link
-                href="/uploadMaterial/document"
-                className="bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-              >
-                Add Material
-              </Link>
-            )}
           </div>
         </div>
-      </div> */}
 
-      {/* Documents Grid */}
-      {documents.length === 0 ? (
-        <div className="text-center py-12 bg-white dark:bg-boxdark rounded-xl border border-stroke dark:border-strokedark">
-          <div className="text-6xl mb-4">📚</div>
-          <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-            {t("learnAndGrow.noResourcesFound", "No Resources Found")}
-          </h3>
-          <p className="text-gray-500 dark:text-gray-400">
-            {t(
-              "learnAndGrow.noMaterialsUploaded",
-              "No materials have been uploaded for this category yet."
-            )}
-          </p>
-          {["Admin"].includes(userDetails.role) && (
-            <Link
-              href="/uploadMaterial/document"
-              className="inline-block mt-4 bg-primary text-white px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors"
-            >
-              {t("learnAndGrow.addFirstMaterial", "Add First Material")}
-            </Link>
-          )}
+        {/* HEADER */}
+        <div className="mb-7">
+          <h2 className="text-xl font-semibold text-[#111827]">
+            Explore Resources
+          </h2>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {documents.map((doc) => (
-            <div
-              key={doc.uuid}
-              className="group bg-white dark:bg-boxdark flex flex-col justify-between rounded-xl border border-stroke dark:border-strokedark shadow-sm hover:shadow-lg transition-all duration-300"
-            >
-              {/* Document Thumbnail */}
-              <div>
-                <div className="relative aspect-[4/3] overflow-hidden rounded-t-xl">
-                  {
+
+        {/* EMPTY STATE */}
+        {documents.length === 0 ? (
+          <div className="rounded-3xl bg-white p-16 text-center shadow-sm">
+            <div className="mb-5 text-6xl">📚</div>
+
+            <h3 className="mb-2 text-2xl font-bold text-[#111827]">
+              No Resources Found
+            </h3>
+
+            <p className="text-[#6b7280]">
+              No materials have been uploaded for this category yet.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {documents.map((doc, index) => {
+              const fileType = getFileType(doc);
+
+              const cardImage =
+                resourceImages[
+                  index % resourceImages.length
+                ];
+
+              return (
+                <div
+                  key={doc.uuid}
+                  onClick={() => {
+                    window.open(
+                      doc.materialUrl,
+                      "_blank",
+                      "noopener,noreferrer"
+                    );
+                  }}
+                  className="group cursor-pointer overflow-hidden rounded-3xl bg-white shadow-sm ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                >
+                  {/* IMAGE */}
+                  <div className="relative h-44 overflow-hidden bg-black">
                     <Image
-                      src={doc.thumbnailUrl || "/discussion.avif"}
-                      alt={doc.fileName}
-                      fill
-                      className="object-cover group-hover:scale-105 transition-transform duration-300"
+                      src={cardImage}
+                      alt={doc.fileName || "Resource"}
+                      width={700}
+                      height={260}
+                      className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
                     />
-                  }
-                  {/* Document Type Badge */}
-                  <div className="absolute top-3 right-3">
-                    <span className="px-2 py-1 bg-black/70 text-white text-xs rounded-full">
-                      {isPdf(doc) ? "PDF" : "Document"}
-                    </span>
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-black/10 to-transparent" />
+
+                    {/* FILE TYPE */}
+                    <div className="absolute right-4 top-4">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                        <FaFilePdf />
+                        {fileType}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* CONTENT */}
+                  <div className="p-6">
+                    <h3 className="mb-3 line-clamp-2 text-xl font-bold text-[#111827]">
+                      {doc.fileName}
+                    </h3>
+
+                    <p className="mb-6 line-clamp-3 text-sm leading-6 text-[#6b7280]">
+                      {doc.description ||
+                        t(
+                          "learnAndGrow.noDescriptionAvailable",
+                          "No description available"
+                        )}
+                    </p>
+
+                    {/* FOOTER */}
+                    <div className="border-t border-black/10 pt-5">
+                      <div className="grid grid-cols-3 items-center text-xs text-[#6b7280]">
+                        <div className="flex items-center gap-2">
+                          <FaBookOpen />
+                          <span>Resource</span>
+                        </div>
+
+                        <div className="flex items-center justify-center gap-2">
+                          <FaFilePdf />
+                          <span>{fileType}</span>
+                        </div>
+
+                        <div className="flex justify-end">
+                          {["Admin"].includes(
+                            userDetails?.role
+                          ) ? (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteDoc(doc);
+                              }}
+                              className="inline-flex items-center gap-1 text-red-500 transition hover:text-red-600"
+                            >
+                              <BsTrash className="text-sm" />
+                              <span>Delete</span>
+                            </button>
+                          ) : (
+                            <div className="flex items-center gap-1 text-[#6b7280]">
+                              <FaBookOpen className="text-xs" />
+                              <span>View Resource</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
-
-                {/* Document Info */}
-                <div className="p-4">
-                  <h3 className="font-semibold text-gray-900 dark:text-white mb-2 line-clamp-2">
-                    {doc.fileName}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 line-clamp-3">
-                    {doc.description ||
-                      t(
-                        "learnAndGrow.noDescriptionAvailable",
-                        "No description available"
-                      )}
-                  </p>
-
-                  {/* Action Buttons */}
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 mt-auto px-4 pb-4">
-                <a
-                  href={doc.materialUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="w-full bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors text-center font-medium"
-                >
-                  {t("learnAndGrow.openResource", "Open Resource")}
-                </a>
-
-                {["Admin"].includes(userDetails.role) && (
-                  <button
-                    onClick={() => handleDeleteDoc(doc)}
-                    className="w-full text-red-600 hover:text-red-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2 border border-red-200 hover:bg-red-50 dark:border-red-800 dark:hover:bg-red-900/20 transition-colors"
-                  >
-                    <BsTrash />
-                    {t("common.delete", "Delete")}
-                  </button>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

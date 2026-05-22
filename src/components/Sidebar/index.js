@@ -30,7 +30,7 @@ import {
 } from "react-icons/ri";
 import { BsCalendar3, BsCardChecklist } from "react-icons/bs";
 import { BiMessageDetail } from "react-icons/bi";
-import { IoDocumentTextOutline, IoChevronDownOutline } from "react-icons/io5";
+import { IoDocumentTextOutline } from "react-icons/io5";
 import { logout } from "@/utils/local_storage";
 
 const Sidebar = ({
@@ -44,8 +44,8 @@ const Sidebar = ({
   const { t } = useTranslation();
   const trigger = useRef(null);
   const sidebar = useRef(null);
+  const router = useRouter();
 
-  // Use the sidebarExpanded state from props if provided, otherwise use local state
   const [localSidebarExpanded, setLocalSidebarExpanded] = useState(() => {
     if (typeof window !== "undefined") {
       const saved = localStorage.getItem("sidebar-expanded");
@@ -53,20 +53,18 @@ const Sidebar = ({
     }
     return false;
   });
-  const router = useRouter();
 
-  // Use props if provided, otherwise use local state
   const isExpanded =
     sidebarExpanded !== undefined ? sidebarExpanded : localSidebarExpanded;
+
   const setExpanded =
     setSidebarExpanded !== undefined
       ? setSidebarExpanded
       : setLocalSidebarExpanded;
-  const [activeCategory, setActiveCategory] = useState(null);
+
   const [isHovered, setIsHovered] = useState(false);
   const [availableDomains, setAvailableDomains] = useState([]);
 
-  // Close on click outside
   useEffect(() => {
     const clickHandler = ({ target }) => {
       if (!sidebar.current || !trigger.current) return;
@@ -76,24 +74,27 @@ const Sidebar = ({
         trigger.current.contains(target)
       )
         return;
+
       setSidebarOpen(false);
     };
+
     document.addEventListener("click", clickHandler);
     return () => document.removeEventListener("click", clickHandler);
   });
 
-  // Close if the esc key is pressed
   useEffect(() => {
     const keyHandler = ({ keyCode }) => {
       if (!sidebarOpen || keyCode !== 27) return;
       setSidebarOpen(false);
     };
+
     document.addEventListener("keydown", keyHandler);
     return () => document.removeEventListener("keydown", keyHandler);
   });
 
   useEffect(() => {
     localStorage.setItem("sidebar-expanded", isExpanded.toString());
+
     if (isExpanded) {
       document.querySelector("body")?.classList.add("sidebar-expanded");
     } else {
@@ -101,27 +102,15 @@ const Sidebar = ({
     }
   }, [isExpanded]);
 
-  // Fetch available domains for CRAT system submenu
-  useEffect(() => {
-    if (userDetails?.role === "Enterprenuer") {
-      getAvailableDomains()
-        .then((domains) => setAvailableDomains(domains || []))
-        .catch(() => setAvailableDomains([]));
-    }
-  }, [userDetails?.role]);
-
-  // Menu categories based on user role
   const getMenuCategories = () => {
     const categories = [];
 
-    // Return empty categories if userDetails is not loaded yet
     if (!userDetails || !userDetails.role) {
       return categories;
     }
 
     const role = userDetails.role;
 
-    // Dashboard - For all roles
     categories.push({
       id: "dashboard",
       title: t("navigation.dashboard", "Dashboard"),
@@ -135,7 +124,6 @@ const Sidebar = ({
       ],
     });
 
-    // People - Different based on roles
     const peopleItems = [];
 
     if (["Admin"].includes(role)) {
@@ -164,21 +152,31 @@ const Sidebar = ({
             name: t("navigation.staff", "Staff"),
             path: "/dashboard/reviewers",
           },
-          { name: t("navigation.admins", "Admins"), path: "/dashboard/admins" },
+          {
+            name: t("navigation.admins", "Admins"),
+            path: "/dashboard/admins",
+          },
         ],
       });
     }
 
     if (["Mentor"].includes(role)) {
       peopleItems.push({
-        name: t("navigation.mentees", "Mentees"),
-        path: "/dashboard/mentorEntreprenuers",
-        icon: <SlPeople className="text-xl" />,
+        name: t("navigation.startups", "Startups"),
+        path: "/dashboard/enterprenuers",
+        icon: <RiTeamLine className="text-xl" />,
       });
+
       peopleItems.push({
-        name: t("navigation.mentorshipRequests", "Mentorship Requests"),
-        path: "/dashboard/mentorshipRequests",
-        icon: <FaHandshake className="text-xl" />,
+  name: t("navigation.investors", "Investors"),
+  path: "/dashboard/investors",
+  icon: <RiMoneyDollarCircleLine className="text-xl" />,
+});
+
+      peopleItems.push({
+        name: t("navigation.mentors", "Mentors"),
+        path: "/dashboard/mentors",
+        icon: <FaUserTie className="text-xl" />,
       });
     }
 
@@ -206,9 +204,7 @@ const Sidebar = ({
       });
     }
 
-    if (
-      ["Investor", "Enterprenuer", "Staff", "Staff", "Mentor"].includes(role)
-    ) {
+    if (["Investor", "Enterprenuer", "Staff"].includes(role)) {
       peopleItems.push({
         name: t("navigation.startups", "Startups"),
         path: "/dashboard/enterprenuers",
@@ -216,23 +212,56 @@ const Sidebar = ({
       });
     }
 
-    if (["Investor"].includes(role)) {
+    if (["Staff"].includes(role)) {
       peopleItems.push({
-        name: t("navigation.interestedStartups", "Interested Startups"),
-        path: "/dashboard/interestedStartupsApplications",
-        icon: <FaHandshake className="text-xl" />,
+        name: t("navigation.investors", "Investors"),
+        path: "/dashboard/investors",
+        icon: <RiMoneyDollarCircleLine className="text-xl" />,
+      });
+
+      peopleItems.push({
+        name: t("navigation.mentors", "Mentors"),
+        path: "/dashboard/mentors",
+        icon: <FaUserTie className="text-xl" />,
       });
     }
 
     if (peopleItems.length > 0) {
       categories.push({
-        id: "users",
-        title: t("common.users", "Users"),
-        items: peopleItems,
+        id: "communityHub",
+        title:
+          role === "Admin"
+            ? t("common.users", "Users")
+            : t("navigation.communityHub", "Community Hub"),
+        items: peopleItems.map((item) => ({
+          ...item,
+          name:
+            role !== "Admin" && item.name === t("navigation.allUsers", "Users")
+              ? t("navigation.communityHub", "Community Hub")
+              : item.name,
+        })),
       });
     }
 
-    // Business Operations
+    if (["Mentor"].includes(role)) {
+      categories.push({
+        id: "mentorship",
+        title: t("navigation.mentorship", "Mentorship Hub"),
+        items: [
+          {
+            name: t("navigation.mentees", "Mentees"),
+            path: "/dashboard/mentorEntreprenuers",
+            icon: <SlPeople className="text-xl" />,
+          },
+          {
+            name: t("navigation.mentorshipRequests", "Mentorship Requests"),
+            path: "/dashboard/mentorshipRequests",
+            icon: <FaHandshake className="text-xl" />,
+          },
+        ],
+      });
+    }
+
     const businessItems = [];
 
     if (["Investor"].includes(role)) {
@@ -242,7 +271,6 @@ const Sidebar = ({
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
 
-      // Add Investment Applications management for Investors
       businessItems.push({
         name: t("navigation.investmentApplications", "Investment Applications"),
         path: "/dashboard/investmentApplications",
@@ -292,51 +320,23 @@ const Sidebar = ({
       });
     }
 
-    if (["Mentor"].includes(role)) {
-      // Mentor-specific business items can be added here if needed
-    }
+   if (businessItems.length > 0) {
+  categories.push({
+    id: "investmentPipeline",
+    title: t("navigation.businessOperations", "Business Operations"),
+    items: businessItems,
+  });
+}
 
-    if (["Staff"].includes(role)) {
-      businessItems.push({
-        name: t("navigation.assignments", "Assignments"),
-        path: "/dashboard/reviewerAssignedInvestmentRequests",
-        icon: <BsCalendar3 className="text-xl" />,
-        submenu: [
-          {
-            name: t(
-              "navigation.investmentRequestsAssignments",
-              "Investment Requests",
-            ),
-            path: "/dashboard/reviewerAssignedInvestmentRequests",
-          },
-          {
-            name: t("navigation.businessAssignments", "Business Assignments"),
-            path: "/dashboard/businessAssignments",
-          },
-          {
-            name: t("navigation.programAssignments", "Program Assignments"),
-            path: "/dashboard/programAssignments",
-          },
-        ],
-      });
-    }
-
-    if (businessItems.length > 0) {
-      categories.push({
-        id: "business",
-        title: t("navigation.businessOperations", "Business Operations"),
-        items: businessItems,
-      });
-    }
-
-    // Funding Opportunities
     const investmentItems = [];
+
     if (["Admin"].includes(role)) {
       investmentItems.push({
         name: t("navigation.investorConnection", "Investor Connection"),
         path: "/dashboard/investors",
         icon: <RiMoneyDollarCircleLine className="text-xl" />,
       });
+
       investmentItems.push({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),
         path: "/dashboard/opportunities",
@@ -368,8 +368,6 @@ const Sidebar = ({
         ],
       });
 
-      // Add Investment Applications for Startups
-
       investmentItems.push({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),
         path: "/dashboard/opportunities",
@@ -385,7 +383,6 @@ const Sidebar = ({
       });
     }
 
-    // Programs & Resources
     const programsItems = [];
 
     if (["Admin", "Enterprenuer"].includes(role)) {
@@ -443,23 +440,15 @@ const Sidebar = ({
         path: "/dashboard/cratReviews",
         icon: <MdAssignment className="text-xl" />,
       });
-
-      programsItems.push({
-        name: t("navigation.report", "CRAT Internal Report"),
-        path: "/dashboard/crat-system/report",
-        icon: <MdBusinessCenter className="text-xl" />,
-      });
     }
 
-    if (["Mentor", "Admin"].includes(role)) {
+    if (["Admin"].includes(role)) {
       programsItems.push({
         name: t("navigation.mentorReports", "Mentor Reports"),
         path: "/dashboard/mentorReports",
         icon: <FaWpforms className="text-xl" />,
       });
-    }
 
-    if (["Admin"].includes(role)) {
       programsItems.push({
         name: t("navigation.cratCatalogManager", "CRAT Builder"),
         path: "/dashboard/cratCatalogManager",
@@ -494,7 +483,7 @@ const Sidebar = ({
       });
     }
 
-    if (["Admin", "Enterprenuer"].includes(role)) {
+    if (["Admin", "Enterprenuer", "Staff", "Mentor"].includes(role)) {
       programsItems.push({
         name: t("navigation.successStories", "Success Stories"),
         path: "/dashboard/successStories",
@@ -510,7 +499,6 @@ const Sidebar = ({
       });
     }
 
-    // Communication - For all roles
     if (
       ["Enterprenuer", "Investor", "Staff", "Mentor", "Admin"].includes(role)
     ) {
@@ -530,15 +518,9 @@ const Sidebar = ({
     return categories;
   };
 
-  const menuCategories = useMemo(
-    () => getMenuCategories(),
-    [availableDomains, userDetails?.role],
-  );
-
-  // Check if sidebar should be visually expanded (hovered or permanently expanded)
+  const menuCategories = getMenuCategories();
   const isVisuallyExpanded = isHovered || isExpanded;
 
-  // Don't render sidebar if userDetails is not loaded
   if (!userDetails) {
     return null;
   }
@@ -557,25 +539,20 @@ const Sidebar = ({
         setIsHovered(false);
       }}
     >
-      {/* SIDEBAR HEADER */}
       <div className="flex items-center justify-between gap-2 px-6 py-5 border-b border-slate-700/50">
         <Link href="/" className="flex items-center">
           <Image
-            width={500}
-            height={10}
-            src={"/logo.png"}
-            alt="Logo"
-            style={{ width: "100px" }}
-            className={`transition-all duration-300 ${
-              isVisuallyExpanded ? "h-9 w-auto" : "h-4 w-48"
+            width={1200}
+            height={300}
+            src="/anza_connect_logo.svg"
+            alt="Anza Connect Logo"
+            className={`transition-all duration-300 object-contain ${
+              isVisuallyExpanded ? "h-20 w-auto" : "h-14 w-auto"
             }`}
           />
         </Link>
-
-        {/* Minimize/Expand Button */}
       </div>
 
-      {/* SIDEBAR CONTENT */}
       <div className="no-scrollbar flex flex-col overflow-y-auto duration-300 ease-linear">
         <nav className="mt-3 px-4 py-2">
           {menuCategories.map((category) => (
@@ -600,10 +577,10 @@ const Sidebar = ({
                             }`}
                             onClick={() => {
                               handleClick();
-                              // Don't auto-expand when clicking submenu items
                             }}
                           >
                             {item.icon}
+
                             {isVisuallyExpanded && (
                               <>
                                 {item.name}
@@ -660,6 +637,7 @@ const Sidebar = ({
                                           {isVisuallyExpanded && (
                                             <>
                                               <span>{subItem.name}</span>
+
                                               <svg
                                                 className={`absolute right-4 top-1/2 -translate-y-1/2 fill-current text-slate-400 ${
                                                   subOpen ? "rotate-180" : ""
@@ -764,7 +742,6 @@ const Sidebar = ({
         </nav>
       </div>
 
-      {/* SIDEBAR FOOTER */}
       <div className="mt-auto border-t border-slate-700/50 p-4">
         <button
           className="flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white"

@@ -1,7 +1,7 @@
 "use client";
-import { getBusiness, updateBusiness } from "@/controllers/business_controller";
+
+import { getBusiness } from "@/controllers/business_controller";
 import { useContext, useEffect, useState } from "react";
-import { useRouter } from "@/utils/navigation";
 import { useParams } from "react-router-dom";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
@@ -11,14 +11,24 @@ import {
   getMentorAssignedEntreprenuers,
 } from "@/controllers/mentorEntreprenuerController";
 import toast from "react-hot-toast";
-
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
+import {
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaClock,
+  FaExternalLinkAlt,
+  FaFileAlt,
+  FaGoogle,
+  FaRegUserCircle,
+  FaTimes,
+  FaUserGraduate,
+  FaArrowRight,
+} from "react-icons/fa";
 
 const Page = () => {
   const { uuid } = useParams();
   const [business, setBusiness] = useState(null);
   const { userDetails } = useContext(UserContext);
-  const router = useRouter();
+
   const [loading, setLoading] = useState(true);
   const [showMeetingModal, setShowMeetingModal] = useState(false);
   const [googleMeetLink, setGoogleMeetLink] = useState("");
@@ -28,136 +38,212 @@ const Page = () => {
 
   const getData = async () => {
     try {
+      setLoading(true);
+
       const data = await getBusiness(uuid);
       setBusiness(data);
-      console.log("business", data);
 
-      // Get approved mentorship relationship for this business
       const approvedRelationships = await getMentorAssignedEntreprenuers(
-        userDetails.uuid,
+        userDetails.uuid
       );
-      console.log("approvedRelationships", approvedRelationships);
+
       const relationship = approvedRelationships.find(
-        (rel) => rel.Entreprenuer?.Business?.uuid === uuid,
+        (rel) => rel.Entreprenuer?.Business?.uuid === uuid
       );
-      console.log("relationship", relationship);
+
       if (relationship) {
-        const application = relationship;
-        setMentorshipApplication(application);
-        if (application.googleMeetLink) {
-          setGoogleMeetLink(application.googleMeetLink);
+        setMentorshipApplication(relationship);
+
+        if (relationship.googleMeetLink) {
+          setGoogleMeetLink(relationship.googleMeetLink);
         }
-        if (application.appointmentDate) {
-          setAppointmentDate(application.appointmentDate.split("T")[0]);
+
+        if (relationship.appointmentDate) {
+          setAppointmentDate(relationship.appointmentDate.slice(0, 16));
         }
       }
-
-      setLoading(false);
     } catch (error) {
       console.error("Error fetching business:", error);
+      toast.error("Failed to load mentee hub");
+    } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    getData();
-  }, [uuid]);
+    if (uuid && userDetails?.uuid) getData();
+  }, [uuid, userDetails?.uuid]);
 
   const handleSetupMeeting = async (e) => {
     e.preventDefault();
+
     if (!mentorshipApplication) {
       toast.error("Mentor-Entrepreneur relationship not found");
       return;
     }
 
     setSettingUpMeeting(true);
+
     try {
       await setupMentorEntreprenuerMeeting(mentorshipApplication.uuid, {
         googleMeetLink,
         appointmentDate: new Date(appointmentDate).toISOString(),
       });
-      toast.success("Meeting scheduled successfully! Mentee will be notified.");
+
+      toast.success("Meeting scheduled successfully. Mentee will be notified.");
       setShowMeetingModal(false);
       getData();
     } catch (error) {
-      toast.error("Failed to setup meeting");
       console.error(error);
+      toast.error("Failed to schedule meeting");
     } finally {
       setSettingUpMeeting(false);
     }
   };
 
-  return loading ? (
-    <Loader />
-  ) : (
-    <div>
-      <Breadcrumb prevLink="" prevPage="Back" pageName={`${business?.name}`} />
-      {/* Stats Section - Full Width */}
-      <div className="bg-primary/10 p-6 rounded-xl mb-4 mt-4">
-        <h1 className="text-2xl font-bold">Dear {userDetails.name}!</h1>
-        <p>
-          Welcome to your Mentee Hub. Here, reports generated from
-          entrepreneur’s journey . you can view your mentees profile, access
-          resources you’ve shared with them , and review your mentoring
-          sessions. Use this space to stay informed and provide tailored
-          guidance based on each
-        </p>
+  if (loading) return <Loader />;
+
+  const actionCards = [
+    {
+      icon: <FaRegUserCircle />,
+      label: "View Profile",
+      description: "Review business details, founder profile, and venture data.",
+      path: `/dashboard/enterprenuers/businessDetails/${uuid}`,
+    },
+    {
+      icon: <FaFileAlt />,
+      label: "Submit Report",
+      description: "Capture mentoring notes, progress updates, and next steps.",
+      path: `/dashboard/addEntreprenuerReport/${business?.User?.uuid}`,
+    },
+    {
+      icon: <FaUserGraduate />,
+      label: "View Reports",
+      description: "Track previous reports, session outcomes, and milestones.",
+      path: `/dashboard/entrepreneurReports/${business?.User?.uuid}`,
+    },
+  ];
+
+  return (
+    <div className="min-h-screen px-6 py-4">
+      <div className="relative mb-8 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/mentor_hero.svg')" }}
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-[#c9672b]/30" />
+
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Mentee Hub
+          </span>
+
+          <h1 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            {business?.name || "Business Profile"}
+          </h1>
+
+          <p className="mb-6 text-lg text-white/85 drop-shadow-md">
+            Manage mentoring sessions, review entrepreneur progress, submit
+            reports, and access the information needed to provide focused,
+            evidence-based guidance.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaUserGraduate />
+              Mentor: {userDetails?.name || "Assigned Mentor"}
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaCalendarAlt />
+              Session Management
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Meeting Status */}
       {mentorshipApplication && (
-        <div className="bg-white shadow rounded-lg p-6 mb-4">
-          <h2 className="text-xl font-bold mb-4">Meeting Status</h2>
+        <div className="mb-8 rounded-2xl border border-black/10 p-6 backdrop-blur-sm">
+          <div className="mb-5 flex flex-col justify-between gap-4 md:flex-row md:items-center">
+            <div>
+              <h2 className="text-2xl font-bold text-[#172033]">
+                Meeting Status
+              </h2>
+              <p className="mt-1 text-sm text-[#6f6f72]">
+                Schedule, update, and monitor the current mentoring appointment.
+              </p>
+            </div>
+
+            <span
+              className={`inline-flex w-fit items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ${
+                mentorshipApplication.menteeAccepted
+                  ? "bg-green-50 text-blue-700"
+                  : "bg-yellow-50 text-yellow-700"
+              }`}
+            >
+              {mentorshipApplication.menteeAccepted ? (
+                <FaCheckCircle />
+              ) : (
+                <FaClock />
+              )}
+              {mentorshipApplication.menteeAccepted
+                ? "Accepted by Mentee"
+                : "Waiting for Mentee Acceptance"}
+            </span>
+          </div>
+
           {mentorshipApplication.googleMeetLink ? (
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-600">Meeting Link:</p>
-                  <a
-                    href={mentorshipApplication.googleMeetLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    {mentorshipApplication.googleMeetLink}
-                  </a>
-                </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-xl border border-black/10 p-4">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#8a8f98]">
+                  Meeting Link
+                </p>
+
+                <a
+                  href={mentorshipApplication.googleMeetLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-blue-700 hover:underline"
+                >
+                  Open Google Meet
+                  <FaExternalLinkAlt className="text-xs" />
+                </a>
               </div>
-              <div>
-                <p className="text-gray-600">Appointment Date:</p>
-                <p className="font-medium">
-                  {new Date(
-                    mentorshipApplication.appointmentDate,
-                  ).toLocaleDateString()}
+
+              <div className="rounded-xl border border-black/10 p-4">
+                <p className="mb-2 text-xs font-medium uppercase tracking-wide text-[#8a8f98]">
+                  Appointment Date
+                </p>
+
+                <p className="text-sm font-semibold text-[#172033]">
+                  {mentorshipApplication.appointmentDate
+                    ? new Date(
+                        mentorshipApplication.appointmentDate
+                      ).toLocaleString()
+                    : "Not set"}
                 </p>
               </div>
-              <div>
-                <p className="text-gray-600">Status:</p>
-                <span
-                  className={`inline-block px-3 py-1 rounded text-sm ${
-                    mentorshipApplication.menteeAccepted
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
+
+              <div className="flex items-center rounded-xl border border-black/10 p-4">
+                <button
+                  onClick={() => setShowMeetingModal(true)}
+                  className="w-full rounded-lg border border-blue-600 bg-transparent px-5 py-3 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
                 >
-                  {mentorshipApplication.menteeAccepted
-                    ? "Accepted by Mentee"
-                    : "Waiting for Mentee Acceptance"}
-                </span>
+                  Update Meeting
+                </button>
               </div>
-              <button
-                onClick={() => setShowMeetingModal(true)}
-                className="mt-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-              >
-                Update Meeting
-              </button>
             </div>
           ) : (
-            <div>
-              <p className="text-gray-600 mb-3">No meeting scheduled yet</p>
+            <div className="rounded-xl border border-dashed border-black/10 p-6">
+              <p className="mb-4 text-sm text-[#6f6f72]">
+                No meeting has been scheduled yet.
+              </p>
+
               <button
                 onClick={() => setShowMeetingModal(true)}
-                className="px-4 py-2 bg-primary text-white rounded hover:bg-primary/90"
+                className="rounded-lg border border-blue-600 bg-transparent px-5 py-3 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
               >
                 Schedule Google Meet
               </button>
@@ -166,111 +252,122 @@ const Page = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-3 gap-6 pt-6">
-        {[
-          {
-            icon: "/profile.png",
-            label: "View Profile",
-            path: `/dashboard/enterprenuers/businessDetails/${uuid}`,
-          },
-          {
-            icon: "/resource.png",
-            label: "Submit Report",
-            path: `/dashboard/addEntreprenuerReport/${business?.User?.uuid}`,
-          },
-          {
-            icon: "/report.png",
-            label: "View Reports",
-            path: `/dashboard/entrepreneurReports/${business?.User?.uuid}`,
-          },
-        ].map((item) => {
-          return (
-            <Link
-              key={item.path}
-              href={item.path}
-              className="border border-black/10 bg-white rounded-lg p-5 flex flex-col items-center  space-y-4"
-            >
-              <img className="h-40" src={item.icon} />
-              <h1 className="font-bold text-lg">{item.label}</h1>
-            </Link>
-          );
-        })}
+      <h2 className="mb-5 text-2xl font-bold text-[#172033]">
+        Mentee Actions
+      </h2>
+
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        {actionCards.map((item) => (
+          <Link
+            key={item.path}
+            href={item.path}
+            className="group rounded-2xl border border-black/10 p-6 backdrop-blur-sm transition duration-200 hover:scale-[1.02] hover:shadow-lg"
+          >
+            <div className="mb-6 flex h-14 w-14 items-center justify-center rounded-xl bg-green-50 text-2xl text-blue-700">
+              {item.icon}
+            </div>
+
+            <h3 className="mb-2 text-lg font-bold text-[#111827]">
+              {item.label}
+            </h3>
+
+            <p className="mb-6 text-sm leading-6 text-[#6f6f72]">
+              {item.description}
+            </p>
+
+            <div className="flex items-center justify-between border-t border-black/10 pt-4 text-sm font-medium text-blue-700">
+              <span>Continue</span>
+              <FaArrowRight className="transition group-hover:translate-x-1" />
+            </div>
+          </Link>
+        ))}
       </div>
 
-      {/* Meeting Setup Modal */}
       {showMeetingModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Setup Google Meet</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl">
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h2 className="text-2xl font-bold text-[#172033]">
+                  Setup Google Meet
+                </h2>
+                <p className="mt-1 text-sm text-[#6f6f72]">
+                  Add the meeting link and appointment date for this mentee.
+                </p>
+              </div>
+
               <button
                 onClick={() => setShowMeetingModal(false)}
-                className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+                className="rounded-full p-2 text-[#8a8f98] transition hover:bg-[#f8f8f6] hover:text-[#172033]"
               >
-                ×
+                <FaTimes />
               </button>
             </div>
 
-            <form onSubmit={handleSetupMeeting} className="space-y-4">
+            <form onSubmit={handleSetupMeeting} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-[#172033]">
                   Google Meet Link <span className="text-red-500">*</span>
                 </label>
-                <div className="flex gap-2">
+
+                <div className="flex flex-col gap-3 sm:flex-row">
                   <input
                     type="url"
                     value={googleMeetLink}
                     onChange={(e) => setGoogleMeetLink(e.target.value)}
                     placeholder="https://meet.google.com/xxx-xxxx-xxx"
-                    className="flex-1 px-3 py-2 border border-black/10 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                    className="flex-1 rounded-lg border border-black/10 px-4 py-3 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
                     required
                   />
+
                   <button
                     type="button"
                     onClick={() =>
                       window.open("https://meet.google.com/new", "_blank")
                     }
-                    className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 whitespace-nowrap"
-                    title="Create a new Google Meet link"
+                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-600 bg-transparent px-4 py-3 text-sm font-medium text-blue-700 transition hover:bg-blue-50"
                   >
-                    Generate Link
+                    <FaGoogle />
+                    Generate
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  Click "Generate Link" to create a new meeting, then copy and
-                  paste the link here
+
+                <p className="mt-2 text-xs text-[#8a8f98]">
+                  Generate a Meet link, then copy and paste it into the field.
                 </p>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-[#172033]">
                   Appointment Date <span className="text-red-500">*</span>
                 </label>
+
                 <input
                   type="datetime-local"
                   value={appointmentDate}
                   onChange={(e) => setAppointmentDate(e.target.value)}
-                  className="w-full px-3 py-2 border border-black/10 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+                  className="w-full rounded-lg border border-black/10 px-4 py-3 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
                   required
                   min={new Date().toISOString().slice(0, 16)}
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-3">
                 <button
                   type="button"
                   onClick={() => setShowMeetingModal(false)}
-                  className="flex-1 px-4 py-2 border border-black/10 rounded-md hover:bg-gray-50"
+                  className="flex-1 rounded-lg border border-black/10 bg-transparent px-4 py-3 text-sm font-medium text-[#6f6f72] transition hover:border-green-600 hover:text-blue-700"
                   disabled={settingUpMeeting}
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
-                  className="flex-1 px-4 py-2 bg-primary text-white rounded-md hover:bg-primary/90 disabled:bg-gray-400"
+                  className="flex-1 rounded-lg border border-blue-600 bg-transparent px-4 py-3 text-sm font-medium text-blue-700 transition hover:bg-blue-50 disabled:cursor-not-allowed disabled:border-gray-300 disabled:text-gray-400"
                   disabled={settingUpMeeting}
                 >
-                  {settingUpMeeting ? "Setting up..." : "Schedule Meeting"}
+                  {settingUpMeeting ? "Scheduling..." : "Schedule Meeting"}
                 </button>
               </div>
             </form>

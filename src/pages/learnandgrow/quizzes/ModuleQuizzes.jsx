@@ -1,17 +1,9 @@
 "use client";
+
 import { useContext, useEffect, useState } from "react";
 import { useRouter } from "@/utils/navigation";
 import { UserContext } from "../../../layouts/DashboardLayout";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import Loader from "@/components/common/Loader";
-import {
-  BsPlus,
-  BsPencil,
-  BsTrash,
-  BsEye,
-  BsCheckCircle,
-  BsArrowClockwise,
-} from "react-icons/bs";
 import {
   getQuizzesByModule,
   deleteQuiz,
@@ -26,24 +18,23 @@ import { useTranslation } from "@/locales";
 const ModuleQuizzesPage = () => {
   const { t } = useTranslation();
   const { moduleId } = useParams();
+
   const [quizzes, setQuizzes] = useState([]);
   const [module, setModule] = useState(null);
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("all");
   const [userAttempts, setUserAttempts] = useState([]);
-  const router = useRouter();
 
+  const router = useRouter();
   const isAdmin = ["Admin", "Staff"].includes(userDetails?.role);
 
   useEffect(() => {
     loadData();
   }, [moduleId, activeTab]);
 
-  // Reload data when component comes back into focus (e.g., after navigating back)
   useEffect(() => {
     const handleFocus = () => {
-      console.log("Window focused, reloading data...");
       loadData();
     };
 
@@ -54,18 +45,18 @@ const ModuleQuizzesPage = () => {
   const loadData = async () => {
     try {
       setLoading(true);
+
       const [moduleData, quizzesData] = await Promise.all([
         getModule(moduleId),
         getQuizzesByModule(moduleId),
       ]);
+
       setModule(moduleData);
       setQuizzes(quizzesData.data || []);
 
-      // Load user attempts if not admin
       if (!isAdmin) {
         try {
           const attemptsData = await getUserAttempts();
-          console.log("Loaded user attempts:", attemptsData.data);
           setUserAttempts(attemptsData.data || []);
         } catch (error) {
           console.error("Error loading user attempts:", error);
@@ -104,21 +95,16 @@ const ModuleQuizzesPage = () => {
     }
   };
 
-  // Check if user has completed a quiz
   const getUserLastAttempt = (quizUuid) => {
     const attempts = userAttempts.filter(
-      (attempt) => attempt.quiz?.uuid === quizUuid && attempt.submittedAt,
+      (attempt) => attempt.quiz?.uuid === quizUuid && attempt.submittedAt
     );
+
     if (attempts.length === 0) return null;
-    // Return the most recent attempt
-    const lastAttempt = attempts.sort(
-      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
+
+    return attempts.sort(
+      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
     )[0];
-    console.log(
-      `Quiz ${quizUuid} - Last attempt status:`,
-      lastAttempt.gradingStatus,
-    );
-    return lastAttempt;
   };
 
   const filteredQuizzes = quizzes.filter((quiz) => {
@@ -126,288 +112,346 @@ const ModuleQuizzesPage = () => {
       if (activeTab === "published") return quiz.isPublished;
       if (activeTab === "draft") return !quiz.isPublished;
       return true;
-    } else {
-      // For entrepreneurs
-      if (activeTab === "attempted") {
-        return getUserLastAttempt(quiz.uuid) !== null;
-      }
-      return quiz.isPublished; // Show only published quizzes in "all" tab
     }
+
+    if (activeTab === "attempted") {
+      return quiz.isPublished && getUserLastAttempt(quiz.uuid) !== null;
+    }
+
+    return quiz.isPublished;
   });
 
-  return loading ? (
-    <Loader />
-  ) : (
-    <div>
-      <Breadcrumb
-        prevLink={``}
-        pageName={`${t("quizzes.moduleQuizzes")}`}
-        prevPage={t("quizzes.backToModule")}
-      />
+  const publishedCount = quizzes.filter((quiz) => quiz.isPublished).length;
+  const draftCount = quizzes.filter((quiz) => !quiz.isPublished).length;
+  const attemptedCount = quizzes.filter(
+    (quiz) => quiz.isPublished && getUserLastAttempt(quiz.uuid) !== null
+  ).length;
 
-      <div className="flex justify-between items-center mb-6">
-        {/* <h1 className="text-2xl font-bold">{t("quizzes.moduleQuizzes")}</h1> */}
-        <div className="flex gap-2">
-          {!isAdmin && (
-            <button
-              onClick={() => {
-                toast.success(t("common.refresh") + "...");
-                loadData();
-              }}
-              className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600"
-            >
-              <BsArrowClockwise size={16} />
-              {t("common.refresh")}
-            </button>
-          )}
-          {isAdmin && (
-            <button
-              onClick={() =>
-                router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}/new`)
-              }
-              className="flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90"
-            >
-              <BsPlus size={20} />
-              {t("quizzes.createQuiz")}
-            </button>
-          )}
-        </div>
-      </div>
+  if (loading) return <Loader />;
 
-      {/* Tabs */}
-      <div className="flex gap-4 border-b border-black/10 mb-6">
-        {isAdmin ? (
-          <>
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "all"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t("quizzes.allQuizzes")} ({quizzes.length})
-            </button>
-            <button
-              onClick={() => setActiveTab("published")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "published"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t("quizzes.published")} (
-              {quizzes.filter((q) => q.isPublished).length})
-            </button>
-            <button
-              onClick={() => setActiveTab("draft")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "draft"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t("quizzes.draft")} (
-              {quizzes.filter((q) => !q.isPublished).length})
-            </button>
-          </>
+  return (
+    <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
+      <div className="mx-auto max-w-7xl">
+        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: "url('/images/business_tools_hero.svg')",
+            }}
+          />
+
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+
+          <div className="relative z-10 flex min-h-[300px] flex-col justify-end gap-6 p-8 text-white md:flex-row md:items-end md:justify-between lg:p-12">
+            <div className="max-w-3xl">
+              <span className="mb-5 inline-flex items-center rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+                Learning Assessment
+              </span>
+
+              <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+                {module?.title || t("quizzes.moduleQuizzes")}
+              </h1>
+
+              <p className="max-w-2xl text-sm leading-7 text-white/85 md:text-base">
+                Review available quizzes, track attempts, manage published
+                assessments, and continue measuring learning progress.
+              </p>
+            </div>
+
+            {isAdmin && (
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() =>
+                    router.push(
+                      `/dashboard/learn-and-grow/quizzes/${moduleId}/new`
+                    )
+                  }
+                  className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+                >
+                  Create Quiz
+                </button>
+              </div>
+            )}
+          </div>
+        </section>
+
+        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <p className="text-3xl font-bold text-[#101828]">
+              {quizzes.length}
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              {t("quizzes.allQuizzes")}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <p className="text-3xl font-bold text-[#101828]">
+              {publishedCount}
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              {t("quizzes.published")}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <p className="text-3xl font-bold text-[#101828]">
+              {isAdmin ? draftCount : attemptedCount}
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              {isAdmin ? t("quizzes.draft") : t("quizzes.attempted")}
+            </p>
+          </div>
+
+          <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+            <p className="text-3xl font-bold text-[#101828]">
+              {filteredQuizzes.length}
+            </p>
+
+            <p className="mt-2 text-sm font-medium text-[#667085]">
+              Visible Now
+            </p>
+          </div>
+        </section>
+
+        <section className="mb-8 rounded-3xl border border-[#EAECF0] bg-white p-5 shadow-sm">
+          <div className="flex flex-wrap items-center gap-3">
+            {isAdmin ? (
+              <>
+                <button
+                  onClick={() => setActiveTab("all")}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    activeTab === "all"
+                      ? "bg-[#2563EB] text-white"
+                      : "bg-[#F9FAFB] text-[#667085] hover:bg-[#EEF4FF] hover:text-[#2563EB]"
+                  }`}
+                >
+                  {t("quizzes.allQuizzes")} ({quizzes.length})
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("published")}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    activeTab === "published"
+                      ? "bg-[#2563EB] text-white"
+                      : "bg-[#F9FAFB] text-[#667085] hover:bg-[#EEF4FF] hover:text-[#2563EB]"
+                  }`}
+                >
+                  {t("quizzes.published")} ({publishedCount})
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("draft")}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    activeTab === "draft"
+                      ? "bg-[#2563EB] text-white"
+                      : "bg-[#F9FAFB] text-[#667085] hover:bg-[#EEF4FF] hover:text-[#2563EB]"
+                  }`}
+                >
+                  {t("quizzes.draft")} ({draftCount})
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => setActiveTab("all")}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    activeTab === "all"
+                      ? "bg-[#2563EB] text-white"
+                      : "bg-[#F9FAFB] text-[#667085] hover:bg-[#EEF4FF] hover:text-[#2563EB]"
+                  }`}
+                >
+                  {t("quizzes.allQuizzes")} ({publishedCount})
+                </button>
+
+                <button
+                  onClick={() => setActiveTab("attempted")}
+                  className={`rounded-full px-5 py-2 text-sm font-semibold transition ${
+                    activeTab === "attempted"
+                      ? "bg-[#2563EB] text-white"
+                      : "bg-[#F9FAFB] text-[#667085] hover:bg-[#EEF4FF] hover:text-[#2563EB]"
+                  }`}
+                >
+                  {t("quizzes.attempted")} ({attemptedCount})
+                </button>
+              </>
+            )}
+          </div>
+        </section>
+
+        {filteredQuizzes.length === 0 ? (
+          <section className="rounded-3xl border border-[#EAECF0] bg-white p-12 text-center shadow-sm">
+            <p className="mb-4 text-sm text-[#667085]">
+              {t("quizzes.noQuizzesFound")}
+            </p>
+
+            {isAdmin && (
+              <button
+                onClick={() =>
+                  router.push(
+                    `/dashboard/learn-and-grow/quizzes/${moduleId}/new`
+                  )
+                }
+                className="inline-flex items-center rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+              >
+                Create First Quiz
+              </button>
+            )}
+          </section>
         ) : (
-          <>
-            <button
-              onClick={() => setActiveTab("all")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "all"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t("quizzes.allQuizzes")} (
-              {quizzes.filter((q) => q.isPublished).length})
-            </button>
-            <button
-              onClick={() => setActiveTab("attempted")}
-              className={`px-4 py-2 font-medium transition-colors ${
-                activeTab === "attempted"
-                  ? "border-b-2 border-primary text-primary"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              {t("quizzes.attempted")} (
-              {
-                quizzes.filter(
-                  (q) => q.isPublished && getUserLastAttempt(q.uuid) !== null,
-                ).length
-              }
-              )
-            </button>
-          </>
-        )}
-      </div>
+          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+            {filteredQuizzes.map((quiz) => {
+              const lastAttempt = !isAdmin
+                ? getUserLastAttempt(quiz.uuid)
+                : null;
 
-      {/* Quizzes List */}
-      {filteredQuizzes.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-lg border border-black/10 shadow-sm">
-          <p className="text-gray-500 mb-4">{t("quizzes.noQuizzesFound")}</p>
-          {isAdmin && (
-            <button
-              onClick={() =>
-                router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}/new`)
-              }
-              className="text-primary hover:underline"
-            >
-              {t("quizzes.createFirstQuiz")}
-            </button>
-          )}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredQuizzes.map((quiz) => (
-            <div
-              key={quiz.uuid}
-              className="bg-white border border-black/10 rounded-lg p-6 hover:shadow-lg transition-all duration-200 hover:border-black/20"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex-1">
-                  <h3 className="font-bold text-lg mb-2">{quiz.title}</h3>
-                  <p className="text-gray-600 text-sm line-clamp-2">
+              return (
+                <article
+                  key={quiz.uuid}
+                  className="rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                >
+                  <div className="mb-5">
+                    {isAdmin && (
+                      <span
+                        className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                          quiz.isPublished
+                            ? "bg-[#ECFDF3] text-[#027A48]"
+                            : "bg-[#FFFAEB] text-[#B54708]"
+                        }`}
+                      >
+                        {quiz.isPublished
+                          ? t("quizzes.published")
+                          : t("quizzes.draft")}
+                      </span>
+                    )}
+
+                    <h3 className="line-clamp-2 text-xl font-bold text-[#101828]">
+                      {quiz.title}
+                    </h3>
+                  </div>
+
+                  <p className="mb-6 line-clamp-3 text-sm leading-7 text-[#667085]">
                     {quiz.description || "No description"}
                   </p>
-                </div>
-                {quiz.isPublished && (
-                  <BsCheckCircle
-                    className="text-green-500 flex-shrink-0 ml-2"
-                    size={20}
-                  />
-                )}
-              </div>
 
-              <div className="space-y-2 mb-4 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-500">
-                    {t("quizzes.questions")}:
-                  </span>
-                  <span className="font-medium">
-                    {quiz.questions?.length || 0}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">
-                    {t("quizzes.passingScore")}:
-                  </span>
-                  <span className="font-medium">{quiz.passingScore}%</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-500">{t("common.status")}:</span>
-                  <span
-                    className={`font-medium ${
-                      quiz.isPublished ? "text-green-600" : "text-orange-600"
-                    }`}
-                  >
-                    {quiz.isPublished
-                      ? t("quizzes.published")
-                      : t("quizzes.draft")}
-                  </span>
-                </div>
-              </div>
+                  <div className="mb-6 grid grid-cols-2 gap-3">
+                    <div className="rounded-2xl bg-[#F9FAFB] p-4">
+                      <p className="text-xs text-[#98A2B3]">
+                        {t("quizzes.questions")}
+                      </p>
 
-              {isAdmin ? (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/dashboard/learn-and-grow/quizzes/${moduleId}/edit/${quiz.uuid}`,
-                      )
-                    }
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 text-sm transition-colors"
-                  >
-                    <BsPencil size={14} />
-                    {t("common.edit")}
-                  </button>
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/dashboard/learn-and-grow/quizzes/${moduleId}/attempts/${quiz.uuid}`,
-                      )
-                    }
-                    className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white px-3 py-2 rounded-lg hover:bg-green-600 text-sm transition-colors"
-                  >
-                    <BsEye size={14} />
-                    {t("quizzes.viewAttempts")}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(quiz.uuid)}
-                    className="px-3 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-                  >
-                    <BsTrash size={14} />
-                  </button>
-                </div>
-              ) : (
-                <div className="flex gap-2">
-                  {quiz.isPublished &&
-                    (() => {
-                      const lastAttempt = getUserLastAttempt(quiz.uuid);
+                      <p className="mt-1 text-lg font-bold text-[#101828]">
+                        {quiz.questions?.length || 0}
+                      </p>
+                    </div>
 
-                      if (lastAttempt) {
-                        // Check if quiz is pending grading
-                        if (lastAttempt.gradingStatus === "pending_grading") {
-                          return (
-                            <button
-                              disabled
-                              className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 text-white px-4 py-2 rounded-lg cursor-not-allowed"
-                            >
-                              <BsCheckCircle size={16} />
-                              {t("quizzes.pendingGrading")}
-                            </button>
-                          );
-                        }
+                    <div className="rounded-2xl bg-[#F9FAFB] p-4">
+                      <p className="text-xs text-[#98A2B3]">
+                        {t("quizzes.passingScore")}
+                      </p>
 
-                        // Show view results for graded quizzes
-                        return (
-                          <button
-                            onClick={() =>
-                              router.push(
-                                `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${lastAttempt.uuid}`,
-                              )
-                            }
-                            className="flex-1 flex items-center justify-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
-                          >
-                            <BsCheckCircle size={16} />
-                            {t("quizzes.viewResult")}
-                          </button>
-                        );
-                      }
+                      <p className="mt-1 text-lg font-bold text-[#101828]">
+                        {quiz.passingScore}%
+                      </p>
+                    </div>
+                  </div>
 
-                      // Show take quiz if no attempts
-                      return (
+                  <div className="border-t border-[#EAECF0] pt-5">
+                    {isAdmin ? (
+                      <div className="flex flex-wrap items-center gap-3">
                         <button
                           onClick={() =>
                             router.push(
-                              `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`,
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/edit/${quiz.uuid}`
                             )
                           }
-                          className="flex-1 bg-primary text-white px-4 py-2 rounded-lg hover:bg-primary/90 transition-colors"
+                          className="inline-flex items-center rounded-xl bg-[#EEF4FF] px-4 py-2 text-sm font-semibold text-[#2563EB] transition hover:bg-[#DCE7FF]"
                         >
-                          {t("quizzes.startQuiz")}
+                          Edit Quiz
                         </button>
-                      );
-                    })()}
-                  <button
-                    onClick={() =>
-                      router.push(
-                        `/dashboard/learn-and-grow/quizzes/${moduleId}/my-attempts/${quiz.uuid}`,
-                      )
-                    }
-                    className="flex-1 flex items-center justify-center gap-2 bg-gray-500 text-white px-3 py-2 rounded-lg hover:bg-gray-600 transition-colors"
-                  >
-                    <BsEye size={14} />
-                    {t("quizzes.myQuizAttempts")}
-                  </button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/attempts/${quiz.uuid}`
+                            )
+                          }
+                          className="inline-flex items-center rounded-xl bg-[#ECFDF3] px-4 py-2 text-sm font-semibold text-[#027A48] transition hover:bg-[#D1FADF]"
+                        >
+                          View Attempts
+                        </button>
+
+                        <button
+                          onClick={() => handleTogglePublish(quiz.uuid)}
+                          className="inline-flex items-center rounded-xl bg-[#FFFAEB] px-4 py-2 text-sm font-semibold text-[#B54708] transition hover:bg-[#FEF0C7]"
+                        >
+                          {quiz.isPublished ? "Move to Draft" : "Publish Quiz"}
+                        </button>
+
+                        <button
+                          onClick={() => handleDelete(quiz.uuid)}
+                          className="inline-flex items-center rounded-xl bg-[#FEF3F2] px-4 py-2 text-sm font-semibold text-[#B42318] transition hover:bg-[#FEE4E2]"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex flex-wrap items-center gap-3">
+                        {quiz.isPublished && lastAttempt ? (
+                          lastAttempt.gradingStatus === "pending_grading" ? (
+                            <button
+                              disabled
+                              className="inline-flex items-center rounded-xl bg-[#FFFAEB] px-4 py-2 text-sm font-semibold text-[#B54708]"
+                            >
+                              Pending Grading
+                            </button>
+                          ) : (
+                            <button
+                              onClick={() =>
+                                router.push(
+                                  `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${lastAttempt.uuid}`
+                                )
+                              }
+                              className="inline-flex items-center rounded-xl bg-[#ECFDF3] px-4 py-2 text-sm font-semibold text-[#027A48] transition hover:bg-[#D1FADF]"
+                            >
+                              View Result
+                            </button>
+                          )
+                        ) : (
+                          <button
+                            onClick={() =>
+                              router.push(
+                                `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`
+                              )
+                            }
+                            className="inline-flex items-center rounded-xl bg-[#2563EB] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+                          >
+                            Start Quiz
+                          </button>
+                        )}
+
+                        <button
+                          onClick={() =>
+                            router.push(
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/my-attempts/${quiz.uuid}`
+                            )
+                          }
+                          className="inline-flex items-center rounded-xl bg-[#EEF4FF] px-4 py-2 text-sm font-semibold text-[#2563EB] transition hover:bg-[#DCE7FF]"
+                        >
+                          My Attempts
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+          </section>
+        )}
+      </div>
     </div>
   );
 };

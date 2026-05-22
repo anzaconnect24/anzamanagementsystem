@@ -1,139 +1,64 @@
 "use client";
+
 import { useState, useEffect, useContext } from "react";
 import Link from "@/utils/link";
 import axios from "axios";
 import { server_url } from "@/utils/endpoint";
 import { headers } from "@/utils/headers";
-import { BsPlus, BsSearch, BsTrash, BsPencil } from "react-icons/bs";
+import { BsTrash, BsPencil, BsPlus } from "react-icons/bs";
+import {
+  FaLayerGroup,
+  FaStar,
+  FaMoneyBillWave,
+  FaTag,
+  FaClock,
+} from "react-icons/fa";
 import Spinner from "@/components/spinner";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
-import { useTranslation } from "@/locales";
-
 const InvestmentOpportunities = () => {
-  const { t } = useTranslation();
-  const [opportunities, setOpportunities] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const [deleting, setDeleting] = useState(null);
-  const [selectedOpportunity, setSelectedOpportunity] = useState(null);
-  const [showModal, setShowModal] = useState(false);
   const { userDetails } = useContext(UserContext);
 
-  const fetchOpportunities = async (
-    page = 1,
-    keyword = "",
-    isSearch = false,
-  ) => {
+  const [opportunities, setOpportunities] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(null);
+
+  const fetchOpportunities = async () => {
     try {
-      if (isSearch) {
-        setSearchLoading(true);
-      } else {
-        setLoading(true);
-      }
+      setLoading(true);
 
       const response = await axios.get(
         `${server_url}/investment-opportunities`,
-        {
-          params: {
-            page: page,
-            limit: 8,
-            keyword: keyword,
-          },
-          headers: headers,
-        },
+        { params: { page: 1, limit: 8 }, headers }
       );
 
       if (response.data.status) {
-        console.log("Investment Opportunities:", response.data);
-        setOpportunities(response.data.body.data);
-        setTotalCount(response.data.body.count);
-        setTotalPages(Math.ceil(response.data.body.count / 8));
-        setCurrentPage(response.data.body.page);
+        setOpportunities(response.data.body.data || []);
       }
     } catch (error) {
-      console.error("Error fetching opportunities:", error);
+      console.error(error);
     } finally {
-      if (isSearch) {
-        setSearchLoading(false);
-      } else {
-        setLoading(false);
-      }
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchOpportunities(1, searchTerm, false);
+    fetchOpportunities();
   }, []);
 
-  // Debounced search effect
-  useEffect(() => {
-    // Skip the initial load
-    if (searchTerm === "" && currentPage === 1) return;
-
-    const timeoutId = setTimeout(() => {
-      setCurrentPage(1);
-      fetchOpportunities(1, searchTerm, true);
-    }, 500); // 500ms delay
-
-    return () => clearTimeout(timeoutId);
-  }, [searchTerm]);
-
-  const handlePageChange = (page) => {
-    fetchOpportunities(page, searchTerm, false);
-  };
-
-  const openModal = (opportunity) => {
-    setSelectedOpportunity(opportunity);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setSelectedOpportunity(null);
-    setShowModal(false);
-  };
-
   const handleDelete = async (uuid) => {
-    if (
-      !confirm(
-        t(
-          "investment.deleteOpportunityConfirm",
-          "Are you sure you want to delete this investment opportunity?",
-        ),
-      )
-    ) {
-      return;
-    }
+    if (!confirm("Delete this opportunity?")) return;
 
     try {
       setDeleting(uuid);
-      const response = await axios.delete(
-        `${server_url}/investment-opportunities/${uuid}`,
-        {
-          headers: headers,
-        },
-      );
 
-      if (response.status === 200 || response.status === 204) {
-        // Refresh the list
-        fetchOpportunities(currentPage, searchTerm, false);
-      } else {
-        alert(
-          t(
-            "investment.failedToDeleteOpportunity",
-            "Failed to delete opportunity",
-          ),
-        );
-      }
+      await axios.delete(`${server_url}/investment-opportunities/${uuid}`, {
+        headers,
+      });
+
+      fetchOpportunities();
     } catch (error) {
-      console.error("Error deleting opportunity:", error);
-      alert(
-        t("investment.errorDeletingOpportunity", "Error deleting opportunity"),
-      );
+      console.error(error);
     } finally {
       setDeleting(null);
     }
@@ -141,399 +66,156 @@ const InvestmentOpportunities = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <Spinner />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-6">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">
-              {t(
-                "investment.investmentOpportunities",
-                "Investment Opportunities",
-              )}
-            </h1>
-            <p className="mt-2 text-gray-600">
-              {t(
-                "investment.manageExploreOpportunities",
-                "Manage and explore investment opportunities",
-              )}
-            </p>
-          </div>
-          {userDetails?.role === "Admin" && (
-            <Link
-              href="/dashboard/opportunities/new"
-              className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              <BsPlus className="text-lg" />
-              {t("investment.addOpportunity", "Add Opportunity")}
-            </Link>
-          )}
-        </div>
-      </div>
+    <div className="min-h-screen px-6 py-4">
+      {/* Hero */}
+      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: `url('${
+              opportunities[0]?.image || "/images/business-tools-hero.jpg"
+            }')`,
+          }}
+        />
 
-      {/* Search */}
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
 
-      {/* Results Count */}
-      <div className="flex justify-between items-center">
-        <div className="mb-4  text-gray-600">
-          {t(
-            "investment.showingOpportunities",
-            "Showing {{current}} of {{total}} opportunities",
-            { current: opportunities.length, total: totalCount },
-          )}
-        </div>
-        <div className="mb-6">
-          <div className="flex-1 relative max-w-md">
-            {searchLoading ? (
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
-              </div>
-            ) : (
-              <BsSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-            )}
-            <input
-              type="text"
-              placeholder={t(
-                "investment.searchOpportunities",
-                "Search opportunities...",
-              )}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-boxdark/30 rounded-lg focus:ring-blue-500 focus:border-blue-500"
-            />
-          </div>
-        </div>
-      </div>
-      {/* Opportunities Grid */}
-      {opportunities.length === 0 ? (
-        <div className="text-center py-12">
-          <div className="mx-auto h-12 w-12 text-gray-400">
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-              />
-            </svg>
-          </div>
-          <h3 className="mt-2 text-sm font-medium text-gray-900">
-            {t("investment.noOpportunitiesFound", "No opportunities found")}
-          </h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {t(
-              "investment.createOpportunityPrompt",
-              "Get started by creating a new investment opportunity.",
-            )}
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Funding Hub
+          </span>
+
+          <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            Investment Opportunities
+          </h2>
+
+          <p className="mb-6 max-w-3xl text-lg leading-relaxed text-white/85 drop-shadow-md">
+            Discover curated funding options across equity, grants, debt
+            financing, and growth capital. These opportunities are designed to
+            help entrepreneurs access capital, scale operations, and unlock new
+            market potential.
           </p>
-          {userDetails?.role === "Admin" && (
-            <div className="mt-6">
-              <Link
-                href="/opportunities/new"
-                className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-              >
-                <BsPlus className="text-lg" />
-                {t("investment.addOpportunity", "Add Opportunity")}
-              </Link>
-            </div>
-          )}
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaLayerGroup />
+              {opportunities.length} Opportunities
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaMoneyBillWave />
+              Investment Ready
+            </span>
+
+            <span className="flex items-center gap-2">
+              <FaClock />
+              Growth Support
+            </span>
+          </div>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {opportunities.map((opportunity) => (
-            <div
-              key={opportunity.uuid}
-              className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
-              onClick={() => openModal(opportunity)}
-            >
-              {/* Image */}
-              {opportunity.image && (
-                <div className="h-48 bg-gray-200 overflow-hidden">
-                  <img
-                    src={opportunity.image}
-                    alt={opportunity.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
+      </div>
 
-              {/* Content */}
-              <div className="p-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                  {opportunity.title}
-                </h3>
-                <p className="text-gray-600 text-sm mb-3 line-clamp-2">
-                  {opportunity.description}
-                </p>
+      {/* Section Header */}
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+        <h2 className="text-2xl font-bold text-[#172033]">
+          Available Opportunities
+        </h2>
 
-                {/* Opportunity Details */}
-                <div className="space-y-2 mb-4">
-                  {/* {opportunity.sector && (
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {opportunity.sector}
-                      </span>
-                    </div>
-                  )} */}
+        {userDetails?.role === "Admin" && (
+          <Link
+            href="/dashboard/opportunities/new"
+            className="inline-flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
+          >
+            <BsPlus className="text-lg" />
+            Add Opportunity
+          </Link>
+        )}
+      </div>
 
-                  {opportunity.amount && (
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">
-                        {t("investment.amount", "Amount")}:
-                      </span>{" "}
-                      Tshs {parseFloat(opportunity.amount).toLocaleString()}
-                    </div>
-                  )}
+      {/* Cards */}
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {opportunities.map((opportunity) => (
+          <div
+            key={opportunity.uuid}
+            className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
+          >
+            <div className="relative h-48 overflow-hidden bg-black">
+              <img
+                src={opportunity.image || "/images/business-tool-card.jpg"}
+                alt={opportunity.title || "Investment opportunity"}
+                className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
 
-                  {opportunity.investmentType && (
-                    <div className="text-sm text-gray-600">
-                      <span className="font-medium">
-                        {t("investment.type", "Type")}:
-                      </span>{" "}
-                      {t(
-                        "investment.types." +
-                          opportunity.investmentType.toLowerCase(),
-                        opportunity.investmentType,
-                      ) || opportunity.investmentType}
-                      {/* { opportunity.investmentType} */}
-                    </div>
-                  )}
-                </div>
-
-                {/* Actions */}
-                <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">
-                    {new Date(opportunity.createdAt).toLocaleDateString()}
-                  </span>
-                  {userDetails?.role === "Admin" && (
-                    <div className="flex gap-2">
-                      <Link
-                        href={`/dashboard/opportunities/${opportunity.uuid}/edit`}
-                        className="p-2 text-blue-600 hover:text-blue-800 hover:bg-blue-50 rounded-lg transition-colors"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <BsPencil className="text-sm" />
-                      </Link>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete(opportunity.uuid);
-                        }}
-                        disabled={deleting === opportunity.uuid}
-                        className="p-2 text-red-600 hover:text-red-800 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
-                      >
-                        {deleting === opportunity.uuid ? (
-                          <div className="w-4 h-4">
-                            <Spinner />
-                          </div>
-                        ) : (
-                          <BsTrash className="text-sm" />
-                        )}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-8 flex justify-center">
-          <nav className="flex items-center gap-2">
-            <button
-              onClick={() => handlePageChange(currentPage - 1)}
-              disabled={currentPage <= 1}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t("common.previous", "Previous")}
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-              <button
-                key={page}
-                onClick={() => handlePageChange(page)}
-                className={`px-3 py-2 text-sm font-medium rounded-md ${
-                  page === currentPage
-                    ? "bg-blue-600 text-white"
-                    : "text-gray-500 bg-white border border-black/20 hover:bg-gray-50"
-                }`}
-              >
-                {page}
-              </button>
-            ))}
-
-            <button
-              onClick={() => handlePageChange(currentPage + 1)}
-              disabled={currentPage >= totalPages}
-              className="px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-black/20 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t("common.next", "Next")}
-            </button>
-          </nav>
-        </div>
-      )}
-
-      {/* Modal */}
-      {showModal && selectedOpportunity && (
-        <div className="fixed inset-0 z-99 bg-black/50 flex items-center justify-center p-4 ">
-          <div className="bg-white z-99 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="sticky top-0 bg-white border-b border-boxdark/10 px-6 py-4 flex justify-between items-center">
-              <h2 className="text-xl font-semibold text-gray-900">
-                {t(
-                  "investment.opportunityDetails",
-                  "Investment Opportunity Details",
-                )}
-              </h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-gray-600 text-2xl"
-              >
-                ×
-              </button>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
             </div>
 
-            <div className="p-6">
-              {/* Image */}
-              {selectedOpportunity.image && (
-                <div className="mb-6">
-                  <img
-                    src={selectedOpportunity.image}
-                    alt={selectedOpportunity.title}
-                    className="w-full h-64 object-cover rounded-lg"
-                  />
-                </div>
-              )}
+            <div className="p-4">
+              <h3 className="mb-2 line-clamp-1 text-base font-bold text-[#111827]">
+                {opportunity.title}
+              </h3>
 
-              {/* Title */}
-              <h1 className="text-2xl font-bold text-gray-900 mb-4">
-                {selectedOpportunity.title}
-              </h1>
+              <p className="mb-6 line-clamp-3 text-sm text-[#6f6f72]">
+                {opportunity.description ||
+                  "Explore this investment opportunity designed to support business growth and access to funding."}
+              </p>
 
-              {/* Description */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {t("common.description", "Description")}
-                </h3>
-                <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
-                  {selectedOpportunity.description}
-                </p>
-              </div>
+              <div className="flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                <span className="flex items-center gap-1">
+                  <FaMoneyBillWave />
+                  Investment
+                </span>
 
-              {/* Opportunity Details Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Sector */}
-                {selectedOpportunity.sector && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {t("investment.sector", "Sector")}
-                    </h3>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
-                      {selectedOpportunity.sector}
-                    </span>
-                  </div>
-                )}
+                <span className="flex items-center gap-1">
+                  <FaTag />
+                  {opportunity.investmentType || "Type"}
+                </span>
 
-                {/* Investment Amount */}
-                {selectedOpportunity.amount && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {t("investment.investmentAmount", "Investment Amount")}
-                    </h3>
-                    <p className="text-2xl font-bold text-green-600">
-                      Tshs.{" "}
-                      {parseFloat(selectedOpportunity.amount).toLocaleString()}
-                    </p>
-                  </div>
-                )}
-
-                {/* Investment Type */}
-                {selectedOpportunity.investmentType && (
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                      {t("investment.investmentType", "Investment Type")}
-                    </h3>
-                    <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
-                      {selectedOpportunity.investmentType}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Created Date */}
-              <div className="mb-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {t("common.created", "Created")}
-                </h3>
-                <p className="text-gray-600">
-                  {new Date(selectedOpportunity.createdAt).toLocaleString()}
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                {selectedOpportunity.url && (
-                  <a
-                    href={selectedOpportunity.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-                  >
-                    {t("investment.viewDetails", "View Details")} →
-                  </a>
-                )}
-
-                {userDetails?.role === "Admin" && (
-                  <>
+                {userDetails?.role === "Admin" ? (
+                  <div className="flex gap-4">
                     <Link
-                      href={`/opportunities/${selectedOpportunity.uuid}/edit`}
-                      className="inline-flex items-center justify-center px-6 py-3 border border-black/20 text-gray-700 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+                      href={`/dashboard/opportunities/${opportunity.uuid}/edit`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-1 text-green-600 hover:text-green-700"
                     >
-                      <BsPencil className="mr-2" />
-                      {t("investment.editOpportunity", "Edit Opportunity")}
+                      <BsPencil />
+                      Edit
                     </Link>
 
                     <button
-                      onClick={() => {
-                        closeModal();
-                        handleDelete(selectedOpportunity.uuid);
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(opportunity.uuid);
                       }}
-                      disabled={deleting === selectedOpportunity.uuid}
-                      className="inline-flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      className="flex items-center gap-1 text-red-600 hover:text-red-700"
                     >
-                      {deleting === selectedOpportunity.uuid ? (
-                        <>
-                          <Spinner />
-                          <span className="ml-2">
-                            {t("investment.deleting", "Deleting...")}
-                          </span>
-                        </>
+                      {deleting === opportunity.uuid ? (
+                        <Spinner />
                       ) : (
-                        <>
-                          <BsTrash className="mr-2" />
-                          {t(
-                            "investment.deleteOpportunity",
-                            "Delete Opportunity",
-                          )}
-                        </>
+                        <BsTrash />
                       )}
+                      Delete
                     </button>
-                  </>
+                  </div>
+                ) : (
+                  <span className="flex items-center gap-1 text-[#f6b800]">
+                    <FaStar />
+                    0.0
+                  </span>
                 )}
               </div>
             </div>
           </div>
-        </div>
-      )}
+        ))}
+      </div>
     </div>
   );
 };
