@@ -483,7 +483,7 @@ const CratSubmissionReviewPage = () => {
                       onClick={() => setActiveDomainKey(domainKey)}
                       className={`rounded-2xl border p-4 text-left shadow-sm transition ${
                         isActive
-                          ? "border-blue-300 bg-blue-600 text-white"
+                          ? "border-blue-300 bg-[#082d77] text-white"
                           : "border-slate-200 bg-white text-slate-800 hover:bg-blue-50"
                       }`}
                     >
@@ -521,7 +521,7 @@ const CratSubmissionReviewPage = () => {
                       className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm"
                     >
                       <div className="mb-3 flex items-start gap-2">
-                        <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-blue-600 text-[10px] font-bold text-white">
+                        <span className="mt-1 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#082d77] text-[10px] font-bold text-white">
                           {index + 1}
                         </span>
 
@@ -665,7 +665,7 @@ const CratSubmissionReviewPage = () => {
                       <button
                         onClick={handleSubmit}
                         disabled={saving || submitting}
-                        className="rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
                       >
                         {submitting ? "Submitting..." : "Submit for Review"}
                       </button>

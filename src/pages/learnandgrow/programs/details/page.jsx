@@ -224,7 +224,7 @@ const CourseDetailsPage = () => {
 
             <Link
               href={`/dashboard/modules/${program.uuid}`}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-4 py-3 text-center text-xs font-semibold text-white shadow-md transition hover:bg-[#1D4ED8]"
+              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#082d77] px-4 py-3 text-center text-xs font-semibold text-white shadow-md transition hover:bg-[#082d76]"
             >
               Enroll Now
               <span className="text-base">→</span>

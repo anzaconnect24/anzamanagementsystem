@@ -222,7 +222,7 @@ const UserAttemptsPage = () => {
                               `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${attempt.uuid}`
                             )
                           }
-                          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 text-sm"
+                          className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded hover:bg-[#082d77] text-sm"
                         >
                           <BsEye />
                           {t("quizzes.viewResults")}

@@ -946,7 +946,7 @@ const businessProfileImage =
                   },
                 );
               }}
-              className="inline-flex w-64 items-center justify-center rounded-xl bg-blue-500 px-6 py-4 text-lg font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-600 hover:shadow-md"
+              className="inline-flex w-64 items-center justify-center rounded-xl bg-[#082d77] px-6 py-4 text-lg font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#082d77] hover:shadow-md"
             >
               {approving ? (
                 <Spinner />
@@ -1229,7 +1229,7 @@ const businessProfileImage =
               {userDetails.role === "Investor" && (
                 <Link
                   href={`/dashboard/investmentApplication/${uuid}`}
-                  className="inline-flex items-center justify-center rounded-xl bg-blue-500 px-6 py-4 text-lg font-semibold text-white shadow-sm transition-all duration-200 hover:bg-blue-600 hover:shadow-md"
+                  className="inline-flex items-center justify-center rounded-xl bg-[#082d77] px-6 py-4 text-lg font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#082d77] hover:shadow-md"
                 >
                   <span className="mr-2 text-xl">💰</span>
                   {t("investment.expressInterest", "Express Interest")}

@@ -246,7 +246,7 @@ const Page = () => {
 
           <button
             type="submit"
-            className="rounded-xl bg-blue-600 px-8 py-3 text-sm font-medium text-white transition hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500"
+            className="rounded-xl bg-[#082d77] px-8 py-3 text-sm font-medium text-white transition hover:bg-[#082d77] disabled:bg-gray-300 disabled:text-gray-500"
             disabled={loading}
           >
             {loading

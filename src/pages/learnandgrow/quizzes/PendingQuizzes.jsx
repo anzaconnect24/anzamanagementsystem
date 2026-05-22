@@ -137,7 +137,7 @@ const PendingQuizzes = () => {
                     <td className="py-4 px-4 text-center">
                       <button
                         onClick={() => handleGrade(attempt.uuid)}
-                        className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+                        className="bg-[#082d77] text-white px-4 py-2 rounded-lg hover:bg-blue-700"
                       >
                         {t("quizzes.grade")}
                       </button>

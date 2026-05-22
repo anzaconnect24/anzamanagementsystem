@@ -42,7 +42,7 @@ const STATUS_META = {
   review_submitted: {
     label: "Review Submitted",
     hint: "Review is complete and awaiting admin decision.",
-    badge: "bg-blue-50 text-blue-700 border-blue-200",
+    badge: "bg-[#082d77]-50 text-blue-700 border-blue-200",
   },
   published: {
     label: "Published",
@@ -207,7 +207,7 @@ const CratReviewPage = () => {
             <button
               onClick={onSubmit}
               disabled={isLocked}
-              className="inline-flex w-fit items-center justify-center rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+              className="inline-flex w-fit items-center justify-center rounded-xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
               {submitCta}
             </button>
@@ -241,7 +241,7 @@ const CratReviewPage = () => {
                   key={step}
                   className={`rounded-2xl border p-4 text-sm transition ${
                     isCurrent
-                      ? "border-blue-200 bg-blue-600 text-white shadow-sm"
+                      ? "border-blue-200 bg-[#082d77] text-white shadow-sm"
                       : isDone
                       ? "border-emerald-200 bg-emerald-50 text-emerald-800"
                       : "border-slate-200 bg-slate-50 text-slate-500"
