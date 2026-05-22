@@ -1511,7 +1511,7 @@ const AIAnalysisPanel = ({
                           <span className="font-medium text-gray-800 dark:text-gray-200">
                             Tshs.
                             {aiAnalysis.predictions.growthPotential.marketExpansion?.addressableMarket?.toLocaleString() ||
-                              "N/A"}}
+                              "N/A"}
                           </span>
                         </div>
                         <div className="flex justify-between">
