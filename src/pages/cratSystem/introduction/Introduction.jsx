@@ -46,17 +46,14 @@ const IntroductionPage = () => {
     <div className="min-h-screen p-4 md:px-6 md:pb-6">
       {/* HERO SECTION */}
       <div className="relative overflow-hidden rounded-[28px] shadow-sm">
-        {/* Background Image */}
         <img
           src="/images/general_resources_hero.svg"
           alt="Capital readiness"
           className="absolute inset-0 h-full w-full object-cover"
         />
 
-        {/* Dark Overlay */}
         <div className="absolute inset-0 bg-black/70" />
 
-        {/* Hero Content */}
         <div className="relative z-10 px-5 py-7 lg:px-8 lg:py-10">
           <div className="max-w-3xl">
             <span className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/10 px-4 py-2 text-xs font-semibold tracking-wide text-white backdrop-blur">
@@ -85,11 +82,11 @@ const IntroductionPage = () => {
             className="rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md"
           >
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-50 text-lg text-blue-600">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#082d77]/10 text-lg text-[#082d77]">
                 <Icon />
               </div>
 
-              <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700">
+              <span className="rounded-full bg-[#082d77]/10 px-3 py-1 text-xs font-bold text-[#082d77]">
                 {weight}
               </span>
             </div>
@@ -105,7 +102,7 @@ const IntroductionPage = () => {
 
       {/* ASSESSMENT MODEL */}
       <div className="mt-6 rounded-[24px] border border-[#e8edf5] bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold tracking-wide text-blue-600">
+        <p className="text-xs font-semibold tracking-wide text-[#082d77]">
           Assessment Model
         </p>
 
@@ -123,7 +120,7 @@ const IntroductionPage = () => {
               key={item}
               className="flex gap-4 rounded-2xl bg-[#f7f9fc] p-5"
             >
-              <FaCheckCircle className="mt-1 shrink-0 text-blue-600" />
+              <FaCheckCircle className="mt-1 shrink-0 text-[#082d77]" />
 
               <p className="text-sm leading-6 text-[#6f6f72]">{item}</p>
             </div>
@@ -133,7 +130,7 @@ const IntroductionPage = () => {
 
       {/* HOW IT WORKS */}
       <div className="mt-6 rounded-[24px] border border-[#e8edf5] bg-white p-6 shadow-sm">
-        <p className="text-xs font-semibold tracking-wide text-blue-600">
+        <p className="text-xs font-semibold tracking-wide text-[#082d77]">
           Process
         </p>
 
@@ -147,7 +144,7 @@ const IntroductionPage = () => {
               key={step}
               className="flex gap-4 rounded-2xl bg-[#f7f9fc] p-5"
             >
-              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-100 text-sm font-bold text-blue-700">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#082d77]/10 text-sm font-bold text-[#082d77]">
                 {index + 1}
               </span>
 
@@ -160,7 +157,7 @@ const IntroductionPage = () => {
       {/* READINESS SECTION */}
       <div className="mt-6 rounded-[24px] border border-[#e8edf5] bg-white p-6 shadow-sm">
         <div>
-          <p className="text-xs font-semibold tracking-wide text-blue-600">
+          <p className="text-xs font-semibold tracking-wide text-[#082d77]">
             Readiness Threshold
           </p>
 
