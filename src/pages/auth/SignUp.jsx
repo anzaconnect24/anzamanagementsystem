@@ -510,7 +510,20 @@ const SignUp = () => {
                     placeholder="Give a short summary of your business"
                   />
                 </div>
+                <div>
+                  <label className={labelClass}>Problem *</label>
 
+                  <textarea
+                    name="problem"
+                    value={formValues.problem}
+                    onChange={(e) =>
+                      updateFormValue("problem", e.target.value)
+                    }
+                    required
+                    className={`${textareaClass} min-h-[110px]`}
+                    placeholder="Describe the problem your business is solving"
+                  />
+                </div>
                 <div>
                   <label className={labelClass}>Solution *</label>
                   <textarea

@@ -181,7 +181,7 @@ const ProgramsPage = () => {
                   {!isAdmin && (
                     <Link
                       href={`/dashboard/programs/details/${item.uuid}`}
-                      className="text-sm font-semibold text-[#2563EB]"
+                      className="text-sm font-semibold text-[#F59E0B] transition hover:text-[#D97706]"
                     >
                       Explore Course →
                     </Link>

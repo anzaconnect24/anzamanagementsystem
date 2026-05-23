@@ -1,5 +1,5 @@
 "use client";
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { getMyInfo } from "@/controllers/user_controller";
 import toast from "react-hot-toast";
@@ -7,26 +7,26 @@ import Spinner from "@/components/spinner";
 import { updateUserInformation } from "../../../controllers/user_controller";
 import { uploadFile } from "../../../controllers/file_upload_controller";
 import Loader from "@/components/common/Loader";
-import UpdateInvestorProfile from "@/component/updateInvestorProfile";
-import UpdateMentorProfile from "@/component/updateMentorProfile";
+
 const EditAccountDetails = () => {
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(0);
   const [loading, setloading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [updatingPassword, setUpdatingPassword] = useState(false);
   const [fileImage, setfileImage] = useState(null);
 
   useEffect(() => {
     getMyInfo().then((data) => {
-      console.log(data);
       setUser(data);
+
       if (data.image) {
         setfileImage(data.image);
       }
+
       setloading(false);
     });
   }, [refresh]);
+
   return loading ? (
     <Loader />
   ) : (
@@ -37,24 +37,24 @@ const EditAccountDetails = () => {
           setUpdating(true);
 
           try {
-            
             let data = {
               name: e.target.name.value,
               phone: e.target.phone.value,
             };
 
-            // Upload image first if a new file was selected
             if (e.target.file.files[0]) {
               const formData = new FormData();
               formData.append("file", e.target.file.files[0]);
+
               const imageUrl = await uploadFile(formData);
               data.image = imageUrl;
             }
 
-            // Update user information with JSON data
-            const response = await updateUserInformation(data);
+            await updateUserInformation(data);
+
             setRefresh(refresh + 1);
             setUpdating(false);
+
             toast.success("User details are updated successfully!");
           } catch (error) {
             setUpdating(false);
@@ -63,11 +63,11 @@ const EditAccountDetails = () => {
         }}
       >
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-          <div className="py-6 px-4 md:px-6 xl:px-7.5">
+          <div className="px-4 py-6 md:px-6 xl:px-7.5">
             <div className="flex justify-center">
               <label
-                for="file-upload"
-                className="aspect-squire h-34 w-34 flex justify-center items-center bg-graydark rounded-full cursor-pointer  "
+                htmlFor="file-upload"
+                className="aspect-square flex h-34 w-34 cursor-pointer items-center justify-center rounded-full bg-graydark"
               >
                 {fileImage == null ? (
                   <svg
@@ -76,7 +76,7 @@ const EditAccountDetails = () => {
                     viewBox="0 0 24 24"
                     strokeWidth="1.5"
                     stroke="currentColor"
-                    className="w-12 text-white h-12"
+                    className="h-12 w-12 text-white"
                   >
                     <path
                       strokeLinecap="round"
@@ -88,7 +88,7 @@ const EditAccountDetails = () => {
                   <img
                     alt=""
                     src={fileImage}
-                    className="rounded-full h-34 w-34 object-cover aspect-square"
+                    className="aspect-square h-34 w-34 rounded-full object-cover"
                   />
                 )}
               </label>
@@ -96,37 +96,41 @@ const EditAccountDetails = () => {
               <input
                 id="file-upload"
                 onChange={(e) => {
-                  setfileImage(URL.createObjectURL(e.target.files[0]));
+                  if (e.target.files[0]) {
+                    setfileImage(URL.createObjectURL(e.target.files[0]));
+                  }
                 }}
                 name="file"
                 className="form-style sr-only"
-                placeholder="Name"
                 type="file"
               />
             </div>
-            {/* {fileImage} */}
 
             <h4 className="text-xl font-semibold text-black dark:text-white">
-              Account infromations
+              Account information
             </h4>
-            <div className="grid grid-cols-2 gap-y-3 gap-x-3 pt-4">
+
+            <div className="grid grid-cols-2 gap-x-3 gap-y-3 pt-4">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   Name
                 </label>
+
                 <input
                   name="name"
                   defaultValue={user.name}
                   required
                   className="form-style"
                   placeholder="Name"
-                  type="tel"
+                  type="text"
                 />
               </div>
+
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   Email address
                 </label>
+
                 <input
                   name="email"
                   disabled
@@ -134,13 +138,15 @@ const EditAccountDetails = () => {
                   required
                   className="form-style disabled:opacity-75"
                   placeholder="Enter email address"
-                  type="tel"
+                  type="email"
                 />
               </div>
+
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   Phone number
                 </label>
+
                 <input
                   name="phone"
                   defaultValue={user.phone}
@@ -151,10 +157,11 @@ const EditAccountDetails = () => {
                 />
               </div>
             </div>
+
             <div className="flex pt-8">
               <button
                 type="submit"
-                className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
+                className="flex cursor-pointer justify-center rounded bg-primary px-4 py-3 text-white hover:opacity-95"
               >
                 <div>{updating ? <Spinner /> : "Update details"}</div>
               </button>
@@ -163,10 +170,10 @@ const EditAccountDetails = () => {
         </div>
       </form>
 
-      {/* Password Update Section */}
       <form
         onSubmit={(e) => {
           e.preventDefault();
+
           const currentPassword = e.target.currentPassword.value;
           const newPassword = e.target.newPassword.value;
           const confirmPassword = e.target.confirmPassword.value;
@@ -181,16 +188,16 @@ const EditAccountDetails = () => {
             return;
           }
 
-          let data = {
+          const data = {
             currentPassword,
             newPassword,
           };
 
           setUpdating(true);
+
           updateUserInformation(data)
-            .then((response) => {
+            .then(() => {
               setUpdating(false);
-              console.log(response);
               toast.success("Password updated successfully!");
               e.target.reset();
             })
@@ -201,15 +208,17 @@ const EditAccountDetails = () => {
         }}
       >
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
-          <div className="py-6 px-4 md:px-6 xl:px-7.5">
+          <div className="px-4 py-6 md:px-6 xl:px-7.5">
             <h4 className="text-xl font-semibold text-black dark:text-white">
               Change Password
             </h4>
-            <div className="grid grid-cols-1 gap-y-3 gap-x-3 pt-4">
+
+            <div className="grid grid-cols-1 gap-x-3 gap-y-3 pt-4">
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   Current Password
                 </label>
+
                 <input
                   name="currentPassword"
                   required
@@ -218,10 +227,12 @@ const EditAccountDetails = () => {
                   type="password"
                 />
               </div>
+
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   New Password
                 </label>
+
                 <input
                   name="newPassword"
                   required
@@ -231,10 +242,12 @@ const EditAccountDetails = () => {
                   minLength={6}
                 />
               </div>
+
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   Confirm New Password
                 </label>
+
                 <input
                   name="confirmPassword"
                   required
@@ -245,10 +258,11 @@ const EditAccountDetails = () => {
                 />
               </div>
             </div>
+
             <div className="flex pt-8">
               <button
                 type="submit"
-                className="py-3 px-4 flex justify-center bg-primary cursor-pointer text-white rounded hover:opacity-95"
+                className="flex cursor-pointer justify-center rounded bg-primary px-4 py-3 text-white hover:opacity-95"
               >
                 <div>{updating ? <Spinner /> : "Update Password"}</div>
               </button>
@@ -256,23 +270,6 @@ const EditAccountDetails = () => {
           </div>
         </div>
       </form>
-
-      {user.role == "Investor" && (
-        <UpdateInvestorProfile
-          refresh={refresh}
-          setRefresh={setRefresh}
-          user={user}
-        />
-      )}
-      {user.role == "Mentor" && (
-        <div>
-          <UpdateMentorProfile
-            refresh={refresh}
-            setRefresh={setRefresh}
-            user={user}
-          />
-        </div>
-      )}
     </div>
   );
 };

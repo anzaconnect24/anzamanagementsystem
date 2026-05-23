@@ -23,6 +23,8 @@ import { useParams } from "react-router-dom";
 
 const fallbackImage = "/images/ideation-classes.svg";
 
+const PRIMARY_COLOR = "#082d77";
+
 const Page = () => {
   const { t } = useTranslation();
   const { userDetails } = useContext(UserContext);
@@ -247,7 +249,7 @@ const Page = () => {
           <aside className="rounded-3xl border border-[#EAECF0] bg-white p-5 shadow-sm">
             <div className="mb-5 flex items-center justify-between">
               <h2 className="text-lg font-bold text-[#101828]">
-                Slides
+                Available Slides
               </h2>
 
               {["Admin"].includes(
@@ -255,7 +257,7 @@ const Page = () => {
               ) && (
                 <Link
                   href={`/dashboard/slides/add/?uuid=${uuid}`}
-                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#2563EB] text-white transition hover:bg-[#1D4ED8]"
+                  className="flex h-10 w-10 items-center justify-center rounded-full bg-[#082d77] text-white transition hover:bg-[#061f52]"
                   title={t(
                     "learnAndGrow.addSlide",
                     "Add Slide"
@@ -283,17 +285,17 @@ const Page = () => {
                     }
                     className={`flex w-full items-center gap-3 rounded-2xl border px-4 py-3 text-left transition ${
                       isActive
-                        ? "border-[#2563EB] bg-[#EEF4FF]"
+                        ? "border-[#082d77] bg-[#082d77]/5"
                         : "border-[#EAECF0] bg-white hover:bg-[#F9FAFB]"
                     }`}
                   >
                     <span
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
                         isRead
-                          ? "bg-[#2563EB] text-white"
+                          ? "bg-[#082d77] text-white"
                           : isActive
-                          ? "bg-[#2563EB] text-white"
-                          : "bg-[#F2F4F7] text-[#667085]"
+                          ? "bg-[#082d77] text-white"
+                          : "bg-[#F2F4F7] text-[#082d77]"
                       }`}
                     >
                       {isRead ? (
@@ -367,7 +369,7 @@ const Page = () => {
               {isModuleCompleted ? (
                 <Link
                   href={`/dashboard/learn-and-grow/quizzes/${uuid}`}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#082d77]"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#061f52]"
                 >
                   Take Quiz
                   <BsArrowRight />
@@ -394,7 +396,7 @@ const Page = () => {
                     currentSlide ===
                     modules.length - 1
                   }
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+                  className="inline-flex items-center gap-2 rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#061f52] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
                 >
                   {t(
                     "common.next",
@@ -411,4 +413,5 @@ const Page = () => {
     </div>
   );
 };
+
 export default Page;

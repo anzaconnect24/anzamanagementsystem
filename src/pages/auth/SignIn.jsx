@@ -143,9 +143,26 @@ const SignInForm = () => {
             </form>
           )}
         </Formik>
+        
+          <p className="mt-3 text-center text-[10px] font-extralight text-gray-400">
+            By signing in, you agree to our{" "}
+            <Link
+              href="/terms"
+              className="text-[#082d77] hover:opacity-80"
+            >
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/privacy"
+              className="text-[#082d77] hover:opacity-80"
+            >
+              Privacy Policy
+            </Link>.
+          </p>
 
         <p className="mt-4 text-center text-sm text-gray-500">
-          Don&apos;t have an account?{" "}
+          Don't have an account?{" "}
           <Link
             href="/auth/signup"
             className="font-medium text-[#10198f] hover:underline"

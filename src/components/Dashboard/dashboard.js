@@ -103,12 +103,18 @@ const DashboardHero = ({ userDetails, data }) => {
           </p>
         </div>
 
-       <Link
-  href="/dashboard"
-  className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
->
-  Complete Profile
-</Link>
+     {!["Admin", "Staff"].includes(role) && (
+  <Link
+    href={
+      ["Enterprenuer", "Investor", "Mentor"].includes(role)
+        ? "/dashboard/entreprenuer-profile"
+        : "/dashboard"
+    }
+    className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
+  >
+    Complete Profile
+  </Link>
+)}
       </div>
 
       <div

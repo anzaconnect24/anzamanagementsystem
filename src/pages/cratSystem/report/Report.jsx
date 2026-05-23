@@ -16,6 +16,8 @@ import { generateCapitalReadinessPDF } from "@/services/capitalReadinessPDF";
 
 import { FaDownload, FaChartLine } from "react-icons/fa";
 
+const PRIMARY_COLOR = "#082d77";
+
 const DOMAIN_CONFIG = [
   {
     apiKey: "commercial_marketing",
@@ -635,56 +637,82 @@ const Report = () => {
           </div>
         </section>
 
-        {/* KPI CARDS */}
-        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
-          {/* OVERALL */}
-          <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
-            <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
-              <FaChartLine className="text-2xl text-blue-600" />
-            </div>
+       {/* KPI CARDS */}
+<section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-5">
+  {/* OVERALL */}
+  <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 pt-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg">
+    <div
+      className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full"
+      style={{
+        backgroundColor: "#082d7715",
+      }}
+    >
+      <FaChartLine
+        className="text-sm"
+        style={{
+          color: PRIMARY_COLOR,
+        }}
+      />
+    </div>
 
-            <p
-              className={`text-3xl font-black tracking-tight ${getPercentageColor(
-                overallPercent,
-              )}`}
-            >
-              {overallPercent}%
-            </p>
+    <p
+      className={`text-3xl font-black tracking-tight ${getPercentageColor(
+        overallPercent,
+      )}`}
+    >
+      {overallPercent}%
+    </p>
 
-            <p className="mt-4 text-xl font-bold text-slate-500">
-              Overall Readiness
-            </p>
-          </div>
+    <p className="mt-4 text-xl font-bold text-slate-500">
+      Overall Readiness
+    </p>
+  </div>
 
-          {/* DOMAINS */}
-          {domainRows.map((domain) => (
-            <div
-              key={domain.apiKey}
-              className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
-            >
-              <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-blue-50">
-                <FaChartLine className="text-2xl text-blue-600" />
-              </div>
+  {/* DOMAINS */}
+  {domainRows.map((domain) => (
+    <div
+      key={domain.apiKey}
+      className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 pt-8 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg"
+    >
+      <div
+        className="absolute right-5 top-5 flex h-10 w-10 items-center justify-center rounded-full"
+        style={{
+          backgroundColor: "#082d7715",
+        }}
+      >
+        <FaChartLine
+          className="text-sm"
+          style={{
+            color: PRIMARY_COLOR,
+          }}
+        />
+      </div>
 
-              <p
-                className={`text-3xl font-black tracking-tight ${getPercentageColor(
-                  domain.percentage,
-                )}`}
-              >
-                {domain.percentage}%
-              </p>
+      <p
+        className={`text-3xl font-black tracking-tight ${getPercentageColor(
+          domain.percentage,
+        )}`}
+      >
+        {domain.percentage}%
+      </p>
 
-              <p className="mt-4 text-xl font-bold text-slate-500">
-                {domain.label} Domain
-              </p>
-            </div>
-          ))}
-        </section>
+      <p className="mt-4 text-xl font-bold text-slate-500">
+        {domain.label} Domain
+      </p>
+    </div>
+  ))}
+</section>
 
         {/* CHARTS */}
         <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
           <div>
-            <p className="text-xs font-semibold tracking-wide text-blue-600">
+            <p
+              className="text-xs font-semibold tracking-wide"
+              style={{
+                color:
+                  PRIMARY_COLOR,
+              }}
+            >
               Performance Overview
             </p>
 
@@ -730,7 +758,13 @@ const Report = () => {
         {/* TABLE */}
         <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
           <div>
-            <p className="text-xs font-semibold tracking-wide text-blue-600">
+            <p
+              className="text-xs font-semibold tracking-wide"
+              style={{
+                color:
+                  PRIMARY_COLOR,
+              }}
+            >
               Domain Insights
             </p>
 
@@ -802,7 +836,15 @@ const Report = () => {
                       </td>
 
                       <td className="px-3 py-4 text-sm">
-                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        <span
+                          className="rounded-full px-3 py-1 text-xs font-semibold"
+                          style={{
+                            backgroundColor:
+                              "#082d770d",
+                            color:
+                              PRIMARY_COLOR,
+                          }}
+                        >
                           {
                             domain.status
                           }

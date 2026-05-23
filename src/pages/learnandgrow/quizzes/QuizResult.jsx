@@ -25,11 +25,13 @@ import {
 
 import { useTranslation } from "@/locales";
 
+const PRIMARY_COLOR = "#082d77";
+const PRIMARY_HOVER = "#061f52";
+const PRIMARY_SOFT = "#082d770d";
+
 const QuizResultPage = () => {
   const { t } = useTranslation();
-
   const { moduleId, attemptId } = useParams();
-
   const router = useRouter();
 
   const [loading, setLoading] = useState(true);
@@ -43,31 +45,24 @@ const QuizResultPage = () => {
   const loadAttempt = async () => {
     try {
       setLoading(true);
-
       const result = await getAttemptDetails(attemptId);
-
       setAttempt(result.data);
-
-      setLoading(false);
     } catch (error) {
       console.error("Error loading attempt:", error);
-
       toast.error(t("quizzes.failedToLoadQuiz"));
-
       router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDownloadCertificate = async () => {
     try {
       setDownloading(true);
-
       await downloadCertificate(attemptId);
-
       toast.success(t("quizzes.downloadCertificate"));
     } catch (error) {
       console.error("Error downloading certificate:", error);
-
       toast.error(t("quizzes.failedToDownloadCertificate"));
     } finally {
       setDownloading(false);
@@ -82,24 +77,27 @@ const QuizResultPage = () => {
       ans.isCorrect === null
   );
 
-  const progressColor = attempt.isPassed
-    ? "text-emerald-500"
-    : "text-red-500";
+  const score = Number(attempt.score || 0).toFixed(1);
 
-  const badgeColor = attempt.isPassed
+  const resultBadge = attempt.isPassed
     ? "bg-emerald-100 text-emerald-700"
     : "bg-red-100 text-red-700";
 
+  const resultIcon = attempt.isPassed ? (
+    <BsCheckCircle className="text-6xl text-emerald-400" />
+  ) : (
+    <BsXCircle className="text-6xl text-red-400" />
+  );
+
   return (
     <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
-      <div className="mx-auto max-w-7xl">
+      <div className="mx-auto max-w-7xl space-y-6">
         {/* HERO */}
-        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+        <section className="relative overflow-hidden rounded-[28px] border border-[#EAECF0] bg-black shadow-sm">
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage:
-                "url('/images/business_tools_hero.svg')",
+              backgroundImage: "url('/images/business_tools_hero.svg')",
             }}
           />
 
@@ -113,15 +111,7 @@ const QuizResultPage = () => {
 
             <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
               <div className="max-w-3xl">
-                <div className="mb-5">
-                  {attempt.isPassed ? (
-                    <BsCheckCircle
-                      className="text-6xl text-emerald-400"
-                    />
-                  ) : (
-                    <BsXCircle className="text-6xl text-red-400" />
-                  )}
-                </div>
+                <div className="mb-5">{resultIcon}</div>
 
                 <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl">
                   {attempt.isPassed
@@ -138,8 +128,7 @@ const QuizResultPage = () => {
                 <div className="mt-7 flex flex-wrap items-center gap-6 text-sm font-medium text-white/90">
                   <span className="flex items-center gap-2">
                     <BsAward />
-                    {Number(attempt.score || 0).toFixed(1)}%
-                    Score
+                    {score}% Score
                   </span>
 
                   <span className="flex items-center gap-2">
@@ -149,35 +138,36 @@ const QuizResultPage = () => {
 
                   <span className="flex items-center gap-2">
                     <BsClock />
-                    {new Date(
-                      attempt.submittedAt
-                    ).toLocaleDateString()}
+                    {new Date(attempt.submittedAt).toLocaleDateString()}
                   </span>
                 </div>
               </div>
 
-              <div>
-                <span
-                  className={`inline-flex rounded-full px-5 py-3 text-sm font-semibold ${badgeColor}`}
-                >
-                  {attempt.isPassed
-                    ? `✓ ${t("quizzes.passed")}`
-                    : `✗ ${t("quizzes.failed")}`}
-                </span>
-              </div>
+              <span
+                className={`inline-flex w-fit rounded-full px-5 py-3 text-sm font-semibold ${resultBadge}`}
+              >
+                {attempt.isPassed
+                  ? `✓ ${t("quizzes.passed")}`
+                  : `✗ ${t("quizzes.failed")}`}
+              </span>
             </div>
           </div>
         </section>
 
-        {/* STATUS CARDS */}
-        <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {/* KPI CARDS */}
+        <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
-            <BsAward className="absolute right-5 top-5 text-xl text-blue-500" />
+            <BsAward
+              className="absolute right-5 top-5 text-xl"
+              style={{ color: PRIMARY_COLOR }}
+            />
 
             <p
-              className={`text-3xl font-bold ${progressColor}`}
+              className={`text-3xl font-bold ${
+                attempt.isPassed ? "text-emerald-600" : "text-red-500"
+              }`}
             >
-              {Number(attempt.score || 0).toFixed(1)}%
+              {score}%
             </p>
 
             <p className="mt-2 text-sm font-medium text-[#667085]">
@@ -210,7 +200,10 @@ const QuizResultPage = () => {
           </div>
 
           <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
-            <BsClock className="absolute right-5 top-5 text-xl text-sky-500" />
+            <BsClock
+              className="absolute right-5 top-5 text-xl"
+              style={{ color: PRIMARY_COLOR }}
+            />
 
             <p className="text-3xl font-bold text-[#101828]">
               {attempt.quiz.passingScore}%
@@ -224,7 +217,7 @@ const QuizResultPage = () => {
 
         {/* REVIEW NOTICE */}
         {hasDescriptionQuestions && (
-          <section className="mb-8 rounded-3xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
+          <section className="rounded-3xl border border-yellow-200 bg-yellow-50 p-5 shadow-sm">
             <div className="flex items-start gap-3">
               <BsClock className="mt-1 text-xl text-yellow-600" />
 
@@ -234,20 +227,22 @@ const QuizResultPage = () => {
                 </h3>
 
                 <p className="mt-1 text-sm leading-6 text-yellow-800">
-                  Some descriptive answers are pending
-                  instructor review. Final scores may update
-                  after grading is completed.
+                  Some descriptive answers are pending instructor review. Final
+                  scores may update after grading is completed.
                 </p>
               </div>
             </div>
           </section>
         )}
 
-        {/* QUIZ DETAILS */}
-        <section className="mb-8 rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm">
+        {/* OVERVIEW */}
+        <section className="rounded-[26px] border border-[#EAECF0] bg-white p-6 shadow-sm">
           <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
             <div>
-              <p className="text-xs font-semibold tracking-wide text-[#2563EB]">
+              <p
+                className="text-xs font-semibold tracking-wide"
+                style={{ color: PRIMARY_COLOR }}
+              >
                 Quiz Overview
               </p>
 
@@ -255,79 +250,49 @@ const QuizResultPage = () => {
                 {attempt.quiz.title}
               </h2>
 
-              <p className="mt-3 text-sm leading-7 text-[#667085]">
-                Review your submitted answers, scoring
-                breakdown, and instructor feedback below.
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-[#667085]">
+                Review your submitted answers, scoring breakdown, and instructor
+                feedback below.
               </p>
             </div>
 
-            {attempt.isPassed &&
-              attempt.submittedAt && (
-                <button
-                  onClick={handleDownloadCertificate}
-                  disabled={downloading}
-                  className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:opacity-50"
-                >
-                  <BsDownload />
-
-                  {downloading
-                    ? t("quizzes.downloading")
-                    : t(
-                        "quizzes.downloadCertificate"
-                      )}
-                </button>
-              )}
+            {attempt.isPassed && attempt.submittedAt && (
+              <button
+                onClick={handleDownloadCertificate}
+                disabled={downloading}
+                className="inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-white transition disabled:opacity-50"
+                style={{ backgroundColor: PRIMARY_COLOR }}
+              >
+                <BsDownload />
+                {downloading
+                  ? t("quizzes.downloading")
+                  : t("quizzes.downloadCertificate")}
+              </button>
+            )}
           </div>
 
           <div className="mt-8 grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-2xl bg-[#F9FAFB] p-5">
-              <p className="text-sm text-[#667085]">
-                Module
-              </p>
-
-              <p className="mt-2 font-semibold text-[#101828]">
-                {attempt.quiz.module.title}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-[#F9FAFB] p-5">
-              <p className="text-sm text-[#667085]">
-                Submitted
-              </p>
-
-              <p className="mt-2 font-semibold text-[#101828]">
-                {new Date(
-                  attempt.submittedAt
-                ).toLocaleString()}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-[#F9FAFB] p-5">
-              <p className="text-sm text-[#667085]">
-                Total Points
-              </p>
-
-              <p className="mt-2 font-semibold text-[#101828]">
-                {attempt.totalPoints}
-              </p>
-            </div>
-
-            <div className="rounded-2xl bg-[#F9FAFB] p-5">
-              <p className="text-sm text-[#667085]">
-                Earned Points
-              </p>
-
-              <p className="mt-2 font-semibold text-[#101828]">
-                {attempt.earnedPoints}
-              </p>
-            </div>
+            {[
+              ["Module", attempt.quiz.module.title],
+              ["Submitted", new Date(attempt.submittedAt).toLocaleString()],
+              ["Total Points", attempt.totalPoints],
+              ["Earned Points", attempt.earnedPoints],
+            ].map(([label, value]) => (
+              <div key={label} className="rounded-2xl bg-[#F9FAFB] p-5">
+                <p className="text-sm text-[#667085]">{label}</p>
+                <p className="mt-2 font-semibold text-[#101828]">{value}</p>
+              </div>
+            ))}
           </div>
         </section>
 
         {/* ANSWERS */}
-        <section className="rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm">
+        <section className="rounded-[26px] border border-[#EAECF0] bg-white p-6 shadow-sm">
           <div className="mb-8">
-            <p className="text-xs font-semibold tracking-wide text-[#2563EB]">
+            <p
+              className="text-xs font-semibold tracking-wide"
+              style={{ color: PRIMARY_COLOR }}
+            >
               Answer Review
             </p>
 
@@ -350,8 +315,14 @@ const QuizResultPage = () => {
               >
                 <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
                   <div>
-                    <span className="mb-4 inline-flex rounded-full bg-white px-3 py-1 text-xs font-semibold text-[#344054] shadow-sm">
-                      Question {index + 1}
+                    <span
+                      className="mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold shadow-sm"
+                      style={{
+                        backgroundColor: "white",
+                        color: PRIMARY_COLOR,
+                      }}
+                    >
+                      {index + 1}
                     </span>
 
                     <h3 className="max-w-4xl text-lg font-semibold leading-8 text-[#101828]">
@@ -379,15 +350,12 @@ const QuizResultPage = () => {
                     )}
 
                     <div className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-[#344054] shadow-sm">
-                      {answer.pointsEarned} /{" "}
-                      {answer.question.points} pts
+                      {answer.pointsEarned} / {answer.question.points} pts
                     </div>
                   </div>
                 </div>
 
-                {/* DESCRIPTION */}
-                {answer.question.questionType ===
-                "description" ? (
+                {answer.question.questionType === "description" ? (
                   <div>
                     <div className="rounded-2xl bg-white p-5 shadow-sm">
                       <p className="mb-2 text-sm font-semibold text-[#667085]">
@@ -400,12 +368,21 @@ const QuizResultPage = () => {
                     </div>
 
                     {answer.feedback && (
-                      <div className="mt-4 rounded-2xl border border-blue-200 bg-blue-50 p-5">
-                        <p className="mb-2 text-sm font-semibold text-blue-900">
+                      <div
+                        className="mt-4 rounded-2xl border p-5"
+                        style={{
+                          borderColor: `${PRIMARY_COLOR}33`,
+                          backgroundColor: PRIMARY_SOFT,
+                        }}
+                      >
+                        <p
+                          className="mb-2 text-sm font-semibold"
+                          style={{ color: PRIMARY_COLOR }}
+                        >
                           Instructor Feedback
                         </p>
 
-                        <p className="text-sm leading-7 text-blue-800">
+                        <p className="text-sm leading-7 text-[#344054]">
                           {answer.feedback}
                         </p>
                       </div>
@@ -417,8 +394,7 @@ const QuizResultPage = () => {
                       <div
                         key={opt.uuid}
                         className={`rounded-2xl border p-4 text-sm font-medium transition ${
-                          opt.uuid ===
-                          answer.option?.uuid
+                          opt.uuid === answer.option?.uuid
                             ? answer.isCorrect
                               ? "border-emerald-300 bg-emerald-100 text-emerald-900"
                               : "border-red-300 bg-red-100 text-red-900"
@@ -428,14 +404,8 @@ const QuizResultPage = () => {
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {opt.uuid ===
-                            answer.option?.uuid && (
-                            <span>→</span>
-                          )}
-
-                          {opt.isCorrect && (
-                            <span>✓</span>
-                          )}
+                          {opt.uuid === answer.option?.uuid && <span>→</span>}
+                          {opt.isCorrect && <span>✓</span>}
 
                           <span>{opt.optionText}</span>
 
@@ -455,12 +425,10 @@ const QuizResultPage = () => {
         </section>
 
         {/* ACTIONS */}
-        <section className="mt-8 flex flex-wrap gap-4">
+        <section className="flex flex-wrap gap-4">
           <button
             onClick={() =>
-              router.push(
-                `/dashboard/learn-and-grow/quizzes/${moduleId}`
-              )
+              router.push(`/dashboard/learn-and-grow/quizzes/${moduleId}`)
             }
             className="inline-flex items-center gap-2 rounded-2xl bg-[#101828] px-6 py-3 text-sm font-semibold text-white transition hover:bg-black"
           >
@@ -475,7 +443,8 @@ const QuizResultPage = () => {
                   `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${attempt.quiz.uuid}`
                 )
               }
-              className="inline-flex items-center gap-2 rounded-2xl bg-[#2563EB] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
+              className="inline-flex items-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold text-white transition"
+              style={{ backgroundColor: PRIMARY_COLOR }}
             >
               <BsArrowRepeat />
               Try Again

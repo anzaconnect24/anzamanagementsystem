@@ -483,11 +483,11 @@ const Enterprenuers = () => {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`rounded-lg px-4 py-2.5 text-sm font-medium transition ${
-                      page === pageNum
-                    ? "bg-[#082d77] text-white"
-                        : "border border-black/10 bg-white text-[#6f6f72] hover:border-primary hover:text-primary"
-                    }`}
+                    className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
+                        page === pageNum
+                          ? "bg-[#082d77] text-white shadow-sm"
+                          : "border border-black/10 bg-white text-[#6f6f72] hover:border-[#082d77] hover:text-[#082d77]"
+                      }`}
                   >
                     {pageNum}
                   </button>

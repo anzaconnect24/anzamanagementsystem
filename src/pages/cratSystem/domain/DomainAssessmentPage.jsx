@@ -362,7 +362,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
         </div>
 
         <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <FaPenAlt className="absolute right-5 top-5 text-xl text-sky-500" />
+            <FaCheckCircle className="absolute right-5 top-5 text-xl text-emerald-500" />
 
           <p className="text-3xl font-bold text-slate-900">
             {progressStats.started}/{questions.length}
@@ -374,7 +374,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
         </div>
 
         <div className="relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-          <FaFolderOpen className="absolute right-5 top-5 text-xl text-blue-500" />
+          <FaFolderOpen className="absolute right-5 top-5 text-xl text-[#082d77]" />
 
           <p className="text-3xl font-bold text-slate-900">
             {progressStats.evidenceUploaded}
@@ -450,7 +450,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
 
                   <textarea
                     rows={6}
-                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-blue-300 focus:ring-2 focus:ring-blue-100"
+                    className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-[#082d77] focus:ring-2 focus:ring-[#082d77]/10"
                     placeholder={labels.notesHint}
                     value={commentValue}
                     onChange={(event) =>
@@ -503,10 +503,10 @@ const DomainAssessmentPage = ({ domainKey }) => {
                 return (
                   <div
                     key={question.id}
-                    className="rounded-2xl border border-blue-100 bg-[#082d77]50/30 p-3 transition hover:border-blue-200 hover:bg-blue-50/60"
+                    className="rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-3 transition hover:border-[#082d77]/20 hover:bg-[#082d77]/10"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-white text-blue-600 shadow-sm">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#082d77]/10 bg-white text-[#082d77] shadow-sm">
                         <FaFileAlt />
                       </div>
 
@@ -534,7 +534,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
                       <div className="flex shrink-0 items-center gap-3">
                         <label
                           htmlFor={`sidebar-attachment-${question.id}`}
-                          className="cursor-pointer text-blue-600 transition hover:text-blue-700"
+                          className="cursor-pointer text-[#082d77] transition hover:text-[#082d77]"
                           title={
                             state.hasAttachment
                               ? labels.replaceAttachment

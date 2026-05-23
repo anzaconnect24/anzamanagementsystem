@@ -20,6 +20,8 @@ import {
   BsArrowRight,
 } from "react-icons/bs";
 
+const PRIMARY_COLOR = "#082d77";
+
 const TakeQuizPage = () => {
   const { t } = useTranslation();
 
@@ -224,7 +226,10 @@ const TakeQuizPage = () => {
         {/* STATUS CARDS */}
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
-            <BsQuestionCircle className="absolute right-5 top-5 text-xl text-blue-500" />
+            <BsQuestionCircle
+              className="absolute right-5 top-5 text-xl"
+              style={{ color: PRIMARY_COLOR }}
+            />
 
             <p className="text-3xl font-bold text-[#101828]">
               {quiz.questions.length}
@@ -260,7 +265,10 @@ const TakeQuizPage = () => {
           </div>
 
           <div className="relative rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
-            <BsClock className="absolute right-5 top-5 text-xl text-sky-500" />
+            <BsClock
+              className="absolute right-5 top-5 text-xl"
+              style={{ color: PRIMARY_COLOR }}
+            />
 
             <p className="text-3xl font-bold text-[#101828]">
               {progress}%
@@ -286,9 +294,10 @@ const TakeQuizPage = () => {
 
           <div className="h-3 overflow-hidden rounded-full bg-[#EAECF0]">
             <div
-              className="h-full rounded-full bg-[#2563EB] transition-all duration-300"
+              className="h-full rounded-full transition-all duration-300"
               style={{
                 width: `${progress}%`,
+                backgroundColor: PRIMARY_COLOR,
               }}
             />
           </div>
@@ -303,8 +312,14 @@ const TakeQuizPage = () => {
             >
               <div className="mb-5 flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <span className="mb-4 inline-flex rounded-full bg-[#EEF4FF] px-3 py-1 text-xs font-semibold text-[#2563EB]">
-                    Question {index + 1}
+                  <span
+                    className="mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold"
+                    style={{
+                      backgroundColor: "#EEF4FF",
+                      color: PRIMARY_COLOR,
+                    }}
+                  >
+                    {index + 1}
                   </span>
 
                   <h3 className="max-w-4xl text-lg font-semibold leading-8 text-[#101828]">
@@ -338,7 +353,7 @@ const TakeQuizPage = () => {
                       className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${
                         answers[question.uuid] ===
                         option.uuid
-                          ? "border-[#2563EB] bg-[#EEF4FF]"
+                          ? "border-[#082d77] bg-[#082d77]/5"
                           : "border-[#EAECF0] hover:bg-[#F9FAFB]"
                       }`}
                     >
@@ -356,7 +371,10 @@ const TakeQuizPage = () => {
                             e.target.value
                           )
                         }
-                        className="h-4 w-4 text-[#2563EB]"
+                        className="h-4 w-4"
+                        style={{
+                          accentColor: PRIMARY_COLOR,
+                        }}
                       />
 
                       <span className="text-sm font-medium text-[#344054]">
@@ -376,7 +394,7 @@ const TakeQuizPage = () => {
                       className={`flex cursor-pointer items-center gap-4 rounded-2xl border p-4 transition ${
                         answers[question.uuid] ===
                         option.uuid
-                          ? "border-[#2563EB] bg-[#EEF4FF]"
+                          ? "border-[#082d77] bg-[#082d77]/5"
                           : "border-[#EAECF0] hover:bg-[#F9FAFB]"
                       }`}
                     >
@@ -394,7 +412,10 @@ const TakeQuizPage = () => {
                             e.target.value
                           )
                         }
-                        className="h-4 w-4 text-[#2563EB]"
+                        className="h-4 w-4"
+                        style={{
+                          accentColor: PRIMARY_COLOR,
+                        }}
                       />
 
                       <span className="text-sm font-medium text-[#344054]">
@@ -416,7 +437,13 @@ const TakeQuizPage = () => {
                       e.target.value
                     )
                   }
-                  className="w-full rounded-2xl border border-[#D0D5DD] bg-white px-5 py-4 text-sm leading-7 text-[#101828] outline-none transition placeholder:text-[#98A2B3] focus:border-[#2563EB] focus:ring-4 focus:ring-blue-100"
+                  className="w-full rounded-2xl border border-[#D0D5DD] bg-white px-5 py-4 text-sm leading-7 text-[#101828] outline-none transition placeholder:text-[#98A2B3]"
+                  style={{
+                    borderColor:
+                      answers[question.uuid]
+                        ? PRIMARY_COLOR
+                        : "#D0D5DD",
+                  }}
                   rows="6"
                   placeholder={t("quizzes.yourAnswer")}
                 />
@@ -449,7 +476,10 @@ const TakeQuizPage = () => {
                 submitting ||
                 answeredCount < quiz.questions.length
               }
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#2563EB] px-6 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8] disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl px-6 py-3 text-sm font-semibold text-white transition disabled:cursor-not-allowed disabled:bg-[#D0D5DD]"
+              style={{
+                backgroundColor: PRIMARY_COLOR,
+              }}
             >
               {submitting
                 ? t("quizzes.submitting")
