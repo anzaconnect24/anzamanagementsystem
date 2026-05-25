@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useRef, useState, useMemo } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 
 import Link from "@/utils/link";
 import { usePathname, useRouter } from "@/utils/navigation";
@@ -64,6 +64,35 @@ const Sidebar = ({
 
   const [isHovered, setIsHovered] = useState(false);
   const [availableDomains, setAvailableDomains] = useState([]);
+
+  useEffect(() => {
+    if (userDetails?.role !== "Enterprenuer") {
+      setAvailableDomains([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadAvailableDomains = async () => {
+      try {
+        const domains = await getAvailableDomains();
+        if (isMounted) {
+          setAvailableDomains(Array.isArray(domains) ? domains : []);
+        }
+      } catch (error) {
+        console.error("Failed to load CRAT domains in sidebar:", error);
+        if (isMounted) {
+          setAvailableDomains([]);
+        }
+      }
+    };
+
+    loadAvailableDomains();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userDetails?.role]);
 
   useEffect(() => {
     const clickHandler = ({ target }) => {
@@ -168,10 +197,10 @@ const Sidebar = ({
       });
 
       peopleItems.push({
-  name: t("navigation.investors", "Investors"),
-  path: "/dashboard/investors",
-  icon: <RiMoneyDollarCircleLine className="text-xl" />,
-});
+        name: t("navigation.investors", "Investors"),
+        path: "/dashboard/investors",
+        icon: <RiMoneyDollarCircleLine className="text-xl" />,
+      });
 
       peopleItems.push({
         name: t("navigation.mentors", "Mentors"),
@@ -320,13 +349,13 @@ const Sidebar = ({
       });
     }
 
-   if (businessItems.length > 0) {
-  categories.push({
-    id: "investmentPipeline",
-    title: t("navigation.businessOperations", "Business Operations"),
-    items: businessItems,
-  });
-}
+    if (businessItems.length > 0) {
+      categories.push({
+        id: "investmentPipeline",
+        title: t("navigation.businessOperations", "Business Operations"),
+        items: businessItems,
+      });
+    }
 
     const investmentItems = [];
 
