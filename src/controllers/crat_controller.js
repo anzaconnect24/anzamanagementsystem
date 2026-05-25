@@ -45,10 +45,14 @@ export const saveAssessmentAnswers = async (assessmentId, answers) => {
 export const uploadAssessmentAttachment = async (
   assessmentId,
   questionId,
-  file,
+  files,
 ) => {
   const formData = new FormData();
-  formData.append("file", file);
+
+  const fileList = Array.isArray(files) ? files : [files];
+  fileList.filter(Boolean).forEach((file) => {
+    formData.append("files", file);
+  });
 
   const response = await axios.post(
     `${server_url}/crat/assessments/${assessmentId}/answers/${questionId}/attachment`,
