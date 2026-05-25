@@ -228,6 +228,9 @@ import MentorWithUuid from "./pages/users/mentors/MentorWithUuid";
 import { TranslationProvider } from "./locales";
 import EditAccountDetails from "./pages/account/editAccount/editAccountDetails";
 import EntrepreneurProfile from "./pages/account/entreprenuerProfile";
+import MentorTracker from "./pages/tracker/mentor/MentorTracker";
+import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
+import AdminTrackerOverview from "./pages/tracker/admin/AdminTrackerOverview";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -318,6 +321,12 @@ function App() {
               element={<MentorshipApplications />}
             />
             <Route path="mentorReports" element={<MentorReports />} />
+            <Route path="mentorTracker" element={<MentorTracker />} />
+            <Route path="myMilestones" element={<EntrepreneurMilestones />} />
+            <Route
+              path="trackerAdminOverview"
+              element={<AdminTrackerOverview />}
+            />
 
             {/* Investment Routes */}
             <Route
@@ -508,7 +517,6 @@ function App() {
             <Route path="slides/add" element={<AddSlide />} />
 
             <Route path="slides/edit" element={<EditSlide />} />
-          
 
             {/* Log Routes */}
             {/* <Route path="logs" element={<Logs />} /> */}

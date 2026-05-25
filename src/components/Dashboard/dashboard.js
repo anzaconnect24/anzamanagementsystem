@@ -13,6 +13,11 @@ import Link from "@/utils/link";
 import { checkIfProfileIsComplete } from "@/utils/check_profile";
 import { getMentorOverviewStats } from "@/controllers/statsControllers";
 import { getScoreData } from "@/controllers/crat_general_controller";
+import {
+  getAdminTrackerOverview,
+  getMentorOverview,
+  listTrackerMilestones,
+} from "@/controllers/trackerController";
 import TanzaniaMap from "../Maps/TanzaniaMap";
 import { useTranslation } from "@/locales";
 import { UserContext } from "../../layouts/DashboardLayout";
@@ -98,17 +103,17 @@ const DashboardHero = ({ userDetails, data }) => {
           </h1>
 
           <p className="mt-2 text-base text-gray-600 dark:text-gray-300">
-            Access your dashboard insights, track your progress, and manage
-            your key activities.
+            Access your dashboard insights, track your progress, and manage your
+            key activities.
           </p>
         </div>
 
-       <Link
-  href="/dashboard"
-  className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
->
-  Complete Profile
-</Link>
+        <Link
+          href="/dashboard"
+          className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
+        >
+          Complete Profile
+        </Link>
       </div>
 
       <div
@@ -173,12 +178,36 @@ const Dashboard = () => {
   const [loadingBar, setLoadingBar] = useState(true);
   const [aiReport, setAiReport] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
+  const [mentorTrackerStats, setMentorTrackerStats] = useState(null);
+  const [adminTrackerStats, setAdminTrackerStats] = useState(null);
+  const [myMilestonesCount, setMyMilestonesCount] = useState(0);
 
   useEffect(() => {
     getMentorOverviewStats().then((res) => {
       setMentorStats(res);
     });
   }, []);
+
+  useEffect(() => {
+    if (userDetails.role === "Mentor") {
+      getMentorOverview().then((res) => setMentorTrackerStats(res || null));
+    }
+
+    if (userDetails.role === "Admin") {
+      getAdminTrackerOverview().then((res) =>
+        setAdminTrackerStats(res || null),
+      );
+    }
+
+    if (userDetails.role === "Enterprenuer") {
+      listTrackerMilestones().then((items) => {
+        const openMilestones = (items || []).filter((item) =>
+          ["pending", "in_progress", "submitted"].includes(item.status),
+        );
+        setMyMilestonesCount(openMilestones.length);
+      });
+    }
+  }, [userDetails.role]);
 
   useEffect(() => {
     if (userDetails.role === "Enterprenuer") {
@@ -238,7 +267,7 @@ const Dashboard = () => {
               value.percentage
             }%`,
             10,
-            y
+            y,
           );
 
           y += 7;
@@ -253,11 +282,7 @@ const Dashboard = () => {
       doc.text("Your AI analysis report is not yet available.", 10, y);
       y += 8;
 
-      doc.text(
-        "Please contact your administrator or check back later.",
-        10,
-        y
-      );
+      doc.text("Please contact your administrator or check back later.", 10, y);
     }
 
     doc.save("AI_Analysis_Report.pdf");
@@ -275,7 +300,7 @@ const Dashboard = () => {
                 <h1 className="text-base font-medium text-black">
                   {t(
                     "dashboard.completeProfile",
-                    "Please complete your profile"
+                    "Please complete your profile",
                   )}
                 </h1>
 
@@ -289,7 +314,7 @@ const Dashboard = () => {
             </div>
           )}
 
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6">
+          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
             <CardDataStats
               link="/dashboard/enterprenuers"
               title={t("dashboard.totalStartups", "Total Startups")}
@@ -312,10 +337,7 @@ const Dashboard = () => {
 
             <CardDataStats
               link="/dashboard/interestedInvestors"
-              title={t(
-                "dashboard.interestedInvestors",
-                "Interested Investors"
-              )}
+              title={t("dashboard.interestedInvestors", "Interested Investors")}
               total={data.investorsInterested || 0}
               rate="2.59%"
               levelUp
@@ -333,7 +355,17 @@ const Dashboard = () => {
               <SlPeople className="text-lg text-primary dark:text-white" />
             </CardDataStats>
 
-            <div className="col-span-1 w-full md:col-span-4">
+            <CardDataStats
+              link="/dashboard/myMilestones"
+              title={t("dashboard.myMilestones", "My Milestones")}
+              total={myMilestonesCount}
+              rate="0.95%"
+              levelUp
+            >
+              <SlPeople className="text-lg text-primary dark:text-white" />
+            </CardDataStats>
+
+            <div className="col-span-1 w-full md:col-span-5">
               <PerformanceOverview userDetails={userDetails} />
             </div>
           </div>
@@ -342,7 +374,7 @@ const Dashboard = () => {
 
       {["Mentor"].includes(userDetails.role) && mentorStats && (
         <div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-6 md:gap-6">
             <CardDataStats
               link="/dashboard/mentorEntreprenuers"
               title={t("dashboard.activeMentees", "Active Mentees")}
@@ -357,7 +389,7 @@ const Dashboard = () => {
               link="/dashboard/mentorshipApplications"
               title={t(
                 "dashboard.pendingMentorshipRequest",
-                "Pending Mentorship Request"
+                "Pending Mentorship Request",
               )}
               total={mentorStats.mentorEnterprenuers}
               rate="0.43%"
@@ -395,18 +427,28 @@ const Dashboard = () => {
             >
               <SlPeople className="text-lg text-primary dark:text-white" />
             </CardDataStats>
+
+            <CardDataStats
+              link="/dashboard/mentorTracker"
+              title={t("dashboard.weeklyLogs", "Weekly Logs")}
+              total={mentorTrackerStats?.weeklyLogs || 0}
+              rate="0.43%"
+              levelUp
+            >
+              <SlPeople className="text-lg text-primary dark:text-white" />
+            </CardDataStats>
           </div>
         </div>
       )}
 
       {["Admin", "Reviewer"].includes(userDetails.role) && (
         <div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
             <CardDataStats
               link="/dashboard/pendingApplications"
               title={t(
                 "dashboard.pendingBusinessApplications",
-                "Pending business applications"
+                "Pending business applications",
               )}
               total={data.pendingBusiness}
               rate="0.43%"
@@ -419,7 +461,7 @@ const Dashboard = () => {
               link="/dashboard/users"
               title={t(
                 "dashboard.pendingUserApplications",
-                "Pending users applications"
+                "Pending users applications",
               )}
               total={data.pendingUser}
               rate="4.35%"
@@ -432,7 +474,7 @@ const Dashboard = () => {
               link="/dashboard/pendingRequests"
               title={t(
                 "dashboard.pendingProgramApplications",
-                "Pending program applications"
+                "Pending program applications",
               )}
               total={data.pendingProgramApplication || 0}
               rate="2.59%"
@@ -445,7 +487,7 @@ const Dashboard = () => {
               link="/dashboard/users"
               title={t(
                 "dashboard.totalUsersRegistered",
-                "Total users registered on system"
+                "Total users registered on system",
               )}
               total={data.totalUsers}
               rate="0.95%"
@@ -453,6 +495,18 @@ const Dashboard = () => {
             >
               <SlPeople className="text-lg text-primary dark:text-white" />
             </CardDataStats>
+
+            {userDetails.role === "Admin" && (
+              <CardDataStats
+                link="/dashboard/trackerAdminOverview"
+                title={t("dashboard.redFlags", "Red Flags")}
+                total={adminTrackerStats?.redFlags || 0}
+                rate="0.43%"
+                levelUp
+              >
+                <SlPeople className="text-lg text-primary dark:text-white" />
+              </CardDataStats>
+            )}
           </div>
         </div>
       )}
@@ -462,10 +516,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
             <CardDataStats
               link="/dashboard/myInvestmentRequests"
-              title={t(
-                "dashboard.requestsInProgress",
-                "Requests in progress"
-              )}
+              title={t("dashboard.requestsInProgress", "Requests in progress")}
               total={data.investorWaitingBusinessInvestmentRequests}
               rate="0.43%"
               levelUp
@@ -485,10 +536,7 @@ const Dashboard = () => {
 
             <CardDataStats
               link="/dashboard/myInvestmentRequests"
-              title={t(
-                "dashboard.droppedInvestments",
-                "Dropped Investments"
-              )}
+              title={t("dashboard.droppedInvestments", "Dropped Investments")}
               total={data.investorClosedBusinessInvestmentRequests}
               rate="4.35%"
               levelUp

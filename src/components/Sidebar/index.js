@@ -287,6 +287,39 @@ const Sidebar = ({
             path: "/dashboard/mentorshipRequests",
             icon: <FaHandshake className="text-xl" />,
           },
+          {
+            name: t("navigation.mentorTracker", "Mentor Tracker"),
+            path: "/dashboard/mentorTracker",
+            icon: <BsCalendar3 className="text-xl" />,
+          },
+        ],
+      });
+    }
+
+    if (["Enterprenuer"].includes(role)) {
+      categories.push({
+        id: "milestones",
+        title: t("navigation.myMilestones", "My Milestones"),
+        items: [
+          {
+            name: t("navigation.myMilestones", "My Milestones"),
+            path: "/dashboard/myMilestones",
+            icon: <FaWpforms className="text-xl" />,
+          },
+        ],
+      });
+    }
+
+    if (["Admin"].includes(role)) {
+      categories.push({
+        id: "trackerAdmin",
+        title: t("navigation.trackerOverview", "Tracker Overview"),
+        items: [
+          {
+            name: t("navigation.trackerOverview", "Tracker Overview"),
+            path: "/dashboard/trackerAdminOverview",
+            icon: <BsCalendar3 className="text-xl" />,
+          },
         ],
       });
     }
