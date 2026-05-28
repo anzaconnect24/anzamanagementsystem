@@ -50,6 +50,135 @@ export const createMentorWeeklyLog = async (data) => {
   }
 };
 
+export const listMentorEnterprises = async () => {
+  try {
+    const response = await axios.get(`${server_url}/tracker/enterprises`, {
+      headers: authHeaders(),
+    });
+    return response.data.body;
+  } catch (error) {
+    return error.response;
+  }
+};
+
+export const upsertMentorEnterprise = async (data) => {
+  try {
+    const response = await axios.post(
+      `${server_url}/tracker/enterprises`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateMentorEnterprise = async (uuid, data) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/tracker/enterprises/${uuid}`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const deleteMentorEnterprise = async (uuid) => {
+  try {
+    const response = await axios.delete(
+      `${server_url}/tracker/enterprises/${uuid}`,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getMentorEnterpriseDetails = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${server_url}/tracker/enterprises/${uuid}`,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const updateMentorEnterpriseKpis = async (uuid, data) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/tracker/enterprises/${uuid}/kpis`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const createMentorEnterpriseSession = async (uuid, data) => {
+  try {
+    const response = await axios.post(
+      `${server_url}/tracker/enterprises/${uuid}/sessions`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const createMentorEnterpriseWeeklyLog = async (uuid, data) => {
+  try {
+    const response = await axios.post(
+      `${server_url}/tracker/enterprises/${uuid}/weekly-logs`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const createMentorEnterpriseMilestone = async (uuid, data) => {
+  try {
+    const response = await axios.post(
+      `${server_url}/tracker/enterprises/${uuid}/milestones`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const listTrackerMilestones = async () => {
   try {
     const response = await axios.get(`${server_url}/tracker/milestones`, {
@@ -122,6 +251,7 @@ export const getAdminWeeklyLogs = async ({
   limit = 20,
   flag = "",
   weekStart = "",
+  businessUuid = "",
 } = {}) => {
   try {
     const params = new URLSearchParams();
@@ -132,6 +262,9 @@ export const getAdminWeeklyLogs = async ({
     }
     if (weekStart) {
       params.set("weekStart", weekStart);
+    }
+    if (businessUuid) {
+      params.set("businessUuid", businessUuid);
     }
 
     const response = await axios.get(
@@ -150,6 +283,7 @@ export const getAdminMilestones = async ({
   page = 1,
   limit = 20,
   status = "",
+  businessUuid = "",
 } = {}) => {
   try {
     const params = new URLSearchParams();
@@ -157,6 +291,9 @@ export const getAdminMilestones = async ({
     params.set("limit", limit);
     if (status) {
       params.set("status", status);
+    }
+    if (businessUuid) {
+      params.set("businessUuid", businessUuid);
     }
 
     const response = await axios.get(
@@ -191,5 +328,16 @@ export const downloadAdminTrackerCsv = async () => {
     return true;
   } catch (error) {
     throw error;
+  }
+};
+
+export const getAdminBusinesses = async () => {
+  try {
+    const response = await axios.get(`${server_url}/tracker/admin/businesses`, {
+      headers: authHeaders(),
+    });
+    return response.data.body;
+  } catch (error) {
+    return error.response;
   }
 };

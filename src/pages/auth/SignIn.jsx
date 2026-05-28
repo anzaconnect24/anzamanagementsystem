@@ -20,13 +20,14 @@ const SignInForm = () => {
     password: yup.string().required("Password is required"),
   });
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     setIsLoading(true);
     toast.dismiss();
 
-    login(values).then((data) => {
+    try {
+      const data = await login(values);
       if (!data.status) {
-        toast.error(data.message, { duration: 3000 });
+        toast.error(data?.message || "Unable to sign in", { duration: 3000 });
       } else {
         toast.success("Logged in successfully");
 
@@ -34,21 +35,19 @@ const SignInForm = () => {
           router.push("/");
         }, 1000);
       }
-
+    } catch (error) {
+      toast.error("Unable to sign in. Please try again.", { duration: 3000 });
+    } finally {
       setIsLoading(false);
-    });
+    }
   };
 
   return (
     <div className="w-full max-w-md">
       <div className="mb-3 text-center">
-        <h1 className="text-3xl font-bold text-[#10198f]">
-          Welcome Back
-        </h1>
+        <h1 className="text-3xl font-bold text-[#10198f]">Welcome Back</h1>
 
-        <p className="mt-1 text-gray-500">
-          Sign in to your account
-        </p>
+        <p className="mt-1 text-gray-500">Sign in to your account</p>
       </div>
 
       <div className="rounded-2xl bg-white p-6">
@@ -60,13 +59,7 @@ const SignInForm = () => {
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
         >
-          {({
-            handleSubmit,
-            handleChange,
-            values,
-            errors,
-            touched,
-          }) => (
+          {({ handleSubmit, handleChange, values, errors, touched }) => (
             <form onSubmit={handleSubmit} className="space-y-3">
               <div>
                 <label className="mb-1 block text-sm font-medium text-black">
@@ -83,9 +76,7 @@ const SignInForm = () => {
                 />
 
                 {errors.email && touched.email && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.email}
-                  </p>
+                  <p className="mt-1 text-sm text-red-500">{errors.email}</p>
                 )}
               </div>
 
@@ -109,18 +100,12 @@ const SignInForm = () => {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 transition hover:text-gray-700"
                   >
-                    {showPassword ? (
-                      <EyeOff size={18} />
-                    ) : (
-                      <Eye size={18} />
-                    )}
+                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
 
                 {errors.password && touched.password && (
-                  <p className="mt-1 text-sm text-red-500">
-                    {errors.password}
-                  </p>
+                  <p className="mt-1 text-sm text-red-500">{errors.password}</p>
                 )}
               </div>
 

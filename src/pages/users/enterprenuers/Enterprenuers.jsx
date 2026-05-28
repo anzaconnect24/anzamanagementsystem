@@ -157,7 +157,7 @@ const Enterprenuers = () => {
     if (isFiltering) {
       if (filters.sector !== "All Sectors") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.BusinessSector?.name === filters.sector
+          (item) => item.Business?.BusinessSector?.name === filters.sector,
         );
       }
 
@@ -165,13 +165,13 @@ const Enterprenuers = () => {
         filteredData = filteredData.filter(
           (item) =>
             new Date(item.Business?.createdAt).getFullYear().toString() ===
-            filters.year
+            filters.year,
         );
       }
 
       if (filters.program !== "All Programs") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.program === filters.program
+          (item) => item.Business?.program === filters.program,
         );
       }
     }
@@ -188,7 +188,7 @@ const Enterprenuers = () => {
           return (
             direction *
             (a.Business?.BusinessSector?.name?.localeCompare(
-              b.Business?.BusinessSector?.name
+              b.Business?.BusinessSector?.name,
             ) || 0)
           );
         case "date":
@@ -230,7 +230,9 @@ const Enterprenuers = () => {
 
   const getBusinessName = (item) => {
     return (
-      item?.Business?.name || t("users.unnamedBusiness", "Unnamed Business")
+      item?.Business?.name ||
+      item?.name ||
+      t("users.unnamedBusiness", "Unnamed Business")
     );
   };
 
@@ -400,7 +402,7 @@ const Enterprenuers = () => {
                 </h3>
 
                 <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
-                  {item?.Business?.email || "No email provided"}
+                  {item?.Business?.email || item?.email || "No email provided"}
                 </p>
 
                 <div className="space-y-3 text-sm text-[#6f6f72]">
@@ -426,8 +428,10 @@ const Enterprenuers = () => {
                     <FaCalendarAlt className="shrink-0" />
                     <span>
                       Joined{" "}
-                      {item?.Business?.createdAt
-                        ? new Date(item.Business.createdAt).getFullYear()
+                      {item?.Business?.createdAt || item?.createdAt
+                        ? new Date(
+                            item?.Business?.createdAt || item?.createdAt,
+                          ).getFullYear()
                         : "N/A"}
                     </span>
                   </div>
@@ -454,8 +458,8 @@ const Enterprenuers = () => {
         <div className="mt-10 rounded-2xl bg-white px-6 py-5 shadow-sm">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-[#6f6f72]">
-              Showing {(page - 1) * limit + 1} -{" "}
-              {Math.min(page * limit, count)} of {count} Entrepreneurs
+              Showing {(page - 1) * limit + 1} - {Math.min(page * limit, count)}{" "}
+              of {count} Entrepreneurs
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -485,7 +489,7 @@ const Enterprenuers = () => {
                     onClick={() => setPage(pageNum)}
                     className={`rounded-lg px-4 py-2.5 text-sm font-medium transition ${
                       page === pageNum
-                    ? "bg-[#082d77] text-white"
+                        ? "bg-[#082d77] text-white"
                         : "border border-black/10 bg-white text-[#6f6f72] hover:border-primary hover:text-primary"
                     }`}
                   >

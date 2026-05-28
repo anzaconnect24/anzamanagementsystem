@@ -25,6 +25,35 @@ const DOMAIN_LABELS_SW = {
   operations: "Uendeshaji",
 };
 
+const toRequiredAttachmentList = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  if (raw.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+      }
+    } catch (_) {
+      return [raw];
+    }
+  }
+
+  const splitItems = raw
+    .split(/[\n;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return splitItems.length > 0 ? splitItems : [raw];
+};
+
+const listToTextareaValue = (value) => toRequiredAttachmentList(value).join("\n");
+
 const emptyForm = {
   domain: "",
   variant: "default",
@@ -122,16 +151,16 @@ const CratCatalogManager = () => {
       : "Swahili guidance (optional)",
     requiredAttachmentEn: isSwahili
       ? "Kiambatisho Kinachohitajika (Kiingereza)"
-      : "Required Attachment (English)",
+      : "Required Attachments (English)",
     requiredAttachmentSw: isSwahili
       ? "Kiambatisho Kinachohitajika (Kiswahili)"
-      : "Required Attachment (Swahili)",
+      : "Required Attachments (Swahili)",
     requiredAttachmentPlaceholder: isSwahili
-      ? "mf. Taarifa za fedha zilizokaguliwa (hiari)"
-      : "e.g. Audited financial statements (optional)",
+      ? "Weka kila kiambatisho kwenye mstari wake (hiari)"
+      : "Enter one required attachment per line (optional)",
     requiredAttachmentSwPlaceholder: isSwahili
-      ? "Tafsiri ya Kiswahili (hiari)"
-      : "Swahili translation (optional)",
+      ? "Weka kila tafsiri ya kiambatisho kwenye mstari wake (hiari)"
+      : "Enter one Swahili attachment label per line (optional)",
     aiEvaluationPrompt: isSwahili
       ? "Maelekezo ya Tathmini ya AI"
       : "AI Evaluation Prompt",
@@ -276,8 +305,12 @@ const CratCatalogManager = () => {
       question_text_sw: q.question_text_sw || "",
       guidance_en: q.guidance_en || "",
       guidance_sw: q.guidance_sw || "",
-      required_attachment: q.required_attachment || "",
-      required_attachment_sw: q.required_attachment_sw || "",
+      required_attachment: listToTextareaValue(
+        q.required_attachments || q.required_attachment,
+      ),
+      required_attachment_sw: listToTextareaValue(
+        q.required_attachments_sw || q.required_attachment_sw,
+      ),
       ai_prompt: q.ai_prompt || "",
       sort_order: q.sort_order ?? 0,
     });
@@ -305,8 +338,16 @@ const CratCatalogManager = () => {
         ...form,
         domain: form.domain.trim().toLowerCase(),
         variant: (form.variant || "default").trim().toLowerCase(),
+        required_attachments: toRequiredAttachmentList(form.required_attachment),
+        required_attachments_sw: toRequiredAttachmentList(
+          form.required_attachment_sw,
+        ),
         sort_order: Number(form.sort_order) || 0,
       };
+
+      delete payload.required_attachment;
+      delete payload.required_attachment_sw;
+
       if (editingQuestion) {
         await updateCatalogQuestion(editingQuestion.id, payload);
         toast.success(labels.questionUpdated);
@@ -775,8 +816,7 @@ const CratCatalogManager = () => {
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
                   {labels.requiredAttachmentEn}
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={form.required_attachment}
                   onChange={(e) =>
                     setForm((f) => ({
@@ -784,6 +824,7 @@ const CratCatalogManager = () => {
                       required_attachment: e.target.value,
                     }))
                   }
+                  rows={3}
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
                   placeholder={labels.requiredAttachmentPlaceholder}
                 />
@@ -793,8 +834,7 @@ const CratCatalogManager = () => {
                 <label className="mb-1 block text-xs font-semibold text-slate-700">
                   {labels.requiredAttachmentSw}
                 </label>
-                <input
-                  type="text"
+                <textarea
                   value={form.required_attachment_sw}
                   onChange={(e) =>
                     setForm((f) => ({
@@ -802,8 +842,9 @@ const CratCatalogManager = () => {
                       required_attachment_sw: e.target.value,
                     }))
                   }
+                  rows={3}
                   className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                  placeholder={labels.enterQuestionSw}
+                  placeholder={labels.requiredAttachmentSwPlaceholder}
                 />
               </div>
 

@@ -13,6 +13,12 @@ import {
 import { useRouter } from "../../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
 
+const PROGRAM_CATEGORIES = [
+  "Ideation",
+  "Business Foundation",
+  "Investment Readiness",
+];
+
 const EditProgramPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
@@ -56,7 +62,9 @@ const EditProgramPage = () => {
       image: imageUrl,
       title: e.target.title.value,
       description: e.target.description.value,
-      programCategory: decodeURIComponent(course),
+      programCategory: e.target.programCategory.value,
+      startDate: e.target.startDate.value || null,
+      endDate: e.target.endDate.value || null,
     };
 
     try {
@@ -97,9 +105,36 @@ const EditProgramPage = () => {
                     className="w-full rounded border-stroke"
                     placeholder={t(
                       "programs.enterProgramTitle",
-                      "Enter program title"
+                      "Enter program title",
                     )}
                   />
+                </div>
+
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t("programs.programType", "Program category")}
+                  </label>
+                  <select
+                    name="programCategory"
+                    defaultValue={
+                      program.programCategory ||
+                      decodeURIComponent(course || "")
+                    }
+                    required
+                    className="w-full rounded border-stroke"
+                  >
+                    <option value="">
+                      {t(
+                        "programs.selectProgramType",
+                        "Select program category",
+                      )}
+                    </option>
+                    {PROGRAM_CATEGORIES.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div>
@@ -132,8 +167,32 @@ const EditProgramPage = () => {
                     className="w-full rounded border-stroke"
                     placeholder={t(
                       "programs.enterProgramDescription",
-                      "Enter description"
+                      "Enter description",
                     )}
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t("programs.timelineStart", "Timeline start")}
+                  </label>
+                  <input
+                    name="startDate"
+                    type="date"
+                    defaultValue={program.startDate || ""}
+                    className="w-full rounded border-stroke"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t("programs.timelineEnd", "Timeline end")}
+                  </label>
+                  <input
+                    name="endDate"
+                    type="date"
+                    defaultValue={program.endDate || ""}
+                    className="w-full rounded border-stroke"
                   />
                 </div>
               </div>

@@ -65,6 +65,33 @@ const getFileNameFromUrl = (url = "") => {
   }
 };
 
+const toRequiredAttachmentList = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  if (raw.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+      }
+    } catch (_) {
+      return [raw];
+    }
+  }
+
+  const splitItems = raw
+    .split(/[\n;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return splitItems.length > 0 ? splitItems : [raw];
+};
+
 const toTitle = (value = "") =>
   String(value)
     .split("_")
@@ -186,7 +213,9 @@ const CratSubmissionReviewPage = () => {
       return {
         ...answer,
         questionText: question?.questionTextEn || answer.questionCode || "-",
-        requiredAttachment: question?.requiredAttachment || "-",
+        requiredAttachments: toRequiredAttachmentList(
+          question?.requiredAttachments || question?.requiredAttachment,
+        ),
         draftScore:
           draft.score === "" ||
           draft.score === null ||
@@ -306,19 +335,14 @@ const CratSubmissionReviewPage = () => {
   }, [activeDomainKey, groupedDomainRows]);
 
   const requiredAttachments = useMemo(() => {
-    return Array.from(
-      new Map(
-        (activeDomainSection?.rows || [])
-          .filter((row) => {
-            const requiredAttachment = String(
-              row.requiredAttachment || "",
-            ).trim();
-
-            return requiredAttachment && requiredAttachment !== "-";
-          })
-          .map((row) => [String(row.requiredAttachment).trim(), row]),
-      ).values(),
+    const rowsWithRequiredAttachments = (activeDomainSection?.rows || []).filter(
+      (row) => (row.requiredAttachments || []).length > 0,
     );
+
+    return rowsWithRequiredAttachments.map((row) => ({
+      ...row,
+      requiredAttachmentLabel: row.requiredAttachments.join(", "),
+    }));
   }, [activeDomainSection?.rows]);
 
   const buildScoresPayload = (currentRows) => {
@@ -687,11 +711,11 @@ const CratSubmissionReviewPage = () => {
                     {requiredAttachments.length > 0 ? (
                       requiredAttachments.map((row) => (
                         <div
-                          key={`doc-${row.requiredAttachment}`}
+                          key={`doc-${row.questionId}`}
                           className="rounded-2xl border border-slate-200 bg-white p-4"
                         >
                           <p className="truncate text-sm font-semibold text-slate-800">
-                            {row.requiredAttachment}
+                            {row.requiredAttachmentLabel}
                           </p>
 
                           {row.attachment ? (

@@ -31,9 +31,11 @@ const Page = () => {
             onSubmit={(e) => {
               e.preventDefault();
               const data = {
-                type: e.target.type.value,
+                programCategory: e.target.programCategory.value,
                 title: e.target.title.value,
                 expireDate: e.target.expireDate.value,
+                startDate: e.target.startDate.value || null,
+                endDate: e.target.endDate.value || null,
                 description: e.target.description.value,
                 requirements: fields,
               };
@@ -52,7 +54,7 @@ const Page = () => {
                   className="w-full rounded border-stroke"
                   placeholder={t(
                     "programs.enterProgramTitle",
-                    "Enter program title"
+                    "Enter program title",
                   )}
                 />
               </div>
@@ -66,7 +68,7 @@ const Page = () => {
                   className="w-full rounded border-stroke"
                   placeholder={t(
                     "programs.enterExpireDate",
-                    "Enter expire date"
+                    "Enter expire date",
                   )}
                 />
               </div>
@@ -75,29 +77,41 @@ const Page = () => {
                   {t("programs.programType", "Program type")}
                 </label>
                 <select
-                  name="type"
+                  name="programCategory"
                   className="w-full rounded border-stroke"
                   placeholder=""
                 >
                   <option>
                     {t("programs.selectProgramType", "Select program type")}
                   </option>
-                  <option value="bfa">
-                    {t(
-                      "programs.businessFoundationAccelerator",
-                      "Business foundation accelerator"
-                    )}
+                  <option value="Ideation">Ideation</option>
+                  <option value="Business Foundation">
+                    Business Foundation
                   </option>
-                  <option value="ira">
-                    {t(
-                      "programs.investmentReadinessAccelerator",
-                      "Investment Readiness Accelerator"
-                    )}
-                  </option>
-                  <option value="consultance">
-                    {t("programs.consultancePrograms", "Consultance programs")}
+                  <option value="Investment Readiness">
+                    Investment Readiness
                   </option>
                 </select>
+              </div>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  {t("programs.timelineStart", "Timeline start")}
+                </label>
+                <input
+                  type="date"
+                  name="startDate"
+                  className="w-full rounded border-stroke"
+                />
+              </div>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  {t("programs.timelineEnd", "Timeline end")}
+                </label>
+                <input
+                  type="date"
+                  name="endDate"
+                  className="w-full rounded border-stroke"
+                />
               </div>
             </div>
             <div className="mt-3">
@@ -108,7 +122,7 @@ const Page = () => {
                 name="description"
                 placeholder={t(
                   "programs.writeDescription",
-                  "Write description"
+                  "Write description",
                 )}
                 className="border-stroke w-full rounded"
               ></textarea>
@@ -117,7 +131,7 @@ const Page = () => {
               <label className="mb-2.5 block font-medium text-black dark:text-white">
                 {t(
                   "programs.addListOfRequiredDocuments",
-                  "Add list of required documents"
+                  "Add list of required documents",
                 )}
               </label>
               <div className="flex space-x-4">
@@ -137,7 +151,7 @@ const Page = () => {
                       setRequirement("");
                     } else {
                       toast.error(
-                        t("programs.enterFieldFirst", "Enter field first")
+                        t("programs.enterFieldFirst", "Enter field first"),
                       );
                     }
                   }}

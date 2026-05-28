@@ -82,7 +82,14 @@ export const login = async (data) => {
     return response.data;
   } catch (error) {
     console.log(error);
-    return error.response.data;
+    if (error?.response?.data) {
+      return error.response.data;
+    }
+
+    return {
+      status: false,
+      message: "Unable to reach authentication service",
+    };
 
     // throw error
   }
@@ -91,7 +98,7 @@ export const getMentorEntreprenuers = async (
   uuid,
   page = 1,
   limit = 5,
-  keyword = ""
+  keyword = "",
 ) => {
   try {
     const user = getUser();
@@ -116,7 +123,7 @@ export const resetPassword = async (data) => {
   try {
     const response = await axios.post(
       `${server_url}/user/reset-password`,
-      data
+      data,
     );
     return response.data;
   } catch (error) {
@@ -136,7 +143,7 @@ export const newPassword = async (data, uuid) => {
   try {
     const response = await axios.patch(
       `${server_url}/user/password/${uuid}`,
-      data
+      data,
     );
     //  console.log(response.data.response)
     return response.data;
@@ -186,7 +193,7 @@ export const getAllUsers = async (limit, page, keyword) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -203,7 +210,7 @@ export const getInvestors = async (limit, page, keyword) => {
       }`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -216,7 +223,7 @@ export const getEnterprenuers = async (
   limit,
   page,
   keyword,
-  revenueParams = {}
+  revenueParams = {},
 ) => {
   try {
     const user = getUser();
@@ -239,7 +246,7 @@ export const getEnterprenuers = async (
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -259,7 +266,7 @@ export const getMentors = async (limit, page, keyword) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -273,7 +280,7 @@ export const getUsersWithSharedDocuments = async (limit, page) => {
       `${server_url}/user/withSharedDocuments/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -288,7 +295,7 @@ export const getAdmins = async (limit, page) => {
       `${server_url}/user/admins/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -303,7 +310,7 @@ export const getReviewers = async (limit, page) => {
       `${server_url}/user/reviewers/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;

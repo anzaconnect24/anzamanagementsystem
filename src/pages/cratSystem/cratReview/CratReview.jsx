@@ -110,7 +110,9 @@ const CratReviewPage = () => {
       toast.success("Assessment submitted to admin for assignment.");
     } catch (error) {
       console.error(error);
-      toast.error("Failed to submit assessment.");
+      const message =
+        error?.response?.data?.message || "Failed to submit assessment.";
+      toast.error(message);
     }
   };
 

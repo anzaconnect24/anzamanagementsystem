@@ -320,6 +320,11 @@ const Sidebar = ({
             path: "/dashboard/trackerAdminOverview",
             icon: <BsCalendar3 className="text-xl" />,
           },
+          {
+            name: t("navigation.programs", "Programs"),
+            path: "/dashboard/trackerPrograms",
+            icon: <MdBusinessCenter className="text-xl" />,
+          },
         ],
       });
     }

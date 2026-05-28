@@ -64,6 +64,51 @@ const toAttachmentList = (value) => {
   return [text];
 };
 
+const toRequiredAttachmentList = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  if (raw.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+      }
+    } catch (_) {
+      return [raw];
+    }
+  }
+
+  const splitItems = raw
+    .split(/[\n;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return splitItems.length > 0 ? splitItems : [raw];
+};
+
+const resolveRequiredAttachmentList = (question, isSwahili = false) => {
+  const preferredList = toRequiredAttachmentList(
+    isSwahili ? question.requiredAttachmentsSw : question.requiredAttachments,
+  );
+  if (preferredList.length > 0) return preferredList;
+
+  const fallbackList = toRequiredAttachmentList(
+    isSwahili ? question.requiredAttachments : question.requiredAttachmentsSw,
+  );
+  if (fallbackList.length > 0) return fallbackList;
+
+  return toRequiredAttachmentList(
+    isSwahili
+      ? question.requiredAttachmentSw || question.requiredAttachment
+      : question.requiredAttachment || question.requiredAttachmentSw,
+  );
+};
+
 const getApiErrorMessage = (error, fallback) => {
   const message =
     error?.response?.data?.message ||
@@ -80,21 +125,30 @@ const getProgressBarColor = (progress = 0) => {
 };
 
 const getQuestionState = (question, answer = {}, isSwahili = false) => {
-  const requiredAttachmentText = isSwahili
-    ? question.requiredAttachmentSw || question.requiredAttachment || ""
-    : question.requiredAttachment || question.requiredAttachmentSw || "";
+  const requiredAttachmentList = resolveRequiredAttachmentList(
+    question,
+    isSwahili,
+  );
 
-  const hasAttachment =
-    toAttachmentList(answer.attachments || answer.attachment || answer.evidence)
-      .length > 0;
+  const attachments = toAttachmentList(
+    answer.attachments || answer.attachment || answer.evidence,
+  );
+  const attachmentCount = attachments.length;
+  const hasAttachment = attachmentCount > 0;
   const hasComment = Boolean((answer.entrepreneurComment || "").trim());
+  const requiredAttachmentCount = requiredAttachmentList.length;
+  const hasRequiredAttachmentCount = attachmentCount >= requiredAttachmentCount;
+  const needsAttachment = requiredAttachmentCount > 0;
 
   return {
-    requiredAttachmentText,
-    needsAttachment: Boolean(requiredAttachmentText.trim()),
+    requiredAttachmentList,
+    requiredAttachmentText: requiredAttachmentList.join(", "),
+    requiredAttachmentCount,
+    uploadedAttachmentCount: attachmentCount,
+    needsAttachment,
     hasAttachment,
     hasComment,
-    isComplete: hasAttachment || hasComment,
+    isComplete: needsAttachment ? hasRequiredAttachmentCount : hasAttachment || hasComment,
     isStarted: hasAttachment || hasComment,
   };
 };
@@ -158,6 +212,8 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
     noRequiredDocuments: isSwahili
       ? "Hakuna nyaraka za lazima kwa eneo hili."
       : "No required documents for this domain.",
+    uploadedFiles: isSwahili ? "Faili Zilizopakiwa" : "Uploaded Files",
+    fileLabel: isSwahili ? "Faili" : "File",
   };
 
   useEffect(() => {
@@ -574,23 +630,40 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
 
                       <div className="min-w-0 flex-1">
                         <p
-                          className="truncate text-sm font-semibold text-slate-900"
+                          className="text-sm font-semibold text-slate-900"
                           title={state.requiredAttachmentText}
                         >
-                          {state.requiredAttachmentText}
+                          {state.requiredAttachmentList[0] || state.requiredAttachmentText}
                         </p>
 
                         <p
                           className={`mt-1 text-[11px] font-semibold ${
-                            state.hasAttachment
+                            state.uploadedAttachmentCount >=
+                            state.requiredAttachmentCount
                               ? "text-emerald-600"
                               : "text-amber-600"
                           }`}
                         >
-                          {state.hasAttachment
-                            ? labels.attached
-                            : labels.missing}
+                          {state.requiredAttachmentCount > 1
+                            ? `${state.uploadedAttachmentCount}/${state.requiredAttachmentCount} ${labels.attached.toLowerCase()}`
+                            : state.hasAttachment
+                              ? labels.attached
+                              : labels.missing}
                         </p>
+
+                        {state.requiredAttachmentList.length > 1 && (
+                          <div className="mt-2 rounded-lg border border-slate-200 bg-white px-2 py-1">
+                            {state.requiredAttachmentList.map((requiredItem, idx) => (
+                              <p
+                                key={`${question.id}-required-${idx}`}
+                                className="truncate text-[11px] text-slate-500"
+                                title={requiredItem}
+                              >
+                                {idx + 1}. {requiredItem}
+                              </p>
+                            ))}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex shrink-0 items-center gap-3">
@@ -645,19 +718,48 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
                     </div>
 
                     {attachments.length > 0 && (
-                      <div className="mt-2 space-y-1 pl-[60px]">
-                        {attachments.map((url, index) => (
-                          <a
-                            key={`${question.id}-${url}-${index}`}
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="block truncate text-xs text-slate-500 hover:text-slate-700"
-                            title={getFileNameFromUrl(url)}
-                          >
-                            {getFileNameFromUrl(url)}
-                          </a>
-                        ))}
+                      <div className="mt-3 rounded-xl border border-slate-200 bg-white/80 p-2.5">
+                        <div className="mb-2 flex items-center justify-between gap-2 px-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                            {labels.uploadedFiles}
+                          </p>
+                          <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                            {attachments.length}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {attachments.map((url, index) => (
+                            <div
+                              key={`${question.id}-${url}-${index}`}
+                              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5"
+                            >
+                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-700">
+                                {index + 1}
+                              </span>
+
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600 hover:text-slate-800"
+                                title={getFileNameFromUrl(url)}
+                              >
+                                {labels.fileLabel} {index + 1}: {getFileNameFromUrl(url)}
+                              </a>
+
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="shrink-0 rounded-md border border-emerald-200 bg-emerald-50 p-1 text-emerald-700 transition hover:bg-emerald-100"
+                                title={`${labels.view}: ${getFileNameFromUrl(url)}`}
+                              >
+                                <FaEye className="text-[11px]" />
+                              </a>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </div>

@@ -43,10 +43,12 @@ const Page = ({ params }) => {
                 e.preventDefault();
                 setloading(true);
                 const data = {
-                  type: e.target.type.value,
+                  programCategory: e.target.programCategory.value,
                   title: e.target.title.value,
                   description: e.target.description.value,
                   expireDate: e.target.expireDate.value,
+                  startDate: e.target.startDate.value || null,
+                  endDate: e.target.endDate.value || null,
                   // requirements:fields
                 };
                 editProgram(program.uuid, data).then(() => {
@@ -73,17 +75,19 @@ const Page = ({ params }) => {
                     Program type
                   </label>
                   <select
-                    name="type"
-                    defaultValue={program.type}
+                    name="programCategory"
+                    defaultValue={program.programCategory}
                     className="w-full rounded border-stroke"
                     placeholder=""
                   >
                     <option>Select program type</option>
-                    <option value="bfa">Business foundation accelerator</option>
-                    <option value="ira">
-                      Investment Readiness Accelerator
+                    <option value="Ideation">Ideation</option>
+                    <option value="Business Foundation">
+                      Business Foundation
                     </option>
-                    <option value="consultance">Consultance programs</option>
+                    <option value="Investment Readiness">
+                      Investment Readiness
+                    </option>
                   </select>
                 </div>
               </div>
@@ -114,6 +118,30 @@ const Page = ({ params }) => {
                   When this program expires and is no longer available for
                   applications
                 </p>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-3">
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Program timeline start
+                  </label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    defaultValue={program.startDate || ""}
+                    className="border-stroke w-full rounded"
+                  />
+                </div>
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    Program timeline end
+                  </label>
+                  <input
+                    type="date"
+                    name="endDate"
+                    defaultValue={program.endDate || ""}
+                    className="border-stroke w-full rounded"
+                  />
+                </div>
               </div>
               <div className="pt-3">
                 <label className="mb-2.5 block font-medium text-black dark:text-white">

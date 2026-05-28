@@ -25,9 +25,7 @@ const ProgramsPage = () => {
   const formatCourseName = (value) => {
     return decodeURIComponent(value || "")
       .split(" ")
-      .map(
-        (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
-      )
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
       .join(" ");
   };
 
@@ -51,19 +49,25 @@ const ProgramsPage = () => {
     loadData();
   }, []);
 
-  const loadData = () => {
+  const loadData = async () => {
     setLoading(true);
-
-    getPrograms(page, limit, courseName).then((res) => {
-      setPrograms(res.data || []);
+    try {
+      const res = await getPrograms(page, limit, courseName);
+      setPrograms(Array.isArray(res?.data) ? res.data : []);
+    } catch (error) {
+      setPrograms([]);
+    } finally {
       setLoading(false);
-    });
+    }
   };
 
   const handleDelete = (programUuid) => {
     if (
       window.confirm(
-        t("common.confirmDelete", "Are you sure you want to delete this course?")
+        t(
+          "common.confirmDelete",
+          "Are you sure you want to delete this course?",
+        ),
       )
     ) {
       deleteProgram(programUuid).then(() => {
@@ -201,7 +205,7 @@ const ProgramsPage = () => {
                       className="rounded-xl bg-[#EEF4FF] px-5 py-2.5 text-sm font-semibold text-[#2563EB] transition hover:bg-[#DCE7FF]"
                       onClick={() => {
                         router.push(
-                          `/dashboard/programs/edit?uuid=${item.uuid}&course=${course}`
+                          `/dashboard/programs/edit?uuid=${item.uuid}&course=${course}`,
                         );
                       }}
                     >

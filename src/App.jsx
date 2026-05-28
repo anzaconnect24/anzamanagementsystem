@@ -229,8 +229,10 @@ import { TranslationProvider } from "./locales";
 import EditAccountDetails from "./pages/account/editAccount/editAccountDetails";
 import EntrepreneurProfile from "./pages/account/entreprenuerProfile";
 import MentorTracker from "./pages/tracker/mentor/MentorTracker";
+import EnterpriseTrackerDetails from "./pages/tracker/mentor/EnterpriseTrackerDetails";
 import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
 import AdminTrackerOverview from "./pages/tracker/admin/AdminTrackerOverview";
+import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -322,11 +324,16 @@ function App() {
             />
             <Route path="mentorReports" element={<MentorReports />} />
             <Route path="mentorTracker" element={<MentorTracker />} />
+            <Route
+              path="mentorTracker/enterprise/:enterpriseUuid"
+              element={<EnterpriseTrackerDetails />}
+            />
             <Route path="myMilestones" element={<EntrepreneurMilestones />} />
             <Route
               path="trackerAdminOverview"
               element={<AdminTrackerOverview />}
             />
+            <Route path="trackerPrograms" element={<TrackerPrograms />} />
 
             {/* Investment Routes */}
             <Route

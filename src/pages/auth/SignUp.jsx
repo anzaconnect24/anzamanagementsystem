@@ -48,6 +48,7 @@ const SignUp = () => {
     completedProgram: "",
     stage: "",
     business_sector_uuid: "",
+    businessLocation: "",
     traction: "",
 
     businessBio: "",
@@ -116,12 +117,72 @@ const SignUp = () => {
   const goNext = (e) => {
     e.preventDefault();
 
+    if (selectedIndex === 0) {
+      if (
+        !formValues.userName ||
+        !formValues.userEmail ||
+        !formValues.userPhone ||
+        !formValues.password ||
+        !formValues.repeatPassword
+      ) {
+        toast.error(
+          t("auth.fillRequiredFields", "Please fill all required fields"),
+        );
+        return;
+      }
+    }
+
     if (
       selectedIndex === 0 &&
       formValues.password !== formValues.repeatPassword
     ) {
       toast.error(t("auth.passwordsDoNotMatch", "Passwords do not match"));
       return;
+    }
+
+    if (role === "Enterprenuer") {
+      if (selectedIndex === 1) {
+        if (
+          !formValues.businessName ||
+          !formValues.businessEmail ||
+          !formValues.businessPhone ||
+          !formValues.business_sector_uuid ||
+          !formValues.stage ||
+          !formValues.businessLocation
+        ) {
+          toast.error("Please complete all business information fields");
+          return;
+        }
+      }
+
+      if (selectedIndex === 2) {
+        if (
+          !formValues.sdg ||
+          (isAlumni && !formValues.completedProgram) ||
+          !formValues.problem ||
+          !formValues.traction ||
+          !formValues.businessBio ||
+          !formValues.solution ||
+          !formValues.targetMarket ||
+          !formValues.businessImpact ||
+          !formValues.growthPlans
+        ) {
+          toast.error("Please complete all required profile fields");
+          return;
+        }
+      }
+
+      if (selectedIndex === 3) {
+        if (
+          !formValues.registration ||
+          formValues.customerCount === "" ||
+          formValues.team === "" ||
+          formValues.revenue === ""
+        ) {
+          toast.error("Please complete all business metrics fields");
+          return;
+        }
+      }
     }
 
     setSelectedIndex((prev) => Math.min(prev + 1, steps.length - 1));
@@ -184,21 +245,21 @@ const SignUp = () => {
 
               if (role === "Enterprenuer") {
                 businessData = {
-                  name: e.target.businessName?.value,
-                  sdg: e.target.sdg?.value,
-                  email: e.target.businessEmail?.value,
-                  phone: e.target.businessPhone?.value,
-                  problem: e.target.problem?.value,
+                  name: formValues.businessName,
+                  sdg: formValues.sdg,
+                  email: formValues.businessEmail,
+                  phone: formValues.businessPhone,
+                  problem: formValues.problem,
                   isAlumni,
-                  completedProgram: e.target.completedProgram?.value,
-                  stage: e.target.stage?.value,
-                  business_sector_uuid: e.target.business_sector_uuid?.value,
-                  traction: e.target.traction?.value,
+                  completedProgram: formValues.completedProgram,
+                  stage: formValues.stage,
+                  business_sector_uuid: formValues.business_sector_uuid,
+                  traction: formValues.traction,
 
                   description: formValues.businessBio,
                   solution: formValues.solution,
                   market: formValues.targetMarket,
-                  location: e.target.businessLocation?.value,
+                  location: formValues.businessLocation,
                   impact: formValues.businessImpact,
                   growthPlan: formValues.growthPlans,
                   fundraisingNeeds: formValues.fundraisingNeeds,
@@ -476,6 +537,9 @@ const SignUp = () => {
                     sectors={sectors}
                     isAlumni={isAlumni}
                     setisAlumni={setisAlumni}
+                    currentStep={1}
+                    formValues={formValues}
+                    setFormValues={setFormValues}
                   />
                 )}
 
@@ -499,6 +563,15 @@ const SignUp = () => {
 
             {role === "Enterprenuer" && selectedIndex === 2 && (
               <div className="space-y-5">
+                <EnterprenuerSignupForm
+                  sectors={sectors}
+                  isAlumni={isAlumni}
+                  setisAlumni={setisAlumni}
+                  currentStep={2}
+                  formValues={formValues}
+                  setFormValues={setFormValues}
+                />
+
                 <div>
                   <label className={labelClass}>
                     Short Business Bio / Profile *

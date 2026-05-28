@@ -10,6 +10,12 @@ import { addProgram } from "../../../../controllers/program_controller";
 import { useRouter } from "../../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
 
+const PROGRAM_CATEGORIES = [
+  "Ideation",
+  "Business Foundation",
+  "Investment Readiness",
+];
+
 const AddProgramPage = () => {
   const { t } = useTranslation();
   const router = useRouter();
@@ -42,12 +48,14 @@ const AddProgramPage = () => {
                   image: url,
                   title: e.target.title.value,
                   description: e.target.description.value,
-                  programCategory: decodeURIComponent(course),
+                  programCategory: e.target.programCategory.value,
+                  startDate: e.target.startDate.value || null,
+                  endDate: e.target.endDate.value || null,
                 };
                 console.log("payload", payload);
                 addProgram(payload).then((res) => {
                   toast.success(
-                    t("programs.programAdded", "Program added successfully")
+                    t("programs.programAdded", "Program added successfully"),
                   );
                   router.push(`/dashboard/programs/${course}`);
                   setloading(false);
@@ -66,9 +74,29 @@ const AddProgramPage = () => {
                   className="w-full rounded border-stroke"
                   placeholder={t(
                     "programs.enterProgramTitle",
-                    "Enter program title"
+                    "Enter program title",
                   )}
                 />
+              </div>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  {t("programs.programType", "Program category")}
+                </label>
+                <select
+                  name="programCategory"
+                  defaultValue={decodeURIComponent(course || "")}
+                  required
+                  className="w-full rounded border-stroke"
+                >
+                  <option value="">
+                    {t("programs.selectProgramType", "Select program category")}
+                  </option>
+                  {PROGRAM_CATEGORIES.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
@@ -91,8 +119,28 @@ const AddProgramPage = () => {
                   className="w-full rounded border-stroke"
                   placeholder={t(
                     "programs.enterProgramDescription",
-                    "Enter program description"
+                    "Enter program description",
                   )}
+                />
+              </div>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  {t("programs.timelineStart", "Timeline start")}
+                </label>
+                <input
+                  name="startDate"
+                  type="date"
+                  className="w-full rounded border-stroke"
+                />
+              </div>
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  {t("programs.timelineEnd", "Timeline end")}
+                </label>
+                <input
+                  name="endDate"
+                  type="date"
+                  className="w-full rounded border-stroke"
                 />
               </div>
             </div>
