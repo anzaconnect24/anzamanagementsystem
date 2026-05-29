@@ -68,6 +68,23 @@ export const uploadAssessmentAttachment = async (
   return unwrap(response);
 };
 
+export const deleteAssessmentAttachment = async (
+  assessmentId,
+  questionId,
+  attachmentUrl,
+) => {
+  const query = new URLSearchParams({ attachmentUrl }).toString();
+
+  const response = await axios.delete(
+    `${server_url}/crat/assessments/${assessmentId}/answers/${questionId}/attachment?${query}`,
+    {
+      headers,
+    },
+  );
+
+  return unwrap(response);
+};
+
 export const submitAssessment = async (assessmentId) => {
   const response = await axios.post(
     `${server_url}/crat/assessments/${assessmentId}/submit`,

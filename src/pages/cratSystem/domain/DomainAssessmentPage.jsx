@@ -7,6 +7,7 @@ import {
   getCatalog,
   getCurrentAssessment,
   getUserBusiness,
+  deleteAssessmentAttachment,
   saveAssessmentAnswers,
   uploadAssessmentAttachment,
 } from "@/controllers/crat_controller";
@@ -14,6 +15,7 @@ import {
   FaCloudUploadAlt,
   FaEye,
   FaFileAlt,
+  FaTrash,
   FaSyncAlt,
   FaCheckCircle,
   FaClock,
@@ -148,7 +150,9 @@ const getQuestionState = (question, answer = {}, isSwahili = false) => {
     needsAttachment,
     hasAttachment,
     hasComment,
-    isComplete: needsAttachment ? hasRequiredAttachmentCount : hasAttachment || hasComment,
+    isComplete: needsAttachment
+      ? hasRequiredAttachmentCount
+      : hasAttachment || hasComment,
     isStarted: hasAttachment || hasComment,
   };
 };
@@ -165,6 +169,7 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [uploadingByQuestion, setUploadingByQuestion] = useState({});
+  const [deletingAttachmentKey, setDeletingAttachmentKey] = useState("");
   const [isAutosaving, setIsAutosaving] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
@@ -194,6 +199,14 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
     uploadFailed: isSwahili
       ? "Imeshindikana kupakia kiambatisho."
       : "Failed to upload attachment.",
+    deleteAttachment: isSwahili ? "Futa" : "Delete",
+    deleteAttachmentConfirm: isSwahili
+      ? "Ungependa kufuta kiambatisho hiki?"
+      : "Delete this attachment?",
+    deleteAttachmentFailed: isSwahili
+      ? "Imeshindikana kufuta kiambatisho."
+      : "Failed to delete attachment.",
+    deletingAttachment: isSwahili ? "Inafuta..." : "Deleting...",
     view: isSwahili ? "Tazama" : "View",
     notes: isSwahili ? "Maelezo" : "Notes",
     notesHint: isSwahili
@@ -399,6 +412,47 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
         ...prev,
         [questionId]: false,
       }));
+    }
+  };
+
+  const onDeleteAttachment = async (questionId, attachmentUrl) => {
+    if (!assessment?.id || !attachmentUrl) {
+      return;
+    }
+
+    if (!window.confirm(labels.deleteAttachmentConfirm)) {
+      return;
+    }
+
+    const attachmentKey = `${questionId}:${attachmentUrl}`;
+
+    try {
+      setDeletingAttachmentKey(attachmentKey);
+      const result = await deleteAssessmentAttachment(
+        assessment.id,
+        questionId,
+        attachmentUrl,
+      );
+
+      const attachments = toAttachmentList(
+        result?.attachments || result?.attachment,
+      );
+
+      setAnswers((prev) => ({
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          attachments,
+          attachment: attachments[0] || "",
+        },
+      }));
+
+      toast.success(result?.message || labels.deleteAttachment);
+    } catch (error) {
+      console.error(error);
+      toast.error(getApiErrorMessage(error, labels.deleteAttachmentFailed));
+    } finally {
+      setDeletingAttachmentKey("");
     }
   };
 
@@ -633,7 +687,8 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
                           className="text-sm font-semibold text-slate-900"
                           title={state.requiredAttachmentText}
                         >
-                          {state.requiredAttachmentList[0] || state.requiredAttachmentText}
+                          {state.requiredAttachmentList[0] ||
+                            state.requiredAttachmentText}
                         </p>
 
                         <p
@@ -653,15 +708,17 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
 
                         {state.requiredAttachmentList.length > 1 && (
                           <div className="mt-2 rounded-lg border border-slate-200 bg-white px-2 py-1">
-                            {state.requiredAttachmentList.map((requiredItem, idx) => (
-                              <p
-                                key={`${question.id}-required-${idx}`}
-                                className="truncate text-[11px] text-slate-500"
-                                title={requiredItem}
-                              >
-                                {idx + 1}. {requiredItem}
-                              </p>
-                            ))}
+                            {state.requiredAttachmentList.map(
+                              (requiredItem, idx) => (
+                                <p
+                                  key={`${question.id}-required-${idx}`}
+                                  className="truncate text-[11px] text-slate-500"
+                                  title={requiredItem}
+                                >
+                                  {idx + 1}. {requiredItem}
+                                </p>
+                              ),
+                            )}
                           </div>
                         )}
                       </div>
@@ -745,7 +802,8 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
                                 className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600 hover:text-slate-800"
                                 title={getFileNameFromUrl(url)}
                               >
-                                {labels.fileLabel} {index + 1}: {getFileNameFromUrl(url)}
+                                {labels.fileLabel} {index + 1}:{" "}
+                                {getFileNameFromUrl(url)}
                               </a>
 
                               <a
@@ -757,6 +815,28 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
                               >
                                 <FaEye className="text-[11px]" />
                               </a>
+
+                              {isEditableAssessment && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onDeleteAttachment(question.id, url)
+                                  }
+                                  disabled={
+                                    deletingAttachmentKey ===
+                                    `${question.id}:${url}`
+                                  }
+                                  className="shrink-0 rounded-md border border-red-200 bg-red-50 p-1 text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                  title={`${labels.deleteAttachment}: ${getFileNameFromUrl(url)}`}
+                                >
+                                  {deletingAttachmentKey ===
+                                  `${question.id}:${url}` ? (
+                                    <FaSyncAlt className="animate-spin text-[11px]" />
+                                  ) : (
+                                    <FaTrash className="text-[11px]" />
+                                  )}
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
