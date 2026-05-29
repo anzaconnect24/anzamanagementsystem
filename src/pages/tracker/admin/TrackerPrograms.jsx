@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
   addProgram,
@@ -103,6 +104,7 @@ const buildDescriptionWithCategories = (description, categories) => {
 };
 
 const TrackerPrograms = () => {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [programs, setPrograms] = useState([]);
@@ -344,6 +346,17 @@ const TrackerPrograms = () => {
                   </div>
 
                   <div className="flex justify-end gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        navigate(
+                          `/dashboard/trackerPrograms/${program.uuid}/details`,
+                        )
+                      }
+                      className="rounded-md bg-[#e0ecff] px-3 py-1.5 text-sm font-semibold text-[#163b8f]"
+                    >
+                      View
+                    </button>
                     <button
                       type="button"
                       onClick={() => openEditModal(program)}

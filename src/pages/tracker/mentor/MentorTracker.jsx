@@ -152,6 +152,23 @@ const getProgramCategories = (program) => {
   return normalizeCategories([...parsedCategories, program.programCategory]);
 };
 
+const parseSubmissionAttachments = (value) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+};
+
 const MentorTracker = () => {
   const { userDetails } = useContext(UserContext);
   const navigate = useNavigate();
@@ -592,11 +609,49 @@ const MentorTracker = () => {
         ) : (
           <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
             {filteredEnterprises.map((item) => {
+              const entrepreneurUuid = getEnterpriseEntrepreneurUuid(item);
               const enterpriseSessions = Array.isArray(item.TrackerSessions)
                 ? item.TrackerSessions
                 : [];
-              const progress = 0;
-              const totalHours = 0;
+
+              const enterpriseWeeklyLogs = weeklyLogs.filter((log) => {
+                const logEntrepreneurUuid =
+                  log?.Entreprenuer?.uuid || log?.entreprenuer_uuid;
+                return (
+                  Boolean(entrepreneurUuid) &&
+                  logEntrepreneurUuid === entrepreneurUuid
+                );
+              });
+
+              const totalHours = enterpriseWeeklyLogs.reduce(
+                (sum, log) => sum + Number(log?.hours || 0),
+                0,
+              );
+
+              const enterpriseMilestones = milestones.filter((milestone) => {
+                const milestoneEntrepreneurUuid =
+                  milestone?.Entreprenuer?.uuid || milestone?.entreprenuer_uuid;
+                return (
+                  Boolean(entrepreneurUuid) &&
+                  milestoneEntrepreneurUuid === entrepreneurUuid
+                );
+              });
+
+              const completedMilestones = enterpriseMilestones.filter(
+                (milestone) =>
+                  String(milestone?.status || "").toLowerCase() === "completed",
+              ).length;
+
+              const computedProgress = enterpriseMilestones.length
+                ? Math.round(
+                    (completedMilestones / enterpriseMilestones.length) * 100,
+                  )
+                : 0;
+
+              const statsProgress = Number(item?.stats?.milestonesProgress);
+              const progress = Number.isFinite(statsProgress)
+                ? Math.max(0, Math.min(100, Math.round(statsProgress)))
+                : computedProgress;
 
               return (
                 <div
@@ -669,7 +724,8 @@ const MentorTracker = () => {
                     <div>
                       <div className="text-black/60">Week logs</div>
                       <div className="font-medium">
-                        0 ({formatHours(totalHours)} hrs)
+                        {enterpriseWeeklyLogs.length} ({formatHours(totalHours)}{" "}
+                        hrs)
                       </div>
                     </div>
                   </div>
@@ -1039,6 +1095,30 @@ const MentorTracker = () => {
 
               {expandedMilestoneUuid === item.uuid && (
                 <div className="mt-2 border-t border-black/10 pt-2">
+                  {parseSubmissionAttachments(item.submissionAttachments)
+                    .length > 0 && (
+                    <div className="mb-2 rounded-md bg-[#eef2f8] p-2 text-sm text-[#334155]">
+                      <span className="font-medium text-[#111827]">
+                        Attachments:
+                      </span>
+                      <div className="mt-1 flex flex-wrap gap-2">
+                        {parseSubmissionAttachments(
+                          item.submissionAttachments,
+                        ).map((url, idx) => (
+                          <a
+                            key={`${item.uuid}-attachment-${idx}`}
+                            href={url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="rounded bg-[#dbe8ff] px-2 py-1 text-xs font-semibold text-[#163b8f] underline"
+                          >
+                            Attachment {idx + 1}
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="mb-2 space-y-1 text-sm text-[#334155]">
                     <div>
                       <span className="font-medium text-[#111827]">

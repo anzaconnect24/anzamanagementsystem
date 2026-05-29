@@ -7,6 +7,8 @@ import {
   createMentorEnterpriseSession,
   createMentorEnterpriseWeeklyLog,
   getMentorEnterpriseDetails,
+  reviewTrackerMilestone,
+  updateMentorEnterpriseTrancheStages,
   updateMentorEnterpriseKpis,
 } from "@/controllers/trackerController";
 
@@ -93,6 +95,46 @@ const getMilestoneDescriptionDisplay = (milestone) => {
   );
 };
 
+const normalizeTrancheStages = (value) => {
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => ({
+        title: String(item?.title || "").trim(),
+        date: item?.date ? String(item.date).slice(0, 10) : "",
+        amount: Number(item?.amount || 0),
+      }))
+      .filter((item) => item.title && item.date);
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return normalizeTrancheStages(parsed);
+    } catch (error) {
+      return [];
+    }
+  }
+
+  return [];
+};
+
+const parseSubmissionAttachments = (value) => {
+  if (Array.isArray(value)) {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  return [];
+};
+
 const EnterpriseTrackerDetails = () => {
   const { enterpriseUuid } = useParams();
   const navigate = useNavigate();
@@ -108,6 +150,7 @@ const EnterpriseTrackerDetails = () => {
   const [expandedSessionUuid, setExpandedSessionUuid] = useState(null);
   const [expandedWeeklyUuid, setExpandedWeeklyUuid] = useState(null);
   const [expandedMilestoneUuid, setExpandedMilestoneUuid] = useState(null);
+  const [isSavingTrancheStages, setIsSavingTrancheStages] = useState(false);
 
   const [kpiForm, setKpiForm] = useState({
     monthlyRevenue: "0",
@@ -151,11 +194,27 @@ const EnterpriseTrackerDetails = () => {
     description: "",
   });
 
+  const [trancheForm, setTrancheForm] = useState({
+    title: "",
+    date: "",
+    amount: "",
+  });
+  const [reviewState, setReviewState] = useState({});
+  const [reviewingById, setReviewingById] = useState({});
+
   const enterprise = details?.enterprise;
   const sessions = details?.sessions || [];
   const weeklyLogs = details?.weeklyLogs || [];
   const milestones = details?.milestones || [];
   const stats = details?.stats || {};
+  const trancheStages = useMemo(() => {
+    const fromResponse = details?.trancheStages;
+    if (Array.isArray(fromResponse)) {
+      return normalizeTrancheStages(fromResponse);
+    }
+
+    return normalizeTrancheStages(enterprise?.trancheStages);
+  }, [details?.trancheStages, enterprise?.trancheStages]);
 
   const metricCards = useMemo(
     () => [
@@ -328,6 +387,127 @@ const EnterpriseTrackerDetails = () => {
     }
   };
 
+  const onReviewMilestone = async (uuid) => {
+    const payload = reviewState[uuid] || {};
+    if (!payload.status) {
+      toast.error("Select a review status");
+      return;
+    }
+
+    setReviewingById((prev) => ({ ...prev, [uuid]: true }));
+    try {
+      await reviewTrackerMilestone(uuid, {
+        status: payload.status,
+        mentorReviewNotes: payload.mentorReviewNotes || "",
+      });
+      toast.success("Milestone reviewed");
+      setReviewState((prev) => ({ ...prev, [uuid]: {} }));
+      loadDetails();
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to review milestone",
+      );
+    } finally {
+      setReviewingById((prev) => ({ ...prev, [uuid]: false }));
+    }
+  };
+
+  const persistTrancheStages = async (nextTrancheStages) => {
+    setIsSavingTrancheStages(true);
+    try {
+      const response = await updateMentorEnterpriseTrancheStages(
+        enterpriseUuid,
+        {
+          trancheStages: nextTrancheStages,
+        },
+      );
+
+      const savedStages = normalizeTrancheStages(
+        response?.trancheStages || nextTrancheStages,
+      );
+
+      setDetails((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          trancheStages: savedStages,
+          enterprise: {
+            ...prev.enterprise,
+            trancheStages: JSON.stringify(savedStages),
+          },
+        };
+      });
+
+      return savedStages;
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to update tranche stages",
+      );
+      return null;
+    } finally {
+      setIsSavingTrancheStages(false);
+    }
+  };
+
+  const onAddTrancheStage = async (e) => {
+    e.preventDefault();
+
+    const title = trancheForm.title.trim();
+    const date = trancheForm.date;
+    const amount = Number(trancheForm.amount);
+
+    if (!title || !date) {
+      toast.error("Tranche title and date are required");
+      return;
+    }
+
+    if (!Number.isFinite(amount) || amount < 0) {
+      toast.error("Tranche amount must be a valid number");
+      return;
+    }
+
+    const nextTrancheStages = [
+      ...trancheStages,
+      {
+        title,
+        date,
+        amount,
+      },
+    ];
+
+    const savedStages = await persistTrancheStages(nextTrancheStages);
+    if (!savedStages) {
+      return;
+    }
+
+    setTrancheForm({ title: "", date: "", amount: "" });
+    toast.success("Tranche stage added");
+  };
+
+  const onRemoveTrancheStage = async (indexToRemove) => {
+    const nextTrancheStages = trancheStages.filter(
+      (_, index) => index !== indexToRemove,
+    );
+
+    const savedStages = await persistTrancheStages(nextTrancheStages);
+    if (!savedStages) {
+      return;
+    }
+
+    setMilestoneForm((prev) => {
+      if (prev.linkedTranche === "None") {
+        return prev;
+      }
+
+      const exists = savedStages.some(
+        (item) => item.title === prev.linkedTranche,
+      );
+      return exists ? prev : { ...prev, linkedTranche: "None" };
+    });
+
+    toast.success("Tranche stage removed");
+  };
+
   if (loading) {
     return <Loader />;
   }
@@ -439,6 +619,17 @@ const EnterpriseTrackerDetails = () => {
               }`}
             >
               Milestones ({milestones.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveSection("tranches")}
+              className={`border-b-2 pb-2 text-sm font-medium ${
+                activeSection === "tranches"
+                  ? "border-[#163b8f] text-[#163b8f]"
+                  : "border-transparent text-[#475569]"
+              }`}
+            >
+              Tranche stages ({trancheStages.length})
             </button>
           </div>
         </div>
@@ -641,28 +832,39 @@ const EnterpriseTrackerDetails = () => {
                 </div>
               )}
               {milestones.map((item) => (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedMilestoneUuid((prev) =>
-                      prev === item.uuid ? null : item.uuid,
-                    )
-                  }
+                <div
                   key={item.uuid}
                   className="w-full rounded-xl border border-black/10 p-3 text-left"
                 >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-[#111827]">
-                      {item.title}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setExpandedMilestoneUuid((prev) =>
+                        prev === item.uuid ? null : item.uuid,
+                      )
+                    }
+                    className="w-full text-left"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-[#111827]">
+                        {item.title}
+                      </div>
+                      <span
+                        className={`rounded-full px-3 py-1 text-xs font-semibold ${getMilestonePillClass(item.status)}`}
+                      >
+                        {formatMilestoneStatus(item.status)}
+                      </span>
                     </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getMilestonePillClass(item.status)}`}
-                    >
-                      {formatMilestoneStatus(item.status)}
-                    </span>
-                  </div>
 
-                  {expandedMilestoneUuid === item.uuid ? (
+                    {expandedMilestoneUuid !== item.uuid && (
+                      <div className="mt-1 text-sm text-[#475569]">
+                        Due:{" "}
+                        {item.dueDate ? formatDateDisplay(item.dueDate) : "N/A"}
+                      </div>
+                    )}
+                  </button>
+
+                  {expandedMilestoneUuid === item.uuid && (
                     <div className="mt-3 space-y-2 text-sm text-[#475569]">
                       <div>
                         <span className="font-medium text-[#111827]">
@@ -688,21 +890,196 @@ const EnterpriseTrackerDetails = () => {
                         </span>{" "}
                         {item.submissionNotes || "N/A"}
                       </div>
+                      {parseSubmissionAttachments(item.submissionAttachments)
+                        .length > 0 && (
+                        <div>
+                          <span className="font-medium text-[#111827]">
+                            Attachments:
+                          </span>
+                          <div className="mt-1 flex flex-wrap gap-2">
+                            {parseSubmissionAttachments(
+                              item.submissionAttachments,
+                            ).map((url, idx) => (
+                              <a
+                                key={`${item.uuid}-attachment-${idx}`}
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="rounded bg-[#dbe8ff] px-2 py-1 text-xs font-semibold text-[#163b8f] underline"
+                              >
+                                Attachment {idx + 1}
+                              </a>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                       <div>
                         <span className="font-medium text-[#111827]">
                           Review notes:
                         </span>{" "}
                         {item.mentorReviewNotes || "N/A"}
                       </div>
-                    </div>
-                  ) : (
-                    <div className="mt-1 text-sm text-[#475569]">
-                      Due:{" "}
-                      {item.dueDate ? formatDateDisplay(item.dueDate) : "N/A"}
+
+                      <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
+                        <select
+                          className="rounded-md border border-black/10 p-1 pr-8 text-sm"
+                          value={reviewState[item.uuid]?.status || ""}
+                          onChange={(e) =>
+                            setReviewState((prev) => ({
+                              ...prev,
+                              [item.uuid]: {
+                                ...prev[item.uuid],
+                                status: e.target.value,
+                              },
+                            }))
+                          }
+                        >
+                          <option value="">Review status</option>
+                          <option value="in_progress">In progress</option>
+                          <option value="completed">Completed</option>
+                          <option value="overdue">Overdue</option>
+                          <option value="rejected">Rejected</option>
+                        </select>
+                        <input
+                          className="rounded-md border border-black/10 p-1 text-sm"
+                          placeholder="Review note"
+                          value={
+                            reviewState[item.uuid]?.mentorReviewNotes || ""
+                          }
+                          onChange={(e) =>
+                            setReviewState((prev) => ({
+                              ...prev,
+                              [item.uuid]: {
+                                ...prev[item.uuid],
+                                mentorReviewNotes: e.target.value,
+                              },
+                            }))
+                          }
+                        />
+                        <button
+                          type="button"
+                          onClick={() => onReviewMilestone(item.uuid)}
+                          disabled={reviewingById[item.uuid]}
+                          className="rounded-md bg-[#163b8f] px-3 py-1 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
+                        >
+                          {reviewingById[item.uuid] ? "Updating..." : "Update"}
+                        </button>
+                      </div>
                     </div>
                   )}
-                </button>
+                </div>
               ))}
+            </div>
+          )}
+
+          {activeSection === "tranches" && (
+            <div className="space-y-4">
+              <form
+                onSubmit={onAddTrancheStage}
+                className="rounded-xl border border-black/10 p-4"
+              >
+                <h3 className="mb-3 text-base font-semibold text-[#111827]">
+                  Add tranche stage
+                </h3>
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                      Tranche title
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                      placeholder="Tranche title"
+                      value={trancheForm.title}
+                      onChange={(e) =>
+                        setTrancheForm((prev) => ({
+                          ...prev,
+                          title: e.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                      Tranche date
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                      type="date"
+                      value={trancheForm.date}
+                      onChange={(e) =>
+                        setTrancheForm((prev) => ({
+                          ...prev,
+                          date: e.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                      Amount (USD)
+                    </label>
+                    <input
+                      className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      placeholder="Amount (USD)"
+                      value={trancheForm.amount}
+                      onChange={(e) =>
+                        setTrancheForm((prev) => ({
+                          ...prev,
+                          amount: e.target.value,
+                        }))
+                      }
+                      required
+                    />
+                  </div>
+                </div>
+                <div className="mt-3 flex justify-end">
+                  <button
+                    type="submit"
+                    disabled={isSavingTrancheStages}
+                    className="rounded-lg bg-[#163b8f] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isSavingTrancheStages ? "Saving..." : "Add tranche"}
+                  </button>
+                </div>
+              </form>
+
+              <div className="space-y-3">
+                {trancheStages.length === 0 && (
+                  <div className="py-10 text-center text-[#6b7280]">
+                    No tranche stages added yet.
+                  </div>
+                )}
+
+                {trancheStages.map((item, index) => (
+                  <div
+                    key={`${item.title}-${item.date}-${index}`}
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-black/10 p-3"
+                  >
+                    <div>
+                      <div className="text-sm font-semibold text-[#111827]">
+                        {item.title}
+                      </div>
+                      <div className="text-sm text-[#475569]">
+                        {formatDateDisplay(item.date)} · $
+                        {Number(item.amount || 0)}
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => onRemoveTrancheStage(index)}
+                      disabled={isSavingTrancheStages}
+                      className="rounded-lg border border-black/15 px-3 py-1.5 text-sm text-[#111827] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
         </div>
@@ -718,83 +1095,110 @@ const EnterpriseTrackerDetails = () => {
               KPIs - {enterprise?.name}
             </h3>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                min="0"
-                placeholder="Monthly revenue (USD)"
-                value={kpiForm.monthlyRevenue}
-                onChange={(e) =>
-                  setKpiForm((prev) => ({
-                    ...prev,
-                    monthlyRevenue: e.target.value,
-                  }))
-                }
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                min="0"
-                placeholder="Employees (FTE)"
-                value={kpiForm.employees}
-                onChange={(e) =>
-                  setKpiForm((prev) => ({ ...prev, employees: e.target.value }))
-                }
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                min="0"
-                placeholder="Waste diverted (kg/month)"
-                value={kpiForm.wasteDiverted}
-                onChange={(e) =>
-                  setKpiForm((prev) => ({
-                    ...prev,
-                    wasteDiverted: e.target.value,
-                  }))
-                }
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                min="1"
-                max="5"
-                step="0.1"
-                placeholder="CE readiness score (1-5)"
-                value={kpiForm.ceReadinessScore}
-                onChange={(e) =>
-                  setKpiForm((prev) => ({
-                    ...prev,
-                    ceReadinessScore: e.target.value,
-                  }))
-                }
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                min="0"
-                placeholder="Capital mobilised (USD)"
-                value={kpiForm.capitalMobilised}
-                onChange={(e) =>
-                  setKpiForm((prev) => ({
-                    ...prev,
-                    capitalMobilised: e.target.value,
-                  }))
-                }
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                min="0"
-                placeholder="Active customers"
-                value={kpiForm.activeCustomers}
-                onChange={(e) =>
-                  setKpiForm((prev) => ({
-                    ...prev,
-                    activeCustomers: e.target.value,
-                  }))
-                }
-              />
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Monthly revenue (USD)
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  min="0"
+                  value={kpiForm.monthlyRevenue}
+                  onChange={(e) =>
+                    setKpiForm((prev) => ({
+                      ...prev,
+                      monthlyRevenue: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Employees (FTE)
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  min="0"
+                  value={kpiForm.employees}
+                  onChange={(e) =>
+                    setKpiForm((prev) => ({
+                      ...prev,
+                      employees: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Waste diverted (kg/month)
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  min="0"
+                  value={kpiForm.wasteDiverted}
+                  onChange={(e) =>
+                    setKpiForm((prev) => ({
+                      ...prev,
+                      wasteDiverted: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  CE readiness score (1-5)
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  min="1"
+                  max="5"
+                  step="0.1"
+                  value={kpiForm.ceReadinessScore}
+                  onChange={(e) =>
+                    setKpiForm((prev) => ({
+                      ...prev,
+                      ceReadinessScore: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Capital mobilised (USD)
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  min="0"
+                  value={kpiForm.capitalMobilised}
+                  onChange={(e) =>
+                    setKpiForm((prev) => ({
+                      ...prev,
+                      capitalMobilised: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Active customers
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  min="0"
+                  value={kpiForm.activeCustomers}
+                  onChange={(e) =>
+                    setKpiForm((prev) => ({
+                      ...prev,
+                      activeCustomers: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
             <div className="mt-4 flex justify-end gap-3">
               <button
@@ -825,111 +1229,159 @@ const EnterpriseTrackerDetails = () => {
               Log coaching session
             </h3>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={enterprise?.name || ""}
-                disabled
-              >
-                <option>{enterprise?.name || "Enterprise"}</option>
-              </select>
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="date"
-                value={sessionForm.sessionDate}
-                onChange={(e) =>
-                  setSessionForm((prev) => ({
-                    ...prev,
-                    sessionDate: e.target.value,
-                  }))
-                }
-                required
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="BDA / Facilitator"
-                value={sessionForm.facilitator}
-                onChange={(e) =>
-                  setSessionForm((prev) => ({
-                    ...prev,
-                    facilitator: e.target.value,
-                  }))
-                }
-              />
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={sessionForm.sessionType}
-                onChange={(e) =>
-                  setSessionForm((prev) => ({
-                    ...prev,
-                    sessionType: e.target.value,
-                  }))
-                }
-              >
-                <option value="Weekly coaching">Weekly coaching</option>
-                <option value="Financial advisory">Financial advisory</option>
-                <option value="Milestone review">Milestone review</option>
-              </select>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Enterprise
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={enterprise?.name || ""}
+                  disabled
+                >
+                  <option>{enterprise?.name || "Enterprise"}</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Session date
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="date"
+                  value={sessionForm.sessionDate}
+                  onChange={(e) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      sessionDate: e.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  BDA / Facilitator
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  placeholder="BDA / Facilitator"
+                  value={sessionForm.facilitator}
+                  onChange={(e) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      facilitator: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Session type
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={sessionForm.sessionType}
+                  onChange={(e) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      sessionType: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="Weekly coaching">Weekly coaching</option>
+                  <option value="Financial advisory">Financial advisory</option>
+                  <option value="Milestone review">Milestone review</option>
+                </select>
+              </div>
             </div>
 
-            <textarea
-              className="mt-3 min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-              placeholder="Issues discussed"
-              value={sessionForm.issuesDiscussed}
-              onChange={(e) =>
-                setSessionForm((prev) => ({
-                  ...prev,
-                  issuesDiscussed: e.target.value,
-                }))
-              }
-            />
-            <textarea
-              className="mt-3 min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-              placeholder="Recommendations given"
-              value={sessionForm.recommendationsGiven}
-              onChange={(e) =>
-                setSessionForm((prev) => ({
-                  ...prev,
-                  recommendationsGiven: e.target.value,
-                }))
-              }
-            />
-            <textarea
-              className="mt-3 min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-              placeholder="Actions agreed"
-              value={sessionForm.actionsAgreed}
-              onChange={(e) =>
-                setSessionForm((prev) => ({
-                  ...prev,
-                  actionsAgreed: e.target.value,
-                }))
-              }
-            />
-
-            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={sessionForm.flag}
-                onChange={(e) =>
-                  setSessionForm((prev) => ({ ...prev, flag: e.target.value }))
-                }
-              >
-                {FLAG_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="date"
-                value={sessionForm.nextSessionDate}
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                Issues discussed
+              </label>
+              <textarea
+                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                placeholder="Issues discussed"
+                value={sessionForm.issuesDiscussed}
                 onChange={(e) =>
                   setSessionForm((prev) => ({
                     ...prev,
-                    nextSessionDate: e.target.value,
+                    issuesDiscussed: e.target.value,
                   }))
                 }
               />
+            </div>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                Recommendations given
+              </label>
+              <textarea
+                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                placeholder="Recommendations given"
+                value={sessionForm.recommendationsGiven}
+                onChange={(e) =>
+                  setSessionForm((prev) => ({
+                    ...prev,
+                    recommendationsGiven: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                Actions agreed
+              </label>
+              <textarea
+                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                placeholder="Actions agreed"
+                value={sessionForm.actionsAgreed}
+                onChange={(e) =>
+                  setSessionForm((prev) => ({
+                    ...prev,
+                    actionsAgreed: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Session status
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={sessionForm.flag}
+                  onChange={(e) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      flag: e.target.value,
+                    }))
+                  }
+                >
+                  {FLAG_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Next session date
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="date"
+                  value={sessionForm.nextSessionDate}
+                  onChange={(e) =>
+                    setSessionForm((prev) => ({
+                      ...prev,
+                      nextSessionDate: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
 
             <div className="mt-4 flex justify-end gap-3">
@@ -962,60 +1414,88 @@ const EnterpriseTrackerDetails = () => {
             </h3>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={enterprise?.name || ""}
-                disabled
-              >
-                <option>{enterprise?.name || "Enterprise"}</option>
-              </select>
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="date"
-                value={weekLogForm.weekStart}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({
-                    ...prev,
-                    weekStart: e.target.value,
-                  }))
-                }
-                required
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="BDA / Mentor"
-                value={weekLogForm.facilitator}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({
-                    ...prev,
-                    facilitator: e.target.value,
-                  }))
-                }
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                step="0.5"
-                min="0"
-                placeholder="Total hours this week"
-                value={weekLogForm.hours}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({ ...prev, hours: e.target.value }))
-                }
-              />
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="number"
-                min="0"
-                placeholder="No. of touchpoints"
-                value={weekLogForm.touchpoints}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({
-                    ...prev,
-                    touchpoints: e.target.value,
-                  }))
-                }
-              />
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Enterprise
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={enterprise?.name || ""}
+                  disabled
+                >
+                  <option>{enterprise?.name || "Enterprise"}</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Week start date
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="date"
+                  value={weekLogForm.weekStart}
+                  onChange={(e) =>
+                    setWeekLogForm((prev) => ({
+                      ...prev,
+                      weekStart: e.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  BDA / Mentor
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  placeholder="BDA / Mentor"
+                  value={weekLogForm.facilitator}
+                  onChange={(e) =>
+                    setWeekLogForm((prev) => ({
+                      ...prev,
+                      facilitator: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Total hours this week
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  step="0.5"
+                  min="0"
+                  placeholder="Total hours this week"
+                  value={weekLogForm.hours}
+                  onChange={(e) =>
+                    setWeekLogForm((prev) => ({
+                      ...prev,
+                      hours: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Number of touchpoints
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="number"
+                  min="0"
+                  placeholder="No. of touchpoints"
+                  value={weekLogForm.touchpoints}
+                  onChange={(e) =>
+                    setWeekLogForm((prev) => ({
+                      ...prev,
+                      touchpoints: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
 
             <div className="mt-4">
@@ -1039,76 +1519,112 @@ const EnterpriseTrackerDetails = () => {
               </div>
             </div>
 
-            <textarea
-              className="mt-3 min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-              placeholder="Key focus / issues this week"
-              value={weekLogForm.focus}
-              onChange={(e) =>
-                setWeekLogForm((prev) => ({ ...prev, focus: e.target.value }))
-              }
-            />
-            <textarea
-              className="mt-3 min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-              placeholder="Progress / outcomes observed"
-              value={weekLogForm.outcomes}
-              onChange={(e) =>
-                setWeekLogForm((prev) => ({
-                  ...prev,
-                  outcomes: e.target.value,
-                }))
-              }
-            />
-            <textarea
-              className="mt-3 min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-              placeholder="Barriers / challenges encountered"
-              value={weekLogForm.barriers}
-              onChange={(e) =>
-                setWeekLogForm((prev) => ({
-                  ...prev,
-                  barriers: e.target.value,
-                }))
-              }
-            />
-            <textarea
-              className="mt-3 min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-              placeholder="Action plan for next week"
-              value={weekLogForm.nextPlan}
-              onChange={(e) =>
-                setWeekLogForm((prev) => ({
-                  ...prev,
-                  nextPlan: e.target.value,
-                }))
-              }
-            />
-
-            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={weekLogForm.engagement}
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                Key focus / issues this week
+              </label>
+              <textarea
+                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                placeholder="Key focus / issues this week"
+                value={weekLogForm.focus}
                 onChange={(e) =>
                   setWeekLogForm((prev) => ({
                     ...prev,
-                    engagement: e.target.value,
+                    focus: e.target.value,
                   }))
                 }
-              >
-                <option value="high">High - proactive, well-prepared</option>
-                <option value="medium">Medium - partially engaged</option>
-                <option value="low">Low - inconsistent engagement</option>
-              </select>
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={weekLogForm.flag}
+              />
+            </div>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                Progress / outcomes observed
+              </label>
+              <textarea
+                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                placeholder="Progress / outcomes observed"
+                value={weekLogForm.outcomes}
                 onChange={(e) =>
-                  setWeekLogForm((prev) => ({ ...prev, flag: e.target.value }))
+                  setWeekLogForm((prev) => ({
+                    ...prev,
+                    outcomes: e.target.value,
+                  }))
                 }
-              >
-                {FLAG_OPTIONS.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+              />
+            </div>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                Barriers / challenges encountered
+              </label>
+              <textarea
+                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                placeholder="Barriers / challenges encountered"
+                value={weekLogForm.barriers}
+                onChange={(e) =>
+                  setWeekLogForm((prev) => ({
+                    ...prev,
+                    barriers: e.target.value,
+                  }))
+                }
+              />
+            </div>
+            <div className="mt-3">
+              <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                Action plan for next week
+              </label>
+              <textarea
+                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                placeholder="Action plan for next week"
+                value={weekLogForm.nextPlan}
+                onChange={(e) =>
+                  setWeekLogForm((prev) => ({
+                    ...prev,
+                    nextPlan: e.target.value,
+                  }))
+                }
+              />
+            </div>
+
+            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Engagement level
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={weekLogForm.engagement}
+                  onChange={(e) =>
+                    setWeekLogForm((prev) => ({
+                      ...prev,
+                      engagement: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="high">High - proactive, well-prepared</option>
+                  <option value="medium">Medium - partially engaged</option>
+                  <option value="low">Low - inconsistent engagement</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Weekly status flag
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={weekLogForm.flag}
+                  onChange={(e) =>
+                    setWeekLogForm((prev) => ({
+                      ...prev,
+                      flag: e.target.value,
+                    }))
+                  }
+                >
+                  {FLAG_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
 
             <div className="mt-4 flex justify-end gap-3">
@@ -1140,76 +1656,112 @@ const EnterpriseTrackerDetails = () => {
               Add milestone
             </h3>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={enterprise?.name || ""}
-                disabled
-              >
-                <option>{enterprise?.name || "Enterprise"}</option>
-              </select>
-              <input
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2"
-                type="date"
-                value={milestoneForm.dueDate}
-                onChange={(e) =>
-                  setMilestoneForm((prev) => ({
-                    ...prev,
-                    dueDate: e.target.value,
-                  }))
-                }
-              />
-              <input
-                className="md:col-span-2 rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Milestone title"
-                value={milestoneForm.title}
-                onChange={(e) =>
-                  setMilestoneForm((prev) => ({
-                    ...prev,
-                    title: e.target.value,
-                  }))
-                }
-                required
-              />
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={milestoneForm.status}
-                onChange={(e) =>
-                  setMilestoneForm((prev) => ({
-                    ...prev,
-                    status: e.target.value,
-                  }))
-                }
-              >
-                <option value="pending">Pending</option>
-                <option value="in_progress">In progress</option>
-                <option value="completed">Completed</option>
-              </select>
-              <select
-                className="rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                value={milestoneForm.linkedTranche}
-                onChange={(e) =>
-                  setMilestoneForm((prev) => ({
-                    ...prev,
-                    linkedTranche: e.target.value,
-                  }))
-                }
-              >
-                <option value="None">None</option>
-                <option value="Tranche 1">Tranche 1</option>
-                <option value="Tranche 2">Tranche 2</option>
-                <option value="Tranche 3">Tranche 3</option>
-              </select>
-              <textarea
-                className="md:col-span-2 min-h-[90px] rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Description"
-                value={milestoneForm.description}
-                onChange={(e) =>
-                  setMilestoneForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-              />
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Enterprise
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={enterprise?.name || ""}
+                  disabled
+                >
+                  <option>{enterprise?.name || "Enterprise"}</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Due date
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  type="date"
+                  value={milestoneForm.dueDate}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      dueDate: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Milestone title
+                </label>
+                <input
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  placeholder="Milestone title"
+                  value={milestoneForm.title}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  required
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Initial status
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={milestoneForm.status}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in_progress">In progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Linked tranche
+                </label>
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={milestoneForm.linkedTranche}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      linkedTranche: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="None">None</option>
+                  {trancheStages.map((item, index) => (
+                    <option
+                      key={`${item.title}-${item.date}-${index}`}
+                      value={item.title}
+                    >
+                      {item.title} ({formatDateDisplay(item.date)} · $
+                      {Number(item.amount || 0)})
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-xs font-semibold text-[#334155]">
+                  Description
+                </label>
+                <textarea
+                  className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  placeholder="Description"
+                  value={milestoneForm.description}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                />
+              </div>
             </div>
 
             <div className="mt-4 flex justify-end gap-3">

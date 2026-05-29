@@ -23,7 +23,9 @@ const Enterprenuers = () => {
 
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [filters, setFilters] = useState({
     sector: "All Sectors",
     year: "All Years",
@@ -138,20 +140,36 @@ const Enterprenuers = () => {
   };
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setPage(1);
+      setDebouncedKeyword(keyword);
+    }, 350);
+
+    return () => clearTimeout(timeoutId);
+  }, [keyword]);
+
+  useEffect(() => {
     const revenueParams = getRevenueParams(filters.revenue);
 
-    setloading(true);
+    if (users.length === 0) {
+      setloading(true);
+    } else {
+      setIsFetching(true);
+    }
 
-    getEnterprenuers(limit, page, keyword, revenueParams).then((body) => {
-      let filteredData = [...body.data];
+    getEnterprenuers(limit, page, debouncedKeyword, revenueParams).then(
+      (body) => {
+        let filteredData = Array.isArray(body?.data) ? [...body.data] : [];
 
-      applyFilters(filteredData);
+        filteredData = applyFilters(filteredData);
 
-      setCount(body.count);
-      setUsers(filteredData);
-      setloading(false);
-    });
-  }, [sortConfig, filters, page, keyword]);
+        setCount(body?.count || 0);
+        setUsers(filteredData);
+        setloading(false);
+        setIsFetching(false);
+      },
+    );
+  }, [sortConfig, filters, page, debouncedKeyword]);
 
   const applyFilters = (filteredData) => {
     if (isFiltering) {
@@ -205,6 +223,8 @@ const Enterprenuers = () => {
           return 0;
       }
     });
+
+    return filteredData;
   };
 
   const toggleDropdown = (name) => {
@@ -236,7 +256,7 @@ const Enterprenuers = () => {
     );
   };
 
-  if (loading) return <Loader />;
+  if (loading && users.length === 0) return <Loader />;
 
   const totalPages = Math.ceil(count / limit);
 
@@ -363,6 +383,12 @@ const Enterprenuers = () => {
               onChange={(e) => setKeyword(e.target.value)}
               className="w-full rounded-md border border-black/10 bg-[#ffffff] px-4 py-3 pl-10 text-sm text-[#172033] outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
             />
+
+            {isFetching && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8a8f98]">
+                Updating...
+              </span>
+            )}
           </div>
         </div>
       </div>

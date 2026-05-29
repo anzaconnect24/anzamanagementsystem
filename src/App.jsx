@@ -233,6 +233,7 @@ import EnterpriseTrackerDetails from "./pages/tracker/mentor/EnterpriseTrackerDe
 import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
 import AdminTrackerOverview from "./pages/tracker/admin/AdminTrackerOverview";
 import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
+import TrackerProgramDetails from "./pages/tracker/admin/TrackerProgramDetails";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -334,6 +335,10 @@ function App() {
               element={<AdminTrackerOverview />}
             />
             <Route path="trackerPrograms" element={<TrackerPrograms />} />
+            <Route
+              path="trackerPrograms/:programUuid/details"
+              element={<TrackerProgramDetails />}
+            />
 
             {/* Investment Routes */}
             <Route

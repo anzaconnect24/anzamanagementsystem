@@ -21,6 +21,41 @@ export const getMentorOverview = async () => {
   }
 };
 
+export const getEntrepreneurTrackerDashboard = async ({
+  enterpriseUuid,
+} = {}) => {
+  try {
+    const params = new URLSearchParams();
+    if (enterpriseUuid) {
+      params.set("enterpriseUuid", enterpriseUuid);
+    }
+
+    const response = await axios.get(
+      `${server_url}/tracker/entrepreneur/dashboard${params.toString() ? `?${params.toString()}` : ""}`,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+export const getTrackerProgramOverview = async (programUuid) => {
+  try {
+    const response = await axios.get(
+      `${server_url}/tracker/programs/${programUuid}/overview`,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const getMentorWeeklyLogs = async (page = 1, limit = 10) => {
   try {
     const response = await axios.get(
@@ -134,6 +169,21 @@ export const updateMentorEnterpriseKpis = async (uuid, data) => {
   }
 };
 
+export const updateMentorEnterpriseTrancheStages = async (uuid, data) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/tracker/enterprises/${uuid}/tranche-stages`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const createMentorEnterpriseSession = async (uuid, data) => {
   try {
     const response = await axios.post(
@@ -205,11 +255,14 @@ export const createTrackerMilestone = async (data) => {
   }
 };
 
-export const submitTrackerMilestone = async (uuid, submissionNotes) => {
+export const submitTrackerMilestone = async (
+  uuid,
+  { submissionNotes, submissionAttachments = [] } = {},
+) => {
   try {
     const response = await axios.patch(
       `${server_url}/tracker/milestones/${uuid}/submit`,
-      { submissionNotes },
+      { submissionNotes, submissionAttachments },
       {
         headers: authHeaders(),
       },
