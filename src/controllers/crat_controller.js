@@ -149,6 +149,16 @@ export const rejectAssessment = async (assessmentId, adminDecisionNotes) => {
   return unwrap(response);
 };
 
+export const deleteAssessment = async (assessmentId) => {
+  const response = await axios.delete(
+    `${server_url}/crat/admin/assessments/${assessmentId}`,
+    {
+      headers,
+    },
+  );
+  return unwrap(response);
+};
+
 export const getReviewerAssignments = async () => {
   const response = await axios.get(`${server_url}/crat/reviewer/assignments`, {
     headers,

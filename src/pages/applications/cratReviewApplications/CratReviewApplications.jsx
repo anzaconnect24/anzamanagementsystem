@@ -8,6 +8,7 @@ import { UserContext } from "@/layouts/DashboardLayout";
 import {
   approveAssessment,
   assignReviewer,
+  deleteAssessment,
   getAdminQueue,
   rejectAssessment,
 } from "@/controllers/crat_controller";
@@ -153,6 +154,22 @@ const CratReviewApplicationsPage = () => {
     } catch (error) {
       console.error(error);
       toast.error("Failed to reject assessment.");
+    }
+  };
+
+  const onDelete = async (assessmentId) => {
+    const shouldDelete = window.confirm(
+      "Delete this CRAT review application? This action cannot be undone.",
+    );
+    if (!shouldDelete) return;
+
+    try {
+      await deleteAssessment(assessmentId);
+      toast.success("Assessment deleted.");
+      await load(activeTab);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to delete assessment.");
     }
   };
 
@@ -318,8 +335,8 @@ const CratReviewApplicationsPage = () => {
                         <th className="w-56 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
                           Assign Reviewer
                         </th>
-                        <th className="w-52 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                          Decision
+                        <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                          Actions
                         </th>
                         <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
                           Admin Notes
@@ -536,13 +553,27 @@ const CratReviewApplicationsPage = () => {
                                   >
                                     Reject
                                   </button>
+                                  <button
+                                    onClick={() => onDelete(item.id)}
+                                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                                  >
+                                    Delete
+                                  </button>
                                 </div>
                               ) : (
-                                <p className="text-[11px] text-slate-500">
-                                  {isHistoryTab
-                                    ? "Finalized"
-                                    : "Available after review submission."}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-[11px] text-slate-500">
+                                    {isHistoryTab
+                                      ? "Finalized"
+                                      : "Available after review submission."}
+                                  </p>
+                                  <button
+                                    onClick={() => onDelete(item.id)}
+                                    className="rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 transition hover:bg-red-100"
+                                  >
+                                    Delete
+                                  </button>
+                                </div>
                               )}
                             </td>
                             <td className="border-b border-black/10 px-3 py-3">
