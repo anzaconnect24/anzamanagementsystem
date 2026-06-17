@@ -47,76 +47,58 @@ const DOMAIN_CONFIG = [
 const getStatusLabel = (percentage) => {
   if (percentage >= 75) return "Ready";
 
-  if (percentage >= 60)
-    return "Partially Ready";
+  if (percentage >= 60) return "Partially Ready";
 
   return "Not Ready";
 };
 
-const getPercentageColor = (
-  percentage,
-) => {
-  if (percentage >= 75)
-    return "text-green-600";
+const getPercentageColor = (percentage) => {
+  if (percentage >= 75) return "text-green-600";
 
-  if (percentage >= 60)
-    return "text-yellow-500";
+  if (percentage >= 60) return "text-yellow-500";
 
   return "text-red-500";
 };
 
-const toPercentFromDomain = (
-  domain = {},
-) => {
-  const average = Number(
-    domain.average || 0,
-  );
+const toSafePercent = (value, fallback = 0) => {
+  const parsed = Number(value);
 
-  const reviewedQuestions = Number(
-    domain.reviewedQuestions || 0,
-  );
+  if (!Number.isFinite(parsed)) {
+    return Math.round(Number(fallback) || 0);
+  }
 
-  const totalQuestions = Number(
-    domain.totalQuestions || 0,
-  );
+  return Math.max(0, Math.min(100, Math.round(parsed)));
+};
 
-  const earnedScore =
-    average * reviewedQuestions;
+const toPercentFromDomain = (domain = {}) => {
+  const average = Number(domain.average || 0);
+
+  const reviewedQuestions = Number(domain.reviewedQuestions || 0);
+
+  const totalQuestions = Number(domain.totalQuestions || 0);
+
+  const earnedScore = average * reviewedQuestions;
 
   const maxScore = totalQuestions * 5;
 
   if (maxScore <= 0) return 0;
 
-  return Math.round(
-    (earnedScore / maxScore) * 100,
-  );
+  return Math.round((earnedScore / maxScore) * 100);
 };
 
-const toItemScore = (percentage) =>
-  Number(
-    ((percentage / 100) * 2).toFixed(2),
-  );
+const toItemScore = (percentage) => Number(((percentage / 100) * 2).toFixed(2));
 
-const buildFallbackDomainDataForPdf = (
-  domainRows,
-) => {
+const buildFallbackDomainDataForPdf = (domainRows) => {
   const getRow = (chartKey) =>
-    domainRows.find(
-      (row) =>
-        row.chartKey === chartKey,
-    );
+    domainRows.find((row) => row.chartKey === chartKey);
 
   return {
     commercial: {
       summary: [
         {
-          subDomain:
-            "Commercial readiness overview",
+          subDomain: "Commercial readiness overview",
 
-          score: toItemScore(
-            getRow("commercial")
-              ?.percentage || 0,
-          ),
+          score: toItemScore(getRow("commercial")?.percentage || 0),
 
           reviewerComment:
             "Derived from CRAT report domain score normalized by all domain questions.",
@@ -127,13 +109,9 @@ const buildFallbackDomainDataForPdf = (
     financial: {
       summary: [
         {
-          subDomain:
-            "Financial readiness overview",
+          subDomain: "Financial readiness overview",
 
-          score: toItemScore(
-            getRow("financial")
-              ?.percentage || 0,
-          ),
+          score: toItemScore(getRow("financial")?.percentage || 0),
 
           reviewerComment:
             "Derived from CRAT report domain score normalized by all domain questions.",
@@ -144,13 +122,9 @@ const buildFallbackDomainDataForPdf = (
     operations: {
       summary: [
         {
-          subDomain:
-            "Operations readiness overview",
+          subDomain: "Operations readiness overview",
 
-          score: toItemScore(
-            getRow("operations")
-              ?.percentage || 0,
-          ),
+          score: toItemScore(getRow("operations")?.percentage || 0),
 
           reviewerComment:
             "Derived from CRAT report domain score normalized by all domain questions.",
@@ -161,13 +135,9 @@ const buildFallbackDomainDataForPdf = (
     legal: {
       summary: [
         {
-          subDomain:
-            "Legal and compliance readiness overview",
+          subDomain: "Legal and compliance readiness overview",
 
-          score: toItemScore(
-            getRow("legal")
-              ?.percentage || 0,
-          ),
+          score: toItemScore(getRow("legal")?.percentage || 0),
 
           reviewerComment:
             "Derived from CRAT report domain score normalized by all domain questions.",
@@ -177,181 +147,115 @@ const buildFallbackDomainDataForPdf = (
   };
 };
 
-const buildFallbackScoreDataForPdf = (
-  domainRows,
-) => {
+const buildFallbackScoreDataForPdf = (domainRows) => {
   const getRow = (chartKey) =>
-    domainRows.find(
-      (row) =>
-        row.chartKey === chartKey,
-    );
+    domainRows.find((row) => row.chartKey === chartKey);
 
-  const commercial =
-    getRow("commercial");
+  const commercial = getRow("commercial");
 
-  const financial =
-    getRow("financial");
+  const financial = getRow("financial");
 
-  const operations =
-    getRow("operations");
+  const operations = getRow("operations");
 
   const legal = getRow("legal");
 
-  const overallPercent =
-    Math.round(
-      [
-        commercial?.percentage || 0,
-        financial?.percentage || 0,
-        operations?.percentage || 0,
-        legal?.percentage || 0,
-      ].reduce(
-        (sum, value) => sum + value,
-        0,
-      ) / 4,
-    );
+  const overallPercent = Math.round(
+    [
+      commercial?.percentage || 0,
+      financial?.percentage || 0,
+      operations?.percentage || 0,
+      legal?.percentage || 0,
+    ].reduce((sum, value) => sum + value, 0) / 4,
+  );
 
   return {
     commercial: {
-      percentage:
-        commercial?.percentage || 0,
+      percentage: commercial?.percentage || 0,
 
-      status:
-        commercial?.status ||
-        "Not Ready",
+      status: commercial?.status || "Not Ready",
     },
 
     financial: {
-      percentage:
-        financial?.percentage || 0,
+      percentage: financial?.percentage || 0,
 
-      status:
-        financial?.status ||
-        "Not Ready",
+      status: financial?.status || "Not Ready",
     },
 
     operations: {
-      percentage:
-        operations?.percentage || 0,
+      percentage: operations?.percentage || 0,
 
-      status:
-        operations?.status ||
-        "Not Ready",
+      status: operations?.status || "Not Ready",
     },
 
     legal: {
-      percentage:
-        legal?.percentage || 0,
+      percentage: legal?.percentage || 0,
 
-      status:
-        legal?.status ||
-        "Not Ready",
+      status: legal?.status || "Not Ready",
     },
 
-    general_status:
-      getStatusLabel(overallPercent),
+    general_status: getStatusLabel(overallPercent),
   };
 };
 
-const getPdfPayloadFromReport = (
-  report,
-  domainRows,
-) => {
+const getPdfPayloadFromReport = (report, domainRows) => {
   const hasReportData =
     report?.reportData &&
-    [
-      "commercial",
-      "financial",
-      "operations",
-      "legal",
-    ].every(
+    ["commercial", "financial", "operations", "legal"].every(
       (key) =>
-        report.reportData?.[key] &&
-        typeof report.reportData[
-          key
-        ] === "object",
+        report.reportData?.[key] && typeof report.reportData[key] === "object",
     );
 
   const hasScoreData =
     report?.scoreData &&
-    [
-      "commercial",
-      "financial",
-      "operations",
-      "legal",
-    ].every(
+    ["commercial", "financial", "operations", "legal"].every(
       (key) =>
-        report.scoreData?.[key] &&
-        typeof report.scoreData[
-          key
-        ] === "object",
+        report.scoreData?.[key] && typeof report.scoreData[key] === "object",
     );
 
   return {
-    domainDataForPdf:
-      hasReportData
-        ? report.reportData
-        : buildFallbackDomainDataForPdf(
-            domainRows,
-          ),
+    domainDataForPdf: hasReportData
+      ? report.reportData
+      : buildFallbackDomainDataForPdf(domainRows),
 
-    scoreDataForPdf:
-      hasScoreData
-        ? report.scoreData
-        : buildFallbackScoreDataForPdf(
-            domainRows,
-          ),
+    scoreDataForPdf: hasScoreData
+      ? report.scoreData
+      : buildFallbackScoreDataForPdf(domainRows),
   };
 };
 
 const Report = () => {
-  const { userDetails } =
-    useContext(UserContext);
+  const { userDetails } = useContext(UserContext);
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
 
-  const [pdfLoading, setPdfLoading] =
-    useState(false);
+  const [pdfLoading, setPdfLoading] = useState(false);
 
-  const [report, setReport] =
-    useState(null);
+  const [report, setReport] = useState(null);
 
-  const [business, setBusiness] =
-    useState(null);
+  const [business, setBusiness] = useState(null);
 
-  const isEntrepreneur =
-    userDetails?.role ===
-    "Enterprenuer";
+  const isEntrepreneur = userDetails?.role === "Enterprenuer";
 
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
 
-        const businessData =
-          await getUserBusiness(
-            userDetails?.uuid,
-          );
+        const businessData = await getUserBusiness(userDetails?.uuid);
 
         if (!businessData?.id) return;
 
         setBusiness(businessData);
 
         const data = isEntrepreneur
-          ? await getPublishedReport(
-              businessData.id,
-            )
-          : await getInternalReport(
-              businessData.id,
-            );
+          ? await getPublishedReport(businessData.id)
+          : await getInternalReport(businessData.id);
 
         setReport(data || null);
       } catch (error) {
         console.error(error);
 
-        toast.error(
-          "Failed to load CRAT report.",
-        );
+        toast.error("Failed to load CRAT report.");
       } finally {
         setLoading(false);
       }
@@ -360,221 +264,151 @@ const Report = () => {
     if (userDetails?.uuid) {
       load();
     }
-  }, [
-    isEntrepreneur,
-    userDetails?.uuid,
-  ]);
+  }, [isEntrepreneur, userDetails?.uuid]);
 
   const domainRows = useMemo(() => {
-    return DOMAIN_CONFIG.map(
-      (item) => {
-        const domain =
-          report?.domainScores?.[
-            item.apiKey
-          ] || {};
+    return DOMAIN_CONFIG.map((item) => {
+      const domain = report?.domainScores?.[item.apiKey] || {};
 
-        const percentage =
-          toPercentFromDomain(domain);
+      const percentage = toPercentFromDomain(domain);
 
-        const reviewedQuestions =
-          Number(
-            domain.reviewedQuestions ||
-              0,
-          );
+      const reviewedQuestions = Number(domain.reviewedQuestions || 0);
 
-        const totalQuestions =
-          Number(
-            domain.totalQuestions || 0,
-          );
+      const totalQuestions = Number(domain.totalQuestions || 0);
 
-        const coverage =
-          totalQuestions > 0
-            ? Math.round(
-                (reviewedQuestions /
-                  totalQuestions) *
-                  100,
-              )
-            : 0;
+      const coverage =
+        totalQuestions > 0
+          ? Math.round((reviewedQuestions / totalQuestions) * 100)
+          : 0;
 
-        return {
-          ...item,
+      return {
+        ...item,
 
-          percentage,
+        percentage,
 
-          average: Number(
-            domain.average || 0,
-          ),
+        average: Number(domain.average || 0),
 
-          weight: Math.round(
-            Number(domain.weight || 0) *
-              100,
-          ),
+        weight: Math.round(Number(domain.weight || 0) * 100),
 
-          weightedContribution:
-            Number(
-              domain.weightedContribution ||
-                0,
-            ),
+        weightedContribution: Number(domain.weightedContribution || 0),
 
-          coverage,
+        coverage,
 
-          status:
-            getStatusLabel(
-              percentage,
-            ),
-        };
-      },
-    );
+        status: getStatusLabel(percentage),
+      };
+    });
   }, [report]);
 
-  const chartScoreData =
-    useMemo(() => {
-      const base = {
-        commercial: {
-          percentage: 0,
-          status: "Not Ready",
-        },
+  const chartScoreData = useMemo(() => {
+    const base = {
+      commercial: {
+        percentage: 0,
+        status: "Not Ready",
+      },
 
-        financial: {
-          percentage: 0,
-          status: "Not Ready",
-        },
+      financial: {
+        percentage: 0,
+        status: "Not Ready",
+      },
 
-        operations: {
-          percentage: 0,
-          status: "Not Ready",
-        },
+      operations: {
+        percentage: 0,
+        status: "Not Ready",
+      },
 
-        legal: {
-          percentage: 0,
-          status: "Not Ready",
-        },
+      legal: {
+        percentage: 0,
+        status: "Not Ready",
+      },
 
-        general_status:
-          "Not Ready",
+      general_status: "Not Ready",
+    };
+
+    if (!report) return base;
+
+    domainRows.forEach((domain) => {
+      base[domain.chartKey] = {
+        percentage: domain.percentage,
+
+        status: domain.status,
+      };
+    });
+
+    const fallbackOverallPercent = Math.round(
+      domainRows.reduce((sum, domain) => sum + domain.percentage, 0) /
+        (domainRows.length || 1),
+    );
+
+    const overallPercent = toSafePercent(
+      report?.overallPercent,
+      fallbackOverallPercent,
+    );
+
+    base.general_status = getStatusLabel(overallPercent);
+
+    return base;
+  }, [domainRows, report]);
+
+  const overallPercent = useMemo(() => {
+    const fallbackOverallPercent = Math.round(
+      domainRows.reduce((sum, domain) => sum + domain.percentage, 0) /
+        (domainRows.length || 1),
+    );
+
+    return toSafePercent(report?.overallPercent, fallbackOverallPercent);
+  }, [domainRows, report?.overallPercent]);
+
+  const handleDownloadPdf = async () => {
+    if (pdfLoading || !report) return;
+
+    try {
+      setPdfLoading(true);
+
+      const toastId = toast.loading("Generating PDF report...");
+
+      const { domainDataForPdf, scoreDataForPdf } = getPdfPayloadFromReport(
+        report,
+        domainRows,
+      );
+
+      const pdfUserContext = {
+        Business: {
+          businessName: business?.name,
+
+          name: business?.name,
+
+          sector: business?.BusinessSector?.name,
+
+          businessSector: business?.BusinessSector?.name,
+
+          location: business?.location,
+
+          businessLocation: business?.location,
+        },
       };
 
-      if (!report) return base;
-
-      domainRows.forEach((domain) => {
-        base[domain.chartKey] = {
-          percentage:
-            domain.percentage,
-
-          status: domain.status,
-        };
-      });
-
-      const overallPercent =
-        Math.round(
-          domainRows.reduce(
-            (sum, domain) =>
-              sum +
-              domain.percentage,
-            0,
-          ) / domainRows.length,
-        );
-
-      base.general_status =
-        getStatusLabel(
-          overallPercent,
-        );
-
-      return base;
-    }, [domainRows, report]);
-
-  const overallPercent =
-    useMemo(() => {
-      return Math.round(
-        domainRows.reduce(
-          (sum, domain) =>
-            sum + domain.percentage,
-          0,
-        ) /
-          (domainRows.length || 1),
-      );
-    }, [domainRows]);
-
-  const handleDownloadPdf =
-    async () => {
-      if (
-        pdfLoading ||
-        !report
-      )
-        return;
-
-      try {
-        setPdfLoading(true);
-
-        const toastId =
-          toast.loading(
-            "Generating PDF report...",
-          );
-
-        const {
-          domainDataForPdf,
-          scoreDataForPdf,
-        } = getPdfPayloadFromReport(
-          report,
-          domainRows,
-        );
-
-        const pdfUserContext = {
-          Business: {
-            businessName:
-              business?.name,
-
-            name: business?.name,
-
-            sector:
-              business
-                ?.BusinessSector
-                ?.name,
-
-            businessSector:
-              business
-                ?.BusinessSector
-                ?.name,
-
-            location:
-              business?.location,
-
-            businessLocation:
-              business?.location,
-          },
-        };
-
-        const { filename } =
-          await generateCapitalReadinessPDF(
-            domainDataForPdf,
-            scoreDataForPdf,
-            pdfUserContext,
-            (message) => {
-              toast.loading(
-                message,
-                {
-                  id: toastId,
-                },
-              );
-            },
-          );
-
-        toast.success(
-          `Report downloaded: ${filename}`,
-          {
+      const { filename } = await generateCapitalReadinessPDF(
+        domainDataForPdf,
+        scoreDataForPdf,
+        pdfUserContext,
+        (message) => {
+          toast.loading(message, {
             id: toastId,
-          },
-        );
-      } catch (error) {
-        console.error(error);
+          });
+        },
+      );
 
-        toast.error(
-          "Failed to download PDF report.",
-        );
-      } finally {
-        setPdfLoading(false);
-      }
-    };
+      toast.success(`Report downloaded: ${filename}`, {
+        id: toastId,
+      });
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to download PDF report.");
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -592,8 +426,7 @@ const Report = () => {
           <div
             className="absolute inset-0 bg-cover bg-center"
             style={{
-              backgroundImage:
-                "url('/images/business_tools_hero.svg')",
+              backgroundImage: "url('/images/business_tools_hero.svg')",
             }}
           />
 
@@ -611,28 +444,19 @@ const Report = () => {
               </h1>
 
               <p className="max-w-2xl text-sm leading-6 text-white/85 md:text-base">
-                Review your investment
-                readiness score, domain
-                performance, assessment
-                coverage, and improvement
-                priorities.
+                Review your investment readiness score, domain performance,
+                assessment coverage, and improvement priorities.
               </p>
             </div>
 
             <button
-              onClick={
-                handleDownloadPdf
-              }
-              disabled={
-                pdfLoading || !report
-              }
+              onClick={handleDownloadPdf}
+              disabled={pdfLoading || !report}
               className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
               <FaDownload />
 
-              {pdfLoading
-                ? "Generating PDF..."
-                : "Download PDF"}
+              {pdfLoading ? "Generating PDF..." : "Download PDF"}
             </button>
           </div>
         </section>
@@ -717,39 +541,27 @@ const Report = () => {
             </p>
 
             <h2 className="mt-1 text-xl font-semibold text-slate-900">
-              Domain readiness and
-              performance distribution
+              Domain readiness and performance distribution
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Scores are normalized
-              against the full question
-              count in each domain to
-              provide a consistent view
-              of investment readiness.
+              Scores are normalized against the full question count in each
+              domain to provide a consistent view of investment readiness.
             </p>
           </div>
 
           <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-5">
             <div className="col-span-1 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 md:col-span-3">
               <BusinessDomainScores
-                initialScoreData={
-                  chartScoreData
-                }
-                userDetails={
-                  userDetails
-                }
+                initialScoreData={chartScoreData}
+                userDetails={userDetails}
               />
             </div>
 
             <div className="col-span-1 rounded-2xl border border-slate-200 bg-slate-50/60 p-3 md:col-span-2">
               <PerformanceDistribution
-                initialScoreData={
-                  chartScoreData
-                }
-                userDetails={
-                  userDetails
-                }
+                initialScoreData={chartScoreData}
+                userDetails={userDetails}
               />
             </div>
           </div>
@@ -769,14 +581,11 @@ const Report = () => {
             </p>
 
             <h2 className="mt-1 text-xl font-semibold text-slate-900">
-              Normalized domain
-              performance
+              Normalized domain performance
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
-              Percentages below are
-              calculated against all
-              questions assigned to
+              Percentages below are calculated against all questions assigned to
               each domain.
             </p>
           </div>
@@ -812,29 +621,27 @@ const Report = () => {
               </thead>
 
               <tbody>
-                {domainRows.map(
-                  (domain) => (
-                    <tr
-                      key={
-                        domain.apiKey
-                      }
-                      className="border-b border-slate-200"
+                {domainRows.map((domain) => (
+                  <tr key={domain.apiKey} className="border-b border-slate-200">
+                    <td className="px-3 py-4 text-sm font-semibold text-slate-900">
+                      {domain.label}
+                    </td>
+
+                    <td
+                      className={`px-3 py-4 text-sm font-semibold ${getPercentageColor(
+                        domain.percentage,
+                      )}`}
                     >
-                      <td className="px-3 py-4 text-sm font-semibold text-slate-900">
-                        {domain.label}
-                      </td>
+                      {domain.percentage}%
+                    </td>
 
-                      <td
-                        className={`px-3 py-4 text-sm font-semibold ${getPercentageColor(
-                          domain.percentage,
-                        )}`}
-                      >
-                        {
-                          domain.percentage
-                        }
-                        %
-                      </td>
+                    <td className="px-3 py-4 text-sm">
+                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                        {domain.status}
+                      </span>
+                    </td>
 
+<<<<<<< HEAD
                       <td className="px-3 py-4 text-sm">
                         <span
                           className="rounded-full px-3 py-1 text-xs font-semibold"
@@ -850,27 +657,21 @@ const Report = () => {
                           }
                         </span>
                       </td>
+=======
+                    <td className="px-3 py-4 text-sm text-slate-700">
+                      {domain.coverage}%
+                    </td>
+>>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
 
-                      <td className="px-3 py-4 text-sm text-slate-700">
-                        {
-                          domain.coverage
-                        }
-                        %
-                      </td>
+                    <td className="px-3 py-4 text-sm text-slate-700">
+                      {domain.weight}%
+                    </td>
 
-                      <td className="px-3 py-4 text-sm text-slate-700">
-                        {domain.weight}
-                        %
-                      </td>
-
-                      <td className="px-3 py-4 text-sm text-slate-700">
-                        {domain.weightedContribution.toFixed(
-                          2,
-                        )}
-                      </td>
-                    </tr>
-                  ),
-                )}
+                    <td className="px-3 py-4 text-sm text-slate-700">
+                      {domain.weightedContribution.toFixed(2)}
+                    </td>
+                  </tr>
+                ))}
               </tbody>
             </table>
           </div>

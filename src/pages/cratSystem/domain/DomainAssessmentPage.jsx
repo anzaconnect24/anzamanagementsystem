@@ -1,4 +1,5 @@
 import React, { useContext, useEffect, useMemo, useState } from "react";
+import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { useTranslation } from "@/locales";
@@ -6,6 +7,7 @@ import {
   getCatalog,
   getCurrentAssessment,
   getUserBusiness,
+  deleteAssessmentAttachment,
   saveAssessmentAnswers,
   uploadAssessmentAttachment,
 } from "@/controllers/crat_controller";
@@ -13,6 +15,7 @@ import {
   FaCloudUploadAlt,
   FaEye,
   FaFileAlt,
+  FaTrash,
   FaSyncAlt,
   FaCheckCircle,
   FaClock,
@@ -41,6 +44,82 @@ const getWordCount = (text = "") => {
   return trimmed ? trimmed.split(/\s+/).length : 0;
 };
 
+const toAttachmentList = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  const text = String(value || "").trim();
+  if (!text) return [];
+
+  if (text.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(text);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+      }
+    } catch (_) {
+      return [text];
+    }
+  }
+
+  return [text];
+};
+
+const toRequiredAttachmentList = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  if (raw.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+      }
+    } catch (_) {
+      return [raw];
+    }
+  }
+
+  const splitItems = raw
+    .split(/[\n;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return splitItems.length > 0 ? splitItems : [raw];
+};
+
+const resolveRequiredAttachmentList = (question, isSwahili = false) => {
+  const preferredList = toRequiredAttachmentList(
+    isSwahili ? question.requiredAttachmentsSw : question.requiredAttachments,
+  );
+  if (preferredList.length > 0) return preferredList;
+
+  const fallbackList = toRequiredAttachmentList(
+    isSwahili ? question.requiredAttachments : question.requiredAttachmentsSw,
+  );
+  if (fallbackList.length > 0) return fallbackList;
+
+  return toRequiredAttachmentList(
+    isSwahili
+      ? question.requiredAttachmentSw || question.requiredAttachment
+      : question.requiredAttachment || question.requiredAttachmentSw,
+  );
+};
+
+const getApiErrorMessage = (error, fallback) => {
+  const message =
+    error?.response?.data?.message ||
+    error?.response?.data?.error?.message ||
+    error?.message;
+
+  return message || fallback;
+};
+
 const getProgressBarColor = (progress = 0) => {
   if (progress < 40) return "#ef4444";
   if (progress < 70) return "#f59e0b";
@@ -48,24 +127,40 @@ const getProgressBarColor = (progress = 0) => {
 };
 
 const getQuestionState = (question, answer = {}, isSwahili = false) => {
-  const requiredAttachmentText = isSwahili
-    ? question.requiredAttachmentSw || question.requiredAttachment || ""
-    : question.requiredAttachment || question.requiredAttachmentSw || "";
+  const requiredAttachmentList = resolveRequiredAttachmentList(
+    question,
+    isSwahili,
+  );
 
-  const hasAttachment = Boolean((answer.attachment || "").trim());
+  const attachments = toAttachmentList(
+    answer.attachments || answer.attachment || answer.evidence,
+  );
+  const attachmentCount = attachments.length;
+  const hasAttachment = attachmentCount > 0;
   const hasComment = Boolean((answer.entrepreneurComment || "").trim());
+  const requiredAttachmentCount = requiredAttachmentList.length;
+  const hasRequiredAttachmentCount = attachmentCount >= requiredAttachmentCount;
+  const needsAttachment = requiredAttachmentCount > 0;
 
   return {
-    requiredAttachmentText,
-    needsAttachment: Boolean(requiredAttachmentText.trim()),
+    requiredAttachmentList,
+    requiredAttachmentText: requiredAttachmentList.join(", "),
+    requiredAttachmentCount,
+    uploadedAttachmentCount: attachmentCount,
+    needsAttachment,
     hasAttachment,
     hasComment,
-    isComplete: hasAttachment || hasComment,
+    isComplete: needsAttachment
+      ? hasRequiredAttachmentCount
+      : hasAttachment || hasComment,
     isStarted: hasAttachment || hasComment,
   };
 };
 
-const DomainAssessmentPage = ({ domainKey }) => {
+const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
+  const { domainKey: urlDomainKey } = useParams();
+  const domainKey = urlDomainKey || propDomainKey;
+
   const { userDetails } = useContext(UserContext);
   const { isSwahili } = useTranslation();
 
@@ -74,10 +169,14 @@ const DomainAssessmentPage = ({ domainKey }) => {
   const [questions, setQuestions] = useState([]);
   const [answers, setAnswers] = useState({});
   const [uploadingByQuestion, setUploadingByQuestion] = useState({});
+  const [deletingAttachmentKey, setDeletingAttachmentKey] = useState("");
   const [isAutosaving, setIsAutosaving] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
 
   const title = DOMAIN_LABELS[domainKey] || "CRAT Domain";
+  const isEditableAssessment = ["draft", "admin_rejected"].includes(
+    assessment?.status,
+  );
 
   const labels = {
     requiredDocuments: isSwahili
@@ -100,12 +199,21 @@ const DomainAssessmentPage = ({ domainKey }) => {
     uploadFailed: isSwahili
       ? "Imeshindikana kupakia kiambatisho."
       : "Failed to upload attachment.",
+    deleteAttachment: isSwahili ? "Futa" : "Delete",
+    deleteAttachmentConfirm: isSwahili
+      ? "Ungependa kufuta kiambatisho hiki?"
+      : "Delete this attachment?",
+    deleteAttachmentFailed: isSwahili
+      ? "Imeshindikana kufuta kiambatisho."
+      : "Failed to delete attachment.",
+    deletingAttachment: isSwahili ? "Inafuta..." : "Deleting...",
     view: isSwahili ? "Tazama" : "View",
     notes: isSwahili ? "Maelezo" : "Notes",
     notesHint: isSwahili
       ? "Andika maelezo mafupi yanayoonyesha hali ya sasa ya biashara yako."
       : "Add concise context that helps explain your current business position.",
     uploadAttachment: isSwahili ? "Pakia" : "Upload",
+    uploadAttachments: isSwahili ? "Pakia Viambatisho" : "Upload Attachments",
     replaceAttachment: isSwahili ? "Badilisha" : "Replace",
     completed: isSwahili ? "Imekamilika" : "Completed",
     answered: isSwahili ? "Imejibiwa" : "Answered",
@@ -117,6 +225,8 @@ const DomainAssessmentPage = ({ domainKey }) => {
     noRequiredDocuments: isSwahili
       ? "Hakuna nyaraka za lazima kwa eneo hili."
       : "No required documents for this domain.",
+    uploadedFiles: isSwahili ? "Faili Zilizopakiwa" : "Uploaded Files",
+    fileLabel: isSwahili ? "Faili" : "File",
   };
 
   useEffect(() => {
@@ -145,8 +255,13 @@ const DomainAssessmentPage = ({ domainKey }) => {
         const mapped = {};
 
         (current?.answers || []).forEach((answer) => {
+          const attachments = toAttachmentList(
+            answer.attachments || answer.attachment || answer.evidence,
+          );
+
           mapped[answer.questionId] = {
-            attachment: answer.attachment || answer.evidence || "",
+            attachments,
+            attachment: attachments[0] || "",
             entrepreneurComment: answer.entrepreneurComment || "",
           };
         });
@@ -167,11 +282,10 @@ const DomainAssessmentPage = ({ domainKey }) => {
     () =>
       questions.map((question) => ({
         questionId: question.id,
-        evidence: answers[question.id]?.attachment || "",
-        entrepreneurComment:
-          answers[question.id]?.entrepreneurComment || "",
+        attachments: answers[question.id]?.attachments || [],
+        entrepreneurComment: answers[question.id]?.entrepreneurComment || "",
       })),
-    [answers, questions]
+    [answers, questions],
   );
 
   const requiredDocuments = useMemo(
@@ -179,26 +293,26 @@ const DomainAssessmentPage = ({ domainKey }) => {
       questions.filter(
         (question) =>
           getQuestionState(question, answers[question.id], isSwahili)
-            .needsAttachment
+            .needsAttachment,
       ),
-    [questions, answers, isSwahili]
+    [questions, answers, isSwahili],
   );
 
   const progressStats = useMemo(() => {
     const total = questions.length;
 
-    const evidenceUploaded = questions.filter((question) =>
-      Boolean((answers[question.id]?.attachment || "").trim())
+    const evidenceUploaded = questions.filter(
+      (question) => (answers[question.id]?.attachments || []).length > 0,
     ).length;
 
     const completed = questions.filter(
       (question) =>
-        getQuestionState(question, answers[question.id], isSwahili).isComplete
+        getQuestionState(question, answers[question.id], isSwahili).isComplete,
     ).length;
 
     const started = questions.filter(
       (question) =>
-        getQuestionState(question, answers[question.id], isSwahili).isStarted
+        getQuestionState(question, answers[question.id], isSwahili).isStarted,
     ).length;
 
     const pending = total - completed;
@@ -241,7 +355,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save draft.");
+      toast.error(getApiErrorMessage(error, "Failed to save draft."));
     } finally {
       setIsAutosaving(false);
     }
@@ -257,13 +371,17 @@ const DomainAssessmentPage = ({ domainKey }) => {
     return () => clearTimeout(timer);
   }, [preparedAnswers, assessment?.id, hasInteracted]);
 
-  const onUploadAttachment = async (questionId, selectedFile) => {
+  const onUploadAttachment = async (questionId, selectedFiles) => {
     if (!assessment?.id) {
       toast.error("No editable assessment found.");
       return;
     }
 
-    if (!selectedFile) {
+    const files = Array.isArray(selectedFiles)
+      ? selectedFiles.filter(Boolean)
+      : [selectedFiles].filter(Boolean);
+
+    if (files.length === 0) {
       toast.error(labels.chooseFileFirst);
       return;
     }
@@ -277,19 +395,64 @@ const DomainAssessmentPage = ({ domainKey }) => {
       const payload = await uploadAssessmentAttachment(
         assessment.id,
         questionId,
-        selectedFile
+        files,
       );
 
-      setAnswerValue(questionId, "attachment", payload?.attachment || "");
+      const attachments = toAttachmentList(
+        payload?.attachments || payload?.attachment,
+      );
+      setAnswerValue(questionId, "attachments", attachments);
+      setAnswerValue(questionId, "attachment", attachments[0] || "");
       toast.success(labels.uploadedSuccess);
     } catch (error) {
       console.error(error);
-      toast.error(labels.uploadFailed);
+      toast.error(getApiErrorMessage(error, labels.uploadFailed));
     } finally {
       setUploadingByQuestion((prev) => ({
         ...prev,
         [questionId]: false,
       }));
+    }
+  };
+
+  const onDeleteAttachment = async (questionId, attachmentUrl) => {
+    if (!assessment?.id || !attachmentUrl) {
+      return;
+    }
+
+    if (!window.confirm(labels.deleteAttachmentConfirm)) {
+      return;
+    }
+
+    const attachmentKey = `${questionId}:${attachmentUrl}`;
+
+    try {
+      setDeletingAttachmentKey(attachmentKey);
+      const result = await deleteAssessmentAttachment(
+        assessment.id,
+        questionId,
+        attachmentUrl,
+      );
+
+      const attachments = toAttachmentList(
+        result?.attachments || result?.attachment,
+      );
+
+      setAnswers((prev) => ({
+        ...prev,
+        [questionId]: {
+          ...prev[questionId],
+          attachments,
+          attachment: attachments[0] || "",
+        },
+      }));
+
+      toast.success(result?.message || labels.deleteAttachment);
+    } catch (error) {
+      console.error(error);
+      toast.error(getApiErrorMessage(error, labels.deleteAttachmentFailed));
+    } finally {
+      setDeletingAttachmentKey("");
     }
   };
 
@@ -408,6 +571,13 @@ const DomainAssessmentPage = ({ domainKey }) => {
             {labels.saving}
           </p>
         )}
+
+        {!isEditableAssessment && assessment?.status && (
+          <p className="mt-3 text-xs font-medium text-amber-700">
+            This assessment is currently in "{assessment.status}" status and is
+            read-only.
+          </p>
+        )}
       </div>
 
       <div className="mt-5 grid grid-cols-1 gap-6 xl:grid-cols-4">
@@ -453,11 +623,12 @@ const DomainAssessmentPage = ({ domainKey }) => {
                     className="mt-3 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-[#082d77] focus:ring-2 focus:ring-[#082d77]/10"
                     placeholder={labels.notesHint}
                     value={commentValue}
+                    disabled={!isEditableAssessment}
                     onChange={(event) =>
                       setAnswerValue(
                         question.id,
                         "entrepreneurComment",
-                        event.target.value
+                        event.target.value,
                       )
                     }
                     onBlur={() => onSave(false)}
@@ -495,10 +666,11 @@ const DomainAssessmentPage = ({ domainKey }) => {
                 const state = getQuestionState(
                   question,
                   answers[question.id],
-                  isSwahili
+                  isSwahili,
                 );
 
-                const attachmentUrl = answers[question.id]?.attachment || "";
+                const attachments = answers[question.id]?.attachments || [];
+                const attachmentUrl = attachments[attachments.length - 1] || "";
 
                 return (
                   <div
@@ -512,33 +684,61 @@ const DomainAssessmentPage = ({ domainKey }) => {
 
                       <div className="min-w-0 flex-1">
                         <p
-                          className="truncate text-sm font-semibold text-slate-900"
+                          className="text-sm font-semibold text-slate-900"
                           title={state.requiredAttachmentText}
                         >
-                          {state.requiredAttachmentText}
+                          {state.requiredAttachmentList[0] ||
+                            state.requiredAttachmentText}
                         </p>
 
                         <p
                           className={`mt-1 text-[11px] font-semibold ${
-                            state.hasAttachment
+                            state.uploadedAttachmentCount >=
+                            state.requiredAttachmentCount
                               ? "text-emerald-600"
                               : "text-amber-600"
                           }`}
                         >
-                          {state.hasAttachment
-                            ? labels.attached
-                            : labels.missing}
+                          {state.requiredAttachmentCount > 1
+                            ? `${state.uploadedAttachmentCount}/${state.requiredAttachmentCount} ${labels.attached.toLowerCase()}`
+                            : state.hasAttachment
+                              ? labels.attached
+                              : labels.missing}
                         </p>
+
+                        {state.requiredAttachmentList.length > 1 && (
+                          <div className="mt-2 rounded-lg border border-slate-200 bg-white px-2 py-1">
+                            {state.requiredAttachmentList.map(
+                              (requiredItem, idx) => (
+                                <p
+                                  key={`${question.id}-required-${idx}`}
+                                  className="truncate text-[11px] text-slate-500"
+                                  title={requiredItem}
+                                >
+                                  {idx + 1}. {requiredItem}
+                                </p>
+                              ),
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       <div className="flex shrink-0 items-center gap-3">
                         <label
                           htmlFor={`sidebar-attachment-${question.id}`}
+<<<<<<< HEAD
                           className="cursor-pointer text-[#082d77] transition hover:text-[#082d77]"
+=======
+                          className={`text-blue-600 transition hover:text-blue-700 ${
+                            isEditableAssessment
+                              ? "cursor-pointer"
+                              : "cursor-not-allowed opacity-50"
+                          }`}
+>>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
                           title={
                             state.hasAttachment
                               ? labels.replaceAttachment
-                              : labels.uploadAttachment
+                              : labels.uploadAttachments
                           }
                         >
                           {uploadingByQuestion[question.id] ? (
@@ -551,11 +751,13 @@ const DomainAssessmentPage = ({ domainKey }) => {
                         <input
                           id={`sidebar-attachment-${question.id}`}
                           type="file"
+                          multiple
                           className="hidden"
+                          disabled={!isEditableAssessment}
                           onChange={(event) =>
                             onUploadAttachment(
                               question.id,
-                              event.target.files?.[0] || null
+                              Array.from(event.target.files || []),
                             )
                           }
                         />
@@ -567,7 +769,7 @@ const DomainAssessmentPage = ({ domainKey }) => {
                             rel="noreferrer"
                             className="text-emerald-600 transition hover:text-emerald-700"
                             title={`${labels.view}: ${getFileNameFromUrl(
-                              attachmentUrl
+                              attachmentUrl,
                             )}`}
                           >
                             <FaEye />
@@ -576,13 +778,73 @@ const DomainAssessmentPage = ({ domainKey }) => {
                       </div>
                     </div>
 
-                    {attachmentUrl && (
-                      <p
-                        className="mt-2 truncate pl-[60px] text-xs text-slate-500"
-                        title={getFileNameFromUrl(attachmentUrl)}
-                      >
-                        {getFileNameFromUrl(attachmentUrl)}
-                      </p>
+                    {attachments.length > 0 && (
+                      <div className="mt-3 rounded-xl border border-slate-200 bg-white/80 p-2.5">
+                        <div className="mb-2 flex items-center justify-between gap-2 px-1">
+                          <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+                            {labels.uploadedFiles}
+                          </p>
+                          <span className="inline-flex rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">
+                            {attachments.length}
+                          </span>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          {attachments.map((url, index) => (
+                            <div
+                              key={`${question.id}-${url}-${index}`}
+                              className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-2 py-1.5"
+                            >
+                              <span className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-slate-100 text-[10px] font-bold text-slate-700">
+                                {index + 1}
+                              </span>
+
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="min-w-0 flex-1 truncate text-xs font-medium text-slate-600 hover:text-slate-800"
+                                title={getFileNameFromUrl(url)}
+                              >
+                                {labels.fileLabel} {index + 1}:{" "}
+                                {getFileNameFromUrl(url)}
+                              </a>
+
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="shrink-0 rounded-md border border-emerald-200 bg-emerald-50 p-1 text-emerald-700 transition hover:bg-emerald-100"
+                                title={`${labels.view}: ${getFileNameFromUrl(url)}`}
+                              >
+                                <FaEye className="text-[11px]" />
+                              </a>
+
+                              {isEditableAssessment && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    onDeleteAttachment(question.id, url)
+                                  }
+                                  disabled={
+                                    deletingAttachmentKey ===
+                                    `${question.id}:${url}`
+                                  }
+                                  className="shrink-0 rounded-md border border-red-200 bg-red-50 p-1 text-red-700 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                  title={`${labels.deleteAttachment}: ${getFileNameFromUrl(url)}`}
+                                >
+                                  {deletingAttachmentKey ===
+                                  `${question.id}:${url}` ? (
+                                    <FaSyncAlt className="animate-spin text-[11px]" />
+                                  ) : (
+                                    <FaTrash className="text-[11px]" />
+                                  )}
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
                   </div>
                 );

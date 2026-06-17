@@ -45,10 +45,14 @@ export const saveAssessmentAnswers = async (assessmentId, answers) => {
 export const uploadAssessmentAttachment = async (
   assessmentId,
   questionId,
-  file,
+  files,
 ) => {
   const formData = new FormData();
-  formData.append("file", file);
+
+  const fileList = Array.isArray(files) ? files : [files];
+  fileList.filter(Boolean).forEach((file) => {
+    formData.append("files", file);
+  });
 
   const response = await axios.post(
     `${server_url}/crat/assessments/${assessmentId}/answers/${questionId}/attachment`,
@@ -58,6 +62,23 @@ export const uploadAssessmentAttachment = async (
         ...headers,
         "Content-Type": "multipart/form-data",
       },
+    },
+  );
+
+  return unwrap(response);
+};
+
+export const deleteAssessmentAttachment = async (
+  assessmentId,
+  questionId,
+  attachmentUrl,
+) => {
+  const query = new URLSearchParams({ attachmentUrl }).toString();
+
+  const response = await axios.delete(
+    `${server_url}/crat/assessments/${assessmentId}/answers/${questionId}/attachment?${query}`,
+    {
+      headers,
     },
   );
 
@@ -121,6 +142,16 @@ export const rejectAssessment = async (assessmentId, adminDecisionNotes) => {
     {
       adminDecisionNotes,
     },
+    {
+      headers,
+    },
+  );
+  return unwrap(response);
+};
+
+export const deleteAssessment = async (assessmentId) => {
+  const response = await axios.delete(
+    `${server_url}/crat/admin/assessments/${assessmentId}`,
     {
       headers,
     },
@@ -215,6 +246,26 @@ export const toggleCatalogQuestion = async (questionId) => {
     { headers },
   );
   return unwrap(response);
+};
+
+export const deleteCatalogQuestion = async (questionId) => {
+  const response = await axios.delete(
+    `${server_url}/crat/admin/catalog-mgmt/${questionId}`,
+    { headers },
+  );
+  return unwrap(response);
+};
+
+export const getAvailableDomains = async () => {
+  try {
+    const response = await axios.get(`${server_url}/crat/available-domains`, {
+      headers,
+    });
+    return unwrap(response) || [];
+  } catch (error) {
+    console.error("Failed to fetch available domains:", error);
+    return [];
+  }
 };
 
 // ─── Backend AI Review ────────────────────────────────────────────────────────

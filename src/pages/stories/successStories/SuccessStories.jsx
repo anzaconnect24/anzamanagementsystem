@@ -8,18 +8,8 @@ import Spinner from "../../../components/spinner";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import { server_url } from "../../../utils/endpoint";
 import { headers } from "../../../utils/headers";
-import {
-  BsPencil,
-  BsTrash,
-  BsPlayFill,
-  BsPlus,
-} from "react-icons/bs";
-import {
-  FaLayerGroup,
-  FaClock,
-  FaStar,
-  FaVideo,
-} from "react-icons/fa";
+import { BsPencil, BsTrash, BsPlayFill, BsPlus } from "react-icons/bs";
+import { FaLayerGroup, FaClock, FaStar, FaVideo } from "react-icons/fa";
 import { useTranslation } from "../../../locales";
 
 const SuccessStories = () => {
@@ -29,7 +19,7 @@ const SuccessStories = () => {
   const [stories, setStories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
-  const [limit] = useState(8);
+  const [limit] = useState(12);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedStory, setSelectedStory] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,7 +50,7 @@ const SuccessStories = () => {
       console.error("Error fetching success stories:", error);
 
       toast.error(
-        t("stories.failedToFetch", "Failed to fetch success stories")
+        t("stories.failedToFetch", "Failed to fetch success stories"),
       );
     } finally {
       setLoading(false);
@@ -81,8 +71,8 @@ const SuccessStories = () => {
     const confirmed = confirm(
       t(
         "stories.confirmDelete",
-        "Are you sure you want to delete this success story?"
-      )
+        "Are you sure you want to delete this success story?",
+      ),
     );
 
     if (!confirmed) return;
@@ -92,27 +82,28 @@ const SuccessStories = () => {
 
       const response = await axios.delete(
         `${server_url}/success-stories/${uuid}`,
-        { headers }
+        { headers },
       );
 
       if (response.status === 200 || response.status === 204) {
         toast.success(
-          t("stories.deletedSuccessfully", "Success story deleted successfully")
+          t(
+            "stories.deletedSuccessfully",
+            "Success story deleted successfully",
+          ),
         );
 
         fetchStories();
         closeModal();
       } else {
         toast.error(
-          t("stories.failedToDelete", "Failed to delete success story")
+          t("stories.failedToDelete", "Failed to delete success story"),
         );
       }
     } catch (error) {
       console.error("Error deleting success story:", error);
 
-      toast.error(
-        t("stories.errorDeleting", "Error deleting success story")
-      );
+      toast.error(t("stories.errorDeleting", "Error deleting success story"));
     } finally {
       setDeleteLoading(false);
     }
@@ -163,6 +154,8 @@ const SuccessStories = () => {
     return "/images/business-tools-hero.jpg";
   };
 
+  const totalPages = Math.max(1, Math.ceil(total / limit));
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -201,7 +194,7 @@ const SuccessStories = () => {
           <p className="mb-6 text-lg text-white/85 drop-shadow-md">
             {t(
               "stories.heroMessage",
-              "Explore real entrepreneurial journeys, lessons learned, and practical insights from founders building and growing their ventures."
+              "Explore real entrepreneurial journeys, lessons learned, and practical insights from founders building and growing their ventures.",
             )}
           </p>
 
@@ -242,7 +235,7 @@ const SuccessStories = () => {
       </div>
 
       {/* CARDS */}
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
         {stories.map((story) => (
           <div
             key={story.uuid}
@@ -371,6 +364,47 @@ const SuccessStories = () => {
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {total > limit && (
+        <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+          <button
+            type="button"
+            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            disabled={currentPage === 1}
+            className="rounded-md border border-black/10 bg-white px-4 py-2 text-sm text-[#6f6f72] transition hover:border-[#082d77] hover:text-[#082d77] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Previous
+          </button>
+
+          {Array.from({ length: totalPages }, (_, index) => index + 1).map(
+            (page) => (
+              <button
+                type="button"
+                key={page}
+                onClick={() => setCurrentPage(page)}
+                className={`rounded-md px-4 py-2 text-sm font-medium transition ${
+                  page === currentPage
+                    ? "bg-[#082d77] text-white"
+                    : "border border-black/10 bg-white text-[#6f6f72] hover:border-[#082d77] hover:text-[#082d77]"
+                }`}
+              >
+                {page}
+              </button>
+            ),
+          )}
+
+          <button
+            type="button"
+            onClick={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
+            disabled={currentPage === totalPages}
+            className="rounded-md border border-black/10 bg-white px-4 py-2 text-sm text-[#6f6f72] transition hover:border-[#082d77] hover:text-[#082d77] disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Next
+          </button>
         </div>
       )}
     </div>

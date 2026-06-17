@@ -7,6 +7,8 @@ const EntrepreneurSignupForm = ({
   isAlumni = false,
   setisAlumni,
   currentStep = 1,
+  formValues = {},
+  setFormValues = () => {},
 }) => {
   const { t } = useTranslation();
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -20,6 +22,13 @@ const EntrepreneurSignupForm = ({
     "w-full rounded-md border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20";
 
   const labelClass = "mb-2 block text-sm font-semibold text-gray-800";
+
+  const updateFormValue = (key, value) => {
+    setFormValues((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
 
   const programCategories = [
     "Ideation",
@@ -51,6 +60,8 @@ const EntrepreneurSignupForm = ({
             <input
               required
               name="businessName"
+              value={formValues.businessName || ""}
+              onChange={(e) => updateFormValue("businessName", e.target.value)}
               className={inputClass}
               placeholder={t("business.companyName", "Company name")}
               type="text"
@@ -64,6 +75,8 @@ const EntrepreneurSignupForm = ({
             <input
               required
               name="businessEmail"
+              value={formValues.businessEmail || ""}
+              onChange={(e) => updateFormValue("businessEmail", e.target.value)}
               className={inputClass}
               placeholder={t("business.companyEmail", "Company email address")}
               type="email"
@@ -77,6 +90,8 @@ const EntrepreneurSignupForm = ({
             <input
               required
               name="businessPhone"
+              value={formValues.businessPhone || ""}
+              onChange={(e) => updateFormValue("businessPhone", e.target.value)}
               className={inputClass}
               placeholder={t("business.companyPhone", "Company phone number")}
               type="text"
@@ -87,7 +102,15 @@ const EntrepreneurSignupForm = ({
             <label className={labelClass}>
               {t("business.businessSector", "Business sector")} *
             </label>
-            <select required name="business_sector_uuid" className={inputClass}>
+            <select
+              required
+              name="business_sector_uuid"
+              value={formValues.business_sector_uuid || ""}
+              onChange={(e) =>
+                updateFormValue("business_sector_uuid", e.target.value)
+              }
+              className={inputClass}
+            >
               <option value="">
                 {t("business.selectBusinessSector", "Select business sector")}
               </option>
@@ -104,11 +127,19 @@ const EntrepreneurSignupForm = ({
             <label className={labelClass}>
               {t("business.businessStage", "Business stage")} *
             </label>
-            <select required name="stage" className={inputClass}>
+            <select
+              required
+              name="stage"
+              value={formValues.stage || ""}
+              onChange={(e) => updateFormValue("stage", e.target.value)}
+              className={inputClass}
+            >
               <option value="">
                 {t("business.selectBusinessStage", "Select business stage")}
               </option>
-              <option value="Startup">{t("business.startup", "Startup")}</option>
+              <option value="Startup">
+                {t("business.startup", "Startup")}
+              </option>
               <option value="Growth stage">
                 {t("business.growthStage", "Growth stage")}
               </option>
@@ -125,7 +156,15 @@ const EntrepreneurSignupForm = ({
             <label className={labelClass}>
               {t("business.businessLocation", "Business Location")} *
             </label>
-            <select required name="businessLocation" className={inputClass}>
+            <select
+              required
+              name="businessLocation"
+              value={formValues.businessLocation || ""}
+              onChange={(e) =>
+                updateFormValue("businessLocation", e.target.value)
+              }
+              className={inputClass}
+            >
               <option value="">
                 {t("business.selectRegion", "Select Region")}
               </option>
@@ -171,11 +210,17 @@ const EntrepreneurSignupForm = ({
             <label className={labelClass}>
               {t(
                 "business.sustainableDevelopmentGoals",
-                "Select Sustainable Development Goals"
+                "Select Sustainable Development Goals",
               )}{" "}
               *
             </label>
-            <select required name="sdg" className={inputClass}>
+            <select
+              required
+              name="sdg"
+              value={formValues.sdg || ""}
+              onChange={(e) => updateFormValue("sdg", e.target.value)}
+              className={inputClass}
+            >
               <option value="">{t("business.selectSdg", "Select SDG")}</option>
 
               {[
@@ -239,6 +284,10 @@ const EntrepreneurSignupForm = ({
               onChange={(e) => {
                 setisAlumni &&
                   setisAlumni(e.target.value === "true" ? true : false);
+
+                if (e.target.value === "false") {
+                  updateFormValue("completedProgram", "");
+                }
               }}
               required
               name="isAlumni"
@@ -256,7 +305,7 @@ const EntrepreneurSignupForm = ({
                 <label className={labelClass}>
                   {t(
                     "business.selectProgramCategory",
-                    "Select Program Category"
+                    "Select Program Category",
                   )}{" "}
                   *
                 </label>
@@ -284,13 +333,17 @@ const EntrepreneurSignupForm = ({
                   <label className={labelClass}>
                     {t(
                       "business.whatProgramDidYouComplete",
-                      "What program did you complete?"
+                      "What program did you complete?",
                     )}{" "}
                     *
                   </label>
                   <select
                     required
                     name="completedProgram"
+                    value={formValues.completedProgram || ""}
+                    onChange={(e) =>
+                      updateFormValue("completedProgram", e.target.value)
+                    }
                     className={inputClass}
                     disabled={loadingPrograms}
                   >
@@ -315,17 +368,19 @@ const EntrepreneurSignupForm = ({
             <label className={labelClass}>
               {t(
                 "business.whatProblemsDoesYourBusinessSolve",
-                "What problem does your business solve?"
+                "What problem does your business solve?",
               )}{" "}
               *
             </label>
             <textarea
               required
               name="problem"
+              value={formValues.problem || ""}
+              onChange={(e) => updateFormValue("problem", e.target.value)}
               className={`${textareaClass} min-h-[110px]`}
               placeholder={t(
                 "business.problemPlaceholder",
-                "Clearly describe the problem your business is solving"
+                "Clearly describe the problem your business is solving",
               )}
               rows="3"
             />
@@ -338,10 +393,12 @@ const EntrepreneurSignupForm = ({
             <textarea
               required
               name="traction"
+              value={formValues.traction || ""}
+              onChange={(e) => updateFormValue("traction", e.target.value)}
               className={`${textareaClass} min-h-[110px]`}
               placeholder={t(
                 "business.tractionPlaceholder",
-                "Describe your traction"
+                "Describe your traction",
               )}
               rows="3"
             />

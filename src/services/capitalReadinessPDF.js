@@ -1,4 +1,16 @@
+import OpenAI from "openai";
 import jsPDF from "jspdf";
+
+// ─── OpenAI client ────────────────────────────────────────────────────────────
+const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
+if (!OPENAI_API_KEY) {
+  console.warn(
+    "VITE_OPENAI_API_KEY is not set. AI content generation may fall back to static content.",
+  );
+}
+const openai = OPENAI_API_KEY
+  ? new OpenAI({ apiKey: OPENAI_API_KEY, dangerouslyAllowBrowser: true })
+  : null;
 
 // ─── Modern Capital Readiness PDF Generator ──────────────────────────────────
 
@@ -364,7 +376,11 @@ function drawGaugeChart(doc, centerX, centerY, radius, percentage, label) {
   }
 
   arcSegment(COLORS.red, startAngle, startAngle + 0.4 * Math.PI);
-  arcSegment(COLORS.orange, startAngle + 0.4 * Math.PI, startAngle + 0.7 * Math.PI);
+  arcSegment(
+    COLORS.orange,
+    startAngle + 0.4 * Math.PI,
+    startAngle + 0.7 * Math.PI,
+  );
   arcSegment(COLORS.green, startAngle + 0.7 * Math.PI, endAngle);
 
   const needleAngle = startAngle + (value / 100) * Math.PI;
@@ -539,7 +555,14 @@ function drawCoverPage(doc, businessName, overallScore, date, logoDataUrl) {
       const img = doc.getImageProperties(logoDataUrl);
       const logoH = 13;
       const logoW = (img.width / img.height) * logoH;
-      doc.addImage(logoDataUrl, "PNG", PW - LAYOUT.marginX - logoW, 14, logoW, logoH);
+      doc.addImage(
+        logoDataUrl,
+        "PNG",
+        PW - LAYOUT.marginX - logoW,
+        14,
+        logoW,
+        logoH,
+      );
     } catch {
       doc.setTextColor(...COLORS.white);
       doc.setFont("helvetica", "bold");
@@ -595,9 +618,14 @@ function drawCoverPage(doc, businessName, overallScore, date, logoDataUrl) {
   doc.text(date, LAYOUT.marginX, PH - 22);
 
   doc.setFontSize(7);
-  doc.text(`${businessName} — Capital Readiness Assessment Report`, PW / 2, PH - 10, {
-    align: "center",
-  });
+  doc.text(
+    `${businessName} — Capital Readiness Assessment Report`,
+    PW / 2,
+    PH - 10,
+    {
+      align: "center",
+    },
+  );
 }
 
 function drawExecutiveSummary(doc, businessName, scoreData, overallScore) {
@@ -621,7 +649,13 @@ function drawExecutiveSummary(doc, businessName, scoreData, overallScore) {
   });
 
   y += 35;
-  y = drawSectionTitle(doc, "Domain Scores vs. 70% Investment Readiness Threshold", x, y, w);
+  y = drawSectionTitle(
+    doc,
+    "Domain Scores vs. 70% Investment Readiness Threshold",
+    x,
+    y,
+    w,
+  );
 
   drawCard(doc, x, y, w, 60, { fill: COLORS.paleBlue });
 
@@ -676,7 +710,13 @@ function drawExecutiveSummary(doc, businessName, scoreData, overallScore) {
   });
 }
 
-function drawOverallReadinessPage(doc, businessName, scoreData, overallScore, domainData) {
+function drawOverallReadinessPage(
+  doc,
+  businessName,
+  scoreData,
+  overallScore,
+  domainData,
+) {
   let y = drawPageHeader(doc, "Overall Readiness Score", businessName, 3);
   const x = LAYOUT.marginX;
   const w = contentWidth(doc);
@@ -688,13 +728,27 @@ function drawOverallReadinessPage(doc, businessName, scoreData, overallScore, do
     style: "bold",
     color: COLORS.navy,
   });
-  drawGaugeChart(doc, x + colW / 2, y + 49, 28, overallScore, getStatus(overallScore));
+  drawGaugeChart(
+    doc,
+    x + colW / 2,
+    y + 49,
+    28,
+    overallScore,
+    getStatus(overallScore),
+  );
 
   drawCard(doc, x + colW + colGap, y, colW, 88, { fill: COLORS.white });
-  drawWrappedText(doc, "Domain Comparison", x + colW + colGap + 8, y + 10, colW - 16, {
-    style: "bold",
-    color: COLORS.navy,
-  });
+  drawWrappedText(
+    doc,
+    "Domain Comparison",
+    x + colW + colGap + 8,
+    y + 10,
+    colW - 16,
+    {
+      style: "bold",
+      color: COLORS.navy,
+    },
+  );
 
   let barY = y + 28;
   [
@@ -713,8 +767,22 @@ function drawOverallReadinessPage(doc, businessName, scoreData, overallScore, do
   y = drawSectionTitle(doc, "Sub-Domain Breakdown", x, y, w);
 
   const yStart = y;
-  drawSubDomainPanel(doc, x, yStart, colW, "Commercial / Market", extractSubDomains(domainData, "commercial"));
-  drawSubDomainPanel(doc, x + colW + colGap, yStart, colW, "Financial", extractSubDomains(domainData, "financial"));
+  drawSubDomainPanel(
+    doc,
+    x,
+    yStart,
+    colW,
+    "Commercial / Market",
+    extractSubDomains(domainData, "commercial"),
+  );
+  drawSubDomainPanel(
+    doc,
+    x + colW + colGap,
+    yStart,
+    colW,
+    "Financial",
+    extractSubDomains(domainData, "financial"),
+  );
 
   y = yStart + 84;
 
@@ -725,16 +793,41 @@ function drawOverallReadinessPage(doc, businessName, scoreData, overallScore, do
   drawWrappedText(doc, insightText, x + 8, y + 10, w - 16);
 }
 
-function drawProjectionsPage(doc, businessName, scoreData, overallScore, domainData) {
-  let y = drawPageHeader(doc, "Operations, Legal & Score Projection", businessName, 4);
+function drawProjectionsPage(
+  doc,
+  businessName,
+  scoreData,
+  overallScore,
+  domainData,
+) {
+  let y = drawPageHeader(
+    doc,
+    "Operations, Legal & Score Projection",
+    businessName,
+    4,
+  );
   const x = LAYOUT.marginX;
   const w = contentWidth(doc);
   const colGap = 8;
   const colW = (w - colGap) / 2;
 
   const yStart = y;
-  drawSubDomainPanel(doc, x, yStart, colW, "Operations", extractSubDomains(domainData, "operations"));
-  drawSubDomainPanel(doc, x + colW + colGap, yStart, colW, "Legal & Compliance", extractSubDomains(domainData, "legal"));
+  drawSubDomainPanel(
+    doc,
+    x,
+    yStart,
+    colW,
+    "Operations",
+    extractSubDomains(domainData, "operations"),
+  );
+  drawSubDomainPanel(
+    doc,
+    x + colW + colGap,
+    yStart,
+    colW,
+    "Legal & Compliance",
+    extractSubDomains(domainData, "legal"),
+  );
 
   y = yStart + 86;
   y = drawSectionTitle(doc, "18-Month Score Projection", x, y, w);
@@ -780,7 +873,12 @@ function drawProjectionsPage(doc, businessName, scoreData, overallScore, domainD
 }
 
 function drawRiskAnalysisPage(doc, businessName, scoreData, overallScore) {
-  let y = drawPageHeader(doc, "Key Thematic Gaps & Risk Analysis", businessName, 5);
+  let y = drawPageHeader(
+    doc,
+    "Key Thematic Gaps & Risk Analysis",
+    businessName,
+    5,
+  );
   const x = LAYOUT.marginX;
   const w = contentWidth(doc);
   const gap = 6;
@@ -963,7 +1061,11 @@ function calculateBusinessModelMetrics(domainData) {
   const operations = extractSubDomains(domainData, "operations");
 
   const avg = (rows) =>
-    rows.length ? Math.round(rows.reduce((sum, r) => sum + clamp(r.value), 0) / rows.length) : 0;
+    rows.length
+      ? Math.round(
+          rows.reduce((sum, r) => sum + clamp(r.value), 0) / rows.length,
+        )
+      : 0;
 
   const commercialAvg = avg(commercial);
   const financialAvg = avg(financial);
@@ -1050,20 +1152,44 @@ function drawPrioritizationPage(doc, businessName) {
   doc.rect(matrixX, matrixY + matrixH / 2, matrixW / 2, matrixH / 2, "F");
 
   doc.setFillColor(240, 253, 244);
-  doc.rect(matrixX + matrixW / 2, matrixY + matrixH / 2, matrixW / 2, matrixH / 2, "F");
+  doc.rect(
+    matrixX + matrixW / 2,
+    matrixY + matrixH / 2,
+    matrixW / 2,
+    matrixH / 2,
+    "F",
+  );
 
   doc.setDrawColor(...COLORS.border);
   doc.rect(matrixX, matrixY, matrixW, matrixH, "S");
-  doc.line(matrixX + matrixW / 2, matrixY, matrixX + matrixW / 2, matrixY + matrixH);
-  doc.line(matrixX, matrixY + matrixH / 2, matrixX + matrixW, matrixY + matrixH / 2);
+  doc.line(
+    matrixX + matrixW / 2,
+    matrixY,
+    matrixX + matrixW / 2,
+    matrixY + matrixH,
+  );
+  doc.line(
+    matrixX,
+    matrixY + matrixH / 2,
+    matrixX + matrixW,
+    matrixY + matrixH / 2,
+  );
 
   doc.setTextColor(...COLORS.navy);
   doc.setFont("helvetica", "bold");
   doc.setFontSize(8);
-  doc.text("Bold Plays", matrixX + matrixW * 0.25, matrixY + 10, { align: "center" });
-  doc.text("Strategic Bets", matrixX + matrixW * 0.75, matrixY + 10, { align: "center" });
-  doc.text("Low Priority", matrixX + matrixW * 0.25, matrixY + matrixH - 8, { align: "center" });
-  doc.text("Quick Wins", matrixX + matrixW * 0.75, matrixY + matrixH - 8, { align: "center" });
+  doc.text("Bold Plays", matrixX + matrixW * 0.25, matrixY + 10, {
+    align: "center",
+  });
+  doc.text("Strategic Bets", matrixX + matrixW * 0.75, matrixY + 10, {
+    align: "center",
+  });
+  doc.text("Low Priority", matrixX + matrixW * 0.25, matrixY + matrixH - 8, {
+    align: "center",
+  });
+  doc.text("Quick Wins", matrixX + matrixW * 0.75, matrixY + matrixH - 8, {
+    align: "center",
+  });
 
   const initiatives = [
     { label: "Financial records", x: 0.78, y: 0.78, color: COLORS.green },
@@ -1089,9 +1215,14 @@ function drawPrioritizationPage(doc, businessName) {
   doc.setTextColor(...COLORS.muted);
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7);
-  doc.text("Ease of implementation →", matrixX + matrixW / 2, matrixY + matrixH + 8, {
-    align: "center",
-  });
+  doc.text(
+    "Ease of implementation →",
+    matrixX + matrixW / 2,
+    matrixY + matrixH + 8,
+    {
+      align: "center",
+    },
+  );
   doc.text("Impact →", matrixX - 5, matrixY + matrixH / 2, {
     align: "center",
     angle: 90,
@@ -1130,7 +1261,13 @@ async function buildPDF(domainData, scoreData, userDetails, logoDataUrl) {
   drawExecutiveSummary(doc, businessName, scoreData, overallScore);
 
   doc.addPage();
-  drawOverallReadinessPage(doc, businessName, scoreData, overallScore, domainData);
+  drawOverallReadinessPage(
+    doc,
+    businessName,
+    scoreData,
+    overallScore,
+    domainData,
+  );
 
   doc.addPage();
   drawProjectionsPage(doc, businessName, scoreData, overallScore, domainData);
@@ -1158,6 +1295,185 @@ async function buildPDF(domainData, scoreData, userDetails, logoDataUrl) {
   return filename;
 }
 
+// ─── AI Content Generation ──────────────────────────────────────────────────
+
+function flattenDomain(domainData) {
+  if (!domainData || typeof domainData !== "object") return [];
+  const result = [];
+  Object.entries(domainData).forEach(([section, rows]) => {
+    if (!Array.isArray(rows)) return;
+    rows.forEach((item) => {
+      const narr =
+        item.narrative?.find((n) => n.score === item.score)?.text || "";
+      result.push({
+        section,
+        subDomain: item.subDomain || "",
+        score: item.score ?? 0,
+        maxScore: 2,
+        narrative: narr,
+        customerComment: item.customerComment || "",
+        reviewerComment: item.reviewerComment || "",
+      });
+    });
+  });
+  return result;
+}
+
+function buildPrompt(data, scoreData, userDetails) {
+  const businessName = getBusinessName(userDetails);
+  const sector =
+    userDetails?.Business?.sector ||
+    userDetails?.Business?.businessSector ||
+    "General Business";
+  const location =
+    userDetails?.Business?.location ||
+    userDetails?.Business?.businessLocation ||
+    "East Africa";
+  const overallScore = calcOverallScore(scoreData);
+  const readiness = overallScore >= 70 ? "Ready" : "Not Ready";
+
+  const commercialItems = flattenDomain(data?.commercial).slice(0, 20);
+  const financialItems = flattenDomain(data?.financial).slice(0, 20);
+  const operationsItems = flattenDomain(data?.operations).slice(0, 20);
+  const legalItems = flattenDomain(data?.legal).slice(0, 20);
+
+  return `You are a senior investment analyst preparing a formal Capital Readiness Assessment Report for a business in East Africa. Based on the assessment data below, generate a comprehensive professional report in valid JSON format.
+
+BUSINESS PROFILE:
+- Name: ${businessName}
+- Sector: ${sector}
+- Location: ${location}
+
+ASSESSMENT SCORES:
+- Commercial/Market: ${scoreData?.commercial?.percentage || 0}% — ${scoreData?.commercial?.status || "Not Ready"}
+- Financial: ${scoreData?.financial?.percentage || 0}% — ${scoreData?.financial?.status || "Not Ready"}
+- Operations: ${scoreData?.operations?.percentage || 0}% — ${scoreData?.operations?.status || "Not Ready"}
+- Legal & Compliance: ${scoreData?.legal?.percentage || 0}% — ${scoreData?.legal?.status || "Not Ready"}
+- Overall Score: ${overallScore}% — ${readiness}
+
+COMMERCIAL DATA: ${JSON.stringify(commercialItems)}
+FINANCIAL DATA: ${JSON.stringify(financialItems)}
+OPERATIONS DATA: ${JSON.stringify(operationsItems)}
+LEGAL DATA: ${JSON.stringify(legalItems)}
+
+Generate a JSON object with EXACTLY this structure (no markdown, no code fences — ONLY raw JSON):
+{
+  "executiveSummary": "<3 paragraphs>",
+  "background": { "purpose": "<2 paragraphs>", "definition": "<2 paragraphs>", "scopeAndMethodology": "<2 paragraphs>" },
+  "companyOverview": "<3 paragraphs>",
+  "assessmentOutcome": { "overallScore": "<2 paragraphs>", "domainScores": "<2 paragraphs>", "scoringMethodology": "<2 paragraphs>", "thresholdCriteria": "<2 paragraphs>" },
+  "marketAssessment": "<4 paragraphs>",
+  "financialAssessment": "<4 paragraphs>",
+  "operationsAssessment": "<4 paragraphs>",
+  "legalAssessment": "<4 paragraphs>",
+  "riskAnalysis": { "commercialRisks": "<3 paragraphs>", "financialRisks": "<3 paragraphs>", "operationalRisks": "<3 paragraphs>", "legalRegulatoryRisks": "<3 paragraphs>" },
+  "roadmap": { "immediate": "<2 paragraphs>", "shortTerm": "<2 paragraphs>", "mediumTerm": "<2 paragraphs>", "projectedImprovement": "<2 paragraphs>" },
+  "conclusion": "<3 paragraphs>"
+}
+
+Return ONLY valid JSON. Base ALL content on the actual scores provided. Name the business as \"${businessName}\" in the narrative.`;
+}
+
+function buildFallbackContent(scoreData, userDetails) {
+  const businessName = getBusinessName(userDetails);
+  const overallScore = calcOverallScore(scoreData);
+  const c = (k) => scoreData?.[k]?.percentage || 0;
+  return {
+    executiveSummary: `${businessName} has undergone a comprehensive Capital Readiness Assessment covering four key domains. The overall score of ${overallScore}% ${overallScore >= 70 ? "indicates investment readiness" : "indicates areas requiring improvement before full investment readiness"}.\n\nScores: Commercial ${c("commercial")}%, Financial ${c("financial")}%, Operations ${c("operations")}%, Legal ${c("legal")}%.\n\nTargeted improvements across identified gap areas have the potential to significantly enhance investment readiness within an 18-month roadmap.`,
+    background: {
+      purpose: `This Capital Readiness Assessment evaluates ${businessName}'s preparedness to attract, receive, and effectively deploy external investment capital across four critical dimensions.\n\nThe primary purpose is to identify strengths and gaps, enabling the business to present a compelling case to potential investors.`,
+      definition: `Capital readiness refers to the degree to which a business has established the systems, processes, governance structures, and commercial foundations necessary to attract and deploy investment.\n\nFor ${businessName}, achieving capital readiness means building investor confidence through transparent financial management, robust operations, and legal compliance.`,
+      scopeAndMethodology: `This assessment covers Commercial/Market, Financial, Operations, and Legal & Compliance domains. Each sub-domain is scored 0–2 and aggregated to domain percentages.\n\nThe 70% threshold represents investment readiness based on East African market best practices.`,
+    },
+    companyOverview: `${businessName} is a business seeking capital readiness certification through this structured assessment framework.\n\nThe assessment identified specific strengths and improvement areas across all four domains.\n\nThe business has demonstrated commitment to the assessment process and willingness to address identified gaps.`,
+    assessmentOutcome: {
+      overallScore: `${businessName} achieved an overall score of ${overallScore}%, which ${overallScore >= 70 ? "meets" : "falls below"} the 70% investment readiness threshold.\n\nThis score represents an average across four domains and investors should review individual domain scores for detailed insights.`,
+      domainScores: `Domain scores: Commercial ${c("commercial")}%, Financial ${c("financial")}%, Operations ${c("operations")}%, Legal ${c("legal")}%.\n\nVariation across domains highlights areas of strength and those requiring focused improvement.`,
+      scoringMethodology: `Each sub-domain is evaluated on a 0–2 scale: 0 (not met), 1 (partial), 2 (full compliance). Scores are aggregated to domain percentages.\n\nThis methodology ensures consistency and objectivity across assessments.`,
+      thresholdCriteria: `The 70% threshold is based on investment best practices for East African markets. Businesses above 70% demonstrate sufficient foundations to manage investment capital responsibly.\n\nBusinesses below 70% are advised to address identified gaps before investor engagement.`,
+    },
+    marketAssessment: `Commercial score of ${c("commercial")}% reflects current market position and commercial capabilities.\n\nKey evaluation areas include market demand, competitive positioning, sales performance, and marketing effectiveness.\n\nRecommendations include formalising the sales process, investing in marketing strategy, and strengthening customer relationship management.\n\nRegular market assessment reviews are recommended to ensure the business adapts proactively to changing conditions.`,
+    financialAssessment: `Financial score of ${c("financial")}% reflects current financial management capabilities.\n\nEvaluation covers revenue generation, cost management, cash flow, and financial record quality.\n\nRecommendations include implementing accounting software, preparing monthly management accounts, and developing a 12-month cash flow forecast.\n\nEngaging a qualified accountant to audit financial records prior to investor engagement is strongly advised.`,
+    operationsAssessment: `Operations score of ${c("operations")}% captures operational maturity across management, systems, and quality control.\n\nThe business has functional operational systems supporting its current scale.\n\nRecommendations include documenting key processes, implementing performance KPIs, and upgrading data management systems.\n\nBuilding operational resilience is essential before deploying significant investment capital.`,
+    legalAssessment: `Legal score of ${c("legal")}% reflects legal standing and governance framework.\n\nEvaluation covers incorporation, licensing, contracts, IP, and governance structures.\n\nRecommendations include engaging a legal advisor, ensuring full tax compliance, registering IP assets, and establishing a formal governance framework.\n\nEngagement of qualified legal counsel is strongly recommended prior to any investor engagement.`,
+    riskAnalysis: {
+      commercialRisks: `Primary commercial risks relate to market competition, customer concentration, and pace of market development.\n\nMitigation strategies include customer diversification, geographic expansion, and continuous product/service innovation.\n\nRegular competitive intelligence reviews and long-term customer contracts are recommended.`,
+      financialRisks: `Financial risks centre on cash flow sustainability, working capital management, and quality of financial information.\n\nCash flow risk is particularly significant as the business scales toward investment.\n\nMitigation includes implementing robust financial management systems, maintaining cash reserves, and securing appropriate credit facilities.`,
+      operationalRisks: `Operational risks include capacity constraints, key-person dependency, and scalability of current systems.\n\nKey-person risk must be proactively managed through succession planning and knowledge management systems.\n\nDocumenting critical processes and cross-training team members are priority mitigation actions.`,
+      legalRegulatoryRisks: `Legal risks include compliance gaps, contractual exposure, and governance weaknesses.\n\nRegulatory risk includes evolving tax legislation and sector-specific compliance requirements.\n\nA comprehensive legal compliance audit and engagement of qualified legal counsel are strongly recommended.`,
+    },
+    roadmap: {
+      immediate: `In the 0–3 month period, ${businessName} should prioritise closing critical compliance and documentation gaps.\n\nPriority actions include formalising financial records, ensuring all licences are current, and preparing an investor information pack.`,
+      shortTerm: `Over 3–9 months, focus on strengthening commercial and operational systems including CRM, formalised sales processes, and comprehensive contracts.\n\nFinancially, implement monthly management accounting and develop investor-grade financial projections.`,
+      mediumTerm: `The 9–18 month period should focus on scaling improvements and preparing for active investor engagement.\n\nBy end of the roadmap, the business should present audited financials, documented systems, and evidence of commercial traction.`,
+      projectedImprovement: `If recommended actions are implemented, ${businessName} is projected to achieve a Capital Readiness Score above the 70% threshold.\n\nThe most significant improvements are anticipated in Financial and Legal domains through structured documentation and compliance improvements.`,
+    },
+    conclusion: `${businessName} has demonstrated commitment to capital readiness through this assessment, achieving ${overallScore}%.\n\nThe roadmap provides a clear path to investor readiness through targeted improvements in financial management, legal compliance, operational documentation, and commercial strategy.\n\nA follow-up assessment in 12 months is recommended to measure progress and update the investment readiness profile.`,
+  };
+}
+
+/**
+ * Generate the structured Capital Readiness report content using AI.
+ * Returns the same JSON object used to build the PDF.
+ *
+ * @param {Object} data        - Domain data (commercial, financial, operations, legal)
+ * @param {Object} scoreData   - Domain score percentages and statuses
+ * @param {Object} userDetails - User / business details
+ * @param {Function} [onStatus]- Optional callback(message) for progress updates
+ * @returns {Promise<{ success: boolean, content: any }>}
+ */
+export async function generateCapitalReadinessContent(
+  data,
+  scoreData,
+  userDetails,
+  onStatus,
+) {
+  onStatus?.("Preparing assessment data...");
+
+  let content;
+
+  try {
+    if (!openai) {
+      throw new Error("Missing VITE_OPENAI_API_KEY");
+    }
+
+    onStatus?.(
+      "Calling AI to generate report content — this may take 20–40 seconds...",
+    );
+
+    const prompt = buildPrompt(data, scoreData, userDetails);
+
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [{ role: "user", content: prompt }],
+      temperature: 0.65,
+      max_tokens: 8000,
+    });
+
+    const raw = response.choices[0]?.message?.content || "";
+    onStatus?.("Processing AI response...");
+
+    const cleaned = raw
+      .replace(/```json\s*/gi, "")
+      .replace(/```\s*/g, "")
+      .trim();
+
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("AI did not return valid JSON");
+
+    content = JSON.parse(jsonMatch[0]);
+  } catch (err) {
+    console.warn(
+      "AI report generation failed, using fallback content:",
+      err.message,
+    );
+    onStatus?.("AI unavailable — generating report with assessment data...");
+    content = buildFallbackContent(scoreData, userDetails);
+  }
+
+  return { success: true, content };
+}
+
 // ─── Main Export ─────────────────────────────────────────────────────────────
 
 export async function generateCapitalReadinessPDF(
@@ -1171,7 +1487,9 @@ export async function generateCapitalReadinessPDF(
   }
 
   if (!userDetails || typeof userDetails !== "object") {
-    throw new Error("Invalid userDetails: must be an object with business information");
+    throw new Error(
+      "Invalid userDetails: must be an object with business information",
+    );
   }
 
   const domains = ["commercial", "financial", "operations", "legal"];

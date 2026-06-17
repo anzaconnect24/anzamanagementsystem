@@ -23,7 +23,9 @@ const Enterprenuers = () => {
 
   const [users, setUsers] = useState([]);
   const [loading, setloading] = useState(true);
+  const [isFetching, setIsFetching] = useState(false);
   const [keyword, setKeyword] = useState("");
+  const [debouncedKeyword, setDebouncedKeyword] = useState("");
   const [filters, setFilters] = useState({
     sector: "All Sectors",
     year: "All Years",
@@ -138,26 +140,42 @@ const Enterprenuers = () => {
   };
 
   useEffect(() => {
+    const timeoutId = setTimeout(() => {
+      setPage(1);
+      setDebouncedKeyword(keyword);
+    }, 350);
+
+    return () => clearTimeout(timeoutId);
+  }, [keyword]);
+
+  useEffect(() => {
     const revenueParams = getRevenueParams(filters.revenue);
 
-    setloading(true);
+    if (users.length === 0) {
+      setloading(true);
+    } else {
+      setIsFetching(true);
+    }
 
-    getEnterprenuers(limit, page, keyword, revenueParams).then((body) => {
-      let filteredData = [...body.data];
+    getEnterprenuers(limit, page, debouncedKeyword, revenueParams).then(
+      (body) => {
+        let filteredData = Array.isArray(body?.data) ? [...body.data] : [];
 
-      applyFilters(filteredData);
+        filteredData = applyFilters(filteredData);
 
-      setCount(body.count);
-      setUsers(filteredData);
-      setloading(false);
-    });
-  }, [sortConfig, filters, page, keyword]);
+        setCount(body?.count || 0);
+        setUsers(filteredData);
+        setloading(false);
+        setIsFetching(false);
+      },
+    );
+  }, [sortConfig, filters, page, debouncedKeyword]);
 
   const applyFilters = (filteredData) => {
     if (isFiltering) {
       if (filters.sector !== "All Sectors") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.BusinessSector?.name === filters.sector
+          (item) => item.Business?.BusinessSector?.name === filters.sector,
         );
       }
 
@@ -165,13 +183,13 @@ const Enterprenuers = () => {
         filteredData = filteredData.filter(
           (item) =>
             new Date(item.Business?.createdAt).getFullYear().toString() ===
-            filters.year
+            filters.year,
         );
       }
 
       if (filters.program !== "All Programs") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.program === filters.program
+          (item) => item.Business?.program === filters.program,
         );
       }
     }
@@ -188,7 +206,7 @@ const Enterprenuers = () => {
           return (
             direction *
             (a.Business?.BusinessSector?.name?.localeCompare(
-              b.Business?.BusinessSector?.name
+              b.Business?.BusinessSector?.name,
             ) || 0)
           );
         case "date":
@@ -205,6 +223,8 @@ const Enterprenuers = () => {
           return 0;
       }
     });
+
+    return filteredData;
   };
 
   const toggleDropdown = (name) => {
@@ -230,11 +250,13 @@ const Enterprenuers = () => {
 
   const getBusinessName = (item) => {
     return (
-      item?.Business?.name || t("users.unnamedBusiness", "Unnamed Business")
+      item?.Business?.name ||
+      item?.name ||
+      t("users.unnamedBusiness", "Unnamed Business")
     );
   };
 
-  if (loading) return <Loader />;
+  if (loading && users.length === 0) return <Loader />;
 
   const totalPages = Math.ceil(count / limit);
 
@@ -361,6 +383,12 @@ const Enterprenuers = () => {
               onChange={(e) => setKeyword(e.target.value)}
               className="w-full rounded-md border border-black/10 bg-[#ffffff] px-4 py-3 pl-10 text-sm text-[#172033] outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
             />
+
+            {isFetching && (
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[#8a8f98]">
+                Updating...
+              </span>
+            )}
           </div>
         </div>
       </div>
@@ -400,7 +428,7 @@ const Enterprenuers = () => {
                 </h3>
 
                 <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
-                  {item?.Business?.email || "No email provided"}
+                  {item?.Business?.email || item?.email || "No email provided"}
                 </p>
 
                 <div className="space-y-3 text-sm text-[#6f6f72]">
@@ -426,8 +454,10 @@ const Enterprenuers = () => {
                     <FaCalendarAlt className="shrink-0" />
                     <span>
                       Joined{" "}
-                      {item?.Business?.createdAt
-                        ? new Date(item.Business.createdAt).getFullYear()
+                      {item?.Business?.createdAt || item?.createdAt
+                        ? new Date(
+                            item?.Business?.createdAt || item?.createdAt,
+                          ).getFullYear()
                         : "N/A"}
                     </span>
                   </div>
@@ -454,8 +484,8 @@ const Enterprenuers = () => {
         <div className="mt-10 rounded-2xl bg-white px-6 py-5 shadow-sm">
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-[#6f6f72]">
-              Showing {(page - 1) * limit + 1} -{" "}
-              {Math.min(page * limit, count)} of {count} Entrepreneurs
+              Showing {(page - 1) * limit + 1} - {Math.min(page * limit, count)}{" "}
+              of {count} Entrepreneurs
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
@@ -483,11 +513,19 @@ const Enterprenuers = () => {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
+<<<<<<< HEAD
                     className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition ${
                         page === pageNum
                           ? "bg-[#082d77] text-white shadow-sm"
                           : "border border-black/10 bg-white text-[#6f6f72] hover:border-[#082d77] hover:text-[#082d77]"
                       }`}
+=======
+                    className={`rounded-lg px-4 py-2.5 text-sm font-medium transition ${
+                      page === pageNum
+                        ? "bg-[#082d77] text-white"
+                        : "border border-black/10 bg-white text-[#6f6f72] hover:border-primary hover:text-primary"
+                    }`}
+>>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
                   >
                     {pageNum}
                   </button>

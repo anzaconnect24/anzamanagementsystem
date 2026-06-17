@@ -218,6 +218,9 @@ export const en = {
     approvedApplications: "Approved Applications",
     rejectedApplications: "Rejected Applications",
     mentorshipRequests: "Mentorship Requests",
+    mentorTracker: "Mentor Tracker",
+    myMilestones: "My Milestones",
+    trackerOverview: "Tracker Overview",
 
     // Mentorship Application Form
     mentorshipApplication: {
@@ -2101,6 +2104,9 @@ export const en = {
     totalStartupsShort: "Total Startups",
     startupsSupported: "Startups Supported",
     reportsSubmitted: "Reports Submitted",
+    weeklyLogs: "Weekly Logs",
+    myMilestones: "My Milestones",
+    redFlags: "Red Flags",
     pendingBusinessApplications: "Pending business applications",
     pendingUserApplications: "Pending users applications",
     pendingProgramApplications: "Pending program applications",

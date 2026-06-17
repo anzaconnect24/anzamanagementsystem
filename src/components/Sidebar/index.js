@@ -6,6 +6,7 @@ import Image from "@/utils/image";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { useTranslation } from "@/locales";
 import SidebarLinkGroup from "./SidebarLinkGroup";
+import { getAvailableDomains } from "@/controllers/crat_controller";
 
 // Icons
 import {
@@ -62,6 +63,36 @@ const Sidebar = ({
       : setLocalSidebarExpanded;
 
   const [isHovered, setIsHovered] = useState(false);
+  const [availableDomains, setAvailableDomains] = useState([]);
+
+  useEffect(() => {
+    if (userDetails?.role !== "Enterprenuer") {
+      setAvailableDomains([]);
+      return;
+    }
+
+    let isMounted = true;
+
+    const loadAvailableDomains = async () => {
+      try {
+        const domains = await getAvailableDomains();
+        if (isMounted) {
+          setAvailableDomains(Array.isArray(domains) ? domains : []);
+        }
+      } catch (error) {
+        console.error("Failed to load CRAT domains in sidebar:", error);
+        if (isMounted) {
+          setAvailableDomains([]);
+        }
+      }
+    };
+
+    loadAvailableDomains();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userDetails?.role]);
 
   useEffect(() => {
     const clickHandler = ({ target }) => {
@@ -166,10 +197,10 @@ const Sidebar = ({
       });
 
       peopleItems.push({
-  name: t("navigation.investors", "Investors"),
-  path: "/dashboard/investors",
-  icon: <RiMoneyDollarCircleLine className="text-xl" />,
-});
+        name: t("navigation.investors", "Investors"),
+        path: "/dashboard/investors",
+        icon: <RiMoneyDollarCircleLine className="text-xl" />,
+      });
 
       peopleItems.push({
         name: t("navigation.mentors", "Mentors"),
@@ -256,6 +287,44 @@ const Sidebar = ({
             path: "/dashboard/mentorshipRequests",
             icon: <FaHandshake className="text-xl" />,
           },
+          {
+            name: t("navigation.mentorTracker", "Mentor Tracker"),
+            path: "/dashboard/mentorTracker",
+            icon: <BsCalendar3 className="text-xl" />,
+          },
+        ],
+      });
+    }
+
+    if (["Enterprenuer"].includes(role)) {
+      categories.push({
+        id: "milestones",
+        title: t("navigation.myMilestones", "My Milestones"),
+        items: [
+          {
+            name: t("navigation.myMilestones", "My Milestones"),
+            path: "/dashboard/myMilestones",
+            icon: <FaWpforms className="text-xl" />,
+          },
+        ],
+      });
+    }
+
+    if (["Admin"].includes(role)) {
+      categories.push({
+        id: "trackerAdmin",
+        title: t("navigation.trackerOverview", "Tracker Overview"),
+        items: [
+          {
+            name: t("navigation.trackerOverview", "Tracker Overview"),
+            path: "/dashboard/trackerAdminOverview",
+            icon: <BsCalendar3 className="text-xl" />,
+          },
+          {
+            name: t("navigation.programs", "Programs"),
+            path: "/dashboard/trackerPrograms",
+            icon: <MdBusinessCenter className="text-xl" />,
+          },
         ],
       });
     }
@@ -318,13 +387,13 @@ const Sidebar = ({
       });
     }
 
-   if (businessItems.length > 0) {
-  categories.push({
-    id: "investmentPipeline",
-    title: t("navigation.businessOperations", "Business Operations"),
-    items: businessItems,
-  });
-}
+    if (businessItems.length > 0) {
+      categories.push({
+        id: "investmentPipeline",
+        title: t("navigation.businessOperations", "Business Operations"),
+        items: businessItems,
+      });
+    }
 
     const investmentItems = [];
 
@@ -393,43 +462,42 @@ const Sidebar = ({
     }
 
     if (["Enterprenuer"].includes(role)) {
+      // Build CRAT domain submenu items dynamically from available domains
+      const domainSubmenu = [
+        {
+          name: t("navigation.introduction", "Introduction"),
+          path: "/dashboard/crat-system/introduction",
+        },
+      ];
+
+      // Add domain items from available domains using dynamic route
+      availableDomains.forEach((domain) => {
+        const label = domain
+          .replace(/_/g, " ")
+          .replace(/\b\w/g, (c) => c.toUpperCase());
+        const path = `/dashboard/crat-system/domain/${domain}`;
+        domainSubmenu.push({
+          name: label,
+          path: path,
+        });
+      });
+
+      // Add review and report items
+      domainSubmenu.push({
+        name: t("navigation.cratReview", "CRAT Review"),
+        path: "/dashboard/crat-system/cratReview",
+      });
+
+      domainSubmenu.push({
+        name: t("navigation.report", "Report"),
+        path: "/dashboard/crat-system/report",
+      });
+
       programsItems.push({
         name: t("navigation.cratSystem", "CRAT System"),
         path: "/dashboard/crat-system/introduction",
         icon: <MdBusinessCenter className="text-xl" />,
-        submenu: [
-          {
-            name: t("navigation.introduction", "Introduction"),
-            path: "/dashboard/crat-system/introduction",
-          },
-          {
-            name: t(
-              "navigation.commercialDomain",
-              "Commercial & Market Domain",
-            ),
-            path: "/dashboard/crat-system/marketDomain",
-          },
-          {
-            name: t("navigation.financialDomain", "Financial Domain"),
-            path: "/dashboard/crat-system/financialDomain",
-          },
-          {
-            name: t("navigation.operationDomain", "Operation Domain"),
-            path: "/dashboard/crat-system/operationsDomain",
-          },
-          {
-            name: t("navigation.legalDomain", "Legal Domain"),
-            path: "/dashboard/crat-system/legalDomain",
-          },
-          {
-            name: t("navigation.cratReview", "CRAT Review"),
-            path: "/dashboard/crat-system/cratReview",
-          },
-          {
-            name: t("navigation.report", "Report"),
-            path: "/dashboard/crat-system/report",
-          },
-        ],
+        submenu: domainSubmenu,
       });
     }
 

@@ -48,6 +48,7 @@ const SignUp = () => {
     completedProgram: "",
     stage: "",
     business_sector_uuid: "",
+    businessLocation: "",
     traction: "",
 
     businessBio: "",
@@ -80,15 +81,15 @@ const SignUp = () => {
           "Profile Image",
         ]
       : role === "Reviewer"
-      ? ["User Information", "Profile Image"]
-      : role === "Mentor"
-      ? [
-          "User Information",
-          "Mentorship Profile",
-          "Availability & Motivation",
-          "Profile Image",
-        ]
-      : ["User Information", "Profile Information", "Profile Image"];
+        ? ["User Information", "Profile Image"]
+        : role === "Mentor"
+          ? [
+              "User Information",
+              "Mentorship Profile",
+              "Availability & Motivation",
+              "Profile Image",
+            ]
+          : ["User Information", "Profile Information", "Profile Image"];
 
   const inputClass =
     "h-[40px] w-full rounded-lg border border-gray-300 bg-[#ffffff] px-5 text-[16px] text-black outline-none focus:border-[#082d77] focus:ring-2 focus:ring-[#082d77]/20";
@@ -116,12 +117,72 @@ const SignUp = () => {
   const goNext = (e) => {
     e.preventDefault();
 
+    if (selectedIndex === 0) {
+      if (
+        !formValues.userName ||
+        !formValues.userEmail ||
+        !formValues.userPhone ||
+        !formValues.password ||
+        !formValues.repeatPassword
+      ) {
+        toast.error(
+          t("auth.fillRequiredFields", "Please fill all required fields"),
+        );
+        return;
+      }
+    }
+
     if (
       selectedIndex === 0 &&
       formValues.password !== formValues.repeatPassword
     ) {
       toast.error(t("auth.passwordsDoNotMatch", "Passwords do not match"));
       return;
+    }
+
+    if (role === "Enterprenuer") {
+      if (selectedIndex === 1) {
+        if (
+          !formValues.businessName ||
+          !formValues.businessEmail ||
+          !formValues.businessPhone ||
+          !formValues.business_sector_uuid ||
+          !formValues.stage ||
+          !formValues.businessLocation
+        ) {
+          toast.error("Please complete all business information fields");
+          return;
+        }
+      }
+
+      if (selectedIndex === 2) {
+        if (
+          !formValues.sdg ||
+          (isAlumni && !formValues.completedProgram) ||
+          !formValues.problem ||
+          !formValues.traction ||
+          !formValues.businessBio ||
+          !formValues.solution ||
+          !formValues.targetMarket ||
+          !formValues.businessImpact ||
+          !formValues.growthPlans
+        ) {
+          toast.error("Please complete all required profile fields");
+          return;
+        }
+      }
+
+      if (selectedIndex === 3) {
+        if (
+          !formValues.registration ||
+          formValues.customerCount === "" ||
+          formValues.team === "" ||
+          formValues.revenue === ""
+        ) {
+          toast.error("Please complete all business metrics fields");
+          return;
+        }
+      }
     }
 
     setSelectedIndex((prev) => Math.min(prev + 1, steps.length - 1));
@@ -157,8 +218,7 @@ const SignUp = () => {
     if (role === "Enterprenuer" && selectedIndex === 3)
       return "Add key performance and operating metrics";
 
-    if (isLastStep)
-      return "Upload a profile image to personalize your account";
+    if (isLastStep) return "Upload a profile image to personalize your account";
 
     return "Complete the remaining details for your selected role";
   };
@@ -185,20 +245,21 @@ const SignUp = () => {
 
               if (role === "Enterprenuer") {
                 businessData = {
-                  name: e.target.businessName?.value,
-                  sdg: e.target.sdg?.value,
-                  email: e.target.businessEmail?.value,
-                  phone: e.target.businessPhone?.value,
-                  problem: e.target.problem?.value,
+                  name: formValues.businessName,
+                  sdg: formValues.sdg,
+                  email: formValues.businessEmail,
+                  phone: formValues.businessPhone,
+                  problem: formValues.problem,
                   isAlumni,
-                  completedProgram: e.target.completedProgram?.value,
-                  stage: e.target.stage?.value,
-                  business_sector_uuid: e.target.business_sector_uuid?.value,
-                  traction: e.target.traction?.value,
+                  completedProgram: formValues.completedProgram,
+                  stage: formValues.stage,
+                  business_sector_uuid: formValues.business_sector_uuid,
+                  traction: formValues.traction,
 
                   description: formValues.businessBio,
                   solution: formValues.solution,
                   market: formValues.targetMarket,
+                  location: formValues.businessLocation,
                   impact: formValues.businessImpact,
                   growthPlan: formValues.growthPlans,
                   fundraisingNeeds: formValues.fundraisingNeeds,
@@ -243,15 +304,14 @@ const SignUp = () => {
                   industries: formValues.mentorIndustries,
                   mentorshipFocus: formValues.mentorMentorshipFocus,
                   mentorAvailability: formValues.mentorAvailability,
-                  mentorPreviousExperience:
-                    formValues.mentorPreviousExperience,
+                  mentorPreviousExperience: formValues.mentorPreviousExperience,
                   mentorMotivation: formValues.mentorMotivation,
                 };
               }
 
               if (formValues.password !== formValues.repeatPassword) {
                 toast.error(
-                  t("auth.passwordsDoNotMatch", "Passwords do not match")
+                  t("auth.passwordsDoNotMatch", "Passwords do not match"),
                 );
                 setloading(false);
                 return;
@@ -280,8 +340,17 @@ const SignUp = () => {
                       for: "Reviewer",
                     });
 
-                    createBusiness(businessData).then(() => {
-                      router.push("/confirmEmail");
+                    createBusiness(businessData).then((businessResponse) => {
+                      if (businessResponse?.status === true) {
+                        router.push("/confirmEmail");
+                        setloading(false);
+                        return;
+                      }
+
+                      toast.error(
+                        businessResponse?.message ||
+                          "Failed to create business profile. Please try again.",
+                      );
                       setloading(false);
                     });
                   } else if (role === "Investor") {
@@ -329,7 +398,7 @@ const SignUp = () => {
                     className={inputClass}
                     placeholder={t(
                       "auth.enterFullName",
-                      "Enter your full name"
+                      "Enter your full name",
                     )}
                     type="text"
                   />
@@ -366,7 +435,7 @@ const SignUp = () => {
                     className={inputClass}
                     placeholder={t(
                       "auth.enterPhone",
-                      "Enter your phone number"
+                      "Enter your phone number",
                     )}
                     type="tel"
                   />
@@ -394,12 +463,12 @@ const SignUp = () => {
                           {item === "Staff"
                             ? t("roles.staff", "Staff")
                             : item === "Enterprenuer"
-                            ? t("roles.entrepreneur", "Entrepreneur")
-                            : item === "Investor"
-                            ? t("roles.investor", "Investor")
-                            : t("roles.mentor", "Mentor")}
+                              ? t("roles.entrepreneur", "Entrepreneur")
+                              : item === "Investor"
+                                ? t("roles.investor", "Investor")
+                                : t("roles.mentor", "Mentor")}
                         </option>
-                      )
+                      ),
                     )}
                   </select>
                 </div>
@@ -418,7 +487,7 @@ const SignUp = () => {
                       defaultValue={formValues.password}
                       placeholder={t(
                         "auth.enterPassword",
-                        "Enter your password"
+                        "Enter your password",
                       )}
                       className={`${inputClass} pr-12`}
                     />
@@ -454,11 +523,7 @@ const SignUp = () => {
                       onClick={() => setshowPassword2(!showPassword2)}
                       className="absolute right-4 top-1/2 -translate-y-1/2 text-[#082d77] hover:text-[#06245f]"
                     >
-                      {showPassword2 ? (
-                        <EyeOff size={22} />
-                      ) : (
-                        <Eye size={22} />
-                      )}
+                      {showPassword2 ? <EyeOff size={22} /> : <Eye size={22} />}
                     </button>
                   </div>
                 </div>
@@ -472,6 +537,9 @@ const SignUp = () => {
                     sectors={sectors}
                     isAlumni={isAlumni}
                     setisAlumni={setisAlumni}
+                    currentStep={1}
+                    formValues={formValues}
+                    setFormValues={setFormValues}
                   />
                 )}
 
@@ -495,6 +563,15 @@ const SignUp = () => {
 
             {role === "Enterprenuer" && selectedIndex === 2 && (
               <div className="space-y-5">
+                <EnterprenuerSignupForm
+                  sectors={sectors}
+                  isAlumni={isAlumni}
+                  setisAlumni={setisAlumni}
+                  currentStep={2}
+                  formValues={formValues}
+                  setFormValues={setFormValues}
+                />
+
                 <div>
                   <label className={labelClass}>
                     Short Business Bio / Profile *
@@ -624,7 +701,7 @@ const SignUp = () => {
                     onChange={(e) =>
                       updateFormValue(
                         "mentorPreviousExperience",
-                        e.target.value
+                        e.target.value,
                       )
                     }
                     required

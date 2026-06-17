@@ -16,7 +16,12 @@ export const createBusiness = async (data) => {
     return response.data;
   } catch (error) {
     console.log(error);
-    return error.response;
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to create business profile",
+      }
+    );
   }
 };
 
@@ -40,7 +45,7 @@ export const uploadBusinessDocument = async (data) => {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
 
     return response.data;
@@ -67,7 +72,7 @@ export const updateBusinessWithFile = async (uuid, data) => {
           "Content-Type": "multipart/form-data",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
 
     return response.data;
@@ -94,7 +99,7 @@ export const getPendingBusinesses = async (page, limit) => {
       `${server_url}/business/waiting/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -109,7 +114,7 @@ export const getRejectedBusinesses = async (page, limit) => {
       `${server_url}/business/rejected/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -141,7 +146,7 @@ export const deleteBusinessDocument = async (uuid) => {
       `${server_url}/business_document/${uuid}`,
       {
         headers,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -155,7 +160,7 @@ export const getApprovedBusinesses = async (page, limit) => {
       `${server_url}/business/approved/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;
@@ -169,7 +174,7 @@ export const getInvestorBusinesses = async (page, limit) => {
       `${server_url}/business/investor/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     console.log(response.data);
     return response.data.body;

@@ -50,6 +50,15 @@ const Page = () => {
     return "Not Ready";
   };
 
+  const toSafeOverallPercent = (value, fallback = 0) => {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) {
+      return Math.round(Number(fallback) || 0);
+    }
+
+    return Math.max(0, Math.min(100, Math.round(parsed)));
+  };
+
   const normalizeScoreData = (rawData) => {
     if (!rawData || typeof rawData !== "object") return null;
 
@@ -59,7 +68,23 @@ const Page = () => {
       typeof rawData?.operations?.percentage === "number" &&
       typeof rawData?.legal?.percentage === "number";
 
-    if (looksLikeScoreData) return rawData;
+    if (looksLikeScoreData) {
+      const fallbackOverall = Math.round(
+        (rawData.commercial.percentage +
+          rawData.financial.percentage +
+          rawData.operations.percentage +
+          rawData.legal.percentage) /
+          4,
+      );
+
+      return {
+        ...rawData,
+        overall_percent: toSafeOverallPercent(
+          rawData?.overall_percent,
+          fallbackOverall,
+        ),
+      };
+    }
 
     if (rawData?.scoreData && typeof rawData.scoreData === "object") {
       const nested = rawData.scoreData;
@@ -70,7 +95,21 @@ const Page = () => {
         typeof nested?.operations?.percentage === "number" &&
         typeof nested?.legal?.percentage === "number"
       ) {
-        return nested;
+        const fallbackOverall = Math.round(
+          (nested.commercial.percentage +
+            nested.financial.percentage +
+            nested.operations.percentage +
+            nested.legal.percentage) /
+            4,
+        );
+
+        return {
+          ...nested,
+          overall_percent: toSafeOverallPercent(
+            nested?.overall_percent,
+            fallbackOverall,
+          ),
+        };
       }
     }
 
@@ -91,8 +130,13 @@ const Page = () => {
     const financial = toPercentFromDomain(domainScores.financial);
     const operations = toPercentFromDomain(domainScores.operations);
     const legal = toPercentFromDomain(domainScores.legal_compliance);
-    const overall = Math.round(
+    const fallbackOverall = Math.round(
       (commercial + financial + operations + legal) / 4,
+    );
+
+    const overall = toSafeOverallPercent(
+      rawData?.overallPercent,
+      fallbackOverall,
     );
 
     return {
@@ -112,6 +156,7 @@ const Page = () => {
         percentage: legal,
         status: toReadinessStatus(legal),
       },
+      overall_percent: overall,
       general_status: toReadinessStatus(overall),
     };
   };
@@ -196,142 +241,163 @@ const Page = () => {
       percentage: 0,
       status: t("ai.status.notAssessed", "Not Assessed"),
     },
+    overall_percent: 0,
     general_status: t("ai.generalStatus.noAssessment", "No CRAT Assessment"),
   });
 
   const buildReportData = (scoreData) => ({
     commercial: {
       responses: [
-        `${t("business.labels.businessDescription", "Business Description")}: ${business.description ||
-        t(
-          "business.placeholders.overviewMissing",
-          "Comprehensive business overview needed",
-        )
-        }`,
-        `${t("business.labels.targetMarket", "Target Market")}: ${business.market ||
-        t("business.placeholders.marketMissing", "Market analysis required")
-        }`,
-        `${t("business.labels.customerBase", "Customer Base")}: ${business.numberOfCustomers
-          ? `${business.numberOfCustomers} ${t(
-            "business.customers",
-            "customers",
-          )}`
-          : t(
-            "business.placeholders.customerMetricsMissing",
-            "Customer metrics needed",
+        `${t("business.labels.businessDescription", "Business Description")}: ${
+          business.description ||
+          t(
+            "business.placeholders.overviewMissing",
+            "Comprehensive business overview needed",
           )
         }`,
-        `${t("business.labels.marketImpact", "Market Impact")}: ${business.impact ||
-        t("business.placeholders.impactMissing", "Impact assessment required")
+        `${t("business.labels.targetMarket", "Target Market")}: ${
+          business.market ||
+          t("business.placeholders.marketMissing", "Market analysis required")
         }`,
-        `${t("business.labels.currentTraction", "Current Traction")}: ${business.traction ||
-        t("business.placeholders.tractionMissing", "Traction metrics needed")
+        `${t("business.labels.customerBase", "Customer Base")}: ${
+          business.numberOfCustomers
+            ? `${business.numberOfCustomers} ${t(
+                "business.customers",
+                "customers",
+              )}`
+            : t(
+                "business.placeholders.customerMetricsMissing",
+                "Customer metrics needed",
+              )
         }`,
-        `${t("business.labels.problemStatement", "Problem Statement")}: ${business.problem ||
-        t(
-          "business.placeholders.problemMissing",
-          "Problem definition required",
-        )
+        `${t("business.labels.marketImpact", "Market Impact")}: ${
+          business.impact ||
+          t("business.placeholders.impactMissing", "Impact assessment required")
         }`,
-        `${t("business.labels.solutionOffered", "Solution Offered")}: ${business.solution ||
-        t(
-          "business.placeholders.solutionMissing",
-          "Solution description required",
-        )
+        `${t("business.labels.currentTraction", "Current Traction")}: ${
+          business.traction ||
+          t("business.placeholders.tractionMissing", "Traction metrics needed")
+        }`,
+        `${t("business.labels.problemStatement", "Problem Statement")}: ${
+          business.problem ||
+          t(
+            "business.placeholders.problemMissing",
+            "Problem definition required",
+          )
+        }`,
+        `${t("business.labels.solutionOffered", "Solution Offered")}: ${
+          business.solution ||
+          t(
+            "business.placeholders.solutionMissing",
+            "Solution description required",
+          )
         }`,
       ],
       score: scoreData.commercial.percentage,
     },
     financial: {
       responses: [
-        `${t("business.labels.businessStage", "Business Stage")}: ${business.stage ||
-        t("business.placeholders.stageMissing", "Stage classification needed")
+        `${t("business.labels.businessStage", "Business Stage")}: ${
+          business.stage ||
+          t("business.placeholders.stageMissing", "Stage classification needed")
         }`,
-        `${t("business.labels.fundraisingNeeds", "Fundraising Needs")}: ${business.fundraisingNeeds ||
-        t(
-          "business.placeholders.fundraisingMissing",
-          "Funding requirements not specified",
-        )
-        }`,
-        `${t("business.labels.investmentSeeking", "Investment Seeking")}: ${business.lookingForInvestment
-          ? t("business.seekingInvestmentYes", "Actively seeking investment")
-          : t(
-            "business.seekingInvestmentNo",
-            "Not currently seeking investment",
+        `${t("business.labels.fundraisingNeeds", "Fundraising Needs")}: ${
+          business.fundraisingNeeds ||
+          t(
+            "business.placeholders.fundraisingMissing",
+            "Funding requirements not specified",
           )
         }`,
-        `${t("business.labels.revenueModel", "Revenue Model")}: ${business.businessPlan
-          ? t(
-            "business.placeholders.businessPlanAvailable",
-            "Business plan available",
-          )
-          : t(
-            "business.placeholders.revenueModelMissing",
-            "Revenue model documentation needed",
-          )
+        `${t("business.labels.investmentSeeking", "Investment Seeking")}: ${
+          business.lookingForInvestment
+            ? t("business.seekingInvestmentYes", "Actively seeking investment")
+            : t(
+                "business.seekingInvestmentNo",
+                "Not currently seeking investment",
+              )
+        }`,
+        `${t("business.labels.revenueModel", "Revenue Model")}: ${
+          business.businessPlan
+            ? t(
+                "business.placeholders.businessPlanAvailable",
+                "Business plan available",
+              )
+            : t(
+                "business.placeholders.revenueModelMissing",
+                "Revenue model documentation needed",
+              )
         }`,
         `${t(
           "business.labels.financialDocumentation",
           "Financial Documentation",
-        )}: ${business.companyProfile
-          ? t(
-            "business.placeholders.companyProfileAvailable",
-            "Company profile available",
-          )
-          : t(
-            "business.placeholders.financialDocsMissing",
-            "Financial documents needed",
-          )
+        )}: ${
+          business.companyProfile
+            ? t(
+                "business.placeholders.companyProfileAvailable",
+                "Company profile available",
+              )
+            : t(
+                "business.placeholders.financialDocsMissing",
+                "Financial documents needed",
+              )
         }`,
-        `${t("business.labels.growthPlans", "Growth Plans")}: ${business.growthPlan ||
-        t(
-          "business.placeholders.growthStrategyMissing",
-          "Growth strategy required",
-        )
+        `${t("business.labels.growthPlans", "Growth Plans")}: ${
+          business.growthPlan ||
+          t(
+            "business.placeholders.growthStrategyMissing",
+            "Growth strategy required",
+          )
         }`,
       ],
       score: scoreData.financial.percentage,
     },
     operations: {
       responses: [
-        `${t("business.labels.teamStructure", "Team Structure")}: ${business.team
-          ? `${t("business.teamSize", "Team Size")} ${business.team}`
-          : t(
-            "business.placeholders.teamSizeMissing",
-            "Team size not specified",
+        `${t("business.labels.teamStructure", "Team Structure")}: ${
+          business.team
+            ? `${t("business.teamSize", "Team Size")} ${business.team}`
+            : t(
+                "business.placeholders.teamSizeMissing",
+                "Team size not specified",
+              )
+        }`,
+        `${t("business.labels.businessLocation", "Business Location")}: ${
+          business.location ||
+          t("business.placeholders.locationMissing", "Location not specified")
+        }`,
+        `${t("business.labels.growthStrategy", "Growth Strategy")}: ${
+          business.growthPlan ||
+          t(
+            "business.placeholders.strategyMissing",
+            "Strategic planning required",
           )
         }`,
-        `${t("business.labels.businessLocation", "Business Location")}: ${business.location ||
-        t("business.placeholders.locationMissing", "Location not specified")
+        `${t("business.labels.operationalStatus", "Operational Status")}: ${
+          business.status === "accepted"
+            ? t(
+                "business.placeholders.approvedOperations",
+                "Approved operations",
+              )
+            : t("business.placeholders.pendingApproval", "Pending approval")
         }`,
-        `${t("business.labels.growthStrategy", "Growth Strategy")}: ${business.growthPlan ||
-        t(
-          "business.placeholders.strategyMissing",
-          "Strategic planning required",
-        )
-        }`,
-        `${t("business.labels.operationalStatus", "Operational Status")}: ${business.status === "accepted"
-          ? t(
-            "business.placeholders.approvedOperations",
-            "Approved operations",
+        `${t("business.labels.industrySector", "Industry Sector")}: ${
+          business.BusinessSector?.name ||
+          t(
+            "business.placeholders.sectorMissing",
+            "Sector classification needed",
           )
-          : t("business.placeholders.pendingApproval", "Pending approval")
         }`,
-        `${t("business.labels.industrySector", "Industry Sector")}: ${business.BusinessSector?.name ||
-        t(
-          "business.placeholders.sectorMissing",
-          "Sector classification needed",
-        )
+        `${t("business.labels.programCompletion", "Program Completion")}: ${
+          business.completedProgram ||
+          t(
+            "business.placeholders.noProgramCompletion",
+            "No program completion recorded",
+          )
         }`,
-        `${t("business.labels.programCompletion", "Program Completion")}: ${business.completedProgram ||
-        t(
-          "business.placeholders.noProgramCompletion",
-          "No program completion recorded",
-        )
-        }`,
-        `${t("business.labels.alumniStatus", "Alumni Status")}: ${business.isAlumni
-          ? t("business.alumni", "Anza Alumni")
-          : t("business.nonAlumni", "Non-alumni")
+        `${t("business.labels.alumniStatus", "Alumni Status")}: ${
+          business.isAlumni
+            ? t("business.alumni", "Anza Alumni")
+            : t("business.nonAlumni", "Non-alumni")
         }`,
       ],
       score: scoreData.operations.percentage,
@@ -341,50 +407,59 @@ const Page = () => {
         `${t(
           "business.labels.businessRegistration",
           "Business Registration",
-        )}: ${business.registration ||
-        t(
-          "business.placeholders.registrationMissing",
-          "Registration documentation needed",
-        )
-        }`,
-        `${t("business.labels.legalStructure", "Legal Structure")}: ${business.BusinessSector?.name ||
-        t(
-          "business.placeholders.legalStructureMissing",
-          "Legal structure classification required",
-        )
-        }`,
-        `${t("business.labels.complianceStatus", "Compliance Status")}: ${business.status === "accepted"
-          ? t(
-            "business.placeholders.compliantApproved",
-            "Compliant and approved",
-          )
-          : t(
-            "business.placeholders.pendingCompliance",
-            "Pending compliance review",
+        )}: ${
+          business.registration ||
+          t(
+            "business.placeholders.registrationMissing",
+            "Registration documentation needed",
           )
         }`,
-        `${t("business.labels.sdgAlignment", "SDG Alignment")}: ${business.sdg ||
-        t("business.placeholders.sdgMissing", "SDG alignment assessment needed")
-        }`,
-        `${t("business.labels.documentation", "Documentation")}: ${business.companyProfile
-          ? t(
-            "business.placeholders.legalDocsAvailable",
-            "Legal documents available",
-          )
-          : t(
-            "business.placeholders.legalDocsMissing",
-            "Legal documentation required",
+        `${t("business.labels.legalStructure", "Legal Structure")}: ${
+          business.BusinessSector?.name ||
+          t(
+            "business.placeholders.legalStructureMissing",
+            "Legal structure classification required",
           )
         }`,
-        `${t("business.labels.industryCompliance", "Industry Compliance")}: ${business.BusinessSector?.name
-          ? t(
-            "business.placeholders.industryComplianceAddressed",
-            "Industry-specific compliance addressed",
+        `${t("business.labels.complianceStatus", "Compliance Status")}: ${
+          business.status === "accepted"
+            ? t(
+                "business.placeholders.compliantApproved",
+                "Compliant and approved",
+              )
+            : t(
+                "business.placeholders.pendingCompliance",
+                "Pending compliance review",
+              )
+        }`,
+        `${t("business.labels.sdgAlignment", "SDG Alignment")}: ${
+          business.sdg ||
+          t(
+            "business.placeholders.sdgMissing",
+            "SDG alignment assessment needed",
           )
-          : t(
-            "business.placeholders.industryComplianceMissing",
-            "Industry compliance assessment needed",
-          )
+        }`,
+        `${t("business.labels.documentation", "Documentation")}: ${
+          business.companyProfile
+            ? t(
+                "business.placeholders.legalDocsAvailable",
+                "Legal documents available",
+              )
+            : t(
+                "business.placeholders.legalDocsMissing",
+                "Legal documentation required",
+              )
+        }`,
+        `${t("business.labels.industryCompliance", "Industry Compliance")}: ${
+          business.BusinessSector?.name
+            ? t(
+                "business.placeholders.industryComplianceAddressed",
+                "Industry-specific compliance addressed",
+              )
+            : t(
+                "business.placeholders.industryComplianceMissing",
+                "Industry compliance assessment needed",
+              )
         }`,
       ],
       score: scoreData.legal.percentage,
@@ -394,7 +469,8 @@ const Page = () => {
   const buildBusinessInfo = () => ({
     name: business.name || t("business.labels.businessName", "Business Name"),
     sector:
-      business.BusinessSector?.name || t("business.labels.sector", "Technology"),
+      business.BusinessSector?.name ||
+      t("business.labels.sector", "Technology"),
     location: business.location || t("business.labels.location", "Tanzania"),
     stage: business.stage || t("business.labels.stage", "Growth Stage"),
     description: business.description,
@@ -437,7 +513,9 @@ const Page = () => {
       let scoreData = buildDefaultScoreData();
 
       try {
-        const actualCRATData = await getScoreData({ uuid: business.User?.uuid });
+        const actualCRATData = await getScoreData({
+          uuid: business.User?.uuid,
+        });
         const normalizedCRATScoreData = normalizeScoreData(actualCRATData);
 
         if (normalizedCRATScoreData) {
@@ -469,12 +547,13 @@ const Page = () => {
 
       setShowAIAnalysis(true);
 
-      const avgScore = Math.round(
+      const avgScore = toSafeOverallPercent(
+        scoreData?.overall_percent,
         (scoreData.commercial.percentage +
           scoreData.financial.percentage +
           scoreData.operations.percentage +
           scoreData.legal.percentage) /
-        4,
+          4,
       );
 
       toast.success(
@@ -523,7 +602,9 @@ const Page = () => {
 
       if (!scoreDataForPdf) {
         try {
-          const actualCRATData = await getScoreData({ uuid: business.User?.uuid });
+          const actualCRATData = await getScoreData({
+            uuid: business.User?.uuid,
+          });
           reportPayloadForPdf = actualCRATData;
 
           const normalizedCRATScoreData = normalizeScoreData(actualCRATData);
@@ -572,7 +653,8 @@ const Page = () => {
       console.error("Error generating AI PDF:", error);
 
       toast.error(
-        `${t("ai.failedToDownloadPDF", "Failed to generate AI PDF")}: ${error?.message || "Unknown error"
+        `${t("ai.failedToDownloadPDF", "Failed to generate AI PDF")}: ${
+          error?.message || "Unknown error"
         }`,
         { id: toastId },
       );
@@ -617,8 +699,8 @@ const Page = () => {
   if (loading) return <Loader />;
 
   if (!business) return null;
-const businessProfileImage =
-  business?.User?.image || business?.image || "/images/default-avatar.png";
+  const businessProfileImage =
+    business?.User?.image || business?.image || "/images/default-avatar.png";
 
   const heroCards = [
     {
@@ -650,15 +732,14 @@ const businessProfileImage =
     <div>
       {/* Hero Section */}
       <div className="relative overflow-hidden rounded-3xl bg-black shadow-xl">
-  <img
-    src="/images/investment_readiness_classes.svg"
-    alt={business?.name || "Business"}
-    className="absolute inset-0 h-full w-full object-cover"
-  />
+        <img
+          src="/images/investment_readiness_classes.svg"
+          alt={business?.name || "Business"}
+          className="absolute inset-0 h-full w-full object-cover"
+        />
 
-  <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/30" />
-  <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
-    
+        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
 
         <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/65 to-black/30" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-transparent" />
@@ -835,35 +916,35 @@ const businessProfileImage =
           {["Admin", "Mentor", "Investor", "Staff"].includes(
             userDetails.role,
           ) && (
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
-                <div className="xl:col-span-7">
-                  <Suspense
-                    fallback={
-                      <div className="h-48 animate-pulse rounded-xl bg-gray-100" />
-                    }
-                  >
-                    <BusinessDomainScores
-                      userDetails={business?.User}
-                      initialScoreData={{}}
-                    />
-                  </Suspense>
-                </div>
-
-                <div className="xl:col-span-5">
-                  <Suspense
-                    fallback={
-                      <div className="h-48 animate-pulse rounded-xl bg-gray-100" />
-                    }
-                  >
-                    <PerformanceDistribution
-                      userDetails={business?.User}
-                      chartHeight={250}
-                      initialScoreData={{}}
-                    />
-                  </Suspense>
-                </div>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+              <div className="xl:col-span-7">
+                <Suspense
+                  fallback={
+                    <div className="h-48 animate-pulse rounded-xl bg-gray-100" />
+                  }
+                >
+                  <BusinessDomainScores
+                    userDetails={business?.User}
+                    initialScoreData={{}}
+                  />
+                </Suspense>
               </div>
-            )}
+
+              <div className="xl:col-span-5">
+                <Suspense
+                  fallback={
+                    <div className="h-48 animate-pulse rounded-xl bg-gray-100" />
+                  }
+                >
+                  <PerformanceDistribution
+                    userDetails={business?.User}
+                    chartHeight={250}
+                    initialScoreData={{}}
+                  />
+                </Suspense>
+              </div>
+            </div>
+          )}
 
           {business.companyProfile && userDetails.role !== "Investor" && (
             <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark">
@@ -881,27 +962,24 @@ const businessProfileImage =
                   },
                   ...(business.businessPlan
                     ? [
-                      {
-                        title: t(
-                          "business.businessPlanDoc",
-                          "Business Plan",
-                        ),
-                        url: business.businessPlan,
-                        icon: <FaFilePdf className="text-red-600" />,
-                      },
-                    ]
+                        {
+                          title: t("business.businessPlanDoc", "Business Plan"),
+                          url: business.businessPlan,
+                          icon: <FaFilePdf className="text-red-600" />,
+                        },
+                      ]
                     : []),
                   ...(business.marketResearch
                     ? [
-                      {
-                        title: t(
-                          "business.marketResearchDoc",
-                          "Market Research",
-                        ),
-                        url: business.marketResearch,
-                        icon: <FaFilePdf className="text-red-600" />,
-                      },
-                    ]
+                        {
+                          title: t(
+                            "business.marketResearchDoc",
+                            "Market Research",
+                          ),
+                          url: business.marketResearch,
+                          icon: <FaFilePdf className="text-red-600" />,
+                        },
+                      ]
                     : []),
                 ].map((doc, idx) => (
                   <a
@@ -1055,8 +1133,7 @@ const businessProfileImage =
                       {item.label}
                     </p>
 
-                    {item.label === t("common.email", "Email") &&
-                      item.value ? (
+                    {item.label === t("common.email", "Email") && item.value ? (
                       <a
                         href={`mailto:${item.value}`}
                         className="break-all font-semibold text-blue-600 transition-colors duration-200 hover:text-blue-800 hover:underline dark:text-blue-400 dark:hover:text-blue-300"
@@ -1082,7 +1159,7 @@ const businessProfileImage =
                         {item.value}
                       </a>
                     ) : item.label ===
-                      t("business.instagramLink", "Instagram Link") &&
+                        t("business.instagramLink", "Instagram Link") &&
                       item.value ? (
                       <a
                         href={item.value}
@@ -1108,69 +1185,69 @@ const businessProfileImage =
               business.twitter ||
               business.websiteLink ||
               business.instagramLink) && (
-                <div className="mt-6">
-                  <h3 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">
-                    {t("business.socialMedia", "Social Media")}
-                  </h3>
+              <div className="mt-6">
+                <h3 className="mb-3 text-lg font-semibold text-gray-800 dark:text-gray-200">
+                  {t("business.socialMedia", "Social Media")}
+                </h3>
 
-                  <div className="flex flex-wrap gap-4">
-                    {business.facebook && (
-                      <a
-                        href={business.facebook}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <span className="text-2xl">📘</span>
-                      </a>
-                    )}
+                <div className="flex flex-wrap gap-4">
+                  {business.facebook && (
+                    <a
+                      href={business.facebook}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-600 hover:text-blue-800"
+                    >
+                      <span className="text-2xl">📘</span>
+                    </a>
+                  )}
 
-                    {business.websiteLink && (
-                      <a
-                        href={business.websiteLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-semibold text-primary hover:underline"
-                      >
-                        {t("business.visitWebsite", "Visit Website")}
-                      </a>
-                    )}
+                  {business.websiteLink && (
+                    <a
+                      href={business.websiteLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      {t("business.visitWebsite", "Visit Website")}
+                    </a>
+                  )}
 
-                    {business.instagramLink && (
-                      <a
-                        href={business.instagramLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="font-semibold text-primary hover:underline"
-                      >
-                        {t("business.instagramLink", "Instagram Link")}
-                      </a>
-                    )}
+                  {business.instagramLink && (
+                    <a
+                      href={business.instagramLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-primary hover:underline"
+                    >
+                      {t("business.instagramLink", "Instagram Link")}
+                    </a>
+                  )}
 
-                    {business.linkedin && (
-                      <a
-                        href={business.linkedin}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-700 hover:text-blue-900"
-                      >
-                        <span className="text-2xl">💼</span>
-                      </a>
-                    )}
+                  {business.linkedin && (
+                    <a
+                      href={business.linkedin}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-700 hover:text-blue-900"
+                    >
+                      <span className="text-2xl">💼</span>
+                    </a>
+                  )}
 
-                    {business.twitter && (
-                      <a
-                        href={business.twitter}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700"
-                      >
-                        <span className="text-2xl">🐦</span>
-                      </a>
-                    )}
-                  </div>
+                  {business.twitter && (
+                    <a
+                      href={business.twitter}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      <span className="text-2xl">🐦</span>
+                    </a>
+                  )}
                 </div>
-              )}
+              </div>
+            )}
 
             <div className="mt-4 flex flex-col gap-4">
               {["Admin", "Staff"].includes(userDetails.role) && (
@@ -1264,9 +1341,9 @@ const businessProfileImage =
                   {requesting
                     ? t("mentorship.requesting", "Requesting...")
                     : t(
-                      "mentorship.requestToBeMentor",
-                      "Request to be a mentor",
-                    )}
+                        "mentorship.requestToBeMentor",
+                        "Request to be a mentor",
+                      )}
                 </button>
               )}
             </div>
@@ -1291,12 +1368,13 @@ const businessProfileImage =
 
               <div className="rounded-full bg-gradient-to-r from-green-500 to-emerald-500 px-5 py-3 text-sm font-bold text-white shadow-md">
                 {t("ai.overallScore", "Overall Score:")}{" "}
-                {Math.round(
+                {toSafeOverallPercent(
+                  cratData?.scoreData?.overall_percent,
                   (cratData.scoreData.commercial.percentage +
                     cratData.scoreData.financial.percentage +
                     cratData.scoreData.operations.percentage +
                     cratData.scoreData.legal.percentage) /
-                  4,
+                    4,
                 )}
                 %
               </div>

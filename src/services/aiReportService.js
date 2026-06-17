@@ -224,15 +224,6 @@ export class AIReportService {
   }
 
   /**
-   * Get readiness level based on percentage score
-   */
-  getReadinessLevel(percentage) {
-    if (percentage >= 75) return "Ready";
-    if (percentage >= 60) return "Partially Ready";
-    return "Not Ready";
-  }
-
-  /**
    * Calculate average score from score data
    */
   calculateAverageScore(scoreData) {

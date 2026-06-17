@@ -229,6 +229,33 @@ const getFileNameFromUrl = (url = "") => {
   }
 };
 
+const toRequiredAttachmentList = (value) => {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || "").trim()).filter(Boolean);
+  }
+
+  const raw = String(value || "").trim();
+  if (!raw) return [];
+
+  if (raw.startsWith("[")) {
+    try {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+      }
+    } catch (_) {
+      return [raw];
+    }
+  }
+
+  const splitItems = raw
+    .split(/[\n;]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return splitItems.length > 0 ? splitItems : [raw];
+};
+
 const toTitle = (value = "") =>
   String(value)
     .split("_")
@@ -524,7 +551,9 @@ const CratSubmissionReviewPage = () => {
       return {
         ...answer,
         questionText: question?.questionTextEn || answer.questionCode || "-",
-        requiredAttachment: question?.requiredAttachment || "-",
+        requiredAttachments: toRequiredAttachmentList(
+          question?.requiredAttachments || question?.requiredAttachment,
+        ),
         draftScore:
           draft.score === "" || draft.score === null || draft.score === undefined
             ? ""
@@ -642,6 +671,7 @@ const CratSubmissionReviewPage = () => {
   }, [activeDomainKey, groupedDomainRows]);
 
   const requiredAttachments = useMemo(() => {
+<<<<<<< HEAD
     return Array.from(
       new Map(
         (activeDomainSection?.rows || [])
@@ -652,7 +682,16 @@ const CratSubmissionReviewPage = () => {
           })
           .map((row) => [String(row.requiredAttachment).trim(), row]),
       ).values(),
+=======
+    const rowsWithRequiredAttachments = (activeDomainSection?.rows || []).filter(
+      (row) => (row.requiredAttachments || []).length > 0,
+>>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
     );
+
+    return rowsWithRequiredAttachments.map((row) => ({
+      ...row,
+      requiredAttachmentLabel: row.requiredAttachments.join(", "),
+    }));
   }, [activeDomainSection?.rows]);
 
   const buildScoresPayload = (currentRows) => {
@@ -1015,10 +1054,23 @@ const CratSubmissionReviewPage = () => {
                       Required Documents
                     </h2>
 
+<<<<<<< HEAD
                     <p className="mt-2 text-sm leading-6 text-slate-500">
                       Review the supporting evidence requested by admin for this
                       domain.
                     </p>
+=======
+                  <div className="mt-5 space-y-3">
+                    {requiredAttachments.length > 0 ? (
+                      requiredAttachments.map((row) => (
+                        <div
+                          key={`doc-${row.questionId}`}
+                          className="rounded-2xl border border-slate-200 bg-white p-4"
+                        >
+                          <p className="truncate text-sm font-semibold text-slate-800">
+                            {row.requiredAttachmentLabel}
+                          </p>
+>>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
 
                     <div className="mt-5 space-y-3">
                       {requiredAttachments.length > 0 ? (

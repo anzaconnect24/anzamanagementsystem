@@ -100,6 +100,7 @@ import MarketDomainPage from "./pages/cratSystem/marketDomain/MarketDomain";
 import FinancialDomain from "./pages/cratSystem/financialDomain/FinancialDomain";
 import Report from "./pages/cratSystem/report/Report";
 import CratSubmissionReviewPage from "./pages/cratSystem/reviewAssessment/CratSubmissionReviewPage";
+import DomainAssessmentPage from "./pages/cratSystem/domain/DomainAssessmentPage";
 
 // Dynamic route components
 import MyMentorDetailsWithUuid from "./pages/mentor/myMentorDetails/MyMentorDetailsWithUuid";
@@ -227,6 +228,12 @@ import MentorWithUuid from "./pages/users/mentors/MentorWithUuid";
 import { TranslationProvider } from "./locales";
 import EditAccountDetails from "./pages/account/editAccount/editAccountDetails";
 import EntrepreneurProfile from "./pages/account/entreprenuerProfile";
+import MentorTracker from "./pages/tracker/mentor/MentorTracker";
+import EnterpriseTrackerDetails from "./pages/tracker/mentor/EnterpriseTrackerDetails";
+import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
+import AdminTrackerOverview from "./pages/tracker/admin/AdminTrackerOverview";
+import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
+import TrackerProgramDetails from "./pages/tracker/admin/TrackerProgramDetails";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -317,6 +324,21 @@ function App() {
               element={<MentorshipApplications />}
             />
             <Route path="mentorReports" element={<MentorReports />} />
+            <Route path="mentorTracker" element={<MentorTracker />} />
+            <Route
+              path="mentorTracker/enterprise/:enterpriseUuid"
+              element={<EnterpriseTrackerDetails />}
+            />
+            <Route path="myMilestones" element={<EntrepreneurMilestones />} />
+            <Route
+              path="trackerAdminOverview"
+              element={<AdminTrackerOverview />}
+            />
+            <Route path="trackerPrograms" element={<TrackerPrograms />} />
+            <Route
+              path="trackerPrograms/:programUuid/details"
+              element={<TrackerProgramDetails />}
+            />
 
             {/* Investment Routes */}
             <Route
@@ -507,7 +529,6 @@ function App() {
             <Route path="slides/add" element={<AddSlide />} />
 
             <Route path="slides/edit" element={<EditSlide />} />
-          
 
             {/* Log Routes */}
             {/* <Route path="logs" element={<Logs />} /> */}
@@ -640,6 +661,10 @@ function App() {
             {/* CRAT System nested routes */}
             <Route path="crat-system">
               <Route path="introduction" element={<IntroductionPage />} />
+              <Route
+                path="domain/:domainKey"
+                element={<DomainAssessmentPage />}
+              />
               <Route path="marketDomain" element={<MarketDomainPage />} />
               <Route path="financialDomain" element={<FinancialDomain />} />
               <Route path="operationsDomain" element={<OperationsDomain />} />
