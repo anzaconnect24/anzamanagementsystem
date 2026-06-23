@@ -73,14 +73,8 @@ const SignUp = () => {
 
   const steps =
     role === "Enterprenuer"
-      ? [
-          "User Information",
-          "Business Information",
-          "Business Profile",
-          "Business Metrics",
-          "Profile Image",
-        ]
-      : role === "Reviewer"
+      ? ["User Information", "Business Information", "Profile Image"]
+      : role === "Reviewer" || role === "Finance"
         ? ["User Information", "Profile Image"]
         : role === "Mentor"
           ? [
@@ -144,42 +138,11 @@ const SignUp = () => {
       if (selectedIndex === 1) {
         if (
           !formValues.businessName ||
-          !formValues.businessEmail ||
-          !formValues.businessPhone ||
           !formValues.business_sector_uuid ||
-          !formValues.stage ||
-          !formValues.businessLocation
+          !formValues.businessLocation ||
+          !formValues.businessBio
         ) {
           toast.error("Please complete all business information fields");
-          return;
-        }
-      }
-
-      if (selectedIndex === 2) {
-        if (
-          !formValues.sdg ||
-          (isAlumni && !formValues.completedProgram) ||
-          !formValues.problem ||
-          !formValues.traction ||
-          !formValues.businessBio ||
-          !formValues.solution ||
-          !formValues.targetMarket ||
-          !formValues.businessImpact ||
-          !formValues.growthPlans
-        ) {
-          toast.error("Please complete all required profile fields");
-          return;
-        }
-      }
-
-      if (selectedIndex === 3) {
-        if (
-          !formValues.registration ||
-          formValues.customerCount === "" ||
-          formValues.team === "" ||
-          formValues.revenue === ""
-        ) {
-          toast.error("Please complete all business metrics fields");
           return;
         }
       }
@@ -189,16 +152,11 @@ const SignUp = () => {
   };
 
   const getTitle = () => {
-    if (selectedIndex === 0) return "Create your account";
+    if (selectedIndex === 0)
+      return t("auth.createYourAccount", "Create your account");
 
     if (role === "Enterprenuer" && selectedIndex === 1)
       return "Add your business information";
-
-    if (role === "Enterprenuer" && selectedIndex === 2)
-      return "Build your business profile";
-
-    if (role === "Enterprenuer" && selectedIndex === 3)
-      return "Add your business metrics";
 
     if (isLastStep) return "Add your profile picture";
 
@@ -211,12 +169,6 @@ const SignUp = () => {
 
     if (role === "Enterprenuer" && selectedIndex === 1)
       return "Add the basic details about your business";
-
-    if (role === "Enterprenuer" && selectedIndex === 2)
-      return "Summarize your business and explain your solution, market, impact, and growth plans";
-
-    if (role === "Enterprenuer" && selectedIndex === 3)
-      return "Add key performance and operating metrics";
 
     if (isLastStep) return "Upload a profile image to personalize your account";
 
@@ -244,30 +196,33 @@ const SignUp = () => {
               let businessData;
 
               if (role === "Enterprenuer") {
+                // The entrepreneur only fills the essentials at signup; the
+                // rest is completed later from the Edit Profile page. The
+                // backend still expects the full set of columns on creation,
+                // so send safe defaults for the not-yet-collected fields to
+                // avoid an internal server error.
                 businessData = {
                   name: formValues.businessName,
-                  sdg: formValues.sdg,
-                  email: formValues.businessEmail,
-                  phone: formValues.businessPhone,
-                  problem: formValues.problem,
-                  isAlumni,
-                  completedProgram: formValues.completedProgram,
-                  stage: formValues.stage,
                   business_sector_uuid: formValues.business_sector_uuid,
-                  traction: formValues.traction,
-
-                  description: formValues.businessBio,
-                  solution: formValues.solution,
-                  market: formValues.targetMarket,
                   location: formValues.businessLocation,
-                  impact: formValues.businessImpact,
-                  growthPlan: formValues.growthPlans,
-                  fundraisingNeeds: formValues.fundraisingNeeds,
-
-                  registration: formValues.registration,
-                  revenue: formValues.revenue,
-                  team: formValues.team,
-                  numberOfCustomers: formValues.customerCount,
+                  description: formValues.businessBio,
+                  email: formValues.userEmail || "",
+                  phone: formValues.userPhone || "",
+                  stage: "Startup",
+                  sdg: "",
+                  problem: "",
+                  solution: "",
+                  traction: "",
+                  market: "",
+                  impact: "",
+                  growthPlan: "",
+                  fundraisingNeeds: "",
+                  registration: "",
+                  revenue: "0",
+                  team: "0",
+                  numberOfCustomers: "0",
+                  isAlumni: false,
+                  completedProgram: "",
                 };
               }
 
@@ -454,7 +409,7 @@ const SignUp = () => {
                     className={inputClass}
                     name="role"
                   >
-                    {["Staff", "Enterprenuer", "Investor", "Mentor"].map(
+                    {["Staff", "Finance", "Enterprenuer", "Investor", "Mentor"].map(
                       (item) => (
                         <option
                           key={item}
@@ -462,11 +417,13 @@ const SignUp = () => {
                         >
                           {item === "Staff"
                             ? t("roles.staff", "Staff")
-                            : item === "Enterprenuer"
-                              ? t("roles.entrepreneur", "Entrepreneur")
-                              : item === "Investor"
-                                ? t("roles.investor", "Investor")
-                                : t("roles.mentor", "Mentor")}
+                            : item === "Finance"
+                              ? t("roles.finance", "Finance Officer")
+                              : item === "Enterprenuer"
+                                ? t("roles.entrepreneur", "Entrepreneur")
+                                : item === "Investor"
+                                  ? t("roles.investor", "Investor")
+                                  : t("roles.mentor", "Mentor")}
                         </option>
                       ),
                     )}
@@ -561,116 +518,6 @@ const SignUp = () => {
               </div>
             )}
 
-            {role === "Enterprenuer" && selectedIndex === 2 && (
-              <div className="space-y-5">
-                <EnterprenuerSignupForm
-                  sectors={sectors}
-                  isAlumni={isAlumni}
-                  setisAlumni={setisAlumni}
-                  currentStep={2}
-                  formValues={formValues}
-                  setFormValues={setFormValues}
-                />
-
-                <div>
-                  <label className={labelClass}>
-                    Short Business Bio / Profile *
-                  </label>
-                  <textarea
-                    name="businessBio"
-                    value={formValues.businessBio}
-                    onChange={(e) =>
-                      updateFormValue("businessBio", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Give a short summary of your business"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Problem *</label>
-
-                  <textarea
-                    name="problem"
-                    value={formValues.problem}
-                    onChange={(e) =>
-                      updateFormValue("problem", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe the problem your business is solving"
-                  />
-                </div>
-                <div>
-                  <label className={labelClass}>Solution *</label>
-                  <textarea
-                    name="solution"
-                    value={formValues.solution}
-                    onChange={(e) =>
-                      updateFormValue("solution", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe your solution"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Target market *</label>
-                  <textarea
-                    name="targetMarket"
-                    value={formValues.targetMarket}
-                    onChange={(e) =>
-                      updateFormValue("targetMarket", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe your target market"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Business impact *</label>
-                  <textarea
-                    name="businessImpact"
-                    value={formValues.businessImpact}
-                    onChange={(e) =>
-                      updateFormValue("businessImpact", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe your business impact"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Growth plans *</label>
-                  <textarea
-                    name="growthPlans"
-                    value={formValues.growthPlans}
-                    onChange={(e) =>
-                      updateFormValue("growthPlans", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe your growth plans"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Fundraising needs</label>
-                  <textarea
-                    name="fundraisingNeeds"
-                    value={formValues.fundraisingNeeds}
-                    onChange={(e) =>
-                      updateFormValue("fundraisingNeeds", e.target.value)
-                    }
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe your fundraising needs"
-                  />
-                </div>
-              </div>
-            )}
 
             {role === "Mentor" && selectedIndex === 2 && (
               <div className="space-y-5">
@@ -729,73 +576,6 @@ const SignUp = () => {
               </div>
             )}
 
-            {role === "Enterprenuer" && selectedIndex === 3 && (
-              <div className="space-y-5">
-                <div>
-                  <label className={labelClass}>Registration status *</label>
-                  <select
-                    name="registration"
-                    value={formValues.registration}
-                    onChange={(e) =>
-                      updateFormValue("registration", e.target.value)
-                    }
-                    required
-                    className={inputClass}
-                  >
-                    <option value="">Select registration status</option>
-                    <option value="Registered">Registered</option>
-                    <option value="Not Registered">Not Registered</option>
-                    <option value="In Progress">In Progress</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className={labelClass}>Number of customers *</label>
-                  <input
-                    name="customerCount"
-                    value={formValues.customerCount}
-                    onChange={(e) =>
-                      updateFormValue("customerCount", e.target.value)
-                    }
-                    required
-                    className={inputClass}
-                    placeholder="Enter number of customers"
-                    type="number"
-                    min="0"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>
-                    Number of people in your team *
-                  </label>
-                  <input
-                    name="team"
-                    value={formValues.team}
-                    onChange={(e) => updateFormValue("team", e.target.value)}
-                    required
-                    className={inputClass}
-                    placeholder="Enter team size"
-                    type="number"
-                    min="0"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>Annual revenue *</label>
-                  <input
-                    name="revenue"
-                    value={formValues.revenue}
-                    onChange={(e) => updateFormValue("revenue", e.target.value)}
-                    required
-                    className={inputClass}
-                    placeholder="Enter annual revenue"
-                    type="number"
-                    min="0"
-                  />
-                </div>
-              </div>
-            )}
 
             {isLastStep && (
               <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-gray-300 bg-[#ffffff] p-10">

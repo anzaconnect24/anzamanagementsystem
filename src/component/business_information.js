@@ -9,6 +9,31 @@ import Loader from "@/components/common/Loader";
 import Spinner from "../components/spinner";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "../locales";
+import { MapContainer, Marker, TileLayer, useMapEvents } from "react-leaflet";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+
+// Fix Leaflet default marker icons (bundlers strip the relative asset paths).
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+  iconUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+  shadowUrl:
+    "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+});
+
+const DEFAULT_CENTER = [-6.369, 34.8888]; // Tanzania
+
+const MapClickHandler = ({ onSelect }) => {
+  useMapEvents({
+    click(e) {
+      onSelect(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+};
 
 const BusinessInformation = () => {
   const { t } = useTranslation();
@@ -23,6 +48,7 @@ const BusinessInformation = () => {
   const [updatingInvestmentDetails, setupdatingInvestmentDetails] =
     useState(false);
   const [selectedOption, setselectedOption] = useState(0);
+  const [coords, setCoords] = useState({ lat: "", lng: "" });
 
   useEffect(() => {
     getSectors().then((data) => {
@@ -35,14 +61,64 @@ const BusinessInformation = () => {
   useEffect(() => {
     getBusiness(userDetails.Business.uuid).then((data) => {
       setBusiness(data);
-      console.log("business", data);
+      setCoords({
+        lat: data?.latitude != null ? String(data.latitude) : "",
+        lng: data?.longitude != null ? String(data.longitude) : "",
+      });
       setloadingData(false);
     });
   }, [refresh]);
+
+  const lat = Number(coords.lat);
+  const lng = Number(coords.lng);
+  const hasCoords =
+    coords.lat !== "" && coords.lng !== "" && Number.isFinite(lat) && Number.isFinite(lng);
   return loadingData ? (
     <Loader />
   ) : (
     <div>
+      <section
+        className="relative mb-6 overflow-hidden rounded-2xl bg-slate-950 px-7 py-8 text-white shadow-sm"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.2) 100%), url('/images/mentor_hero.svg')",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-[#F59E0B]" />
+            Business Profile
+          </div>
+          <h1 className="mt-5 text-3xl font-black tracking-tight md:text-4xl">
+            {business?.name || "Business Profile"}
+          </h1>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {[
+              { label: "Customers", value: business?.numberOfCustomers },
+              { label: "Location", value: business?.location },
+              {
+                label: "Industry",
+                value: business?.BusinessSector?.name || business?.sector,
+              },
+              { label: "Stage", value: business?.stage },
+              { label: "Revenue", value: business?.revenue },
+            ].map((tile) => (
+              <div
+                key={tile.label}
+                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur"
+              >
+                <p className="text-xs font-medium text-white/60">{tile.label}</p>
+                <p className="mt-1 truncate text-lg font-black text-white">
+                  {tile.value || "N/A"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <form
         onSubmit={async (e) => {
           e.preventDefault();
@@ -73,6 +149,9 @@ const BusinessInformation = () => {
             numberOfCustomers: e.target.customerCount.value,
             market: e.target.targetMarket.value,
             location: e.target.businessLocation.value,
+            country: e.target.country.value,
+            latitude: coords.lat || null,
+            longitude: coords.lng || null,
             impact: e.target.businessImpact.value,
             growthPlan: e.target.growthPlans.value,
             fundraisingNeeds: e.target.fundraisingNeeds.value,
@@ -249,7 +328,7 @@ const BusinessInformation = () => {
                     {t("business.businessSector", "Business sector")}
                   </label>
                   <select
-                    defaultValue={business.BusinessSector.uuid}
+                    defaultValue={business.BusinessSector?.uuid}
                     name="business_sector_uuid"
                     className="form-style"
                   >
@@ -338,7 +417,7 @@ const BusinessInformation = () => {
                     {t("business.areYouAnAlumni", "Are you an Anza alumni?")}
                   </label>
                   <select
-                    defaultValue={business.isAlumni.toString()}
+                    defaultValue={(business.isAlumni ?? false).toString()}
                     name="isAlumni"
                     className="form-style"
                   >
@@ -434,7 +513,19 @@ const BusinessInformation = () => {
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    {t("business.businessLocation", "Business Location")}
+                    {t("business.country", "Country")}
+                  </label>
+                  <select
+                    defaultValue={business.country || "Tanzania"}
+                    name="country"
+                    className="form-style"
+                  >
+                    <option value="Tanzania">Tanzania</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t("business.region", "Region")}
                   </label>
                   <select
                     defaultValue={business.location}
@@ -478,6 +569,52 @@ const BusinessInformation = () => {
                   </select>
                 </div>
               </div>
+
+              <div>
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  {t("business.mapCoordinates", "Map Coordinates (Lat, Lng)")}
+                </label>
+                <input
+                  className="form-style"
+                  value={coords.lat && coords.lng ? `${coords.lat}, ${coords.lng}` : ""}
+                  onChange={(e) => {
+                    const [la, ln] = e.target.value.split(",");
+                    setCoords({ lat: (la || "").trim(), lng: (ln || "").trim() });
+                  }}
+                  placeholder="-6.369, 34.8888"
+                />
+                <div className="relative mt-3 overflow-hidden rounded-lg border border-stroke">
+                  <MapContainer
+                    center={hasCoords ? [lat, lng] : DEFAULT_CENTER}
+                    zoom={hasCoords ? 13 : 6}
+                    style={{ height: "320px", width: "100%" }}
+                    scrollWheelZoom={false}
+                  >
+                    <TileLayer
+                      attribution="&copy; OpenStreetMap contributors"
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <MapClickHandler
+                      onSelect={(la, ln) =>
+                        setCoords({ lat: la.toFixed(6), lng: ln.toFixed(6) })
+                      }
+                    />
+                    {hasCoords && (
+                      <Marker
+                        position={[lat, lng]}
+                        draggable
+                        eventHandlers={{
+                          dragend: (ev) => {
+                            const { lat: dla, lng: dln } = ev.target.getLatLng();
+                            setCoords({ lat: dla.toFixed(6), lng: dln.toFixed(6) });
+                          },
+                        }}
+                      />
+                    )}
+                  </MapContainer>
+                </div>
+              </div>
+
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   {t("business.businessBio", "Short Business Bio/Profile")}

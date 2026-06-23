@@ -24,9 +24,17 @@ const MentorEntreprenuer = () => {
     return item?.name || t("mentorHub.unnamedMentor", "Unnamed Mentor");
   };
 
+  // BDA (Business Development Advisor) assignments reuse the same
+  // mentor-entrepreneur relationship, so exclude them here — only actual
+  // mentors should appear under "My Mentors".
+  const onlyMentors = (list) =>
+    (Array.isArray(list) ? list : []).filter(
+      (app) => !["Reviewer", "Staff", "Finance"].includes(app?.Mentor?.role),
+    );
+
   useEffect(() => {
     getEntreprenuerMentors(userDetails.uuid, 1, 100, "").then((res) => {
-      setData(res);
+      setData(onlyMentors(res));
       setLoading(false);
     });
   }, []);
@@ -46,7 +54,7 @@ const MentorEntreprenuer = () => {
         "",
       );
 
-      setData(res);
+      setData(onlyMentors(res));
     } catch (error) {
       toast.error("Failed to accept appointment");
       console.error(error);

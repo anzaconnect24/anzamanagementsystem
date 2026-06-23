@@ -12,6 +12,8 @@ import AuthLayout from "@/layouts/AuthLayout";
 // Auth Pages
 import SignIn from "@/pages/auth/SignIn";
 import SignUp from "@/pages/auth/SignUp";
+import TermsOfService from "@/pages/legal/TermsOfService";
+import PrivacyPolicy from "@/pages/legal/PrivacyPolicy";
 import ForgotPassword from "@/pages/auth/ForgotPassword";
 import ResetPassword from "@/pages/auth/ResetPassword";
 import EmailConfirmation from "@/pages/auth/EmailConfirmation";
@@ -40,6 +42,7 @@ import Investors from "./pages/users/investors/Investors";
 import Mentors from "./pages/users/mentors/Mentors";
 import Reviewers from "./pages/users/reviewers/Reviewers";
 import Admins from "./pages/users/admins/Admins";
+import FinanceOfficers from "./pages/users/financeOfficers/FinanceOfficers";
 import InterestedEnterprenuers from "./pages/users/interestedEnterprenuers/InterestedEntreprenuers";
 
 // Mentor Pages
@@ -230,7 +233,11 @@ import EditAccountDetails from "./pages/account/editAccount/editAccountDetails";
 import EntrepreneurProfile from "./pages/account/entreprenuerProfile";
 import MentorTracker from "./pages/tracker/mentor/MentorTracker";
 import EnterpriseTrackerDetails from "./pages/tracker/mentor/EnterpriseTrackerDetails";
+import EnterpriseKyc from "./pages/tracker/mentor/EnterpriseKyc";
 import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
+import CoachingSessions from "./pages/tracker/entreprenuer/CoachingSessions";
+import ProgramMemberRoute from "./components/guards/ProgramMemberRoute";
+import BdaCoachingSessions from "./pages/tracker/mentor/BdaCoachingSessions";
 import AdminTrackerOverview from "./pages/tracker/admin/AdminTrackerOverview";
 import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
 import TrackerProgramDetails from "./pages/tracker/admin/TrackerProgramDetails";
@@ -261,6 +268,10 @@ function App() {
             <Route path="confirm-email" element={<ConfirmEmail />} />
             <Route path="authorization" element={<AuthorizationPage />} />
           </Route>
+
+          {/* Legal Routes (public) */}
+          <Route path="/terms" element={<TermsOfService />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
 
           {/* Legacy auth routes (for backward compatibility) */}
           <Route
@@ -303,6 +314,7 @@ function App() {
             <Route path="mentors" element={<Mentors />} />
             <Route path="reviewers" element={<Reviewers />} />
             <Route path="admins" element={<Admins />} />
+            <Route path="financeOfficers" element={<FinanceOfficers />} />
             <Route
               path="interestedEnterprenuers"
               element={<InterestedEnterprenuers />}
@@ -325,11 +337,43 @@ function App() {
             />
             <Route path="mentorReports" element={<MentorReports />} />
             <Route path="mentorTracker" element={<MentorTracker />} />
+            <Route path="bdaCoachingSessions" element={<BdaCoachingSessions />} />
+            <Route
+              path="mentorTracker/enterprise-kyc"
+              element={<EnterpriseKyc />}
+            />
+            <Route
+              path="mentorTracker/enterprise-kyc/:enterpriseUuid"
+              element={<EnterpriseKyc />}
+            />
             <Route
               path="mentorTracker/enterprise/:enterpriseUuid"
               element={<EnterpriseTrackerDetails />}
             />
-            <Route path="myMilestones" element={<EntrepreneurMilestones />} />
+            <Route
+              path="myMilestones"
+              element={
+                <ProgramMemberRoute>
+                  <EntrepreneurMilestones />
+                </ProgramMemberRoute>
+              }
+            />
+            <Route
+              path="coachingSessions"
+              element={
+                <ProgramMemberRoute>
+                  <CoachingSessions />
+                </ProgramMemberRoute>
+              }
+            />
+            <Route
+              path="myMilestones/kyc"
+              element={
+                <ProgramMemberRoute>
+                  <EnterpriseKyc audience="entrepreneur" />
+                </ProgramMemberRoute>
+              }
+            />
             <Route
               path="trackerAdminOverview"
               element={<AdminTrackerOverview />}

@@ -25,6 +25,35 @@ export const register = async (data) => {
     return error.response.data;
   }
 };
+
+// Sign up / sign in with Google. Sends the Google ID-token credential
+// (from @react-oauth/google) to the backend, which verifies it, creates
+// the user if needed, and returns auth tokens — same shape as register().
+//
+// Backend endpoint (to be implemented): POST /user/google
+//   body: { credential: <google id_token>, role: <selected role> }
+//   returns: { status, message, tokens, body }  (tokens stored on success)
+export const googleAuth = async ({ credential, role }) => {
+  try {
+    const response = await axios.post(
+      `${server_url}/user/google`,
+      { credential, role },
+      { headers: { "Content-Type": "application/json" } },
+    );
+    if (response.data?.tokens) {
+      storeUser(response.data.tokens);
+    }
+    return response.data;
+  } catch (error) {
+    console.log(error);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Google sign-up failed. Please try again.",
+      }
+    );
+  }
+};
 export const updateUser = async (data, uuid) => {
   try {
     const response = await axios.patch(`${server_url}/user/${uuid}`, data, {
@@ -274,6 +303,26 @@ export const getMentors = async (limit, page, keyword) => {
     console.log(error);
   }
 };
+export const getStaffs = async (limit, page, keyword) => {
+  try {
+    const user = getUser();
+    const response = await axios.get(
+      `${server_url}/user/staffs/?page=${page}&limit=${limit}&keyword=${
+        keyword ?? " "
+      }`,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 export const getUsersWithSharedDocuments = async (limit, page) => {
   try {
     const response = await axios.get(

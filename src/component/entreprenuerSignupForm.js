@@ -70,36 +70,6 @@ const EntrepreneurSignupForm = ({
 
           <div>
             <label className={labelClass}>
-              {t("business.businessEmail", "Business email address")} *
-            </label>
-            <input
-              required
-              name="businessEmail"
-              value={formValues.businessEmail || ""}
-              onChange={(e) => updateFormValue("businessEmail", e.target.value)}
-              className={inputClass}
-              placeholder={t("business.companyEmail", "Company email address")}
-              type="email"
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>
-              {t("business.businessPhone", "Business phone number")} *
-            </label>
-            <input
-              required
-              name="businessPhone"
-              value={formValues.businessPhone || ""}
-              onChange={(e) => updateFormValue("businessPhone", e.target.value)}
-              className={inputClass}
-              placeholder={t("business.companyPhone", "Company phone number")}
-              type="text"
-            />
-          </div>
-
-          <div>
-            <label className={labelClass}>
               {t("business.businessSector", "Business sector")} *
             </label>
             <select
@@ -120,35 +90,6 @@ const EntrepreneurSignupForm = ({
                   {item.name}
                 </option>
               ))}
-            </select>
-          </div>
-
-          <div>
-            <label className={labelClass}>
-              {t("business.businessStage", "Business stage")} *
-            </label>
-            <select
-              required
-              name="stage"
-              value={formValues.stage || ""}
-              onChange={(e) => updateFormValue("stage", e.target.value)}
-              className={inputClass}
-            >
-              <option value="">
-                {t("business.selectBusinessStage", "Select business stage")}
-              </option>
-              <option value="Startup">
-                {t("business.startup", "Startup")}
-              </option>
-              <option value="Growth stage">
-                {t("business.growthStage", "Growth stage")}
-              </option>
-              <option value="Expansion stage">
-                {t("business.expansionStage", "Expansion stage")}
-              </option>
-              <option value="Maturity stage">
-                {t("business.maturityStage", "Maturity stage")}
-              </option>
             </select>
           </div>
 
@@ -200,6 +141,24 @@ const EntrepreneurSignupForm = ({
               <option value="Unguja North">Unguja North</option>
               <option value="Unguja South">Unguja South</option>
             </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>
+              {t("business.businessBio", "Short Business Bio / Profile")} *
+            </label>
+            <textarea
+              required
+              name="businessBio"
+              value={formValues.businessBio || ""}
+              onChange={(e) => updateFormValue("businessBio", e.target.value)}
+              className={`${textareaClass} min-h-[110px]`}
+              placeholder={t(
+                "business.shortBioPlaceholder",
+                "Give a short summary of your business",
+              )}
+              rows="3"
+            />
           </div>
         </div>
       )}

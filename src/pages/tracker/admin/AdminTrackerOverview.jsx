@@ -1,13 +1,71 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
+import { Building2 } from "lucide-react";
 import Loader from "@/components/common/Loader";
 import {
-  downloadAdminTrackerCsv,
   getAdminBusinesses,
   getAdminMilestones,
   getAdminTrackerOverview,
   getAdminWeeklyLogs,
+  listMentorEnterprises,
 } from "@/controllers/trackerController";
+import { getPrograms } from "@/controllers/program_controller";
+
+const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
+
+// Read the selected-startup members out of a program description.
+const parseProgramStartups = (program) => {
+  const text = String(program?.description || "");
+  const idx = text.lastIndexOf(TRACKER_STARTUPS_MARKER);
+  if (idx === -1) return [];
+  const line = text.slice(idx + TRACKER_STARTUPS_MARKER.length).split("\n")[0].trim();
+  try {
+    const value = JSON.parse(line);
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+};
+
+const formatMoney = (value) => `TZS ${Number(value || 0).toLocaleString()}`;
+
+// Per-program financial roll-up from the startups selected into the program.
+// member shape: { grantUsd, disbursed, utilized, overdueReports }
+const programFinancials = (program) => {
+  const members = parseProgramStartups(program);
+  let approved = 0;
+  let disbursed = 0;
+  let utilized = 0;
+  let overdue = 0;
+  members.forEach((m) => {
+    const grant = Number(m?.grantUsd || 0);
+    if (Number.isFinite(grant)) {
+      approved += grant;
+      if (m?.disbursed) disbursed += grant;
+    }
+    const util = Number(m?.utilized || 0);
+    if (Number.isFinite(util)) utilized += util;
+    overdue += Number(m?.overdueReports || 0);
+  });
+  return {
+    startups: members.length,
+    approved,
+    disbursed,
+    utilized,
+    remaining: approved - utilized,
+    undisbursed: approved - disbursed,
+    pendingTranche: Math.max(disbursed - utilized, 0),
+    overdue,
+    risk: overdue > 0 ? "Critical" : "On track",
+  };
+};
+
+const riskPillClass = (risk) => {
+  if (risk === "Critical") return "bg-[#fde0e0] text-[#a11111]";
+  if (risk === "At risk") return "bg-[#fdf1ce] text-[#8a6500]";
+  return "bg-[#e1f0d8] text-[#2d6e1f]";
+};
 
 const getFlagPillClass = (flag) => {
   if (flag === "green") return "bg-[#e1f0d8] text-[#2d6e1f]";
@@ -66,11 +124,48 @@ const AdminTrackerOverview = () => {
   const [milestoneBusinessFilter, setMilestoneBusinessFilter] = useState("");
   const [selectedWeeklyLog, setSelectedWeeklyLog] = useState(null);
   const [selectedMilestone, setSelectedMilestone] = useState(null);
+  const [enterprises, setEnterprises] = useState([]);
+  const [programs, setPrograms] = useState([]);
+
+  const navigate = useNavigate();
 
   const loadOverview = async () => {
     const data = await getAdminTrackerOverview();
     setOverview(data || null);
   };
+
+  const loadEnterprises = async () => {
+    const data = await listMentorEnterprises();
+    setEnterprises(Array.isArray(data) ? data : []);
+  };
+
+  const loadPrograms = async () => {
+    const response = await getPrograms(1, 500);
+    setPrograms(Array.isArray(response?.data) ? response.data : []);
+  };
+
+  // Grant metrics computed from the startups selected into each program.
+  const grantStats = (() => {
+    const beneficiaries = new Set();
+    let totalGrants = 0;
+    let disbursed = 0;
+    programs.forEach((program) => {
+      parseProgramStartups(program).forEach((member) => {
+        if (member?.entreprenuerUuid) beneficiaries.add(member.entreprenuerUuid);
+        const amount = Number(member?.grantUsd || 0);
+        if (Number.isFinite(amount)) {
+          totalGrants += amount;
+          if (member?.disbursed) disbursed += amount;
+        }
+      });
+    });
+    return {
+      beneficiaries: beneficiaries.size,
+      programs: programs.length,
+      totalGrants,
+      disbursed,
+    };
+  })();
 
   const loadBusinesses = async () => {
     const data = await getAdminBusinesses();
@@ -115,12 +210,7 @@ const AdminTrackerOverview = () => {
 
   const load = async () => {
     setLoading(true);
-    await Promise.all([
-      loadOverview(),
-      loadBusinesses(),
-      loadWeeklyLogs(1),
-      loadMilestones(1),
-    ]);
+    await Promise.all([loadOverview(), loadEnterprises(), loadPrograms()]);
     setLoading(false);
   };
 
@@ -128,447 +218,130 @@ const AdminTrackerOverview = () => {
     load();
   }, []);
 
-  const onExportCsv = async () => {
-    try {
-      await downloadAdminTrackerCsv();
-      toast.success("CSV downloaded");
-    } catch (error) {
-      toast.error("Failed to export CSV");
-    }
-  };
-
   if (loading) {
     return <Loader />;
   }
 
   return (
     <div className="space-y-6 px-6 py-6">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-black">
-            Tracker Admin Overview
-          </h1>
-          <p className="text-sm text-black/60">
-            Platform-level mentorship risk and milestone monitoring snapshot.
-          </p>
+      <section
+        className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 100%), url('/images/mentor_hero.svg')",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
+        <div className="relative z-10 flex flex-wrap items-end justify-between gap-4">
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur">
+              <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+              Grant Management
+            </div>
+            <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Grant Management</h1>
+            <p className="mt-3 text-sm leading-7 text-white/85 md:text-base">
+              Programs, beneficiaries, grants, and disbursement snapshot.
+            </p>
+          </div>
         </div>
-        <button
-          onClick={onExportCsv}
-          className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white"
-        >
-          Export CSV
-        </button>
-      </div>
+      </section>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <div className="rounded-lg border border-black/10 bg-white p-4">
-          <div className="text-sm text-black/60">Weekly logs</div>
-          <div className="text-3xl font-semibold">
-            {overview?.totalWeeklyLogs || 0}
-          </div>
+          <div className="text-3xl font-semibold">{grantStats.beneficiaries}</div>
+          <div className="mt-1 text-sm text-black/60">Total beneficiaries</div>
         </div>
         <div className="rounded-lg border border-black/10 bg-white p-4">
-          <div className="text-sm text-black/60">Red flags</div>
-          <div className="text-3xl font-semibold text-red-600">
-            {overview?.redFlags || 0}
-          </div>
+          <div className="text-3xl font-semibold">{grantStats.programs}</div>
+          <div className="mt-1 text-sm text-black/60">Programs</div>
         </div>
         <div className="rounded-lg border border-black/10 bg-white p-4">
-          <div className="text-sm text-black/60">Milestones</div>
-          <div className="text-3xl font-semibold">
-            {overview?.totalMilestones || 0}
+          <div className="text-3xl font-semibold text-[#082d77]">
+            {formatMoney(grantStats.totalGrants)}
           </div>
+          <div className="mt-1 text-sm text-black/60">Total grants</div>
         </div>
         <div className="rounded-lg border border-black/10 bg-white p-4">
-          <div className="text-sm text-black/60">Submitted milestones</div>
-          <div className="text-3xl font-semibold">
-            {overview?.submittedMilestones || 0}
+          <div className="text-3xl font-semibold text-[#2d6e1f]">
+            {formatMoney(grantStats.disbursed)}
           </div>
+          <div className="mt-1 text-sm text-black/60">Amount disbursed</div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-        <div className="rounded-lg border border-black/10 bg-white p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Weekly risk logs</h2>
-            <div className="flex items-center gap-2">
-              <select
-                className="rounded-md border border-black/10 p-2 pr-10 text-sm"
-                value={weeklyBusinessFilter}
-                onChange={(e) => {
-                  setWeeklyBusinessFilter(e.target.value);
-                  loadWeeklyLogs(1, flagFilter, e.target.value);
-                }}
-              >
-                <option value="">All businesses</option>
-                {businesses.map((business) => (
-                  <option key={business.uuid} value={business.uuid}>
-                    {business.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="rounded-md border border-black/10 p-2 pr-10 text-sm"
-                value={flagFilter}
-                onChange={(e) => {
-                  setFlagFilter(e.target.value);
-                  loadWeeklyLogs(1, e.target.value, weeklyBusinessFilter);
-                }}
-              >
-                <option value="">All flags</option>
-                <option value="green">Green</option>
-                <option value="amber">Amber</option>
-                <option value="red">Red</option>
-              </select>
-            </div>
+      <div className="rounded-2xl border border-black/10 bg-white p-5">
+        <div className="mb-4 flex items-center gap-3">
+          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#082d77]/5 text-[#082d77]">
+            <Building2 className="h-5 w-5" />
           </div>
-
-          <div className="space-y-2">
-            {weeklyLogs.length === 0 && (
-              <div className="text-sm text-black/60">No weekly logs found.</div>
-            )}
-            {weeklyLogs.map((item) => (
-              <button
-                type="button"
-                onClick={() => setSelectedWeeklyLog(item)}
-                key={item.uuid}
-                className="w-full rounded border border-black/10 px-3 py-2 text-left transition hover:bg-black/5"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">
-                    {item?.Business?.name || item?.Entreprenuer?.name}
-                  </div>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getFlagPillClass(item.flag)}`}
-                  >
-                    {getFlagLabel(item.flag)}
-                  </span>
-                </div>
-                <div className="text-xs text-black/60">
-                  Mentor: {item?.Mentor?.name} • Week: {item.weekStart}
-                </div>
-                <div className="text-xs text-black/60">
-                  {item.hours}h • {item.touchpoints} touchpoints
-                </div>
-              </button>
-            ))}
-          </div>
-
-          <div className="mt-3 flex items-center justify-between">
-            <button
-              className="rounded border border-black/10 px-3 py-1 text-sm disabled:opacity-40"
-              disabled={weeklyPagination.page <= 1}
-              onClick={() =>
-                loadWeeklyLogs(
-                  weeklyPagination.page - 1,
-                  flagFilter,
-                  weeklyBusinessFilter,
-                )
-              }
-            >
-              Previous
-            </button>
-            <span className="text-xs text-black/60">
-              Page {weeklyPagination.page} / {weeklyPagination.totalPages}
-            </span>
-            <button
-              className="rounded border border-black/10 px-3 py-1 text-sm disabled:opacity-40"
-              disabled={weeklyPagination.page >= weeklyPagination.totalPages}
-              onClick={() =>
-                loadWeeklyLogs(
-                  weeklyPagination.page + 1,
-                  flagFilter,
-                  weeklyBusinessFilter,
-                )
-              }
-            >
-              Next
-            </button>
+          <div>
+            <h2 className="text-lg font-bold text-[#111827]">Program-Level Financial Summary</h2>
+            <p className="text-sm text-black/60">
+              Approved budget, disbursement, utilization, and reporting risk per program.
+            </p>
           </div>
         </div>
 
-        <div className="rounded-lg border border-black/10 bg-white p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <h2 className="text-lg font-semibold">Milestone submissions</h2>
-            <div className="flex items-center gap-2">
-              <select
-                className="rounded-md border border-black/10 p-2 pr-10 text-sm"
-                value={milestoneBusinessFilter}
-                onChange={(e) => {
-                  setMilestoneBusinessFilter(e.target.value);
-                  loadMilestones(1, statusFilter, e.target.value);
-                }}
-              >
-                <option value="">All businesses</option>
-                {businesses.map((business) => (
-                  <option key={business.uuid} value={business.uuid}>
-                    {business.name}
-                  </option>
-                ))}
-              </select>
-              <select
-                className="rounded-md border border-black/10 p-2 pr-10 text-sm"
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  loadMilestones(1, e.target.value, milestoneBusinessFilter);
-                }}
-              >
-                <option value="">All statuses</option>
-                <option value="submitted">Submitted</option>
-                <option value="pending">Pending</option>
-                <option value="in_progress">In progress</option>
-                <option value="completed">Completed</option>
-                <option value="overdue">Overdue</option>
-                <option value="rejected">Rejected</option>
-              </select>
-            </div>
+        {programs.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-black/60">
+            No programs yet.
           </div>
-
-          <div className="space-y-2">
-            {milestones.length === 0 && (
-              <div className="text-sm text-black/60">No milestones found.</div>
-            )}
-            {milestones.map((item) => (
-              <button
-                type="button"
-                onClick={() => setSelectedMilestone(item)}
-                key={item.uuid}
-                className="w-full rounded border border-black/10 px-3 py-2 text-left transition hover:bg-black/5"
-              >
-                <div className="flex items-center justify-between">
-                  <div className="font-medium">{item.title}</div>
-                  <span
-                    className={`rounded-full px-2.5 py-1 text-xs font-semibold ${getMilestonePillClass(item.status)}`}
-                  >
-                    {formatMilestoneStatus(item.status)}
-                  </span>
-                </div>
-                <div className="text-xs text-black/60">
-                  Business: {item?.Business?.name || item?.Entreprenuer?.name} •
-                  Mentor: {item?.Mentor?.name}
-                </div>
-                {item.submissionNotes ? (
-                  <div className="text-xs text-black/70">
-                    Submission: {item.submissionNotes}
-                  </div>
-                ) : null}
-              </button>
-            ))}
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1000px] text-left text-sm">
+              <thead>
+                <tr className="border-b border-black/10 text-xs text-black/50">
+                  <th className="py-3 pr-4 font-semibold">Program</th>
+                  <th className="px-3 py-3 text-right font-semibold">Startups</th>
+                  <th className="px-3 py-3 text-right font-semibold">Approved</th>
+                  <th className="px-3 py-3 text-right font-semibold">Disbursed</th>
+                  <th className="px-3 py-3 text-right font-semibold">Utilized</th>
+                  <th className="px-3 py-3 text-right font-semibold">Balance</th>
+                  <th className="px-3 py-3 text-right font-semibold">Undisbursed</th>
+                  <th className="px-3 py-3 text-right font-semibold">Pending tranches</th>
+                  <th className="px-3 py-3 text-right font-semibold">Overdue reports</th>
+                  <th className="px-3 py-3 text-center font-semibold">Risk</th>
+                </tr>
+              </thead>
+              <tbody>
+                {programs.map((program) => {
+                  const f = programFinancials(program);
+                  return (
+                    <tr key={program.uuid} className="border-b border-black/5 text-[#111827]">
+                      <td className="py-3 pr-4">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(`/dashboard/trackerPrograms/${program.uuid}/details`)
+                          }
+                          className="font-semibold text-[#163b8f] hover:underline"
+                        >
+                          {program.title || "Untitled program"}
+                        </button>
+                      </td>
+                      <td className="px-3 py-3 text-right">{f.startups}</td>
+                      <td className="px-3 py-3 text-right">{f.approved.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-right">{f.disbursed.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-right">{f.utilized.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-right">{f.remaining.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-right">{f.undisbursed.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-right">{f.pendingTranche.toLocaleString()}</td>
+                      <td className="px-3 py-3 text-right">{f.overdue}</td>
+                      <td className="px-3 py-3 text-center">
+                        <span className={`rounded-full px-3 py-1 text-xs font-semibold ${riskPillClass(f.risk)}`}>
+                          {f.risk}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
           </div>
-
-          <div className="mt-3 flex items-center justify-between">
-            <button
-              className="rounded border border-black/10 px-3 py-1 text-sm disabled:opacity-40"
-              disabled={milestonePagination.page <= 1}
-              onClick={() =>
-                loadMilestones(
-                  milestonePagination.page - 1,
-                  statusFilter,
-                  milestoneBusinessFilter,
-                )
-              }
-            >
-              Previous
-            </button>
-            <span className="text-xs text-black/60">
-              Page {milestonePagination.page} / {milestonePagination.totalPages}
-            </span>
-            <button
-              className="rounded border border-black/10 px-3 py-1 text-sm disabled:opacity-40"
-              disabled={
-                milestonePagination.page >= milestonePagination.totalPages
-              }
-              onClick={() =>
-                loadMilestones(
-                  milestonePagination.page + 1,
-                  statusFilter,
-                  milestoneBusinessFilter,
-                )
-              }
-            >
-              Next
-            </button>
-          </div>
-        </div>
+        )}
       </div>
 
-      {selectedWeeklyLog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setSelectedWeeklyLog(null)}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-xl font-semibold text-[#111827]">
-                Weekly Log Details
-              </h3>
-              <button
-                type="button"
-                onClick={() => setSelectedWeeklyLog(null)}
-                className="rounded-md border border-black/10 px-3 py-1 text-sm"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="space-y-2 text-sm text-[#374151]">
-              <div>
-                <span className="font-semibold text-[#111827]">Business:</span>{" "}
-                {selectedWeeklyLog?.Business?.name || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Entrepreneur:
-                </span>{" "}
-                {selectedWeeklyLog?.Entreprenuer?.name || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Mentor:</span>{" "}
-                {selectedWeeklyLog?.Mentor?.name || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Week start:
-                </span>{" "}
-                {formatDateDisplay(selectedWeeklyLog?.weekStart)}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Hours:</span>{" "}
-                {selectedWeeklyLog?.hours ?? "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Touchpoints:
-                </span>{" "}
-                {selectedWeeklyLog?.touchpoints ?? "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Engagement:
-                </span>{" "}
-                {selectedWeeklyLog?.engagement || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Flag:</span>{" "}
-                {getFlagLabel(selectedWeeklyLog?.flag)}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Activities:
-                </span>{" "}
-                {Array.isArray(selectedWeeklyLog?.activities) &&
-                selectedWeeklyLog.activities.length > 0
-                  ? selectedWeeklyLog.activities.join(", ")
-                  : "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Focus:</span>{" "}
-                {selectedWeeklyLog?.focus || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Outcomes:</span>{" "}
-                {selectedWeeklyLog?.outcomes || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Barriers:</span>{" "}
-                {selectedWeeklyLog?.barriers || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Next plan:</span>{" "}
-                {selectedWeeklyLog?.nextPlan || "N/A"}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {selectedMilestone && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
-          onClick={() => setSelectedMilestone(null)}
-        >
-          <div
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-xl bg-white p-5"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-xl font-semibold text-[#111827]">
-                Milestone Details
-              </h3>
-              <button
-                type="button"
-                onClick={() => setSelectedMilestone(null)}
-                className="rounded-md border border-black/10 px-3 py-1 text-sm"
-              >
-                Close
-              </button>
-            </div>
-
-            <div className="space-y-2 text-sm text-[#374151]">
-              <div>
-                <span className="font-semibold text-[#111827]">Title:</span>{" "}
-                {selectedMilestone?.title || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Status:</span>{" "}
-                {formatMilestoneStatus(selectedMilestone?.status)}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Business:</span>{" "}
-                {selectedMilestone?.Business?.name || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Entrepreneur:
-                </span>{" "}
-                {selectedMilestone?.Entreprenuer?.name || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Mentor:</span>{" "}
-                {selectedMilestone?.Mentor?.name || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">Due date:</span>{" "}
-                {formatDateDisplay(selectedMilestone?.dueDate)}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Submitted on:
-                </span>{" "}
-                {formatDateDisplay(selectedMilestone?.submissionDate)}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Description:
-                </span>{" "}
-                {selectedMilestone?.description || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Submission notes:
-                </span>{" "}
-                {selectedMilestone?.submissionNotes || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Review notes:
-                </span>{" "}
-                {selectedMilestone?.mentorReviewNotes || "N/A"}
-              </div>
-              <div>
-                <span className="font-semibold text-[#111827]">
-                  Reviewed at:
-                </span>{" "}
-                {formatDateDisplay(selectedMilestone?.reviewedAt)}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

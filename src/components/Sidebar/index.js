@@ -7,6 +7,23 @@ import { UserContext } from "@/layouts/DashboardLayout";
 import { useTranslation } from "@/locales";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import { getAvailableDomains } from "@/controllers/crat_controller";
+import { getPrograms } from "@/controllers/program_controller";
+
+const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
+
+// Entrepreneur uuids selected into a program by the Finance Officer.
+const parseProgramStartups = (program) => {
+  const text = String(program?.description || "");
+  const idx = text.lastIndexOf(TRACKER_STARTUPS_MARKER);
+  if (idx === -1) return [];
+  const line = text.slice(idx + TRACKER_STARTUPS_MARKER.length).split("\n")[0].trim();
+  try {
+    const value = JSON.parse(line);
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+};
 
 // Icons
 import {
@@ -30,7 +47,7 @@ import {
 } from "react-icons/ri";
 import { BsCalendar3, BsCardChecklist } from "react-icons/bs";
 import { BiMessageDetail } from "react-icons/bi";
-import { IoDocumentTextOutline } from "react-icons/io5";
+import { IoDocumentTextOutline, IoSettingsOutline } from "react-icons/io5";
 import { logout } from "@/utils/local_storage";
 
 const Sidebar = ({
@@ -64,6 +81,33 @@ const Sidebar = ({
 
   const [isHovered, setIsHovered] = useState(false);
   const [availableDomains, setAvailableDomains] = useState([]);
+  const [inProgram, setInProgram] = useState(false);
+
+  // Only entrepreneurs selected into a program (by the Finance Officer) get the
+  // Enterprise Growth Dashboard.
+  useEffect(() => {
+    if (userDetails?.role !== "Enterprenuer" || !userDetails?.uuid) {
+      setInProgram(false);
+      return;
+    }
+    let isMounted = true;
+    getPrograms(1, 500)
+      .then((response) => {
+        const programs = Array.isArray(response?.data) ? response.data : [];
+        const member = programs.some((program) =>
+          parseProgramStartups(program).some(
+            (m) => m?.entreprenuerUuid === userDetails.uuid,
+          ),
+        );
+        if (isMounted) setInProgram(member);
+      })
+      .catch(() => {
+        if (isMounted) setInProgram(false);
+      });
+    return () => {
+      isMounted = false;
+    };
+  }, [userDetails?.role, userDetails?.uuid]);
 
   useEffect(() => {
     if (userDetails?.role !== "Enterprenuer") {
@@ -182,6 +226,10 @@ const Sidebar = ({
             path: "/dashboard/reviewers",
           },
           {
+            name: t("navigation.financeOfficers", "Finance Officers"),
+            path: "/dashboard/financeOfficers",
+          },
+          {
             name: t("navigation.admins", "Admins"),
             path: "/dashboard/admins",
           },
@@ -233,7 +281,7 @@ const Sidebar = ({
       });
     }
 
-    if (["Investor", "Enterprenuer", "Staff"].includes(role)) {
+    if (["Investor", "Enterprenuer", "Staff", "Reviewer", "Finance"].includes(role)) {
       peopleItems.push({
         name: t("navigation.startups", "Startups"),
         path: "/dashboard/enterprenuers",
@@ -241,7 +289,7 @@ const Sidebar = ({
       });
     }
 
-    if (["Staff"].includes(role)) {
+    if (["Staff", "Reviewer", "Finance"].includes(role)) {
       peopleItems.push({
         name: t("navigation.investors", "Investors"),
         path: "/dashboard/investors",
@@ -287,41 +335,63 @@ const Sidebar = ({
             path: "/dashboard/mentorshipRequests",
             icon: <FaHandshake className="text-xl" />,
           },
+        ],
+      });
+    }
+
+    // Displayed "Staff" users are stored with role "Reviewer" (see SignUp),
+    // so the BDA tracker must be available to both role values.
+    if (["Staff", "Reviewer"].includes(role)) {
+      categories.push({
+        id: "staffTracking",
+        title: t("navigation.tracking", "Portfolio Support"),
+        items: [
           {
-            name: t("navigation.mentorTracker", "Mentor Tracker"),
+            name: t("navigation.staffTracker", "Grant Management"),
             path: "/dashboard/mentorTracker",
+            icon: <BsCalendar3 className="text-xl" />,
+          },
+          {
+            name: t("navigation.coachingSessions", "Coaching Sessions"),
+            path: "/dashboard/bdaCoachingSessions",
             icon: <BsCalendar3 className="text-xl" />,
           },
         ],
       });
     }
 
-    if (["Enterprenuer"].includes(role)) {
+    if (["Enterprenuer"].includes(role) && inProgram) {
       categories.push({
         id: "milestones",
-        title: t("navigation.myMilestones", "My Milestones"),
+        title: t("navigation.enterpriseGrowth", "Enterprise Growth"),
         items: [
           {
-            name: t("navigation.myMilestones", "My Milestones"),
+            name: t("navigation.grantManagement", "Grant Management"),
             path: "/dashboard/myMilestones",
             icon: <FaWpforms className="text-xl" />,
+          },
+          {
+            name: t("navigation.coachingSessions", "Coaching Sessions"),
+            path: "/dashboard/coachingSessions",
+            icon: <BsCalendar3 className="text-xl" />,
           },
         ],
       });
     }
 
-    if (["Admin"].includes(role)) {
+    // Grant management moved from Admin to the Finance team (Finance Officer).
+    if (["Finance"].includes(role)) {
       categories.push({
         id: "trackerAdmin",
-        title: t("navigation.trackerOverview", "Tracker Overview"),
+        title: t("navigation.trackerOverview", "Grant Management"),
         items: [
           {
-            name: t("navigation.trackerOverview", "Tracker Overview"),
+            name: t("navigation.trackerOverview", "Grant Management"),
             path: "/dashboard/trackerAdminOverview",
             icon: <BsCalendar3 className="text-xl" />,
           },
           {
-            name: t("navigation.programs", "Programs"),
+            name: t("navigation.programsManagement", "Programs Management"),
             path: "/dashboard/trackerPrograms",
             icon: <MdBusinessCenter className="text-xl" />,
           },
@@ -501,7 +571,7 @@ const Sidebar = ({
       });
     }
 
-    if (["Staff"].includes(role)) {
+    if (["Staff", "Reviewer"].includes(role)) {
       programsItems.push({
         name: t("navigation.cratReviews", "My CRAT Assignments"),
         path: "/dashboard/cratReviews",
@@ -529,7 +599,7 @@ const Sidebar = ({
       });
     }
 
-    if (["Admin", "Enterprenuer", "Staff", "Mentor"].includes(role)) {
+    if (["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)) {
       programsItems.push({
         name: t("navigation.learnAndGrow", "Learn & Grow"),
         icon: <IoDocumentTextOutline className="text-xl" />,
@@ -550,7 +620,7 @@ const Sidebar = ({
       });
     }
 
-    if (["Admin", "Enterprenuer", "Staff", "Mentor"].includes(role)) {
+    if (["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)) {
       programsItems.push({
         name: t("navigation.successStories", "Success Stories"),
         path: "/dashboard/successStories",
@@ -567,7 +637,7 @@ const Sidebar = ({
     }
 
     if (
-      ["Enterprenuer", "Investor", "Staff", "Mentor", "Admin"].includes(role)
+      ["Enterprenuer", "Investor", "Staff", "Mentor", "Admin", "Reviewer", "Finance"].includes(role)
     ) {
       categories.push({
         id: "communication",
@@ -810,6 +880,23 @@ const Sidebar = ({
       </div>
 
       <div className="mt-auto border-t border-slate-700/50 p-4">
+        {/* Settings (edit profile / account) for every user except Finance
+            Officers, who do not edit a profile. */}
+        {userDetails?.role !== "Finance" && (
+          <Link
+            href="/dashboard/edit-profile"
+            className={`mb-1 flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white ${
+              pathname === "/dashboard/edit-profile" &&
+              "bg-slate-700/50 text-white"
+            }`}
+          >
+            <IoSettingsOutline className="text-xl" />
+            {isVisuallyExpanded && (
+              <span>{t("account.settings", "Settings")}</span>
+            )}
+          </Link>
+        )}
+
         <button
           className="flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white"
           onClick={() => {

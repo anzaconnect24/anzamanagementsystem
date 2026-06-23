@@ -70,6 +70,33 @@ export const getMentorWeeklyLogs = async (page = 1, limit = 10) => {
   }
 };
 
+// Staff/BDA tracker reads. The backend has no /tracker/staff routes yet, so
+// these reuse the working mentor-scoped endpoints (the logged-in BDA is the owner).
+export const getStaffWeeklyLogs = async (page = 1, limit = 10) => {
+  try {
+    const response = await axios.get(
+      `${server_url}/tracker/mentor/weekly-logs?page=${page}&limit=${limit}`,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    return error.response;
+  }
+};
+
+export const getStaffOverview = async () => {
+  try {
+    const response = await axios.get(`${server_url}/tracker/mentor/overview`, {
+      headers: authHeaders(),
+    });
+    return response.data.body;
+  } catch (error) {
+    return error.response;
+  }
+};
+
 export const createMentorWeeklyLog = async (data) => {
   try {
     const response = await axios.post(
@@ -115,6 +142,22 @@ export const updateMentorEnterprise = async (uuid, data) => {
   try {
     const response = await axios.patch(
       `${server_url}/tracker/enterprises/${uuid}`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
+// Entrepreneur self-service KYC update for their own enterprise.
+export const updateEntrepreneurEnterpriseKyc = async (data) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/tracker/entrepreneur/enterprise`,
       data,
       {
         headers: authHeaders(),

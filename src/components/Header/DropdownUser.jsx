@@ -96,13 +96,10 @@ const DropdownUser = () => {
         }`}
       >
         <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
+          {userDetails?.role !== "Finance" && (
           <li>
             <Link
-              href={`${
-                userDetails?.role === "Enterprenuer"
-                  ? "/dashboard/entreprenuer-profile"
-                  : "/dashboard/profile"
-              }`}
+              href="/dashboard/edit-profile"
               className="flex items-center gap-3.5 text-sm font-medium duration-300 ease-in-out hover:text-primary lg:text-base"
             >
               <svg
@@ -122,9 +119,10 @@ const DropdownUser = () => {
                   fill=""
                 />
               </svg>
-              {t("account.myProfile", "My Profile")}
+              {t("account.settings", "Settings")}
             </Link>
           </li>
+          )}
         </ul>
         <button
           onClick={() => {

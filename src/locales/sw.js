@@ -3,6 +3,9 @@ export const sw = {
   // Maneno ya kawaida
   common: {
     dashboard: "Dashibodi",
+    startups: "Biashara Changa",
+    of: "kati ya",
+    remaining: "iliyobaki",
     users: "Jamii Hub",
     entrepreneurs: "Wajasiriamali",
     investors: "Wawekezaji",
@@ -124,6 +127,9 @@ export const sw = {
   // Lebo za usajili wa mshauri (Mentor)
   mentor: {
     linkedinProfile: "Wasifu wa LinkedIn",
+    startupReport: "Ripoti ya Biashara",
+    viewStartupReport: "Tazama ripoti ya biashara",
+    startupName: "Jina la Biashara",
     linkedinUrlPlaceholder: "Anwani ya URL ya wasifu wako wa LinkedIn",
     organisationName: "Jina la Shirika/Kampuni",
     organisationNamePlaceholder: "Jina la shirika lako",
@@ -225,8 +231,17 @@ export const sw = {
     rejectedApplications: "Maombi Yaliyokataliwa",
     mentorshipRequests: "Maombi ya Ulezi",
     mentorTracker: "Kifuatiliaji cha Ushauri",
-    myMilestones: "Hatua Zangu",
-    trackerOverview: "Muhtasari wa Kifuatiliaji",
+    myMilestones: "Ukuaji wa Biashara",
+    trackerOverview: "Usimamizi wa Ruzuku",
+    tracking: "Usaidizi wa Biashara",
+    staffTracker: "Usimamizi wa Ruzuku",
+    enterpriseGrowth: "Ukuaji wa Biashara",
+    grantManagement: "Usimamizi wa Ruzuku",
+    coachingSessions: "Vipindi vya Ukocha",
+    startups: "Biashara Changa",
+    mentorshipApplications: "Maombi ya Ushauri",
+    interestedStartups: "Biashara Zilizovutiwa",
+    businessTools: "Zana za Biashara",
 
     assignments: "Majukumu",
     investmentRequestsAssignments: "Majukumu ya Uwekezaji",
@@ -287,6 +302,8 @@ export const sw = {
   // Authentication
   auth: {
     signIn: "Ingia",
+    accountCreatedSuccessfully: "Akaunti imeundwa kwa mafanikio",
+    createYourAccount: "Fungua akaunti yako",
     signUp: "Jisajili",
     signOut: "Toka",
     logout: "Toka",
@@ -370,6 +387,7 @@ export const sw = {
   // Role labels
   roles: {
     staff: "Mfanyakazi",
+    startup: "Biashara Changa",
     entrepreneur: "Mjasiriamali",
     investor: "Mwekezaji",
     mentor: "Mshauri wa Biashara",
@@ -567,7 +585,6 @@ export const sw = {
 
     // Table headings for business applications
     sent: "Imetumwa",
-    businessName: "Jina la biashara",
     phone: "Simu",
     email: "Barua pepe",
     more: "Zaidi",
@@ -607,7 +624,6 @@ export const sw = {
     website: "Tovuti",
     socialMedia: "Mitandao ya Kijamii",
     visitWebsite: "Tembelea Tovuti",
-    cratAttachments: "Viambatanisho vya Crat",
 
     seekingInvestmentYes: "Anatafuta uwekezaji kwa sasa",
     seekingInvestmentNo: "Hatafuti uwekezaji kwa sasa",
@@ -616,12 +632,14 @@ export const sw = {
 
     actions: {
       approveEntrepreneur: "Kubali Mjasiriamali",
+      approveStartup: "Idhinisha Biashara",
     },
     success: {
       approved: "Imekubaliwa kwa mafanikio",
     },
     errors: {
       dataNotLoaded: "Taarifa za biashara hazijapakiwa bado",
+      failedToLoadData: "Imeshindikana kupakia data ya biashara",
     },
 
     labels: {
@@ -729,10 +747,6 @@ export const sw = {
     viewFullDetails: "Tazama maelezo kamili",
     downloadApplication: "Pakua ombi",
     moreOptions: "Chaguo Zaidi",
-
-    errors: {
-      failedToLoadData: "Imeshindikana kupakia data ya biashara",
-    },
   },
 
   // Investment Opportunities
@@ -749,7 +763,7 @@ export const sw = {
     describeTheInvestmentOpportunity: "Eleza fursa ya uwekezaji",
     detailsURL: "Kiungo cha Maelezo",
     detailsURLOptional: "Kiungo cha Maelezo (Hiari)",
-    linkToExternalPage: "Kiungo cha ukurasa wa nje wenye maelezo zaidi",
+    linkToExternalPage: "Kiungo cha ukurasa wa nje wenye maelezo zaidi kuhusu fursa hii",
     expireDate: "Tarehe ya Kumalizika",
     expireDateOptional: "Tarehe ya kumalizika (Hiari)",
     whenThisOpportunityExpires: "Wakati fursa hii itaisha na isiwepo tena",
@@ -794,20 +808,14 @@ export const sw = {
     detailsUrl: "Kiungo cha Maelezo",
     optional: "Hiari",
     urlPlaceholder: "https://mfano.com/maelezo-ya-fursa",
-    linkToExternalPage:
-      "Kiungo cha ukurasa wa nje wenye maelezo zaidi kuhusu fursa hii",
     opportunityExpireInfo: "Wakati fursa hii itaisha na isiwepo tena",
     image: "Picha",
     opportunity: "Fursa",
-    removeImage: "Ondoa Picha",
     uploading: "Inapakia...",
-    clickToUploadImage: "Bonyeza kupakia picha",
     imageFileTypes: "PNG, JPG, GIF hadi MB 5",
     cancel: "Ghairi",
     updating: "Inasasisha...",
-    updateOpportunity: "Sasisha Fursa",
     describeOpportunity: "Eleza fursa ya uwekezaji",
-    enterOpportunityTitle: "Weka kichwa cha fursa",
     additionalInfo:
       "Ni taarifa gani za ziada unataka kutoka kwa mjasiriamali au biashara?",
     writeAdditionalInfo: "Andika taarifa za ziada hapa",
@@ -837,7 +845,6 @@ export const sw = {
     amount: "Kiasi",
     type: "Aina",
     investmentAmount: "Kiasi cha Uwekezaji",
-    investmentType: "Aina ya Uwekezaji",
     viewDetails: "Tazama Maelezo",
     editOpportunity: "Hariri Fursa",
     deleting: "Inafuta...",
@@ -855,7 +862,6 @@ export const sw = {
     investmentTypeIsRequired: "Aina ya uwekezaji inahitajika",
     pleaseEnterValidAmount: "Tafadhali weka kiasi sahihi",
     enterInvestmentAmount: "Weka kiasi cha uwekezaji",
-    selectInvestmentType: "Chagua aina ya uwekezaji",
     creating: "Inaunda...",
     failedToUploadImage: "Imeshindwa kupakia picha",
 
@@ -892,6 +898,9 @@ export const sw = {
   // Programs
   programs: {
     programs: "Programu",
+    enterExpireDate: "Weka tarehe ya mwisho",
+    more: "Zaidi",
+    viewDetails: "Tazama Maelezo",
     newProgram: "Programu Mpya",
     editProgram: "Hariri Programu",
     addNewProgram: "Ongeza Programu Mpya",
@@ -951,11 +960,49 @@ export const sw = {
     cancel: "Ghairi",
     createNewProgramDescription:
       "Unda programu mpya ya kushiriki na washiriki.",
+    businessFoundationAcceleratorPrograms:
+      "Programu za Kuongeza Msingi wa Biashara",
+    investmentReadinessAcceleratorPrograms:
+      "Programu za Kuongeza Uwezo wa Uwekezaji",
+    add: "Ongeza",
+    created: "Imeundwa",
+    applicationStatus: "Hali ya maombi",
+    applyNow: "Tuma Ombi Sasa",
+    applicationDeadline: "Mwisho wa Kutuma Maombi",
+    programDuration: "Muda wa Programu",
+    eligibilityCriteria: "Vigezo vya Ustahiki",
+    requirements: "Mahitaji",
+    benefits: "Faida",
+    applicationProcess: "Mchakato wa Maombi",
+    contactInformation: "Taarifa za Mawasiliano",
+    programFee: "Ada ya Programu",
+    scholarshipAvailable: "Ufadhili Unapatikana",
+    applicationOpen: "Maombi Yamefunguliwa",
+    applicationClosed: "Maombi Yamefungwa",
+    comingSoon: "Inakuja Hivi Karibuni",
+    enrolled: "Amejiandikisha",
+    completed: "Imekamilika",
+    inProgress: "Inaendelea",
+    dropped: "Imeacha",
+    applied: "Ametuma",
+    notApplied: "Hajawasilisha",
+    options: "Chaguo",
+    programDetails: "Maelezo ya Mpango",
+    myApplication: "Ombi Langu",
+    programUpdates: "Marekebisho ya Programu",
+    pendingApplications: "Maombi Yanayosubiri",
+    acceptedApplications: "Maombi Yalikubaliwa",
+    rejectedApplications: "Maombi Yalikokataliwa",
   },
 
   // Users and Profiles
   users: {
     welcome: "Karibu",
+    startup: "Biashara Changa",
+    searchStartups: "Tafuta biashara changa...",
+    noStartupsFound: "Hakuna biashara changa zilizopatikana",
+    phone: "Simu",
+    admins: "Wasimamizi",
     user: "Mtumiaji",
     mentors: "Washauri wa Biashara",
     filtered: "(imechujwa)",
@@ -2091,6 +2138,22 @@ export const sw = {
   // Dashboard
   dashboard: {
     completeProfile: "Tafadhali kamilisha wasifu wako",
+    totalStartups: "Jumla ya Biashara Changa",
+    totalStartupsShort: "Jumla ya Biashara",
+    totalStartupsLabel: "Jumla ya Biashara Changa",
+    startupsSupported: "Biashara Zilizosaidiwa",
+    interestedStartups: "Biashara Zilizovutiwa",
+    startup: "Biashara Changa",
+    startupDistribution: "Mgawanyo wa Biashara Changa",
+    regionalStartupDistribution: "Mgawanyo wa kimkoa wa biashara changa nchini Tanzania",
+    loadingStartupData: "Inapakia data ya biashara changa...",
+    noStartupDataFound: "Hakuna Data ya Biashara Changa Iliyopatikana",
+    noStartupsRegistered:
+      "Kwa sasa hakuna biashara changa zilizosajiliwa katika mfumo zenye data ya eneo.",
+    viewAllStartups: "Tazama Biashara Changa Zote",
+    startupsInRegion: "Biashara changa katika {{region}}",
+    startupsLower: "biashara changa",
+    failedToLoadStartupData: "Imeshindwa kupakia data ya biashara changa",
     completeProfileButton: "Kamilisha wasifu",
     totalEntrepreneurs: "Jumla ya Wajasiriamali",
     totalInvestors: "Jumla ya Wawekezaji",
@@ -2136,7 +2199,6 @@ export const sw = {
     entrepreneurDistribution: "Mgawanyiko wa wajasiriamali",
     regionalEntrepreneurDistribution:
       "Mgawanyiko wa kikanda wa wajasiriamali Tanzania",
-    totalEntrepreneursLabel: "Jumla ya Wajasiriamali",
     loadingEntrepreneurData: "Inapakia data ya wajasiriamali...",
     errorLoadingData: "Hitilafu Kupakia Data",
     mapComponentsUnavailable: "Vipengele vya ramani havipatikani",
@@ -2168,6 +2230,7 @@ export const sw = {
   account: {
     accountInformation: "Taarifa za Akaunti",
     myProfile: "Wasifu Wangu",
+    settings: "Mipangilio",
     nameLabel: "Jina",
     emailAddressLabel: "Anwani ya Barua pepe",
     phoneNumberLabel: "Namba ya Simu",
@@ -2192,6 +2255,7 @@ export const sw = {
   // Authentication (legacy - kept to avoid key loss; do not override main auth)
   authLegacy: {
     signIn: "Ingia",
+    passwordHint: "Herufi 6+, herufi 1 kubwa",
     signUp: "Jisajili",
     logout: "Toka",
     signInToContinue: "Ingia kuendelea",
@@ -2225,6 +2289,11 @@ export const sw = {
   // Mentorship
   mentorship: {
     mentorshipRequests: "Maombi ya Ulezi",
+    startup: "Biashara Changa",
+    mentorStartups: "Biashara za Mshauri",
+    requestSent: "Ombi limetumwa kwa mafanikio",
+    requesting: "Inatuma...",
+    requestToBeMentor: "Omba kuwa mshauri",
     searchHere: "Tafuta hapa",
     assigned: "Imetengewa",
     entrepreneur: "Mjasiriamali",
@@ -2287,49 +2356,11 @@ export const sw = {
       "Inawasha usimbaji fiche kutoka mwisho hadi mwisho. Tafadhali subiri...",
     userProfile: "Wasifu wa mtumiaji",
     userAvatar: "Picha ya mtumiaji",
+    enterMessage: "Andika ujumbe hapa...",
+    send: "Tuma",
   },
 
-  // Programs
-  programs: {
-    businessFoundationAcceleratorPrograms:
-      "Programu za Kuongeza Msingi wa Biashara",
-    investmentReadinessAcceleratorPrograms:
-      "Programu za Kuongeza Uwezo wa Uwekezaji",
-    consultancePrograms: "Programu za Ushauri",
-    add: "Ongeza",
-    created: "Imeundwa",
-    programTitle: "Kichwa cha programu",
-    applicationStatus: "Hali ya maombi",
-    more: "Zaidi",
-    viewDetails: "Tazama Maelezo",
-    applyNow: "Tuma Ombi Sasa",
-    applicationDeadline: "Mwisho wa Kutuma Maombi",
-    programDuration: "Muda wa Programu",
-    eligibilityCriteria: "Vigezo vya Ustahiki",
-    programDescription: "Maelezo ya Programu",
-    requirements: "Mahitaji",
-    benefits: "Faida",
-    applicationProcess: "Mchakato wa Maombi",
-    contactInformation: "Taarifa za Mawasiliano",
-    programFee: "Ada ya Programu",
-    scholarshipAvailable: "Ufadhili Unapatikana",
-    applicationOpen: "Maombi Yamefunguliwa",
-    applicationClosed: "Maombi Yamefungwa",
-    comingSoon: "Inakuja Hivi Karibuni",
-    enrolled: "Amejiandikisha",
-    completed: "Imekamilika",
-    inProgress: "Inaendelea",
-    dropped: "Imeacha",
-    applied: "Ametuma",
-    notApplied: "Hajawasilisha",
-    options: "Chaguo",
-    programDetails: "Maelezo ya Mpango",
-    myApplication: "Ombi Langu",
-    programUpdates: "Marekebisho ya Programu",
-    pendingApplications: "Maombi Yanayosubiri",
-    acceptedApplications: "Maombi Yalikubaliwa",
-    rejectedApplications: "Maombi Yalikokataliwa",
-  },
+
 
   // CRAT System
   cratSystem: {
@@ -2375,7 +2406,6 @@ export const sw = {
     deletedSuccessfully: "Hadithi imefutwa kwa mafanikio",
     failedToDelete: "Imeshindikana kufuta hadithi",
     errorDeleting: "Hitilafu kufuta hadithi",
-    failedToFetch: "Imeshindikana kupata shuhuda mbalimbali",
     story: "Hadithi",
     published: "Imechapishwa",
     watchOnYouTube: "Tazama kwenye YouTube",
@@ -2489,6 +2519,14 @@ export const sw = {
   // Learn and Grow
   learnAndGrow: {
     generalResources: "Maarifa ya Jumla",
+    businessTools: "Zana za Biashara",
+    newModule: "Moduli mpya",
+    addNewCourseModule: "Ongeza moduli mpya ya {{course}}",
+    title: "Kichwa",
+    enterModuleTitle: "Weka kichwa cha moduli",
+    moduleCoverImage: "Picha ya jalada la moduli",
+    description: "Maelezo",
+    enterModuleDescription: "Weka maelezo ya moduli",
     classRooms: "Mafunzo Maalum",
     financeAndFundraising: "Fedha na Uchangishaji",
     marketingAndSales: "Masoko na Uuzaji",
@@ -2529,14 +2567,12 @@ export const sw = {
     deleteResourceConfirm:
       "Futa rasilimali hii? Hatua hii haiwezi kubatilishwa.",
     resourceDeleted: "Rasilimali imefutwa",
-    failedToDelete: "Imeshindwa kufuta rasilimali",
+    failedToDelete: "Imeshindikana kufuta rasilimali",
     noResourcesFound: "Hakuna Rasilimali Zilizopatikana",
     noMaterialsUploaded: "Hakuna nyenzo zimepakia katika kategoria hii bado.",
     addFirstMaterial: "Ongeza Nyenzo ya Kwanza",
     noDescriptionAvailable: "Hakuna maelezo yanapatikana",
     openResource: "Fungua Rasilimali",
-    resourceDeleted: "Rasilimali imefutwa",
-    failedToDelete: "Imeshindikana kufuta rasilimali",
     classRoomsWelcome:
       "Fuatilia maendeleo yako, pata kozi maalum, na kukuza biashara yako hatua kwa hatua. Iwe unaanza tu na wazo au unakuza biashara yako kwa uongozi, jukwaa hili limeundwa kukuongoza kupitia kila hatua ya safari yako ya ujasiriamali. Fuatilia alama za kujifunza, jiandikishe kwenye madarasa yanayolingana na hatua ya biashara yako, na fungua zana za vitendo, maarifa ya wataalamu, na fursa za ulezi. Kwa kila moduli unayomaliza, utajenga misingi imara zaidi kuimarisha mkakati wako, na kusonga karibu na kufikia malengo yako ya biashara. Hebu tukue—hatua moja kwa wakati.",
     availableClasses: "Mafunzo Maalum yanayopatikana",
@@ -2672,6 +2708,8 @@ export const sw = {
   // AI Analysis
   ai: {
     preparing: "Inaandaa uchambuzi wa AI...",
+    startup: "Biashara Changa",
+    evaluatingStartup: "Inatathmini: {{name}}",
     cratLoaded: "Data ya tathmini ya CRAT imepakia",
     profilePrepared: "Uchambuzi wa wasifu wa biashara umeandaliwa",
     analyzing: "Inachambua...",
@@ -2810,7 +2848,6 @@ export const sw = {
     aiInvestmentAnalysis: "Uchambuzi wa Uwekezaji wa AI",
     generateProfessionalBriefing:
       "Tengeneza mjadala wa kitaalamu wa utendaji unaoendeshwa na uchambuzi wa hali ya juu wa AI wa tathmini yako ya biashara.",
-    generateExecutiveBriefing: "Tengeneza Mjadala wa Utendaji",
     generateCompleteAnalysisRisk:
       "Tengeneza uchambuzi kamili kuona tathmini ya kina ya hatari",
     growthScore: "Alama ya Ukuaji",
@@ -2964,15 +3001,10 @@ export const sw = {
     newMessage: "Una ujumbe mpya",
   },
 
-  // Ujumbe Mfupi (Chat)
-  chat: {
-    chatPage: "Ukurasa wa ujumbe mfupi",
-    enterMessage: "Andika ujumbe hapa...",
-    send: "Tuma",
-  },
-
   // Mitihani (Quizzes)
   quizzes: {
+    startup: "Biashara Changa",
+    pendingReview: "Mtihani wako unapitiwa",
     // Ukurasa wa Mitihani ya Moduli
     moduleQuizzes: "Majaribio ya Moduli",
     backToModule: "Rudi kwenye Moduli",
@@ -2991,7 +3023,6 @@ export const sw = {
     failedToUpdateQuiz: "Imeshindwa kusasisha mtihani",
 
     // Kadi za Mtihani
-    questions: "maswali",
     passingScore: "Alama ya Kupita",
     notAttempted: "Haujajaribiwa",
     passed: "Umepita",
@@ -3034,18 +3065,15 @@ export const sw = {
     quizCreated: "Mtihani umetengenezwa",
     quizUpdated: "Mtihani umesasishwa",
     failedToCreateQuiz: "Imeshindwa kutengeneza mtihani",
-    failedToUpdateQuiz: "Imeshindwa kusasisha mtihani",
     pleaseAddTitle: "Tafadhali ongeza kichwa cha mtihani",
     pleaseAddQuestions: "Tafadhali ongeza angalau swali moja",
 
     // Ukurasa wa Kuchukua Mtihani
-    backToQuizzes: "Rudi kwenye Mitihani",
     totalQuestions: "Jumla ya Maswali",
     progress: "Maendeleo",
     answered: "imejibiwa",
     question: "Swali",
     point: "alama",
-    points: "alama",
     selectAnswer: "Chagua jibu",
     yourAnswer: "Jibu lako",
     submitQuiz: "Tuma Mtihani",
@@ -3065,22 +3093,17 @@ export const sw = {
     status: "Hali",
     congratulations: "Hongera! Umepita!",
     tryAgain: "Hukupita wakati huu. Endelea kujifunza!",
-    pendingReview: "Mtihani wako unapitiwa",
     reviewMessage:
       "Majibu yako yanapitiwa na mwalimu. Utajulishwa baada ya alama kutolewa.",
     attemptedOn: "Imejaribiwa tarehe",
     gradedBy: "Alama zimetolewa na",
     gradedOn: "Alama zimetolewa tarehe",
     questionReview: "Mapitio ya Maswali",
-    yourAnswer: "Jibu lako",
-    correctAnswer: "Jibu Sahihi",
     instructorFeedback: "Maoni ya Mwalimu",
     noFeedback: "Hakuna maoni yaliyotolewa",
     correct: "Sahihi",
     incorrect: "Si sahihi",
     downloadCertificate: "Pakua Cheti",
-    retakeQuiz: "Rudia Mtihani",
-    backToQuizzes: "Rudi kwenye Mitihani",
 
     // Ukurasa wa Majaribio ya Msimamizi
     allQuizAttempts: "Majaribio Yote ya Mitihani",
@@ -3098,10 +3121,8 @@ export const sw = {
     // Ukurasa wa Majaribio ya Mtumiaji
     myQuizAttempts: "Majaribio Yangu ya Mitihani",
     filterByQuiz: "Chuja kwa Mtihani",
-    allQuizzes: "Mitihani Yote",
 
     // Ukurasa wa Mitihani Inayosubiri
-    pendingGrading: "Inasubiri Alama",
     quizzesAwaitingGrading: "Mitihani Inayosubiri Alama",
     noPendingQuizzes: "Hakuna mitihani inayosubiri alama",
     grade: "Toa Alama",

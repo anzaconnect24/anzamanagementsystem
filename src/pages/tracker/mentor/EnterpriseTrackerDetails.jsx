@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import {
@@ -11,6 +11,94 @@ import {
   updateMentorEnterpriseTrancheStages,
   updateMentorEnterpriseKpis,
 } from "@/controllers/trackerController";
+import {
+  UploadCloud,
+  Building2,
+  BarChart3,
+  Flag,
+  CalendarDays,
+  Layers,
+  FileText,
+  ShieldCheck,
+} from "lucide-react";
+import {
+  PLAN_STATUS,
+  parseKpiPlan,
+  planStatusLabel,
+  planStatusPill,
+  canReviewPlan,
+  VERIFICATION_OPTIONS,
+  verificationLabel,
+  verificationPill,
+} from "@/utils/trancheWorkflow";
+
+const HERO_IMAGE_URL = "/images/mentor_hero.svg";
+
+const baseInputClass =
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77] focus:ring-4 focus:ring-[#082d77]/20 disabled:bg-slate-50 disabled:text-slate-400";
+
+const formatCurrency = (value, currency = "USD") => {
+  const amount = Number(value || 0);
+  if (!Number.isFinite(amount)) return `${currency} 0`;
+  return `${currency} ${amount.toLocaleString()}`;
+};
+
+const getBusinessRiskLabel = (flag) => {
+  if (flag === "red") return "Critical";
+  if (flag === "amber") return "Medium";
+  return "Low";
+};
+
+const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
+  <section className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}>
+    {(title || subtitle || action || icon) && (
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          {icon && (
+            <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#082d77]/5 text-[#082d77]">
+              {icon}
+            </div>
+          )}
+          <div>
+            {title && <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>}
+            {subtitle && <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>}
+          </div>
+        </div>
+        {action}
+      </div>
+    )}
+    <div className={title || subtitle || action || icon ? "mt-6" : ""}>{children}</div>
+  </section>
+);
+
+const FieldLabel = ({ children }) => (
+  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">
+    {children}
+  </label>
+);
+
+const DataTile = ({ label, value, helper }) => (
+  <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
+    <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
+    <p className="mt-1 text-base font-black text-slate-950">{value}</p>
+    {helper && <p className="mt-1 text-xs text-slate-500">{helper}</p>}
+  </div>
+);
+
+const StatusText = ({ children }) => (
+  <span className="text-sm font-semibold text-slate-700">{children}</span>
+);
+
+const modalOverlayClass =
+  "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm";
+const modalCardClass =
+  "max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white shadow-2xl shadow-slate-950/20";
+const modalHeaderClass =
+  "sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5";
+const modalCancelClass =
+  "rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50";
+const modalSubmitClass =
+  "rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-60";
 
 const FLAG_OPTIONS = [
   { value: "green", label: "Green - on track" },
@@ -30,13 +118,6 @@ const ACTIVITY_OPTIONS = [
   "Red flag follow-up",
 ];
 
-const formatDateForInput = (value) => {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString().slice(0, 10);
-};
-
 const formatDateDisplay = (value) => {
   if (!value) return "N/A";
   const date = new Date(value);
@@ -44,33 +125,11 @@ const formatDateDisplay = (value) => {
   return date.toLocaleDateString("en-GB");
 };
 
-const getFlagPillClass = (flag) => {
-  if (flag === "green") {
-    return "bg-[#e1f0d8] text-[#2d6e1f]";
-  }
-  if (flag === "amber") {
-    return "bg-[#fdf1ce] text-[#8a6500]";
-  }
-  return "bg-[#fde0e0] text-[#a11111]";
-};
-
 const getFlagLabel = (flag) => {
   if (flag === "green") return "On track";
   if (flag === "amber") return "At risk";
   if (flag === "red") return "Critical";
   return "Unknown";
-};
-
-const getMilestonePillClass = (status) => {
-  if (status === "completed") return "bg-[#e1f0d8] text-[#2d6e1f]";
-  if (status === "in_progress" || status === "submitted") {
-    return "bg-[#dbe8ff] text-[#163b8f]";
-  }
-  if (status === "pending") return "bg-[#eef2f8] text-[#475569]";
-  if (status === "overdue" || status === "rejected") {
-    return "bg-[#fde0e0] text-[#a11111]";
-  }
-  return "bg-[#eef2f8] text-[#475569]";
 };
 
 const formatMilestoneStatus = (status) =>
@@ -138,10 +197,12 @@ const parseSubmissionAttachments = (value) => {
 const EnterpriseTrackerDetails = () => {
   const { enterpriseUuid } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  // Read-only mode (e.g. admin viewing from the tracker overview).
+  const readOnly = searchParams.get("view") === "1";
 
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState(null);
-  const [activeSection, setActiveSection] = useState("sessions");
 
   const [showKpiModal, setShowKpiModal] = useState(false);
   const [showSessionModal, setShowSessionModal] = useState(false);
@@ -229,28 +290,9 @@ const EnterpriseTrackerDetails = () => {
         sub: "FTE",
       },
       {
-        label: "Waste diverted",
-        value: Number(enterprise?.wasteDiverted || 0),
-        sub: "kg/mo",
-      },
-      {
-        label: "CE readiness",
-        value:
-          enterprise?.ceReadinessScore === null ||
-          enterprise?.ceReadinessScore === undefined
-            ? "-"
-            : Number(enterprise.ceReadinessScore),
-        sub: "/ 5.0",
-      },
-      {
         label: "Mentorship hrs",
         value: Number(stats.mentorshipHours || 0).toFixed(1),
         sub: `${stats.weeklyLogsCount || 0} weeks`,
-      },
-      {
-        label: "Capital mobilised",
-        value: `$${Number(enterprise?.capitalMobilised || 0)}`,
-        sub: "USD",
       },
     ],
     [enterprise, stats],
@@ -412,6 +454,48 @@ const EnterpriseTrackerDetails = () => {
     }
   };
 
+  // Phase 3: BDA approves / requests revision / rejects the proposed plan.
+  const onReviewPlan = async (uuid, planStatus) => {
+    setReviewingById((prev) => ({ ...prev, [uuid]: true }));
+    try {
+      await reviewTrackerMilestone(uuid, {
+        planStatus,
+        mentorReviewNotes: reviewState[uuid]?.mentorReviewNotes || "",
+      });
+      toast.success(
+        planStatus === PLAN_STATUS.APPROVED
+          ? "Plan approved — ready for disbursement"
+          : planStatus === PLAN_STATUS.REVISION_REQUESTED
+            ? "Revision requested"
+            : "Plan rejected",
+      );
+      setReviewState((prev) => ({ ...prev, [uuid]: {} }));
+      loadDetails();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to update plan");
+    } finally {
+      setReviewingById((prev) => ({ ...prev, [uuid]: false }));
+    }
+  };
+
+  // Phase 7: BDA verifies milestone achievement.
+  const onVerifyMilestone = async (uuid, verificationStatus) => {
+    setReviewingById((prev) => ({ ...prev, [uuid]: true }));
+    try {
+      await reviewTrackerMilestone(uuid, {
+        verificationStatus,
+        mentorReviewNotes: reviewState[uuid]?.mentorReviewNotes || "",
+      });
+      toast.success("Milestone verification recorded");
+      setReviewState((prev) => ({ ...prev, [uuid]: {} }));
+      loadDetails();
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to verify milestone");
+    } finally {
+      setReviewingById((prev) => ({ ...prev, [uuid]: false }));
+    }
+  };
+
   const persistTrancheStages = async (nextTrancheStages) => {
     setIsSavingTrancheStages(true);
     try {
@@ -512,545 +596,491 @@ const EnterpriseTrackerDetails = () => {
     return <Loader />;
   }
 
+  const completedMilestones = milestones.filter(
+    (item) => String(item.status || "").toLowerCase() === "completed",
+  ).length;
+  const milestoneProgress = milestones.length
+    ? Math.round((completedMilestones / milestones.length) * 100)
+    : 0;
+  const submittedMilestones = milestones.filter(
+    (item) => String(item.status || "").toLowerCase() === "submitted",
+  ).length;
+  const overdueMilestones = milestones.filter(
+    (item) => String(item.status || "").toLowerCase() === "overdue",
+  ).length;
+  const totalTrancheAmount = trancheStages.reduce(
+    (sum, item) => sum + Number(item.amount || 0),
+    0,
+  );
+  const submittedDocuments = milestones.flatMap((milestone) =>
+    parseSubmissionAttachments(milestone.submissionAttachments).map((url, index) => ({
+      id: `${milestone.uuid || milestone.title}-${index}`,
+      title: `${milestone.title || "Milestone"} evidence ${index + 1}`,
+      url,
+    })),
+  );
+
   return (
-    <div className="space-y-5 bg-[#eef2f8] px-6 py-6">
-      <button
-        type="button"
-        onClick={() => navigate("/dashboard/mentorTracker")}
-        className="text-sm font-medium text-[#163b8f]"
-      >
-        Back to enterprises
-      </button>
+    <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
+      <main className="mx-auto max-w-[1480px] space-y-8">
+        <button
+          type="button"
+          onClick={() => navigate("/dashboard/mentorTracker")}
+          className="inline-flex items-center gap-2 text-sm font-bold text-[#082d77] transition hover:text-[#061f54]"
+        >
+          <span aria-hidden>&larr;</span> Back to startups
+        </button>
 
-      <div className="rounded-2xl border border-[#cad5ea] bg-white p-5">
-        <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h1 className="text-4xl font-semibold text-[#111827]">
-              {enterprise?.name || "Enterprise"}
-            </h1>
-            <p className="text-sm text-[#374151]">
-              {enterprise?.ceSector || "-"} · {enterprise?.district || "-"} ·
-              Grant: ${Number(enterprise?.grantUsd || 0)}
-            </p>
-            <p className="text-sm text-[#374151]">
-              Contact: {enterprise?.leadContact || "N/A"}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              onClick={() => setShowKpiModal(true)}
-              className="rounded-xl border border-[#b7c5e5] px-4 py-2 text-sm text-[#111827]"
-            >
-              KPIs
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowSessionModal(true)}
-              className="rounded-xl border border-[#b7c5e5] px-4 py-2 text-sm text-[#111827]"
-            >
-              Session
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowWeekLogModal(true)}
-              className="rounded-xl border border-[#b7c5e5] px-4 py-2 text-sm text-[#111827]"
-            >
-              Week log
-            </button>
-            <button
-              type="button"
-              onClick={() => setShowMilestoneModal(true)}
-              className="rounded-xl border border-[#b7c5e5] px-4 py-2 text-sm text-[#111827]"
-            >
-              Milestone
-            </button>
-          </div>
-        </div>
-
-        <div className="mb-4 rounded-xl bg-[#eef2f8] px-4 py-3 text-sm text-[#374151]">
-          {enterprise?.businessDescription || "No description provided."}
-        </div>
-
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-6">
-          {metricCards.map((item) => (
-            <div key={item.label} className="rounded-xl bg-[#eef2f8] p-3">
-              <div className="text-sm text-[#64748b]">{item.label}</div>
-              <div className="text-4xl font-semibold text-[#111827]">
-                {item.value}
+        <section
+          className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
+          style={{
+            backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 100%), url(${HERO_IMAGE_URL})`,
+            backgroundPosition: "center",
+            backgroundSize: "cover",
+          }}
+        >
+          <div className="relative z-10 flex min-h-[220px] flex-col justify-between gap-6">
+            <div className="flex flex-wrap items-start justify-between gap-5">
+              <div className="max-w-3xl">
+                <div className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur">
+                  <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+                  Startup Dashboard
+                </div>
+                <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
+                  {enterprise?.name || "Enterprise"}
+                </h1>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
+                  {enterprise?.businessDescription ||
+                    "Track milestones, mentorship activity, KPI progress, and milestone-linked funding tranches from one governance workspace."}
+                </p>
               </div>
-              <div className="text-sm text-[#64748b]">{item.sub}</div>
-            </div>
-          ))}
-        </div>
 
-        <div className="mt-5 border-b border-[#d4dbe8]">
-          <div className="flex flex-wrap gap-4">
-            <button
-              type="button"
-              onClick={() => setActiveSection("sessions")}
-              className={`border-b-2 pb-2 text-sm font-medium ${
-                activeSection === "sessions"
-                  ? "border-[#163b8f] text-[#163b8f]"
-                  : "border-transparent text-[#475569]"
-              }`}
-            >
-              Sessions ({sessions.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSection("weekly")}
-              className={`border-b-2 pb-2 text-sm font-medium ${
-                activeSection === "weekly"
-                  ? "border-[#163b8f] text-[#163b8f]"
-                  : "border-transparent text-[#475569]"
-              }`}
-            >
-              Weekly logs ({weeklyLogs.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSection("milestones")}
-              className={`border-b-2 pb-2 text-sm font-medium ${
-                activeSection === "milestones"
-                  ? "border-[#163b8f] text-[#163b8f]"
-                  : "border-transparent text-[#475569]"
-              }`}
-            >
-              Milestones ({milestones.length})
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveSection("tranches")}
-              className={`border-b-2 pb-2 text-sm font-medium ${
-                activeSection === "tranches"
-                  ? "border-[#163b8f] text-[#163b8f]"
-                  : "border-transparent text-[#475569]"
-              }`}
-            >
-              Tranche stages ({trancheStages.length})
-            </button>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => navigate(`/dashboard/mentorTracker/enterprise-kyc/${enterpriseUuid}?view=1`)}
+                  className="rounded-xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
+                >
+                  View KYC
+                </button>
+                {!readOnly && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setShowSessionModal(true)}
+                      className="rounded-xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
+                    >
+                      + Coaching Session
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setShowMilestoneModal(true)}
+                      className="rounded-xl bg-white px-4 py-2.5 text-sm font-black text-[#082d77] shadow-sm transition hover:bg-white/90"
+                    >
+                      + Milestone
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-4 text-sm font-bold text-white/90">
+              <div className="flex items-center gap-2">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/15 text-white backdrop-blur">&#9737;</span>
+                {enterprise?.district || "Region not set"}
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/15 text-white backdrop-blur">$</span>
+                {formatCurrency(enterprise?.grantUsd)} grant
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <div className="mt-4 min-h-[220px]">
-          {activeSection === "sessions" && (
-            <div className="space-y-3">
-              {sessions.length === 0 && (
-                <div className="py-10 text-center text-[#6b7280]">
-                  No sessions logged yet.
-                </div>
-              )}
-              {sessions.map((item) => (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedSessionUuid((prev) =>
-                      prev === item.uuid ? null : item.uuid,
-                    )
-                  }
-                  key={item.uuid}
-                  className="w-full rounded-xl border border-black/10 p-3 text-left"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-[#111827]">
-                      {formatDateDisplay(item.sessionDate)} ·{" "}
-                      {item.sessionType || "Session"}
-                    </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getFlagPillClass(item.flag)}`}
-                    >
-                      {getFlagLabel(item.flag)}
-                    </span>
-                  </div>
+        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.45fr_0.75fr]">
+          <div className="space-y-8">
+            <PortalCard icon={<Building2 className="h-5 w-5" />} title="Startup Information" subtitle="Core startup profile and program details.">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <DataTile label="Business name" value={enterprise?.name || "N/A"} />
+                <DataTile label="Sector" value={enterprise?.ceSector || "N/A"} />
+                <DataTile label="Region" value={enterprise?.district || "N/A"} />
+                <DataTile label="Lead contact" value={enterprise?.leadContact || "N/A"} />
+                <DataTile label="Grant" value={formatCurrency(enterprise?.grantUsd)} />
+                <DataTile
+                  label="Mentorship hours"
+                  value={Number(stats.mentorshipHours || 0).toFixed(1)}
+                  helper={`${stats.weeklyLogsCount || 0} weeks`}
+                />
+              </div>
+              <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
+                <p className="text-xs font-bold tracking-wide text-slate-400">Business Description</p>
+                <p className="mt-2 text-sm leading-7 text-slate-600">
+                  {enterprise?.businessDescription || "No business description provided."}
+                </p>
+              </div>
+            </PortalCard>
 
-                  {expandedSessionUuid === item.uuid ? (
-                    <div className="mt-3 space-y-2 text-sm text-[#475569]">
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Session date:
-                        </span>{" "}
-                        {item.sessionDate
-                          ? formatDateDisplay(item.sessionDate)
-                          : "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Session type:
-                        </span>{" "}
-                        {item.sessionType || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Status:
-                        </span>{" "}
-                        {getFlagLabel(item.flag)}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Facilitator:
-                        </span>{" "}
-                        {item.facilitator || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Issues discussed:
-                        </span>{" "}
-                        {item.issuesDiscussed || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Recommendations:
-                        </span>{" "}
-                        {item.recommendationsGiven || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Actions agreed:
-                        </span>{" "}
-                        {item.actionsAgreed || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Next session:
-                        </span>{" "}
-                        {item.nextSessionDate
-                          ? formatDateDisplay(item.nextSessionDate)
-                          : "N/A"}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="mt-1 text-sm text-[#475569] line-clamp-1">
-                      {item.issuesDiscussed || "No issues recorded"}
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {activeSection === "weekly" && (
-            <div className="space-y-3">
-              {weeklyLogs.length === 0 && (
-                <div className="py-10 text-center text-[#6b7280]">
-                  No weekly logs yet.
-                </div>
-              )}
-              {weeklyLogs.map((item) => (
-                <button
-                  type="button"
-                  onClick={() =>
-                    setExpandedWeeklyUuid((prev) =>
-                      prev === item.uuid ? null : item.uuid,
-                    )
-                  }
-                  key={item.uuid}
-                  className="w-full rounded-xl border border-black/10 p-3 text-left"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div className="text-sm font-semibold text-[#111827]">
-                      Week {formatDateDisplay(item.weekStart)} · {item.hours}h ·{" "}
-                      {item.touchpoints} touchpoints
-                    </div>
-                    <span
-                      className={`rounded-full px-3 py-1 text-xs font-semibold ${getFlagPillClass(item.flag)}`}
-                    >
-                      {getFlagLabel(item.flag)}
-                    </span>
-                  </div>
-
-                  {expandedWeeklyUuid === item.uuid ? (
-                    <div className="mt-3 space-y-2 text-sm text-[#475569]">
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Facilitator:
-                        </span>{" "}
-                        {item.facilitator || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Status:
-                        </span>{" "}
-                        {getFlagLabel(item.flag)}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Focus:
-                        </span>{" "}
-                        {item.focus || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Outcomes:
-                        </span>{" "}
-                        {item.outcomes || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Barriers:
-                        </span>{" "}
-                        {item.barriers || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Next plan:
-                        </span>{" "}
-                        {item.nextPlan || "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Engagement:
-                        </span>{" "}
-                        {item.engagement || "N/A"}
-                      </div>
-                      {Array.isArray(item.activities) &&
-                        item.activities.length > 0 && (
-                          <div>
-                            <span className="font-medium text-[#111827]">
-                              Activities:
-                            </span>{" "}
-                            {item.activities.join(", ")}
-                          </div>
-                        )}
-                    </div>
-                  ) : (
-                    <div className="mt-1 text-sm text-[#475569] line-clamp-1">
-                      {item.focus || "No focus recorded"}
-                    </div>
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
-          {activeSection === "milestones" && (
-            <div className="space-y-3">
-              {milestones.length === 0 && (
-                <div className="py-10 text-center text-[#6b7280]">
-                  No milestones yet.
-                </div>
-              )}
-              {milestones.map((item) => (
-                <div
-                  key={item.uuid}
-                  className="w-full rounded-xl border border-black/10 p-3 text-left"
-                >
+            <PortalCard
+              icon={<BarChart3 className="h-5 w-5" />}
+              title="KPI Tracking"
+              subtitle="Operational indicators for enterprise growth and reporting."
+              action={
+                readOnly ? undefined : (
                   <button
                     type="button"
-                    onClick={() =>
-                      setExpandedMilestoneUuid((prev) =>
-                        prev === item.uuid ? null : item.uuid,
-                      )
-                    }
-                    className="w-full text-left"
+                    onClick={() => setShowKpiModal(true)}
+                    className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
                   >
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="text-sm font-semibold text-[#111827]">
-                        {item.title}
-                      </div>
-                      <span
-                        className={`rounded-full px-3 py-1 text-xs font-semibold ${getMilestonePillClass(item.status)}`}
-                      >
-                        {formatMilestoneStatus(item.status)}
-                      </span>
-                    </div>
-
-                    {expandedMilestoneUuid !== item.uuid && (
-                      <div className="mt-1 text-sm text-[#475569]">
-                        Due:{" "}
-                        {item.dueDate ? formatDateDisplay(item.dueDate) : "N/A"}
-                      </div>
-                    )}
+                    Edit KPIs
                   </button>
+                )
+              }
+            >
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
+                {metricCards.map((item) => (
+                  <DataTile key={item.label} label={item.label} value={item.value} helper={item.sub} />
+                ))}
+              </div>
+            </PortalCard>
 
-                  {expandedMilestoneUuid === item.uuid && (
-                    <div className="mt-3 space-y-2 text-sm text-[#475569]">
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Due date:
-                        </span>{" "}
-                        {item.dueDate ? formatDateDisplay(item.dueDate) : "N/A"}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Linked tranche:
-                        </span>{" "}
-                        {getLinkedTrancheDisplay(item)}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Description:
-                        </span>{" "}
-                        {getMilestoneDescriptionDisplay(item)}
-                      </div>
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Submission notes:
-                        </span>{" "}
-                        {item.submissionNotes || "N/A"}
-                      </div>
-                      {parseSubmissionAttachments(item.submissionAttachments)
-                        .length > 0 && (
+            <PortalCard
+              icon={<Flag className="h-5 w-5" />}
+              title="Milestones"
+              subtitle="Create milestones, review entrepreneur reports and evidence, and drive tranche eligibility."
+              action={
+                readOnly ? undefined : (
+                  <button
+                    type="button"
+                    onClick={() => setShowMilestoneModal(true)}
+                    className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
+                  >
+                    + New Milestone
+                  </button>
+                )
+              }
+            >
+              <div className="space-y-4">
+                {milestones.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    No milestones yet.
+                  </div>
+                )}
+
+                {milestones.map((item) => {
+                  const attachments = parseSubmissionAttachments(item.submissionAttachments);
+                  const expanded = expandedMilestoneUuid === item.uuid;
+                  const kpiPlan = parseKpiPlan(item.kpiPlan);
+                  const ps = item.planStatus || "";
+                  const vs = item.verificationStatus || "";
+                  const verificationRequested = Boolean(item.verificationRequested);
+
+                  return (
+                    <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setExpandedMilestoneUuid((prev) => (prev === item.uuid ? null : item.uuid))
+                        }
+                        className="flex w-full flex-wrap items-start justify-between gap-3 text-left"
+                      >
                         <div>
-                          <span className="font-medium text-[#111827]">
-                            Attachments:
-                          </span>
-                          <div className="mt-1 flex flex-wrap gap-2">
-                            {parseSubmissionAttachments(
-                              item.submissionAttachments,
-                            ).map((url, idx) => (
-                              <a
-                                key={`${item.uuid}-attachment-${idx}`}
-                                href={url}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="rounded bg-[#dbe8ff] px-2 py-1 text-xs font-semibold text-[#163b8f] underline"
-                              >
-                                Attachment {idx + 1}
-                              </a>
-                            ))}
+                          <p className="font-black text-slate-950">{item.title}</p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Due {item.dueDate ? formatDateDisplay(item.dueDate) : "N/A"}
+                          </p>
+                          <p className="mt-1 text-xs text-slate-500">
+                            Linked tranche: {getLinkedTrancheDisplay(item)}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-1">
+                          {ps && (
+                            <span className={`rounded-full px-3 py-1 text-[10px] font-bold ${planStatusPill(ps)}`}>
+                              {planStatusLabel(ps)}
+                            </span>
+                          )}
+                          <StatusText>{formatMilestoneStatus(item.status)}</StatusText>
+                        </div>
+                      </button>
+
+                      {expanded && (
+                        <div className="mt-4 space-y-3">
+                          <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                            <p>
+                              <span className="font-bold text-slate-950">Description:</span>{" "}
+                              {getMilestoneDescriptionDisplay(item)}
+                            </p>
+                            <p>
+                              <span className="font-bold text-slate-950">Submission notes:</span>{" "}
+                              {item.submissionNotes || "N/A"}
+                            </p>
+                            <p>
+                              <span className="font-bold text-slate-950">Review notes:</span>{" "}
+                              {item.mentorReviewNotes || "N/A"}
+                            </p>
+                            {attachments.length > 0 && (
+                              <div className="mt-2 flex flex-wrap gap-2">
+                                {attachments.map((url, idx) => (
+                                  <a
+                                    key={`${item.uuid}-attachment-${idx}`}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="rounded-xl bg-[#082d77]/5 px-3 py-1.5 text-xs font-bold text-[#082d77] underline"
+                                  >
+                                    Attachment {idx + 1}
+                                  </a>
+                                ))}
+                              </div>
+                            )}
                           </div>
+
+                          <div className="rounded-2xl border border-slate-100 p-4">
+                            <p className="text-xs font-black uppercase tracking-wide text-[#082d77]">KPI plan</p>
+                            {kpiPlan.length === 0 ? (
+                              <p className="mt-2 text-sm text-slate-500">No KPI plan submitted.</p>
+                            ) : (
+                              <div className="mt-3 space-y-2">
+                                {kpiPlan.map((kpi, idx) => (
+                                  <div key={idx} className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
+                                    <p className="font-bold text-slate-950">{kpi.name}</p>
+                                    <p className="mt-0.5 text-xs text-slate-500">
+                                      Target: {kpi.target || "—"} • Evidence: {kpi.evidenceSource || "—"}
+                                      {kpi.currentValue ? ` • Current: ${kpi.currentValue}` : ""}
+                                    </p>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+
+                            {!readOnly && canReviewPlan(ps) && (
+                              <div className="mt-4 space-y-2">
+                                <input
+                                  className={baseInputClass}
+                                  placeholder="Review note (optional for approve, recommended for revision/reject)"
+                                  value={reviewState[item.uuid]?.mentorReviewNotes || ""}
+                                  onChange={(e) =>
+                                    setReviewState((prev) => ({
+                                      ...prev,
+                                      [item.uuid]: { ...prev[item.uuid], mentorReviewNotes: e.target.value },
+                                    }))
+                                  }
+                                />
+                                <div className="flex flex-wrap gap-2">
+                                  <button
+                                    type="button"
+                                    onClick={() => onReviewPlan(item.uuid, PLAN_STATUS.APPROVED)}
+                                    disabled={reviewingById[item.uuid]}
+                                    className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+                                  >
+                                    Approve plan
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onReviewPlan(item.uuid, PLAN_STATUS.REVISION_REQUESTED)}
+                                    disabled={reviewingById[item.uuid]}
+                                    className="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-amber-600 disabled:opacity-60"
+                                  >
+                                    Request revision
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onReviewPlan(item.uuid, PLAN_STATUS.REJECTED)}
+                                    disabled={reviewingById[item.uuid]}
+                                    className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 disabled:opacity-60"
+                                  >
+                                    Reject
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {(verificationRequested || vs) && (
+                            <div className="rounded-2xl border border-slate-100 p-4">
+                              <div className="flex items-center justify-between gap-2">
+                                <p className="text-xs font-black uppercase tracking-wide text-[#082d77]">Milestone verification</p>
+                                <span className={`rounded-full px-3 py-1 text-xs font-bold ${verificationPill(vs)}`}>
+                                  {verificationLabel(vs)}
+                                </span>
+                              </div>
+                              {verificationRequested && (
+                                <p className="mt-2 text-xs font-semibold text-amber-600">
+                                  Entrepreneur has requested verification.
+                                </p>
+                              )}
+                              {!readOnly && verificationRequested && (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                  {VERIFICATION_OPTIONS.map((opt) => (
+                                    <button
+                                      key={opt.value}
+                                      type="button"
+                                      onClick={() => onVerifyMilestone(item.uuid, opt.value)}
+                                      disabled={reviewingById[item.uuid]}
+                                      className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10 disabled:opacity-60"
+                                    >
+                                      {opt.label}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {!readOnly && (
+                          <div className="grid gap-2 md:grid-cols-[210px_1fr_auto]">
+                            <select
+                              className={baseInputClass}
+                              value={reviewState[item.uuid]?.status || ""}
+                              onChange={(e) =>
+                                setReviewState((prev) => ({
+                                  ...prev,
+                                  [item.uuid]: {
+                                    ...prev[item.uuid],
+                                    status: e.target.value,
+                                  },
+                                }))
+                              }
+                            >
+                              <option value="">Review status</option>
+                              <option value="in_progress">In progress</option>
+                              <option value="completed">Completed</option>
+                              <option value="overdue">Overdue</option>
+                              <option value="rejected">Rejected</option>
+                            </select>
+                            <input
+                              className={baseInputClass}
+                              placeholder="Review note"
+                              value={reviewState[item.uuid]?.mentorReviewNotes || ""}
+                              onChange={(e) =>
+                                setReviewState((prev) => ({
+                                  ...prev,
+                                  [item.uuid]: {
+                                    ...prev[item.uuid],
+                                    mentorReviewNotes: e.target.value,
+                                  },
+                                }))
+                              }
+                            />
+                            <button
+                              type="button"
+                              onClick={() => onReviewMilestone(item.uuid)}
+                              disabled={reviewingById[item.uuid]}
+                              className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {reviewingById[item.uuid] ? "Updating..." : "Update"}
+                            </button>
+                          </div>
+                          )}
                         </div>
                       )}
-                      <div>
-                        <span className="font-medium text-[#111827]">
-                          Review notes:
-                        </span>{" "}
-                        {item.mentorReviewNotes || "N/A"}
-                      </div>
-
-                      <div className="mt-2 flex flex-wrap items-center justify-end gap-2">
-                        <select
-                          className="rounded-md border border-black/10 p-1 pr-8 text-sm"
-                          value={reviewState[item.uuid]?.status || ""}
-                          onChange={(e) =>
-                            setReviewState((prev) => ({
-                              ...prev,
-                              [item.uuid]: {
-                                ...prev[item.uuid],
-                                status: e.target.value,
-                              },
-                            }))
-                          }
-                        >
-                          <option value="">Review status</option>
-                          <option value="in_progress">In progress</option>
-                          <option value="completed">Completed</option>
-                          <option value="overdue">Overdue</option>
-                          <option value="rejected">Rejected</option>
-                        </select>
-                        <input
-                          className="rounded-md border border-black/10 p-1 text-sm"
-                          placeholder="Review note"
-                          value={
-                            reviewState[item.uuid]?.mentorReviewNotes || ""
-                          }
-                          onChange={(e) =>
-                            setReviewState((prev) => ({
-                              ...prev,
-                              [item.uuid]: {
-                                ...prev[item.uuid],
-                                mentorReviewNotes: e.target.value,
-                              },
-                            }))
-                          }
-                        />
-                        <button
-                          type="button"
-                          onClick={() => onReviewMilestone(item.uuid)}
-                          disabled={reviewingById[item.uuid]}
-                          className="rounded-md bg-[#163b8f] px-3 py-1 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-70"
-                        >
-                          {reviewingById[item.uuid] ? "Updating..." : "Update"}
-                        </button>
-                      </div>
                     </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            </PortalCard>
 
-          {activeSection === "tranches" && (
-            <div className="space-y-4">
+            <PortalCard
+              icon={<CalendarDays className="h-5 w-5" />}
+              title="Coaching Sessions"
+              subtitle="Coaching sessions and engagement records for this entrepreneur."
+              action={
+                readOnly ? undefined : (
+                  <button
+                    type="button"
+                    onClick={() => setShowSessionModal(true)}
+                    className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
+                  >
+                    + Coaching Session
+                  </button>
+                )
+              }
+            >
+              <div className="space-y-3">
+                {sessions.length === 0 && <p className="text-sm text-slate-500">No sessions logged yet.</p>}
+                {sessions.map((item) => {
+                  const expanded = expandedSessionUuid === item.uuid;
+                  return (
+                    <button
+                      type="button"
+                      key={item.uuid}
+                      onClick={() =>
+                        setExpandedSessionUuid((prev) => (prev === item.uuid ? null : item.uuid))
+                      }
+                      className="w-full rounded-2xl bg-slate-50 p-4 text-left"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="text-sm font-bold text-slate-950">
+                          {item.sessionDate ? formatDateDisplay(item.sessionDate) : "N/A"}
+                        </p>
+                        <StatusText>{getFlagLabel(item.flag)}</StatusText>
+                      </div>
+                      <p className="mt-1 text-xs text-slate-500">{item.sessionType || "Session"}</p>
+                      {expanded ? (
+                        <div className="mt-3 space-y-1 text-sm leading-6 text-slate-600">
+                          <p><span className="font-bold text-slate-950">Facilitator:</span> {item.facilitator || "N/A"}</p>
+                          <p><span className="font-bold text-slate-950">Issues discussed:</span> {item.issuesDiscussed || "N/A"}</p>
+                          <p><span className="font-bold text-slate-950">Recommendations:</span> {item.recommendationsGiven || "N/A"}</p>
+                          <p><span className="font-bold text-slate-950">Actions agreed:</span> {item.actionsAgreed || "N/A"}</p>
+                          <p><span className="font-bold text-slate-950">Next session:</span> {item.nextSessionDate ? formatDateDisplay(item.nextSessionDate) : "N/A"}</p>
+                        </div>
+                      ) : (
+                        <p className="mt-1 line-clamp-1 text-sm text-slate-500">
+                          {item.issuesDiscussed || "No issues recorded"}
+                        </p>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </PortalCard>
+          </div>
+
+          <aside className="space-y-8">
+            <PortalCard icon={<Layers className="h-5 w-5" />} title="Tranche Stages" subtitle="Milestone-linked funding tranches for this startup.">
+              {!readOnly && (
               <form
                 onSubmit={onAddTrancheStage}
-                className="rounded-xl border border-black/10 p-4"
+                className="mb-5 grid grid-cols-1 gap-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4"
               >
-                <h3 className="mb-3 text-base font-semibold text-[#111827]">
-                  Add tranche stage
-                </h3>
-                <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                      Tranche title
-                    </label>
-                    <input
-                      className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                      placeholder="Tranche title"
-                      value={trancheForm.title}
-                      onChange={(e) =>
-                        setTrancheForm((prev) => ({
-                          ...prev,
-                          title: e.target.value,
-                        }))
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                      Tranche date
-                    </label>
-                    <input
-                      className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                      type="date"
-                      value={trancheForm.date}
-                      onChange={(e) =>
-                        setTrancheForm((prev) => ({
-                          ...prev,
-                          date: e.target.value,
-                        }))
-                      }
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                      Amount (USD)
-                    </label>
-                    <input
-                      className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="Amount (USD)"
-                      value={trancheForm.amount}
-                      onChange={(e) =>
-                        setTrancheForm((prev) => ({
-                          ...prev,
-                          amount: e.target.value,
-                        }))
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="mt-3 flex justify-end">
+                <input
+                  className={baseInputClass}
+                  placeholder="Tranche title"
+                  value={trancheForm.title}
+                  onChange={(e) => setTrancheForm((prev) => ({ ...prev, title: e.target.value }))}
+                  required
+                />
+                <input
+                  className={baseInputClass}
+                  type="date"
+                  value={trancheForm.date}
+                  onChange={(e) => setTrancheForm((prev) => ({ ...prev, date: e.target.value }))}
+                  required
+                />
+                <input
+                  className={baseInputClass}
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  placeholder="Amount (USD)"
+                  value={trancheForm.amount}
+                  onChange={(e) => setTrancheForm((prev) => ({ ...prev, amount: e.target.value }))}
+                  required
+                />
+                <div className="flex justify-end">
                   <button
                     type="submit"
                     disabled={isSavingTrancheStages}
-                    className="rounded-lg bg-[#163b8f] px-4 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {isSavingTrancheStages ? "Saving..." : "Add tranche"}
                   </button>
                 </div>
               </form>
+              )}
 
               <div className="space-y-3">
                 {trancheStages.length === 0 && (
-                  <div className="py-10 text-center text-[#6b7280]">
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
                     No tranche stages added yet.
                   </div>
                 )}
@@ -1058,726 +1088,233 @@ const EnterpriseTrackerDetails = () => {
                 {trancheStages.map((item, index) => (
                   <div
                     key={`${item.title}-${item.date}-${index}`}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-black/10 p-3"
+                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
                   >
-                    <div>
-                      <div className="text-sm font-semibold text-[#111827]">
-                        {item.title}
-                      </div>
-                      <div className="text-sm text-[#475569]">
-                        {formatDateDisplay(item.date)} · $
-                        {Number(item.amount || 0)}
-                      </div>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-slate-950">{item.title}</p>
+                      <p className="text-xs text-slate-500">
+                        {formatDateDisplay(item.date)} • {formatCurrency(item.amount)}
+                      </p>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onRemoveTrancheStage(index)}
-                      disabled={isSavingTrancheStages}
-                      className="rounded-lg border border-black/15 px-3 py-1.5 text-sm text-[#111827] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      Remove
-                    </button>
+                    {!readOnly && (
+                      <button
+                        type="button"
+                        onClick={() => onRemoveTrancheStage(index)}
+                        disabled={isSavingTrancheStages}
+                        className="rounded-xl bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        Remove
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
-            </div>
-          )}
+            </PortalCard>
+
+            <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Evidence and reporting documents submitted by the entrepreneur.">
+              <div className="space-y-3">
+                {submittedDocuments.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    No entrepreneur documents have been submitted yet.
+                  </div>
+                )}
+
+                {submittedDocuments.map((document) => (
+                  <div
+                    key={document.id}
+                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#082d77]/5 text-[#082d77]">
+                        <UploadCloud className="h-5 w-5" />
+                      </div>
+                      <p className="truncate text-sm font-bold text-slate-950">{document.title}</p>
+                    </div>
+                    <a
+                      href={document.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs font-bold text-[#082d77] hover:text-[#061f54]"
+                    >
+                      View
+                    </a>
+                  </div>
+                ))}
+              </div>
+            </PortalCard>
+
+            <PortalCard icon={<ShieldCheck className="h-5 w-5" />} title="Risk & Governance" subtitle="Current control signals for this startup.">
+              <div className="space-y-3">
+                <DataTile label="Business risk" value={getBusinessRiskLabel(enterprise?.flag)} />
+                <DataTile label="Submitted reports" value={submittedMilestones} />
+                <DataTile label="Overdue milestones" value={overdueMilestones} />
+                <DataTile
+                  label="Tranche stages"
+                  value={trancheStages.length}
+                  helper={formatCurrency(totalTrancheAmount)}
+                />
+              </div>
+            </PortalCard>
+          </aside>
         </div>
-      </div>
+      </main>
 
       {showKpiModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-          <form
-            onSubmit={onSubmitKpis}
-            className="w-full max-w-4xl rounded-2xl bg-white p-6"
-          >
-            <h3 className="mb-4 text-3xl font-semibold text-[#111827]">
-              KPIs - {enterprise?.name}
-            </h3>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className={modalOverlayClass}>
+          <form onSubmit={onSubmitKpis} className={modalCardClass}>
+            <div className={modalHeaderClass}>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Monthly revenue (USD)
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  min="0"
-                  value={kpiForm.monthlyRevenue}
-                  onChange={(e) =>
-                    setKpiForm((prev) => ({
-                      ...prev,
-                      monthlyRevenue: e.target.value,
-                    }))
-                  }
-                />
+                <h3 className="text-2xl font-black text-slate-950">KPIs — {enterprise?.name}</h3>
+                <p className="mt-1 text-sm text-slate-500">Update the operational indicators for this startup.</p>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Employees (FTE)
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  min="0"
-                  value={kpiForm.employees}
-                  onChange={(e) =>
-                    setKpiForm((prev) => ({
-                      ...prev,
-                      employees: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Waste diverted (kg/month)
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  min="0"
-                  value={kpiForm.wasteDiverted}
-                  onChange={(e) =>
-                    setKpiForm((prev) => ({
-                      ...prev,
-                      wasteDiverted: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  CE readiness score (1-5)
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  min="1"
-                  max="5"
-                  step="0.1"
-                  value={kpiForm.ceReadinessScore}
-                  onChange={(e) =>
-                    setKpiForm((prev) => ({
-                      ...prev,
-                      ceReadinessScore: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Capital mobilised (USD)
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  min="0"
-                  value={kpiForm.capitalMobilised}
-                  onChange={(e) =>
-                    setKpiForm((prev) => ({
-                      ...prev,
-                      capitalMobilised: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Active customers
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  min="0"
-                  value={kpiForm.activeCustomers}
-                  onChange={(e) =>
-                    setKpiForm((prev) => ({
-                      ...prev,
-                      activeCustomers: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-            <div className="mt-4 flex justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowKpiModal(false)}
-                className="rounded-lg border border-black/15 px-5 py-2"
+                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
               >
-                Cancel
+                ×
               </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-[#163b8f] px-5 py-2 font-semibold text-white"
-              >
-                Update KPIs
-              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+              <div>
+                <FieldLabel>Monthly revenue (USD)</FieldLabel>
+                <input className={baseInputClass} type="number" min="0" value={kpiForm.monthlyRevenue} onChange={(e) => setKpiForm((prev) => ({ ...prev, monthlyRevenue: e.target.value }))} />
+              </div>
+              <div>
+                <FieldLabel>Employees (FTE)</FieldLabel>
+                <input className={baseInputClass} type="number" min="0" value={kpiForm.employees} onChange={(e) => setKpiForm((prev) => ({ ...prev, employees: e.target.value }))} />
+              </div>
+              <div>
+                <FieldLabel>Active customers</FieldLabel>
+                <input className={baseInputClass} type="number" min="0" value={kpiForm.activeCustomers} onChange={(e) => setKpiForm((prev) => ({ ...prev, activeCustomers: e.target.value }))} />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button type="button" onClick={() => setShowKpiModal(false)} className={modalCancelClass}>Cancel</button>
+              <button type="submit" className={modalSubmitClass}>Update KPIs</button>
             </div>
           </form>
         </div>
       )}
 
       {showSessionModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-          <form
-            onSubmit={onSubmitSession}
-            className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6"
-          >
-            <h3 className="mb-4 text-3xl font-semibold text-[#111827]">
-              Log coaching session
-            </h3>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className={modalOverlayClass}>
+          <form onSubmit={onSubmitSession} className={modalCardClass}>
+            <div className={modalHeaderClass}>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Enterprise
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={enterprise?.name || ""}
-                  disabled
-                >
-                  <option>{enterprise?.name || "Enterprise"}</option>
-                </select>
+                <h3 className="text-2xl font-black text-slate-950">Log a coaching session</h3>
+                <p className="mt-1 text-sm text-slate-500">Record a coaching session for {enterprise?.name || "this startup"}.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowSessionModal(false)}
+                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+              >
+                ×
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+              <div>
+                <FieldLabel>Session date</FieldLabel>
+                <input className={baseInputClass} type="date" value={sessionForm.sessionDate} onChange={(e) => setSessionForm((prev) => ({ ...prev, sessionDate: e.target.value }))} required />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Session date
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="date"
-                  value={sessionForm.sessionDate}
-                  onChange={(e) =>
-                    setSessionForm((prev) => ({
-                      ...prev,
-                      sessionDate: e.target.value,
-                    }))
-                  }
-                  required
-                />
+                <FieldLabel>BDA / Facilitator</FieldLabel>
+                <input className={baseInputClass} placeholder="BDA / Facilitator" value={sessionForm.facilitator} onChange={(e) => setSessionForm((prev) => ({ ...prev, facilitator: e.target.value }))} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  BDA / Facilitator
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  placeholder="BDA / Facilitator"
-                  value={sessionForm.facilitator}
-                  onChange={(e) =>
-                    setSessionForm((prev) => ({
-                      ...prev,
-                      facilitator: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Session type
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={sessionForm.sessionType}
-                  onChange={(e) =>
-                    setSessionForm((prev) => ({
-                      ...prev,
-                      sessionType: e.target.value,
-                    }))
-                  }
-                >
+                <FieldLabel>Session type</FieldLabel>
+                <select className={baseInputClass} value={sessionForm.sessionType} onChange={(e) => setSessionForm((prev) => ({ ...prev, sessionType: e.target.value }))}>
                   <option value="Weekly coaching">Weekly coaching</option>
                   <option value="Financial advisory">Financial advisory</option>
                   <option value="Milestone review">Milestone review</option>
                 </select>
               </div>
-            </div>
-
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                Issues discussed
-              </label>
-              <textarea
-                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Issues discussed"
-                value={sessionForm.issuesDiscussed}
-                onChange={(e) =>
-                  setSessionForm((prev) => ({
-                    ...prev,
-                    issuesDiscussed: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                Recommendations given
-              </label>
-              <textarea
-                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Recommendations given"
-                value={sessionForm.recommendationsGiven}
-                onChange={(e) =>
-                  setSessionForm((prev) => ({
-                    ...prev,
-                    recommendationsGiven: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                Actions agreed
-              </label>
-              <textarea
-                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Actions agreed"
-                value={sessionForm.actionsAgreed}
-                onChange={(e) =>
-                  setSessionForm((prev) => ({
-                    ...prev,
-                    actionsAgreed: e.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Session status
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={sessionForm.flag}
-                  onChange={(e) =>
-                    setSessionForm((prev) => ({
-                      ...prev,
-                      flag: e.target.value,
-                    }))
-                  }
-                >
+                <FieldLabel>Session status</FieldLabel>
+                <select className={baseInputClass} value={sessionForm.flag} onChange={(e) => setSessionForm((prev) => ({ ...prev, flag: e.target.value }))}>
                   {FLAG_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
+                    <option key={option.value} value={option.value}>{option.label}</option>
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Next session date
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="date"
-                  value={sessionForm.nextSessionDate}
-                  onChange={(e) =>
-                    setSessionForm((prev) => ({
-                      ...prev,
-                      nextSessionDate: e.target.value,
-                    }))
-                  }
-                />
+              <div className="md:col-span-2">
+                <FieldLabel>Issues discussed</FieldLabel>
+                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Issues discussed" value={sessionForm.issuesDiscussed} onChange={(e) => setSessionForm((prev) => ({ ...prev, issuesDiscussed: e.target.value }))} />
               </div>
-            </div>
-
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowSessionModal(false)}
-                className="rounded-lg border border-black/15 px-5 py-2"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-[#163b8f] px-5 py-2 font-semibold text-white"
-              >
-                Save session
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {showWeekLogModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-          <form
-            onSubmit={onSubmitWeekLog}
-            className="max-h-[92vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-white p-6"
-          >
-            <h3 className="mb-4 text-3xl font-semibold text-[#111827]">
-              Log weekly mentorship
-            </h3>
-
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Enterprise
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={enterprise?.name || ""}
-                  disabled
-                >
-                  <option>{enterprise?.name || "Enterprise"}</option>
-                </select>
+              <div className="md:col-span-2">
+                <FieldLabel>Recommendations given</FieldLabel>
+                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Recommendations given" value={sessionForm.recommendationsGiven} onChange={(e) => setSessionForm((prev) => ({ ...prev, recommendationsGiven: e.target.value }))} />
+              </div>
+              <div className="md:col-span-2">
+                <FieldLabel>Actions agreed</FieldLabel>
+                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Actions agreed" value={sessionForm.actionsAgreed} onChange={(e) => setSessionForm((prev) => ({ ...prev, actionsAgreed: e.target.value }))} />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Week start date
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="date"
-                  value={weekLogForm.weekStart}
-                  onChange={(e) =>
-                    setWeekLogForm((prev) => ({
-                      ...prev,
-                      weekStart: e.target.value,
-                    }))
-                  }
-                  required
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  BDA / Mentor
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  placeholder="BDA / Mentor"
-                  value={weekLogForm.facilitator}
-                  onChange={(e) =>
-                    setWeekLogForm((prev) => ({
-                      ...prev,
-                      facilitator: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Total hours this week
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  step="0.5"
-                  min="0"
-                  placeholder="Total hours this week"
-                  value={weekLogForm.hours}
-                  onChange={(e) =>
-                    setWeekLogForm((prev) => ({
-                      ...prev,
-                      hours: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Number of touchpoints
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="number"
-                  min="0"
-                  placeholder="No. of touchpoints"
-                  value={weekLogForm.touchpoints}
-                  onChange={(e) =>
-                    setWeekLogForm((prev) => ({
-                      ...prev,
-                      touchpoints: e.target.value,
-                    }))
-                  }
-                />
+                <FieldLabel>Next session date</FieldLabel>
+                <input className={baseInputClass} type="date" value={sessionForm.nextSessionDate} onChange={(e) => setSessionForm((prev) => ({ ...prev, nextSessionDate: e.target.value }))} />
               </div>
             </div>
-
-            <div className="mt-4">
-              <div className="mb-2 text-sm font-medium text-[#334155]">
-                Mentorship activities this week
-              </div>
-              <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-                {ACTIVITY_OPTIONS.map((activity) => (
-                  <label
-                    key={activity}
-                    className="flex items-center gap-2 text-sm text-[#334155]"
-                  >
-                    <input
-                      type="checkbox"
-                      checked={weekLogForm.activities.includes(activity)}
-                      onChange={() => onToggleActivity(activity)}
-                    />
-                    {activity}
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                Key focus / issues this week
-              </label>
-              <textarea
-                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Key focus / issues this week"
-                value={weekLogForm.focus}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({
-                    ...prev,
-                    focus: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                Progress / outcomes observed
-              </label>
-              <textarea
-                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Progress / outcomes observed"
-                value={weekLogForm.outcomes}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({
-                    ...prev,
-                    outcomes: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                Barriers / challenges encountered
-              </label>
-              <textarea
-                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Barriers / challenges encountered"
-                value={weekLogForm.barriers}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({
-                    ...prev,
-                    barriers: e.target.value,
-                  }))
-                }
-              />
-            </div>
-            <div className="mt-3">
-              <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                Action plan for next week
-              </label>
-              <textarea
-                className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                placeholder="Action plan for next week"
-                value={weekLogForm.nextPlan}
-                onChange={(e) =>
-                  setWeekLogForm((prev) => ({
-                    ...prev,
-                    nextPlan: e.target.value,
-                  }))
-                }
-              />
-            </div>
-
-            <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Engagement level
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={weekLogForm.engagement}
-                  onChange={(e) =>
-                    setWeekLogForm((prev) => ({
-                      ...prev,
-                      engagement: e.target.value,
-                    }))
-                  }
-                >
-                  <option value="high">High - proactive, well-prepared</option>
-                  <option value="medium">Medium - partially engaged</option>
-                  <option value="low">Low - inconsistent engagement</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Weekly status flag
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={weekLogForm.flag}
-                  onChange={(e) =>
-                    setWeekLogForm((prev) => ({
-                      ...prev,
-                      flag: e.target.value,
-                    }))
-                  }
-                >
-                  {FLAG_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowWeekLogModal(false)}
-                className="rounded-lg border border-black/15 px-5 py-2"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-[#163b8f] px-5 py-2 font-semibold text-white"
-              >
-                Save weekly log
-              </button>
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button type="button" onClick={() => setShowSessionModal(false)} className={modalCancelClass}>Cancel</button>
+              <button type="submit" className={modalSubmitClass}>Save coaching session</button>
             </div>
           </form>
         </div>
       )}
 
       {showMilestoneModal && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 p-4">
-          <form
-            onSubmit={onSubmitMilestone}
-            className="w-full max-w-4xl rounded-2xl bg-white p-6"
-          >
-            <h3 className="mb-4 text-3xl font-semibold text-[#111827]">
-              Add milestone
-            </h3>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div className={modalOverlayClass}>
+          <form onSubmit={onSubmitMilestone} className={modalCardClass}>
+            <div className={modalHeaderClass}>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Enterprise
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={enterprise?.name || ""}
-                  disabled
-                >
-                  <option>{enterprise?.name || "Enterprise"}</option>
-                </select>
+                <h3 className="text-2xl font-black text-slate-950">Add milestone</h3>
+                <p className="mt-1 text-sm text-slate-500">Create a milestone for {enterprise?.name || "this startup"}.</p>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Due date
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  type="date"
-                  value={milestoneForm.dueDate}
-                  onChange={(e) =>
-                    setMilestoneForm((prev) => ({
-                      ...prev,
-                      dueDate: e.target.value,
-                    }))
-                  }
-                />
-              </div>
+              <button
+                type="button"
+                onClick={() => setShowMilestoneModal(false)}
+                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+              >
+                ×
+              </button>
+            </div>
+            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
               <div className="md:col-span-2">
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Milestone title
-                </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  placeholder="Milestone title"
-                  value={milestoneForm.title}
-                  onChange={(e) =>
-                    setMilestoneForm((prev) => ({
-                      ...prev,
-                      title: e.target.value,
-                    }))
-                  }
-                  required
-                />
+                <FieldLabel>Milestone title</FieldLabel>
+                <input className={baseInputClass} placeholder="Milestone title" value={milestoneForm.title} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, title: e.target.value }))} required />
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Initial status
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={milestoneForm.status}
-                  onChange={(e) =>
-                    setMilestoneForm((prev) => ({
-                      ...prev,
-                      status: e.target.value,
-                    }))
-                  }
-                >
+                <FieldLabel>Due date</FieldLabel>
+                <input className={baseInputClass} type="date" value={milestoneForm.dueDate} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, dueDate: e.target.value }))} />
+              </div>
+              <div>
+                <FieldLabel>Initial status</FieldLabel>
+                <select className={baseInputClass} value={milestoneForm.status} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, status: e.target.value }))}>
                   <option value="pending">Pending</option>
                   <option value="in_progress">In progress</option>
                   <option value="completed">Completed</option>
                 </select>
               </div>
               <div>
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Linked tranche
-                </label>
-                <select
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
-                  value={milestoneForm.linkedTranche}
-                  onChange={(e) =>
-                    setMilestoneForm((prev) => ({
-                      ...prev,
-                      linkedTranche: e.target.value,
-                    }))
-                  }
-                >
+                <FieldLabel>Linked tranche</FieldLabel>
+                <select className={baseInputClass} value={milestoneForm.linkedTranche} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, linkedTranche: e.target.value }))}>
                   <option value="None">None</option>
                   {trancheStages.map((item, index) => (
-                    <option
-                      key={`${item.title}-${item.date}-${index}`}
-                      value={item.title}
-                    >
-                      {item.title} ({formatDateDisplay(item.date)} · $
-                      {Number(item.amount || 0)})
+                    <option key={`${item.title}-${item.date}-${index}`} value={item.title}>
+                      {item.title} ({formatDateDisplay(item.date)} · {formatCurrency(item.amount)})
                     </option>
                   ))}
                 </select>
               </div>
               <div className="md:col-span-2">
-                <label className="mb-1 block text-xs font-semibold text-[#334155]">
-                  Description
-                </label>
-                <textarea
-                  className="min-h-[90px] w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  placeholder="Description"
-                  value={milestoneForm.description}
-                  onChange={(e) =>
-                    setMilestoneForm((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
-                  }
-                />
+                <FieldLabel>Description</FieldLabel>
+                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Description" value={milestoneForm.description} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, description: e.target.value }))} />
               </div>
             </div>
-
-            <div className="mt-4 flex justify-end gap-3">
-              <button
-                type="button"
-                onClick={() => setShowMilestoneModal(false)}
-                className="rounded-lg border border-black/15 px-5 py-2"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="rounded-lg bg-[#163b8f] px-5 py-2 font-semibold text-white"
-              >
-                Save milestone
-              </button>
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button type="button" onClick={() => setShowMilestoneModal(false)} className={modalCancelClass}>Cancel</button>
+              <button type="submit" className={modalSubmitClass}>Save milestone</button>
             </div>
           </form>
         </div>

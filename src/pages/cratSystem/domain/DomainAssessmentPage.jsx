@@ -726,15 +726,11 @@ const DomainAssessmentPage = ({ domainKey: propDomainKey } = {}) => {
                       <div className="flex shrink-0 items-center gap-3">
                         <label
                           htmlFor={`sidebar-attachment-${question.id}`}
-<<<<<<< HEAD
-                          className="cursor-pointer text-[#082d77] transition hover:text-[#082d77]"
-=======
-                          className={`text-blue-600 transition hover:text-blue-700 ${
+                          className={`text-[#082d77] transition hover:text-blue-700 ${
                             isEditableAssessment
                               ? "cursor-pointer"
                               : "cursor-not-allowed opacity-50"
                           }`}
->>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
                           title={
                             state.hasAttachment
                               ? labels.replaceAttachment

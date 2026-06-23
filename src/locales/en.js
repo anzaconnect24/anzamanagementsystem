@@ -219,8 +219,10 @@ export const en = {
     rejectedApplications: "Rejected Applications",
     mentorshipRequests: "Mentorship Requests",
     mentorTracker: "Mentor Tracker",
-    myMilestones: "My Milestones",
-    trackerOverview: "Tracker Overview",
+    myMilestones: "Enterprise Growth Dashboard",
+    trackerOverview: "Grant Management",
+    tracking: "Portfolio Support",
+    staffTracker: "Grant Management",
 
     // Mentorship Application Form
     mentorshipApplication: {
@@ -283,6 +285,7 @@ export const en = {
   // Authentication
   auth: {
     signIn: "Sign In",
+    createYourAccount: "Create your account",
     signUp: "Sign Up",
     signOut: "Sign Out",
     logout: "Log Out",

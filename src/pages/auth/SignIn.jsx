@@ -129,7 +129,7 @@ const SignInForm = () => {
           )}
         </Formik>
         
-          <p className="mt-3 text-center text-[10px] font-extralight text-gray-400">
+          <p className="mt-3 text-center text-xs font-light text-gray-500">
             By signing in, you agree to our{" "}
             <Link
               href="/terms"

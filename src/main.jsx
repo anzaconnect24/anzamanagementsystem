@@ -1,10 +1,15 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import App from "./App.jsx";
 import "./index.css";
 import "./data-tables-css.css";
 import "./satoshi.css";
+
+// Google OAuth client id (Google Cloud Console → OAuth credentials).
+// Set VITE_GOOGLE_CLIENT_ID in your .env file.
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "";
 
 // Initialize Firebase (moved from layout to ensure client-side only)
 import { initializeApp, getApps, getApp } from "firebase/app";
@@ -28,8 +33,10 @@ export const db = getFirestore(app);
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
-      <App />
-    </BrowserRouter>
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </GoogleOAuthProvider>
   </React.StrictMode>
 );

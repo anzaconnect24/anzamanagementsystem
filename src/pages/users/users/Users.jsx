@@ -97,6 +97,9 @@ const Page = () => {
                 <option value="all">{t("users.allRoles", "All Roles")}</option>
                 <option value="Admins">{t("users.admin", "Admins")}</option>
                 <option value="Staff">{t("users.staff", "Staff")}</option>
+                <option value="Finance">
+                  {t("users.finance", "Finance Officer")}
+                </option>
                 <option value="Investor">
                   {t("users.investor", "Investor")}
                 </option>
@@ -343,6 +346,9 @@ const Page = () => {
                           </option>
                           <option value="Staff">
                             {t("users.staff", "Staff")}
+                          </option>
+                          <option value="Finance">
+                            {t("users.finance", "Finance Officer")}
                           </option>
                           <option value="Investor">
                             {t("users.investor", "Investor")}

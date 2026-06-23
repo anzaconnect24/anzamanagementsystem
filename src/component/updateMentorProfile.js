@@ -5,6 +5,7 @@ import { getSectors } from "../controllers/sector_controller";
 import toast from "react-hot-toast";
 
 const UpdateMentorProfile = ({ user, refresh, setRefresh }) => {
+  const profile = user?.MentorProfile || {};
   const [sectors, setSectors] = useState([]);
   const [loading, setLoading] = useState(false);
   const [formValues, setFormValues] = useState({
@@ -80,6 +81,45 @@ const UpdateMentorProfile = ({ user, refresh, setRefresh }) => {
 
   return (
     <div>
+      <section
+        className="relative mb-6 overflow-hidden rounded-2xl bg-slate-950 px-7 py-8 text-white shadow-sm"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.2) 100%), url('/images/mentor_hero.svg')",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-[#F59E0B]" />
+            Mentor Profile
+          </div>
+          <h1 className="mt-5 text-3xl font-black tracking-tight md:text-4xl">
+            {user?.name || profile.organisation || "Mentor Profile"}
+          </h1>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {[
+              { label: "Position", value: profile.position },
+              { label: "Organisation", value: profile.organisation },
+              { label: "Location", value: profile.location },
+              { label: "Sector", value: profile.BusinessSector?.name },
+              { label: "Availability", value: profile.mentorAvailability },
+            ].map((tile) => (
+              <div
+                key={tile.label}
+                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur"
+              >
+                <p className="text-xs font-medium text-white/60">{tile.label}</p>
+                <p className="mt-1 truncate text-lg font-black capitalize text-white">
+                  {tile.value || "N/A"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <form onSubmit={handleSubmit}>
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5">
@@ -134,7 +174,7 @@ const UpdateMentorProfile = ({ user, refresh, setRefresh }) => {
                     </label>
                     <select
                       name="business_sector_uuid"
-                      defaultValue={user.MentorProfile?.BusinessSector.id}
+                      defaultValue={profile.BusinessSector?.id}
                       className="form-style"
                     >
                       <option value="">Select business sector</option>

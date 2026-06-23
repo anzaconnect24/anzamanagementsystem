@@ -10,10 +10,11 @@ import { toast } from "react-hot-toast";
 import { createConversation } from "@/controllers/conversation_controller";
 import { createNotification } from "@/controllers/notification_controller";
 import { assignEntreprenuerToMentor } from "@/controllers/mentorEntreprenuerController";
+import { assignEntreprenuerToStaff } from "@/controllers/staffEntreprenuerController";
 import Spinner from "@/components/spinner";
-import { updateUser } from "@/controllers/user_controller";
+import { updateUser, getReviewers } from "@/controllers/user_controller";
 import { getScoreData } from "@/controllers/crat_general_controller";
-import { FaFilePdf } from "react-icons/fa";
+import { FaFilePdf, FaUserTie } from "react-icons/fa";
 import { useTranslation } from "@/locales";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import { generateCapitalReadinessPDF } from "../../../services/capitalReadinessPDF";
@@ -43,6 +44,45 @@ const Page = () => {
   const [cratData, setCratData] = useState(null);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [cratDocs, setCratDocs] = useState([]);
+
+  const [showBdaModal, setShowBdaModal] = useState(false);
+  const [bdaList, setBdaList] = useState([]);
+  const [selectedBdaUuid, setSelectedBdaUuid] = useState("");
+  const [assigningBda, setAssigningBda] = useState(false);
+
+  const openBdaModal = () => {
+    setSelectedBdaUuid("");
+    setShowBdaModal(true);
+    // Staff-role users are the Business Development Advisors (BDAs).
+    // "Staff" is displayed for users stored with role "Reviewer".
+    getReviewers(1000, 1).then((body) => {
+      const all = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+      const staffOnly = all.filter((user) => ["Staff", "Reviewer"].includes(user.role));
+      setBdaList(staffOnly.length ? staffOnly : all);
+    });
+  };
+
+  const onAssignToBda = async () => {
+    if (!selectedBdaUuid) {
+      toast.error("Select a Business Development Advisor");
+      return;
+    }
+    setAssigningBda(true);
+    try {
+      await assignEntreprenuerToStaff({
+        staff_uuid: selectedBdaUuid,
+        entreprenuer_uuid: business?.User?.uuid,
+      });
+      toast.success("Entrepreneur assigned to BDA");
+      setShowBdaModal(false);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to assign entrepreneur",
+      );
+    } finally {
+      setAssigningBda(false);
+    }
+  };
 
   const toReadinessStatus = (percentage) => {
     if (percentage >= 75) return "Ready";
@@ -1313,6 +1353,16 @@ const Page = () => {
                 </Link>
               )}
 
+              {userDetails.role === "Finance" && (
+                <button
+                  onClick={openBdaModal}
+                  className="inline-flex items-center justify-center rounded-xl bg-[#082d77] px-6 py-4 text-lg font-semibold text-white shadow-sm transition-all duration-200 hover:bg-[#061f54] hover:shadow-md"
+                >
+                  <FaUserTie className="mr-2 text-xl" />
+                  Assign to BDA
+                </button>
+              )}
+
               {userDetails.role === "Mentor" && !business.linkedWithMentor && (
                 <button
                   onClick={() => {
@@ -1400,6 +1450,66 @@ const Page = () => {
                 }}
               />
             </Suspense>
+          </div>
+        </div>
+      )}
+
+      {showBdaModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl shadow-slate-950/20">
+            <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
+              <div>
+                <h3 className="text-xl font-black text-slate-950">Assign to BDA</h3>
+                <p className="mt-1 text-sm text-slate-500">{business?.name}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowBdaModal(false)}
+                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6">
+              <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">
+                Business Development Advisor
+              </label>
+              <select
+                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition focus:border-[#082d77] focus:ring-4 focus:ring-[#082d77]/20"
+                value={selectedBdaUuid}
+                onChange={(e) => setSelectedBdaUuid(e.target.value)}
+              >
+                <option value="">Select Business Development Advisor</option>
+                {bdaList.map((staff) => (
+                  <option key={staff.uuid} value={staff.uuid}>
+                    {staff.name || staff.email || "Unnamed advisor"}
+                  </option>
+                ))}
+              </select>
+              {bdaList.length === 0 && (
+                <p className="mt-2 text-xs text-slate-500">
+                  No Business Development Advisors found.
+                </p>
+              )}
+            </div>
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button
+                type="button"
+                onClick={() => setShowBdaModal(false)}
+                disabled={assigningBda}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={onAssignToBda}
+                disabled={assigningBda}
+                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+              >
+                {assigningBda ? "Assigning..." : "Assign"}
+              </button>
+            </div>
           </div>
         </div>
       )}

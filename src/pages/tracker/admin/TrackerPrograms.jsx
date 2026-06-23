@@ -7,6 +7,7 @@ import {
   editProgram,
   getPrograms,
 } from "@/controllers/program_controller";
+import { getEnterprenuers } from "@/controllers/user_controller";
 
 const PROGRAM_CATEGORIES = [
   "Ideation",
@@ -16,6 +17,7 @@ const PROGRAM_CATEGORIES = [
 
 const DEFAULT_PROGRAM_IMAGE = "/images/ideation-classes.svg";
 const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
+const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
 
 const emptyForm = {
   title: "",
@@ -24,6 +26,7 @@ const emptyForm = {
   categories: ["Ideation"],
   startDate: "",
   endDate: "",
+  startups: [],
 };
 
 const formatDate = (value) => {
@@ -58,49 +61,51 @@ const normalizeCategories = (categories = []) => {
   );
 };
 
-const parseTrackerProgramMeta = (program) => {
-  const rawDescription = String(program?.description || "");
-  const markerIndex = rawDescription.lastIndexOf(TRACKER_CATEGORIES_MARKER);
-
-  if (markerIndex === -1) {
-    const fallbackCategories = normalizeCategories([program?.programCategory]);
-    return {
-      cleanDescription: rawDescription,
-      categories: fallbackCategories,
-    };
-  }
-
-  const cleanDescription = rawDescription.slice(0, markerIndex).trim();
-  const rawCategories = rawDescription
-    .slice(markerIndex + TRACKER_CATEGORIES_MARKER.length)
-    .trim();
-
-  let parsedCategories = [];
+// Read a marker's single-line JSON value out of a program description.
+const parseMarkerJson = (text, marker) => {
+  const idx = text.lastIndexOf(marker);
+  if (idx === -1) return [];
+  const line = text.slice(idx + marker.length).split("\n")[0].trim();
   try {
-    const parsedValue = JSON.parse(rawCategories);
-    if (Array.isArray(parsedValue)) {
-      parsedCategories = parsedValue;
-    }
-  } catch (error) {
-    parsedCategories = [];
+    const value = JSON.parse(line);
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
   }
-
-  const categories = normalizeCategories([
-    ...parsedCategories,
-    program?.programCategory,
-  ]);
-
-  return {
-    cleanDescription,
-    categories,
-  };
 };
 
-const buildDescriptionWithCategories = (description, categories) => {
+const parseTrackerProgramMeta = (program) => {
+  const rawDescription = String(program?.description || "");
+  const indices = [
+    rawDescription.indexOf(TRACKER_CATEGORIES_MARKER),
+    rawDescription.indexOf(TRACKER_STARTUPS_MARKER),
+  ].filter((i) => i >= 0);
+  const firstMarker = indices.length ? Math.min(...indices) : -1;
+  const cleanDescription =
+    firstMarker === -1 ? rawDescription : rawDescription.slice(0, firstMarker).trim();
+
+  const categories = normalizeCategories([
+    ...parseMarkerJson(rawDescription, TRACKER_CATEGORIES_MARKER),
+    program?.programCategory,
+  ]);
+  const startups = parseMarkerJson(rawDescription, TRACKER_STARTUPS_MARKER);
+
+  return { cleanDescription, categories, startups };
+};
+
+// Encode categories + selected startups into the description. STARTUPS is
+// written before CATEGORIES so the legacy categories parser (lastIndexOf) is
+// unaffected.
+const buildDescriptionWithMeta = (description, categories, startups) => {
   const cleanDescription = String(description || "").trim();
   const safeCategories = normalizeCategories(categories);
+  const safeStartups = Array.isArray(startups) ? startups.filter(Boolean) : [];
 
-  return `${cleanDescription}\n\n${TRACKER_CATEGORIES_MARKER}${JSON.stringify(safeCategories)}`;
+  return (
+    `${cleanDescription}\n\n` +
+    `${TRACKER_STARTUPS_MARKER}${JSON.stringify(safeStartups)}\n` +
+    `${TRACKER_CATEGORIES_MARKER}${JSON.stringify(safeCategories)}`
+  );
 };
 
 const TrackerPrograms = () => {
@@ -112,6 +117,43 @@ const TrackerPrograms = () => {
   const [editingProgram, setEditingProgram] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [categoryInput, setCategoryInput] = useState("");
+  const [pool, setPool] = useState([]);
+  const [poolSearch, setPoolSearch] = useState("");
+
+  useEffect(() => {
+    getEnterprenuers(1000, 1, " ")
+      .then((body) => {
+        const list = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
+        setPool(list);
+      })
+      .catch(() => setPool([]));
+  }, []);
+
+  const toStartupMember = (item) => ({
+    entreprenuerUuid: item?.uuid,
+    businessUuid: item?.Business?.uuid || "",
+    name: item?.Business?.name || item?.name || "Unnamed startup",
+    grantUsd: "",
+    bdaUuid: "",
+    bdaName: "",
+    utilized: "",
+    disbursed: false,
+    overdueReports: 0,
+  });
+
+  const isStartupSelected = (uuid) =>
+    (form.startups || []).some((s) => s.entreprenuerUuid === uuid);
+
+  const toggleStartup = (item) =>
+    setForm((prev) => {
+      const exists = (prev.startups || []).some((s) => s.entreprenuerUuid === item.uuid);
+      return {
+        ...prev,
+        startups: exists
+          ? prev.startups.filter((s) => s.entreprenuerUuid !== item.uuid)
+          : [...(prev.startups || []), toStartupMember(item)],
+      };
+    });
 
   const loadPrograms = async () => {
     setLoading(true);
@@ -155,6 +197,7 @@ const TrackerPrograms = () => {
           : [program?.programCategory || "Ideation"],
       startDate: program?.startDate || "",
       endDate: program?.endDate || "",
+      startups: Array.isArray(parsedMeta.startups) ? parsedMeta.startups : [],
     });
     setCategoryInput("");
     setShowModal(true);
@@ -212,9 +255,10 @@ const TrackerPrograms = () => {
 
     const payload = {
       title: form.title.trim(),
-      description: buildDescriptionWithCategories(
+      description: buildDescriptionWithMeta(
         form.description,
         form.categories,
+        form.startups,
       ),
       programCategory: form.programCategory,
       startDate: form.startDate || null,
@@ -271,81 +315,115 @@ const TrackerPrograms = () => {
 
   return (
     <div className="space-y-6 bg-[#eef2f8] px-6 py-6">
-      <div className="rounded-2xl bg-[#11358b] px-5 py-4 text-white">
-        <h1 className="text-2xl font-bold">Tracker Programs</h1>
-        <p className="text-sm text-white/80">
-          Manage mentor-tracker programs used in enterprise enrollment.
-        </p>
-      </div>
+      <section
+        className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 100%), url('/images/mentor_hero.svg')",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
+        <div className="relative z-10 max-w-3xl">
+          <div className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur">
+            <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
+            Tracker Programs
+          </div>
+          <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Tracker Programs</h1>
+          <p className="mt-3 text-sm leading-7 text-white/85 md:text-base">
+            Manage BDA-tracker programs used in enterprise enrollment.
+          </p>
+        </div>
+      </section>
 
-      <div className="rounded-2xl border border-black/10 bg-white p-4">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-[#111827]">
-            Program List ({programs.length})
+      <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-black tracking-tight text-slate-950">
+            Available Programs
           </h2>
           <button
             type="button"
             onClick={openCreateModal}
-            className="rounded-lg bg-[#163b8f] px-4 py-2 text-sm font-semibold text-white"
+            className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d]"
           >
-            Add Program
+            + Add Program
           </button>
         </div>
 
         {loading ? (
-          <div className="rounded-xl border border-dashed border-black/20 p-6 text-sm text-black/60">
+          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
             Loading programs...
           </div>
         ) : programs.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-black/20 p-6 text-sm text-black/60">
+          <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
             No programs yet. Click Add Program to create one.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-5">
             {programs.map((program) => {
               const parsedMeta = parseTrackerProgramMeta(program);
 
               return (
-                <div
+                <article
                   key={program.uuid}
-                  className="rounded-xl border border-black/10 bg-white p-4"
+                  className="flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm shadow-slate-200/70 transition hover:-translate-y-0.5 hover:shadow-lg hover:shadow-[#082d77]/10"
                 >
-                  <div className="mb-2 flex items-start justify-between gap-2">
-                    <h3 className="text-xl font-semibold text-[#111827]">
-                      {program.title}
-                    </h3>
-                    <span className="rounded-full bg-[#dbe8ff] px-3 py-1 text-xs font-semibold text-[#163b8f]">
-                      {program.programCategory || "N/A"}
-                    </span>
-                  </div>
-
-                  <p className="mb-3 line-clamp-3 text-sm text-[#4b5563]">
-                    {parsedMeta.cleanDescription || "N/A"}
-                  </p>
-
-                  <div className="mb-3 flex flex-wrap gap-2">
-                    {parsedMeta.categories.map((category) => (
-                      <span
-                        key={`${program.uuid}-${category}`}
-                        className="rounded-full bg-[#eef2ff] px-2.5 py-1 text-xs font-semibold text-[#1f3b88]"
-                      >
-                        {category}
+                  <div className="flex-1 p-5">
+                    <div className="flex items-start justify-between gap-3">
+                      <h3 className="text-lg font-black tracking-tight text-slate-950">
+                        {program.title}
+                      </h3>
+                      <span className="shrink-0 rounded-full bg-[#082d77]/5 px-3 py-1 text-xs font-bold text-[#082d77]">
+                        {program.programCategory || "N/A"}
                       </span>
-                    ))}
+                    </div>
+
+                    <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">
+                      {parsedMeta.cleanDescription || "No description provided."}
+                    </p>
+
+                    {parsedMeta.categories.length > 0 && (
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {parsedMeta.categories.map((category) => (
+                          <span
+                            key={`${program.uuid}-${category}`}
+                            className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600"
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    <div className="mt-4 grid grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                        <p className="text-xs font-bold tracking-wide text-slate-400">Start</p>
+                        <p className="mt-1 text-sm font-black text-slate-950">{formatDate(program.startDate)}</p>
+                      </div>
+                      <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
+                        <p className="text-xs font-bold tracking-wide text-slate-400">End</p>
+                        <p className="mt-1 text-sm font-black text-slate-950">{formatDate(program.endDate)}</p>
+                      </div>
+                    </div>
                   </div>
 
-                  <div className="mb-4 grid grid-cols-2 gap-2 text-sm text-[#374151]">
-                    <div>
-                      <span className="font-medium">Start:</span>{" "}
-                      {formatDate(program.startDate)}
+                  <div className="flex items-center justify-between gap-2 border-t border-slate-100 px-5 py-3">
+                    <div className="flex items-center gap-3 text-xs font-bold">
+                      <button
+                        type="button"
+                        onClick={() => openEditModal(program)}
+                        className="text-slate-500 transition hover:text-[#082d77]"
+                      >
+                        Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => onDelete(program)}
+                        className="text-rose-600 transition hover:text-rose-700"
+                      >
+                        Delete
+                      </button>
                     </div>
-                    <div>
-                      <span className="font-medium">End:</span>{" "}
-                      {formatDate(program.endDate)}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2">
                     <button
                       type="button"
                       onClick={() =>
@@ -353,26 +431,12 @@ const TrackerPrograms = () => {
                           `/dashboard/trackerPrograms/${program.uuid}/details`,
                         )
                       }
-                      className="rounded-md bg-[#e0ecff] px-3 py-1.5 text-sm font-semibold text-[#163b8f]"
+                      className="flex items-center gap-1.5 text-sm font-bold text-emerald-600 transition hover:text-emerald-700"
                     >
-                      View
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => openEditModal(program)}
-                      className="rounded-md border border-[#d0d7e8] px-3 py-1.5 text-sm font-medium text-[#1f3b88]"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => onDelete(program)}
-                      className="rounded-md bg-[#fee2e2] px-3 py-1.5 text-sm font-semibold text-[#b91c1c]"
-                    >
-                      Delete
+                      View Details <span aria-hidden>&rarr;</span>
                     </button>
                   </div>
-                </div>
+                </article>
               );
             })}
           </div>
@@ -505,6 +569,44 @@ const TrackerPrograms = () => {
                   placeholder="Program description"
                   required
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-1 block text-sm font-medium text-[#475569]">
+                  Startups in this program ({(form.startups || []).length} selected)
+                </label>
+                <input
+                  className="mb-2 w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
+                  placeholder="Search startups from the pool..."
+                  value={poolSearch}
+                  onChange={(e) => setPoolSearch(e.target.value)}
+                />
+                <div className="max-h-56 space-y-1 overflow-auto rounded-lg border border-[#b7c5e5] p-2">
+                  {pool.length === 0 && (
+                    <p className="p-2 text-sm text-[#64748b]">No startups available in the pool.</p>
+                  )}
+                  {pool
+                    .filter((item) => {
+                      const name = (item?.Business?.name || item?.name || "").toLowerCase();
+                      return !poolSearch || name.includes(poolSearch.toLowerCase());
+                    })
+                    .map((item) => (
+                      <label
+                        key={item.uuid}
+                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[#f1f5f9]"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isStartupSelected(item.uuid)}
+                          onChange={() => toggleStartup(item)}
+                        />
+                        <span className="font-medium text-[#111827]">
+                          {item?.Business?.name || item?.name || "Unnamed startup"}
+                        </span>
+                        {item?.email && <span className="text-xs text-[#64748b]">{item.email}</span>}
+                      </label>
+                    ))}
+                </div>
               </div>
             </div>
 

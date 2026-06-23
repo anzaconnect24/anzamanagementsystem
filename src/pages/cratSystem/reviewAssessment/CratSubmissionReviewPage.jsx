@@ -671,21 +671,8 @@ const CratSubmissionReviewPage = () => {
   }, [activeDomainKey, groupedDomainRows]);
 
   const requiredAttachments = useMemo(() => {
-<<<<<<< HEAD
-    return Array.from(
-      new Map(
-        (activeDomainSection?.rows || [])
-          .filter((row) => {
-            const requiredAttachment = String(row.requiredAttachment || "").trim();
-
-            return requiredAttachment && requiredAttachment !== "-";
-          })
-          .map((row) => [String(row.requiredAttachment).trim(), row]),
-      ).values(),
-=======
     const rowsWithRequiredAttachments = (activeDomainSection?.rows || []).filter(
       (row) => (row.requiredAttachments || []).length > 0,
->>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
     );
 
     return rowsWithRequiredAttachments.map((row) => ({
@@ -1054,33 +1041,20 @@ const CratSubmissionReviewPage = () => {
                       Required Documents
                     </h2>
 
-<<<<<<< HEAD
                     <p className="mt-2 text-sm leading-6 text-slate-500">
                       Review the supporting evidence requested by admin for this
                       domain.
                     </p>
-=======
-                  <div className="mt-5 space-y-3">
-                    {requiredAttachments.length > 0 ? (
-                      requiredAttachments.map((row) => (
-                        <div
-                          key={`doc-${row.questionId}`}
-                          className="rounded-2xl border border-slate-200 bg-white p-4"
-                        >
-                          <p className="truncate text-sm font-semibold text-slate-800">
-                            {row.requiredAttachmentLabel}
-                          </p>
->>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
 
                     <div className="mt-5 space-y-3">
                       {requiredAttachments.length > 0 ? (
                         requiredAttachments.map((row) => (
                           <div
-                            key={`doc-${row.requiredAttachment}`}
+                            key={`doc-${row.questionId}`}
                             className="rounded-2xl border border-slate-200 bg-white p-4"
                           >
                             <p className="truncate text-sm font-semibold text-slate-800">
-                              {row.requiredAttachment}
+                              {row.requiredAttachmentLabel}
                             </p>
 
                             {row.attachment ? (

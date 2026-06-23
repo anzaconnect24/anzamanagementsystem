@@ -2,6 +2,11 @@
 
 import { useContext, useEffect, useState } from "react";
 import { deleteProgram, getPrograms } from "@/controllers/program_controller";
+import {
+  getEnrollmentCounts,
+  getMyEnrolledCourseUuids,
+} from "@/controllers/enrollment_controller";
+import { onlyCourses } from "@/utils/programMeta";
 import Link from "@/utils/link";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import Image from "@/utils/image";
@@ -9,10 +14,13 @@ import Loader from "@/components/common/Loader";
 import { useRouter } from "@/utils/navigation";
 import { useTranslation } from "@/locales";
 import { useParams } from "react-router-dom";
+import { FaUsers } from "react-icons/fa";
 
 const ProgramsPage = () => {
   const { course } = useParams();
   const [programs, setPrograms] = useState([]);
+  const [enrollCounts, setEnrollCounts] = useState({});
+  const [myEnrolled, setMyEnrolled] = useState(new Set());
   const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
@@ -53,7 +61,21 @@ const ProgramsPage = () => {
     setLoading(true);
     try {
       const res = await getPrograms(page, limit, courseName);
-      setPrograms(Array.isArray(res?.data) ? res.data : []);
+      // Drop Finance/grant tracker programs and strip metadata markers so
+      // only genuine courses with clean descriptions appear.
+      const list = onlyCourses(Array.isArray(res?.data) ? res.data : []);
+      setPrograms(list);
+
+      // Load enrolled-startup counts + which courses I'm enrolled in.
+      const uuids = list.map((item) => item.uuid).filter(Boolean);
+      const [counts, mine] = await Promise.all([
+        getEnrollmentCounts(uuids),
+        userDetails?.uuid
+          ? getMyEnrolledCourseUuids(userDetails.uuid)
+          : Promise.resolve(new Set()),
+      ]);
+      setEnrollCounts(counts);
+      setMyEnrolled(mine);
     } catch (error) {
       setPrograms([]);
     } finally {
@@ -165,6 +187,12 @@ const ProgramsPage = () => {
                   />
 
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+
+                  {myEnrolled.has(item.uuid) && (
+                    <span className="absolute right-3 top-3 rounded-full bg-[#16a34a] px-3 py-1 text-xs font-semibold text-white shadow-sm">
+                      Enrolled
+                    </span>
+                  )}
                 </div>
               </Link>
 
@@ -178,8 +206,9 @@ const ProgramsPage = () => {
                 </p>
 
                 <div className="flex items-center justify-between border-t border-[#EAECF0] pt-5">
-                  <span className="rounded-full bg-[#F9FAFB] px-3 py-1 text-sm text-[#667085]">
-                    Flexible Learning
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F9FAFB] px-3 py-1 text-sm text-[#667085]">
+                    <FaUsers className="text-[#082d77]" />
+                    {enrollCounts[item.uuid] || 0} enrolled
                   </span>
 
                   {!isAdmin && (
@@ -187,7 +216,9 @@ const ProgramsPage = () => {
                       href={`/dashboard/programs/details/${item.uuid}`}
                       className="text-sm font-semibold text-[#F59E0B] transition hover:text-[#D97706]"
                     >
-                      Explore Course →
+                      {myEnrolled.has(item.uuid)
+                        ? "Continue →"
+                        : "Explore Course →"}
                     </Link>
                   )}
                 </div>

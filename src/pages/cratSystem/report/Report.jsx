@@ -636,32 +636,20 @@ const Report = () => {
                     </td>
 
                     <td className="px-3 py-4 text-sm">
-                      <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">
+                      <span
+                        className="rounded-full px-3 py-1 text-xs font-semibold"
+                        style={{
+                          backgroundColor: "#082d770d",
+                          color: PRIMARY_COLOR,
+                        }}
+                      >
                         {domain.status}
                       </span>
                     </td>
 
-<<<<<<< HEAD
-                      <td className="px-3 py-4 text-sm">
-                        <span
-                          className="rounded-full px-3 py-1 text-xs font-semibold"
-                          style={{
-                            backgroundColor:
-                              "#082d770d",
-                            color:
-                              PRIMARY_COLOR,
-                          }}
-                        >
-                          {
-                            domain.status
-                          }
-                        </span>
-                      </td>
-=======
                     <td className="px-3 py-4 text-sm text-slate-700">
                       {domain.coverage}%
                     </td>
->>>>>>> 36fb9c74721059773c8e5d53b46aa6c206d8ad35
 
                     <td className="px-3 py-4 text-sm text-slate-700">
                       {domain.weight}%

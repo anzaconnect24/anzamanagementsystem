@@ -1,8 +1,17 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
+import toast from "react-hot-toast";
 import { getPrograms } from "@/controllers/program_controller";
+import {
+  enrollInCourse,
+  isEnrolled as checkIsEnrolled,
+  getCourseEnrollmentCount,
+} from "@/controllers/enrollment_controller";
+import { UserContext } from "@/layouts/DashboardLayout";
+import { isTrackerProgram, cleanProgramDescription } from "@/utils/programMeta";
+import { useRouter } from "@/utils/navigation";
 import Link from "@/utils/link";
 import Image from "@/utils/image";
 import Loader from "@/components/common/Loader";
@@ -47,10 +56,19 @@ const normaliseProgram = (program) => {
 
 const CourseDetailsPage = () => {
   const { uuid } = useParams();
+  const router = useRouter();
+  const { userDetails } = useContext(UserContext);
 
   const [loading, setLoading] = useState(true);
   const [program, setProgram] = useState(null);
   const [error, setError] = useState("");
+  const [enrolled, setEnrolled] = useState(false);
+  const [enrollCount, setEnrollCount] = useState(0);
+  const [enrolling, setEnrolling] = useState(false);
+
+  // Only startups "enrol"; the enrolled count tracks enrolled startups.
+  const canEnroll = userDetails?.role === "Enterprenuer";
+  const modulesHref = `/dashboard/modules/${uuid}`;
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -70,13 +88,32 @@ const CourseDetailsPage = () => {
 
         const selectedProgram = programs.find((item) => item.uuid === uuid);
 
-        if (!selectedProgram) {
+        if (!selectedProgram || isTrackerProgram(selectedProgram)) {
           setProgram(null);
           setError("Course not found.");
           return;
         }
 
-        setProgram(normaliseProgram(selectedProgram));
+        // Strip any tracker metadata markers from the description/about.
+        setProgram(
+          normaliseProgram({
+            ...selectedProgram,
+            description: cleanProgramDescription(selectedProgram.description),
+            about: selectedProgram.about
+              ? cleanProgramDescription(selectedProgram.about)
+              : undefined,
+          }),
+        );
+
+        // Load enrollment state + live count from Firestore.
+        const [count, alreadyEnrolled] = await Promise.all([
+          getCourseEnrollmentCount(uuid),
+          userDetails?.uuid
+            ? checkIsEnrolled(uuid, userDetails.uuid)
+            : Promise.resolve(false),
+        ]);
+        setEnrollCount(count);
+        setEnrolled(alreadyEnrolled);
       } catch (error) {
         console.error("Failed to load course details:", error);
         setProgram(null);
@@ -87,18 +124,40 @@ const CourseDetailsPage = () => {
     };
 
     loadProgram();
-  }, [uuid]);
+  }, [uuid, userDetails?.uuid]);
+
+  const handleEnroll = async () => {
+    if (enrolling || !program) return;
+    setEnrolling(true);
+    try {
+      const ok = await enrollInCourse({
+        courseUuid: uuid,
+        courseTitle: program.title,
+        user: userDetails,
+      });
+      if (ok) {
+        if (!enrolled) setEnrollCount((c) => c + 1);
+        setEnrolled(true);
+        toast.success("Enrolled! Opening course modules...");
+        router.push(modulesHref);
+      } else {
+        toast.error("Could not enroll. Please try again.");
+      }
+    } finally {
+      setEnrolling(false);
+    }
+  };
 
   const courseStats = useMemo(() => {
     if (!program) return [];
 
     return [
-      { icon: "👥", label: "Enrolled", value: program.enrolled_count },
+      { icon: "👥", label: "Enrolled", value: enrollCount },
       { icon: "📖", label: "Lessons", value: program.lessons_count },
       { icon: "⭐", label: "Rating", value: program.rating },
       { icon: "🕒", label: "Duration", value: program.duration },
     ];
-  }, [program]);
+  }, [program, enrollCount]);
 
   if (loading) return <Loader />;
 
@@ -151,7 +210,7 @@ const CourseDetailsPage = () => {
             </p>
 
             <div className="flex flex-wrap items-center gap-4 text-xs font-medium text-white/90">
-              <span>👥 {program.enrolled_count} Enrolled</span>
+              <span>👥 {enrollCount} Enrolled</span>
               <span>📖 {program.lessons_count} Lessons</span>
               <span>🕒 {program.duration}</span>
             </div>
@@ -222,13 +281,42 @@ const CourseDetailsPage = () => {
               ))}
             </div>
 
-            <Link
-              href={`/dashboard/modules/${program.uuid}`}
-              className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#082d77] px-4 py-3 text-center text-xs font-semibold text-white shadow-md transition hover:bg-[#082d76]"
-            >
-              Enroll Now
-              <span className="text-base">→</span>
-            </Link>
+            {canEnroll && !enrolled && (
+              <button
+                onClick={handleEnroll}
+                disabled={enrolling}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#082d77] px-4 py-3 text-center text-xs font-semibold text-white shadow-md transition hover:bg-[#082d76] disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {enrolling ? "Enrolling..." : "Enroll Now"}
+                <span className="text-base">→</span>
+              </button>
+            )}
+
+            {canEnroll && enrolled && (
+              <Link
+                href={modulesHref}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#16a34a] px-4 py-3 text-center text-xs font-semibold text-white shadow-md transition hover:bg-[#15803d]"
+              >
+                Continue Learning
+                <span className="text-base">→</span>
+              </Link>
+            )}
+
+            {enrolled && (
+              <p className="mt-3 text-center text-[11px] font-semibold text-[#16a34a]">
+                ✓ You are enrolled in this course
+              </p>
+            )}
+
+            {!canEnroll && (
+              <Link
+                href={modulesHref}
+                className="mt-6 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#082d77] px-4 py-3 text-center text-xs font-semibold text-white shadow-md transition hover:bg-[#082d76]"
+              >
+                View Modules
+                <span className="text-base">→</span>
+              </Link>
+            )}
           </aside>
         </div>
       </div>

@@ -5,22 +5,27 @@ import toast from "react-hot-toast";
 import { getSectors } from "../controllers/sector_controller";
 
 const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
-  const [sectors, setSectors] = useState([
-    {
-      id: user.InvestorProfile.BusinessSector.id,
-      uuid: user.InvestorProfile.BusinessSector.uuid,
-      name: user.InvestorProfile.BusinessSector.name,
-    },
-  ]);
+  const profile = user?.InvestorProfile || {};
+  const [sectors, setSectors] = useState(
+    profile.BusinessSector
+      ? [
+          {
+            id: profile.BusinessSector.id,
+            uuid: profile.BusinessSector.uuid,
+            name: profile.BusinessSector.name,
+          },
+        ]
+      : []
+  );
   const [loading, setLoading] = useState(false);
   const [formValues, setFormValues] = useState({
-    investorLinkedIn: user.InvestorProfile.linkedinURL || "",
-    investorWebsite: user.InvestorProfile.website || "",
-    investorFocus: Object.values(user.InvestorProfile.investmentFocus || {}),
-    investorTicketSize: user.InvestorProfile.investmentSize || "",
-    investorStructure: Object.values(user.InvestorProfile.investmentType || {}),
-    investorBio: user.InvestorProfile.bio || "",
-    investorNotableInvestments: user.InvestorProfile.notableInvestment || "",
+    investorLinkedIn: profile.linkedinURL || "",
+    investorWebsite: profile.website || "",
+    investorFocus: Object.values(profile.investmentFocus || {}),
+    investorTicketSize: profile.investmentSize || "",
+    investorStructure: Object.values(profile.investmentType || {}),
+    investorBio: profile.bio || "",
+    investorNotableInvestments: profile.notableInvestment || "",
     investorPortfolio: null,
   });
 
@@ -70,7 +75,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
     };
 
     try {
-      await updateInvestorProfile(user.InvestorProfile.uuid, data);
+      await updateInvestorProfile(profile.uuid, data);
       setRefresh(refresh + 1);
       toast.success("User details updated successfully!");
     } catch (error) {
@@ -82,6 +87,56 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
 
   return (
     <div>
+      <section
+        className="relative mb-6 overflow-hidden rounded-2xl bg-slate-950 px-7 py-8 text-white shadow-sm"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(0,0,0,0.9) 0%, rgba(0,0,0,0.65) 45%, rgba(0,0,0,0.2) 100%), url('/images/mentor_hero.svg')",
+          backgroundPosition: "center",
+          backgroundSize: "cover",
+        }}
+      >
+        <div className="relative z-10">
+          <div className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-bold backdrop-blur">
+            <span className="h-2 w-2 rounded-full bg-[#F59E0B]" />
+            Investor Profile
+          </div>
+          <h1 className="mt-5 text-3xl font-black tracking-tight md:text-4xl">
+            {profile.company || user?.name || "Investor Profile"}
+          </h1>
+          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            {[
+              { label: "Role", value: profile.role },
+              { label: "Location", value: profile.geography },
+              {
+                label: "Ticket Size",
+                value: profile.ticketSize || profile.investmentSize,
+              },
+              { label: "Sector", value: profile.BusinessSector?.name },
+              {
+                label: "Mentoring",
+                value:
+                  profile.preferMentoring === true
+                    ? "Yes"
+                    : profile.preferMentoring === false
+                    ? "No"
+                    : "",
+              },
+            ].map((tile) => (
+              <div
+                key={tile.label}
+                className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur"
+              >
+                <p className="text-xs font-medium text-white/60">{tile.label}</p>
+                <p className="mt-1 truncate text-lg font-black text-white">
+                  {tile.value || "N/A"}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       <form onSubmit={handleSubmit}>
         <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
           <div className="py-6 px-4 md:px-6 xl:px-7.5">
@@ -99,7 +154,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                     <input
                       name="company"
                       required
-                      defaultValue={user.InvestorProfile.company}
+                      defaultValue={profile.company}
                       className="form-style"
                       placeholder="Your company name"
                       type="text"
@@ -112,7 +167,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                     <input
                       name="location"
                       required
-                      defaultValue={user.InvestorProfile.geography}
+                      defaultValue={profile.geography}
                       className="form-style"
                       placeholder="Your location"
                       type="text"
@@ -125,7 +180,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                     <input
                       name="investmentSize"
                       required
-                      defaultValue={user.InvestorProfile.ticketSize}
+                      defaultValue={profile.ticketSize}
                       className="form-style"
                       placeholder="Your investment size"
                       type="text"
@@ -138,7 +193,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                     <input
                       name="position"
                       required
-                      defaultValue={user.InvestorProfile.role}
+                      defaultValue={profile.role}
                       className="form-style"
                       placeholder="Your position in the company"
                       type="text"
@@ -151,7 +206,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                     <select
                       required
                       name="sector"
-                      defaultValue={user.InvestorProfile.BusinessSector.uuid}
+                      defaultValue={profile.BusinessSector?.uuid}
                       className="form-style"
                     >
                       <option value="">Select business sector</option>
@@ -408,7 +463,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                     <textarea
                       name="seeking"
                       required
-                      defaultValue={user.InvestorProfile.seeking}
+                      defaultValue={profile.seeking}
                       className="form-style"
                       placeholder="What are you seeking"
                       rows="4"
@@ -426,7 +481,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                           required
                           name="investorMentoringPreference"
                           value="true"
-                          defaultChecked={user.InvestorProfile.preferMentoring}
+                          defaultChecked={profile.preferMentoring}
                           className="form-radio"
                         />
                         <span>Yes, I am open to mentoring startups</span>
@@ -437,7 +492,7 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
                           required
                           name="investorMentoringPreference"
                           value="false"
-                          defaultChecked={!user.InvestorProfile.preferMentoring}
+                          defaultChecked={!profile.preferMentoring}
                           className="form-radio"
                         />
                         <span>No, I am only interested in investing</span>
