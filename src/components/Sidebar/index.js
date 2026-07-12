@@ -390,11 +390,6 @@ const Sidebar = ({
             path: "/dashboard/trackerAdminOverview",
             icon: <BsCalendar3 className="text-xl" />,
           },
-          {
-            name: t("navigation.programsManagement", "Programs Management"),
-            path: "/dashboard/trackerPrograms",
-            icon: <MdBusinessCenter className="text-xl" />,
-          },
         ],
       });
     }
@@ -460,7 +455,7 @@ const Sidebar = ({
     if (businessItems.length > 0) {
       categories.push({
         id: "investmentPipeline",
-        title: t("navigation.businessOperations", "Business Operations"),
+        title: t("navigation.requests", "Requests"),
         items: businessItems,
       });
     }
@@ -522,15 +517,6 @@ const Sidebar = ({
 
     const programsItems = [];
 
-    if (["Admin", "Enterprenuer"].includes(role)) {
-      programsItems.push({
-        name: t("navigation.programsApplications", "Programs Applications"),
-        icon: <MdBusinessCenter className="text-xl" />,
-        path: "https://programs.anzaconnect.co.tz/login",
-        external: true,
-      });
-    }
-
     if (["Enterprenuer"].includes(role)) {
       // Build CRAT domain submenu items dynamically from available domains
       const domainSubmenu = [
@@ -581,21 +567,22 @@ const Sidebar = ({
 
     if (["Admin"].includes(role)) {
       programsItems.push({
-        name: t("navigation.mentorReports", "Mentor Reports"),
-        path: "/dashboard/mentorReports",
-        icon: <FaWpforms className="text-xl" />,
-      });
-
-      programsItems.push({
-        name: t("navigation.cratCatalogManager", "CRAT Builder"),
-        path: "/dashboard/cratCatalogManager",
+        name: t("navigation.crat", "CRAT"),
+        path: "/dashboard/crat",
         icon: <MdAssignment className="text-xl" />,
-      });
-
-      programsItems.push({
-        name: t("navigation.cratReviewApplications", "CRAT Assignment Queue"),
-        path: "/dashboard/cratReviewApplications",
-        icon: <MdAssignment className="text-xl" />,
+        submenu: [
+          {
+            name: t("navigation.cratCatalogManager", "CRAT Builder"),
+            path: "/dashboard/cratCatalogManager",
+          },
+          {
+            name: t(
+              "navigation.cratReviewApplications",
+              "CRAT Review Applications",
+            ),
+            path: "/dashboard/cratReviewApplications",
+          },
+        ],
       });
     }
 
@@ -880,22 +867,19 @@ const Sidebar = ({
       </div>
 
       <div className="mt-auto border-t border-slate-700/50 p-4">
-        {/* Settings (edit profile / account) for every user except Finance
-            Officers, who do not edit a profile. */}
-        {userDetails?.role !== "Finance" && (
-          <Link
-            href="/dashboard/edit-profile"
-            className={`mb-1 flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white ${
-              pathname === "/dashboard/edit-profile" &&
-              "bg-slate-700/50 text-white"
-            }`}
-          >
-            <IoSettingsOutline className="text-xl" />
-            {isVisuallyExpanded && (
-              <span>{t("account.settings", "Settings")}</span>
-            )}
-          </Link>
-        )}
+        {/* Settings (edit profile / account) for every user. */}
+        <Link
+          href="/dashboard/edit-profile"
+          className={`mb-1 flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white ${
+            pathname === "/dashboard/edit-profile" &&
+            "bg-slate-700/50 text-white"
+          }`}
+        >
+          <IoSettingsOutline className="text-xl" />
+          {isVisuallyExpanded && (
+            <span>{t("account.settings", "Settings")}</span>
+          )}
+        </Link>
 
         <button
           className="flex w-full items-center gap-3.5 rounded-lg py-2 px-4 text-slate-300 hover:bg-slate-700 hover:text-white"

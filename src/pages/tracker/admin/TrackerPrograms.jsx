@@ -8,6 +8,7 @@ import {
   getPrograms,
 } from "@/controllers/program_controller";
 import { getEnterprenuers } from "@/controllers/user_controller";
+import { isTrackerProgram } from "@/utils/programMeta";
 
 const PROGRAM_CATEGORIES = [
   "Ideation",
@@ -133,10 +134,15 @@ const TrackerPrograms = () => {
     entreprenuerUuid: item?.uuid,
     businessUuid: item?.Business?.uuid || "",
     name: item?.Business?.name || item?.name || "Unnamed startup",
+    sector:
+      item?.Business?.BusinessSector?.name || item?.Business?.sector || "",
     grantUsd: "",
+    disbursedAmount: "",
+    grantPurpose: "",
     bdaUuid: "",
     bdaName: "",
     utilized: "",
+    reportDate: "",
     disbursed: false,
     overdueReports: 0,
   });
@@ -160,8 +166,11 @@ const TrackerPrograms = () => {
     try {
       const response = await getPrograms(1, 500);
 
+      // Grant Management only lists grant programs (those created here, which
+      // carry the tracker metadata markers). Learn-and-grow courses such as
+      // BFA and Investment Readiness are excluded — they live under Classes.
       if (Array.isArray(response?.data)) {
-        setPrograms(response.data);
+        setPrograms(response.data.filter((program) => isTrackerProgram(program)));
       } else {
         setPrograms([]);
       }
@@ -261,6 +270,9 @@ const TrackerPrograms = () => {
         form.startups,
       ),
       programCategory: form.programCategory,
+      // Explicitly mark this as a grant-management program (kept separate
+      // from learn-and-grow courses on the backend).
+      type: "grant",
       startDate: form.startDate || null,
       endDate: form.endDate || null,
       image: editingProgram?.image || DEFAULT_PROGRAM_IMAGE,

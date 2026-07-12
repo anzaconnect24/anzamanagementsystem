@@ -2,10 +2,10 @@ import axios from "axios";
 import { server_url } from "../utils/endpoint";
 import { getUser } from "../utils/local_storage";
 
-// NOTE: The backend does not (yet) have dedicated /staff-entreprenuers routes.
-// BDA (Staff) assignments reuse the existing, working /mentor-entreprenuers
-// endpoints — the BDA's user id is stored as the "mentor". If dedicated staff
-// endpoints are added later, only the URLs below need to change.
+// BDA (Staff) assignments reuse the deployed /mentor-entreprenuers routes:
+// the BDA's user id is stored as the "mentor". (The dedicated
+// /staff-entreprenuers module is not deployed, so it 404s in production.)
+// GET /mentor/:uuid is self-or-Admin, so a BDA can read their own portfolio.
 
 const authConfig = () => {
   const user = getUser();
@@ -17,7 +17,7 @@ const authConfig = () => {
   };
 };
 
-// Admin assigns an entrepreneur to a BDA to track & manage milestones.
+// Assign an entrepreneur to a BDA to track & manage milestones.
 // Caller payload: { staff_uuid, entreprenuer_uuid }
 // Throws on failure so the UI can report it (do not swallow the error here).
 export const assignEntreprenuerToStaff = async ({ staff_uuid, entreprenuer_uuid }) => {

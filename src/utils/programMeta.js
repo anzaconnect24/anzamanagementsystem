@@ -5,9 +5,12 @@
 // learn-and-grow course experience.
 const TRACKER_MARKERS = ["__TRACKER_STARTUPS__:", "__TRACKER_CATEGORIES__:"];
 
-// A program is a tracker/grant program (not a learn-and-grow course) when
-// its description carries the tracker markers.
+// A program is a tracker/grant program (not a learn-and-grow course) when it
+// is explicitly typed "grant" (authoritative), or — for legacy rows created
+// before the `type` column existed — when its description carries the tracker
+// markers.
 export const isTrackerProgram = (program) => {
+  if (String(program?.type || "").toLowerCase() === "grant") return true;
   const text = String(program?.description || "");
   return TRACKER_MARKERS.some((marker) => text.includes(marker));
 };

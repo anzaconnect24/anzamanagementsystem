@@ -60,10 +60,24 @@ const ProgramsPage = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const res = await getPrograms(page, limit, courseName);
+      const res = await getPrograms(page, limit);
       // Drop Finance/grant tracker programs and strip metadata markers so
       // only genuine courses with clean descriptions appear.
-      const list = onlyCourses(Array.isArray(res?.data) ? res.data : []);
+      const all = onlyCourses(Array.isArray(res?.data) ? res.data : []);
+
+      // Match the category on the client, case-insensitively, so courses are
+      // never hidden by category casing differences (e.g. "Investment
+      // readiness" vs "Investment Readiness") or DB collation.
+      const target = decodeURIComponent(course || "")
+        .trim()
+        .toLowerCase();
+      const list = target
+        ? all.filter(
+            (item) =>
+              String(item.programCategory || "").trim().toLowerCase() ===
+              target,
+          )
+        : all;
       setPrograms(list);
 
       // Load enrolled-startup counts + which courses I'm enrolled in.

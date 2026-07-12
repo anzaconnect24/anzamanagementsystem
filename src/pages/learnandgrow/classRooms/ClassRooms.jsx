@@ -43,7 +43,7 @@ const Page = () => {
     },
     {
       icon: "/images/investment_readiness_classes.svg",
-      englishKey: "Investment readiness",
+      englishKey: "Investment Readiness",
       label: t(
         "learnAndGrow.investmentReadinessClasses",
         "Investment Readiness Classes"

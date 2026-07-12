@@ -1,11 +1,16 @@
-import { useMemo, useEffect, useState } from "react";
+import { useContext, useMemo, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
+import { UserContext } from "@/layouts/DashboardLayout";
+import GrantReportButton from "@/components/reports/GrantReportButton";
+import SignedContractCard from "@/components/tracker/SignedContractCard";
+import GrantSummaryCards from "@/components/tracker/GrantSummaryCards";
 import {
   createTrackerMilestone,
   getEntrepreneurTrackerDashboard,
   submitTrackerMilestone,
+  updateEntrepreneurEnterpriseKyc,
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import {
@@ -64,8 +69,8 @@ const parseSubmissionAttachments = (value) => {
 
 const formatCurrency = (value, currency = "USD") => {
   const amount = Number(value || 0);
-  if (!Number.isFinite(amount)) return `${currency} 0`;
-  return `${currency} ${amount.toLocaleString()}`;
+  if (!Number.isFinite(amount)) return `TZS ${amount || 0}`;
+  return `TZS ${amount.toLocaleString()}`;
 };
 
 const formatHours = (value) => {
@@ -151,6 +156,7 @@ const ProgressBar = ({ value, className = "" }) => (
 
 const EntrepreneurMilestones = () => {
   const navigate = useNavigate();
+  const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [isCreatingMilestone, setIsCreatingMilestone] = useState(false);
   const [dashboard, setDashboard] = useState(null);
@@ -249,6 +255,33 @@ const EntrepreneurMilestones = () => {
   useEffect(() => {
     loadDashboard(selectedEnterpriseUuid);
   }, [selectedEnterpriseUuid]);
+
+  const [signingContract, setSigningContract] = useState(false);
+
+  // The startup downloads the grant contract, signs it, and uploads the signed
+  // copy — which records the signature (contractAcknowledgedAt).
+  const onUploadSignedContract = async (file) => {
+    if (!file) return;
+    setSigningContract(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const url = await uploadFile(formData);
+      if (!url || typeof url !== "string") throw new Error("Upload failed");
+      await updateEntrepreneurEnterpriseKyc({
+        startupSignedContractUrl: url,
+        contractAcknowledgedAt: new Date().toISOString(),
+      });
+      toast.success("Signed contract uploaded");
+      await loadDashboard(selectedEnterpriseUuid);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to upload the signed contract",
+      );
+    } finally {
+      setSigningContract(false);
+    }
+  };
 
   const onSubmitMilestone = async (uuid) => {
     const targetMilestone = milestones.find((item) => item.uuid === uuid);
@@ -436,43 +469,75 @@ const EntrepreneurMilestones = () => {
   const pendingApprovalCount = milestones.filter((item) => ["pending", "draft"].includes(String(item.status || "pending"))).length;
   const submittedReportCount = milestones.filter((item) => String(item.status || "").toLowerCase() === "submitted").length;
 
-  if (loading) return <Loader />;
+  // Financial summary shown in the stat cards below the hero (mirrors the
+  // finance officer's view). Disbursement is derived from tranche stages whose
+  // linked milestone has been disbursed.
+  const grantStats = useMemo(() => {
+    const stages = Array.isArray(trancheStages) ? trancheStages : [];
+    const isTrancheDisbursed = (title) => {
+      const linked = milestones.find((m) => m.linkedTranche === title);
+      return Boolean(
+        linked &&
+          (String(linked.planStatus) === PLAN_STATUS.DISBURSED || linked.disbursed),
+      );
+    };
+    const stagesTotal = stages.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const committed = Number(enterprise?.grantUsd || 0) || stagesTotal;
+    const disbursed = stages
+      .filter((t) => isTrancheDisbursed(t.title))
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const remaining = Math.max(0, committed - disbursed);
+    const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
+    const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
+    const next = stages.find((t) => !isTrancheDisbursed(t.title)) || null;
+    return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
+  }, [enterprise?.grantUsd, trancheStages, milestones]);
 
-  if (!dashboard?.enterprise) {
-    return (
-      <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
-        <main className="mx-auto max-w-[1480px] space-y-8">
-          <section
-            className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
-            style={{
-              backgroundImage: `linear-gradient(to right, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 50%, rgba(0, 0, 0, 0.2) 100%), url(${HERO_IMAGE_URL})`,
-              backgroundPosition: "center",
-              backgroundSize: "cover",
-            }}
-          >
-            <div className="relative z-10 min-h-[140px]">
-              <div className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur">
-                <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
-                Enterprise Growth
-              </div>
-              <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Grant Management</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-                Track your grant milestones, KPIs, and tranche reporting once your workspace is ready.
-              </p>
-            </div>
-          </section>
-
-          <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center shadow-sm">
-            <p className="text-lg font-black text-slate-950">Your tracking workspace is being set up</p>
-            <p className="mt-2 text-sm leading-7 text-slate-500">
-              You&apos;ve been added to a program. Once your Business Development Advisor sets up tracking,
-              your grant details, milestones, and KPIs will appear here.
-            </p>
-          </div>
-        </main>
-      </div>
+  // Context for the AI grant report download.
+  const reportContext = useMemo(() => {
+    const totalGrant = milestones.reduce(
+      (sum, m) => sum + Number(m.trancheAmount || 0),
+      0,
     );
-  }
+    const disbursedTotal = milestones.reduce(
+      (sum, m) => sum + (m.disbursed ? Number(m.trancheAmount || 0) : 0),
+      0,
+    );
+    const business = userDetails?.Business || {};
+    return {
+      startup: {
+        name:
+          enterprise?.name || business.name || userDetails?.name || "My Startup",
+        sector:
+          enterprise?.ceSector ||
+          business.BusinessSector?.name ||
+          business.sector,
+        location: enterprise?.district || business.location,
+        stage: business.stage,
+        description: business.description,
+      },
+      grant: {
+        amount: totalGrant,
+        disbursed: disbursedTotal,
+        purpose: milestones
+          .map((m) => m.tranchePlannedUse)
+          .filter(Boolean)
+          .join("; "),
+      },
+      milestones: milestones.map((m) => ({
+        title: m.title,
+        status: m.status,
+        tranche: m.linkedTranche,
+        trancheAmount: m.trancheAmount,
+        plannedUse: m.tranchePlannedUse,
+        kpis: parseKpiPlan(m.kpiPlan),
+        notes: m.submissionNotes,
+      })),
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [milestones, enterprise?.uuid, userDetails?.uuid]);
+
+  if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
@@ -498,6 +563,12 @@ const EntrepreneurMilestones = () => {
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
                   Analyze financial performance, monitor operational metrics, and align resources with business objectives to improve accountability and growth.
                 </p>
+                <div className="mt-5">
+                  <GrantReportButton
+                    label="Download Grant Report"
+                    context={reportContext}
+                  />
+                </div>
               </div>
 
               {availableEnterprises.length > 1 && (
@@ -521,6 +592,16 @@ const EntrepreneurMilestones = () => {
           </div>
         </section>
 
+        <GrantSummaryCards
+          committed={grantStats.committed}
+          disbursed={grantStats.disbursed}
+          remaining={grantStats.remaining}
+          disbursedPct={grantStats.disbursedPct}
+          remainingPct={grantStats.remainingPct}
+          next={grantStats.next}
+          programName={program?.title}
+        />
+
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.45fr_0.75fr]">
           <div className="space-y-8">
             <PortalCard
@@ -541,6 +622,17 @@ const EntrepreneurMilestones = () => {
                 Complete your KYC to provide your verified business and identity details. This information is used for funding and compliance review by your mentor.
               </div>
             </PortalCard>
+
+            <SignedContractCard
+              contractUrl={enterprise?.signedContractUrl}
+              uploadedAt={enterprise?.signedContractUploadedAt}
+              acknowledgedAt={enterprise?.contractAcknowledgedAt}
+              signedUrl={enterprise?.startupSignedContractUrl}
+              contractName={enterprise?.name ? `Grant Agreement — ${enterprise.name}` : undefined}
+              canSign
+              signing={signingContract}
+              onSignUpload={onUploadSignedContract}
+            />
 
             <PortalCard icon={<Wallet className="h-5 w-5" />} title="Funding Summary" subtitle="Capital mobilisation, tranche progress, and milestone-linked readiness.">
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">

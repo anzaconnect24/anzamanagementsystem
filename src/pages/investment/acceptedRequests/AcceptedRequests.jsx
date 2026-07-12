@@ -39,17 +39,17 @@ const Page = () => {
         ) : (
           <div>
             <div className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5">
-              <div className="col-span-1 flex items-center">
-                <p className="font-medium">Sent </p>
+              <div className="col-span-2 flex items-center">
+                <p className="font-medium">From (Startup)</p>
+              </div>
+              <div className="col-span-2 flex items-center">
+                <p className="font-medium">Sent to (Investor)</p>
               </div>
               <div className="col-span-2 hidden items-center sm:flex">
-                <p className="font-medium">Business name</p>
+                <p className="font-medium">Investor email</p>
               </div>
-              <div className="col-span-2 flex items-center">
-                <p className="font-medium">Phone</p>
-              </div>
-              <div className="col-span-2 flex items-center">
-                <p className="font-medium">Email</p>
+              <div className="col-span-1 hidden items-center sm:flex">
+                <p className="font-medium">Sent</p>
               </div>
               <div className="col-span-1 flex items-center">
                 <p className="font-medium">More</p>
@@ -61,36 +61,30 @@ const Page = () => {
                 className="grid grid-cols-6 border-t border-stroke py-4.5 px-4 dark:border-strokedark sm:grid-cols-8 md:px-6 2xl:px-7.5"
                 key={key}
               >
+                <div className="col-span-2 flex items-center">
+                  <p className="text-sm text-black dark:text-white">
+                    {item.Business?.name || "—"}
+                  </p>
+                </div>
+                <div className="col-span-2 flex items-center">
+                  <p className="text-sm font-medium text-black dark:text-white">
+                    {item.investor?.name || "—"}
+                  </p>
+                </div>
+                <div className="col-span-2 hidden items-center sm:flex">
+                  <p className="text-sm text-black dark:text-white">
+                    {item.investor?.email || "—"}
+                  </p>
+                </div>
                 <div className="col-span-1 hidden items-center sm:flex">
                   <p className="text-sm text-black dark:text-white">
                     {timeAgo(item.createdAt)}
                   </p>
                 </div>
-                <div className="col-span-2 flex items-center">
-                  <p className="text-sm text-black dark:text-white">
-                    {item.Business.name}
-                  </p>
-                </div>
-                <div className="col-span-2 flex items-center">
-                  <p className="text-sm text-black dark:text-white">
-                    {item.Business.phone}
-                  </p>
-                </div>
-                <div className="col-span-2 flex items-center">
-                  <p className="text-sm text-black dark:text-white">
-                    {item.Business.email}
-                  </p>
-                </div>
                 <div className="col-span-1 flex items-center">
                   <div
                     onClick={() => {
-                      if (item.uuid == ShowOptions) {
-                        setShowOptions("");
-                        setSelectedBusiness(item);
-                      } else {
-                        setShowOptions(item.uuid);
-                        setSelectedBusiness(null);
-                      }
+                      setShowOptions(item.uuid == ShowOptions ? "" : item.uuid);
                     }}
                     className="bg-primary hover:bg-primary/90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative"
                   >
@@ -102,8 +96,12 @@ const Page = () => {
                     >
                       {[
                         {
-                          title: "View business",
-                          path: `/businessDetails/${item.uuid}`,
+                          title: "View request",
+                          path: `/dashboard/viewInvestmentRequest/${item.uuid}`,
+                        },
+                        {
+                          title: "Assign reviewers",
+                          path: `/assignInvestmentRequestReviewers/${item.uuid}`,
                         },
                       ].map((item) => {
                         return (

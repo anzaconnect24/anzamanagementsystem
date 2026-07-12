@@ -11,6 +11,7 @@ import {
   updateMentorEnterpriseTrancheStages,
   updateMentorEnterpriseKpis,
 } from "@/controllers/trackerController";
+import SignedContractCard from "@/components/tracker/SignedContractCard";
 import {
   UploadCloud,
   Building2,
@@ -37,7 +38,7 @@ const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 const baseInputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77] focus:ring-4 focus:ring-[#082d77]/20 disabled:bg-slate-50 disabled:text-slate-400";
 
-const formatCurrency = (value, currency = "USD") => {
+const formatCurrency = (value, currency = "TZS") => {
   const amount = Number(value || 0);
   if (!Number.isFinite(amount)) return `${currency} 0`;
   return `${currency} ${amount.toLocaleString()}`;
@@ -281,8 +282,8 @@ const EnterpriseTrackerDetails = () => {
     () => [
       {
         label: "Revenue/month",
-        value: `$${Number(enterprise?.monthlyRevenue || 0)}`,
-        sub: "USD",
+        value: `TZS ${Number(enterprise?.monthlyRevenue || 0).toLocaleString()}`,
+        sub: "TZS",
       },
       {
         label: "Employees",
@@ -1061,7 +1062,7 @@ const EnterpriseTrackerDetails = () => {
                   type="number"
                   step="0.01"
                   min="0"
-                  placeholder="Amount (USD)"
+                  placeholder="Amount (TZS)"
                   value={trancheForm.amount}
                   onChange={(e) => setTrancheForm((prev) => ({ ...prev, amount: e.target.value }))}
                   required
@@ -1110,6 +1111,14 @@ const EnterpriseTrackerDetails = () => {
                 ))}
               </div>
             </PortalCard>
+
+            <SignedContractCard
+              contractUrl={enterprise?.signedContractUrl}
+              uploadedAt={enterprise?.signedContractUploadedAt}
+              acknowledgedAt={enterprise?.contractAcknowledgedAt}
+              signedUrl={enterprise?.startupSignedContractUrl}
+              contractName={enterprise?.name ? `Grant Agreement — ${enterprise.name}` : undefined}
+            />
 
             <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Evidence and reporting documents submitted by the entrepreneur.">
               <div className="space-y-3">
@@ -1177,7 +1186,7 @@ const EnterpriseTrackerDetails = () => {
             </div>
             <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
               <div>
-                <FieldLabel>Monthly revenue (USD)</FieldLabel>
+                <FieldLabel>Monthly revenue (TZS)</FieldLabel>
                 <input className={baseInputClass} type="number" min="0" value={kpiForm.monthlyRevenue} onChange={(e) => setKpiForm((prev) => ({ ...prev, monthlyRevenue: e.target.value }))} />
               </div>
               <div>

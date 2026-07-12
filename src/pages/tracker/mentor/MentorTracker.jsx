@@ -6,6 +6,7 @@ import Loader from "@/components/common/Loader";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { getStaffAssignedEntreprenuers } from "@/controllers/staffEntreprenuerController";
 import { getPrograms } from "@/controllers/program_controller";
+import { getEnterprenuers } from "@/controllers/user_controller";
 import {
   deleteMentorEnterprise,
   listMentorEnterprises,
@@ -23,6 +24,26 @@ const FLAG_LABEL_MAP = {
 
 
 const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
+const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
+
+// Startups (with their per-startup assigned BDA) selected into a grant
+// program by the Finance Officer are stored as JSON in the program
+// description markers.
+const parseProgramStartups = (program) => {
+  const text = String(program?.description || "");
+  const idx = text.lastIndexOf(TRACKER_STARTUPS_MARKER);
+  if (idx === -1) return [];
+  const line = text
+    .slice(idx + TRACKER_STARTUPS_MARKER.length)
+    .split("\n")[0]
+    .trim();
+  try {
+    const value = JSON.parse(line);
+    return Array.isArray(value) ? value : [];
+  } catch {
+    return [];
+  }
+};
 
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 
@@ -58,7 +79,7 @@ const formatHours = (value) => {
   return Number.isFinite(parsed) ? parsed.toFixed(1) : "0.0";
 };
 
-const formatMoney = (value, currency = "USD") => {
+const formatMoney = (value, currency = "TZS") => {
   const parsed = Number(value || 0);
   if (!Number.isFinite(parsed)) return `${currency} 0`;
   return `${currency} ${parsed.toLocaleString()}`;
@@ -170,6 +191,19 @@ const MentorTracker = () => {
   const [enterpriseFilter, setEnterpriseFilter] = useState("all");
   const [deletingEnterpriseUuid, setDeletingEnterpriseUuid] = useState(null);
 
+  // Entrepreneur pool (each carries the signup profile image + business
+  // detail) used to fill the program-assigned startup cards.
+  const [entrepreneurPool, setEntrepreneurPool] = useState([]);
+
+  // Entrepreneur uuid -> their signup user record (image, Business, etc.).
+  const poolByUuid = useMemo(() => {
+    const map = {};
+    entrepreneurPool.forEach((user) => {
+      if (user?.uuid) map[user.uuid] = user;
+    });
+    return map;
+  }, [entrepreneurPool]);
+
   const assignedEntrepreneurOptions = useMemo(
     () =>
       entrepreneurs
@@ -221,6 +255,26 @@ const MentorTracker = () => {
     return map;
   }, [entrepreneurs]);
 
+  // Startups this BDA was assigned to inside Finance grant programs, derived
+  // directly from the program markers (so they appear as soon as the Finance
+  // Officer saves the program — independent of the assignment table).
+  const programAssignedStartups = useMemo(() => {
+    const bdaUuid = String(userDetails?.uuid || "").trim();
+    if (!bdaUuid) return [];
+    const result = [];
+    programs.forEach((program) => {
+      parseProgramStartups(program).forEach((member) => {
+        if (
+          member?.entreprenuerUuid &&
+          String(member?.bdaUuid || "").trim() === bdaUuid
+        ) {
+          result.push(member);
+        }
+      });
+    });
+    return result;
+  }, [programs, userDetails?.uuid]);
+
   // The people shown are the entrepreneurs assigned to this BDA. Each is paired
   // with their tracker enterprise once one has been set up (registered).
   const trackedList = useMemo(() => {
@@ -252,8 +306,35 @@ const MentorTracker = () => {
       });
     });
 
+    // Include startups assigned to this BDA via a grant program (markers).
+    // Their KYC opens read-only using the entrepreneur + business uuids, and
+    // the card fields (signup picture, sector, region, join date) come from
+    // the entrepreneur's signup record in the pool.
+    programAssignedStartups.forEach((member) => {
+      const uuid = member.entreprenuerUuid;
+      if (!uuid || seen.has(uuid)) return;
+      seen.add(uuid);
+      const poolUser = poolByUuid[uuid];
+      const business = poolUser?.Business || poolUser?.business || null;
+      rows.push({
+        key: uuid,
+        entrepreneur: {
+          uuid,
+          name: business?.name || poolUser?.name || member.name,
+          image: poolUser?.image,
+          createdAt: poolUser?.createdAt,
+          Business:
+            business ||
+            (member.businessUuid
+              ? { uuid: member.businessUuid, name: member.name }
+              : undefined),
+        },
+        enterprise: enterpriseByEnt.get(uuid) || null,
+      });
+    });
+
     return rows;
-  }, [entrepreneurs, enterprises]);
+  }, [entrepreneurs, enterprises, programAssignedStartups, poolByUuid]);
 
   const filteredTracked = useMemo(() => {
     return trackedList.filter((row) => {
@@ -286,19 +367,41 @@ const MentorTracker = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [wl, ms, ents, enterpriseList, programsResponse] = await Promise.all([
-        getStaffWeeklyLogs(),
-        listTrackerMilestones(),
-        getStaffAssignedEntreprenuers(userDetails.uuid),
-        listMentorEnterprises(),
-        getPrograms(1, 500),
-      ]);
+      // One failing endpoint (e.g. a BDA-only route that isn't deployed yet)
+      // must not blank the whole portfolio — program-assigned startups only
+      // need getPrograms + getEnterprenuers, which are always available.
+      const [wlR, msR, entsR, enterpriseR, programsR, poolR] =
+        await Promise.allSettled([
+          getStaffWeeklyLogs(),
+          listTrackerMilestones(),
+          getStaffAssignedEntreprenuers(userDetails.uuid),
+          listMentorEnterprises(),
+          getPrograms(1, 500),
+          getEnterprenuers(1000, 1, " "),
+        ]);
+
+      const valueOf = (result, fallback) =>
+        result.status === "fulfilled" ? result.value : fallback;
+
+      const wl = valueOf(wlR, null);
+      const ms = valueOf(msR, []);
+      const ents = valueOf(entsR, []);
+      const enterpriseList = valueOf(enterpriseR, []);
+      const programsResponse = valueOf(programsR, null);
+      const poolResponse = valueOf(poolR, null);
 
       setWeeklyLogs(wl?.weeklyLogs || []);
       setMilestones(Array.isArray(ms) ? ms : []);
       setEntrepreneurs(Array.isArray(ents) ? ents : []);
       setEnterprises(Array.isArray(enterpriseList) ? enterpriseList : []);
       setPrograms(Array.isArray(programsResponse?.data) ? programsResponse.data : []);
+      setEntrepreneurPool(
+        Array.isArray(poolResponse)
+          ? poolResponse
+          : Array.isArray(poolResponse?.data)
+            ? poolResponse.data
+            : [],
+      );
     } catch {
       toast.error("Failed to load tracker data");
     } finally {
@@ -490,7 +593,7 @@ const MentorTracker = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 px-5 py-3">
+                      <div className="flex flex-wrap items-center gap-4 border-t border-slate-100 px-5 py-3">
                         <button
                           type="button"
                           disabled={!entUuid}
@@ -505,9 +608,20 @@ const MentorTracker = () => {
                         >
                           View KYC
                         </button>
-                        <span className="text-xs font-semibold text-amber-600">
-                          Tracking set up by grant management
-                        </span>
+                        <button
+                          type="button"
+                          disabled={!entUuid}
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/mentorTracker/startup/${entUuid}/milestones?name=${encodeURIComponent(
+                                name || "",
+                              )}${business?.uuid ? `&business=${business.uuid}` : ""}`,
+                            )
+                          }
+                          className="text-xs font-bold text-slate-500 transition hover:text-[#082d77] disabled:opacity-50"
+                        >
+                          View milestones
+                        </button>
                       </div>
                     )}
                   </article>
@@ -517,7 +631,6 @@ const MentorTracker = () => {
           )}
         </PortalCard>
       </main>
-
     </div>
   );
 };

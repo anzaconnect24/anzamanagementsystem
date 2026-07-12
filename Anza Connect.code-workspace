@@ -2,6 +2,9 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"path": "../anzamanagmentbackend-main"
 		}
 	],
 	"settings": {}

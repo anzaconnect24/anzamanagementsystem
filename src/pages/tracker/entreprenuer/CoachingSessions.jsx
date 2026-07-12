@@ -1,8 +1,8 @@
-import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { useContext, useEffect, useState } from "react";
 import { CalendarDays } from "lucide-react";
 import Loader from "@/components/common/Loader";
-import { getEntrepreneurTrackerDashboard } from "@/controllers/trackerController";
+import { UserContext } from "@/layouts/DashboardLayout";
+import { getEntrepreneurCoachingSessions } from "@/controllers/coaching_session_controller";
 
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 
@@ -44,27 +44,28 @@ const PortalCard = ({ icon, title, subtitle, children, className = "" }) => (
 );
 
 const CoachingSessions = () => {
+  const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
-  const [enterprise, setEnterprise] = useState(null);
   const [sessions, setSessions] = useState([]);
 
   useEffect(() => {
+    if (!userDetails?.uuid) {
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       setLoading(true);
       try {
-        const data = await getEntrepreneurTrackerDashboard({});
-        setEnterprise(data?.enterprise || null);
-        setSessions(Array.isArray(data?.sessions) ? data.sessions : []);
+        const data = await getEntrepreneurCoachingSessions(userDetails.uuid);
+        setSessions(Array.isArray(data) ? data : []);
       } catch {
-        // No tracking workspace yet — show the empty sessions state instead of an error.
-        setEnterprise(null);
         setSessions([]);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [userDetails?.uuid]);
 
   if (loading) return <Loader />;
 
@@ -85,7 +86,7 @@ const CoachingSessions = () => {
               Coaching Sessions
             </div>
             <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
-              {enterprise?.name || "Coaching Sessions"}
+              {userDetails?.Business?.name || "Coaching Sessions"}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
               Review your coaching sessions, the guidance shared, and the actions agreed with your advisor.

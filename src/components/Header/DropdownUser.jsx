@@ -96,7 +96,6 @@ const DropdownUser = () => {
         }`}
       >
         <ul className="flex flex-col gap-5 border-b border-stroke px-6 py-7.5 dark:border-strokedark">
-          {userDetails?.role !== "Finance" && (
           <li>
             <Link
               href="/dashboard/edit-profile"
@@ -122,7 +121,6 @@ const DropdownUser = () => {
               {t("account.settings", "Settings")}
             </Link>
           </li>
-          )}
         </ul>
         <button
           onClick={() => {

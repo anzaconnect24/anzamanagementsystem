@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { CalendarDays } from "lucide-react";
 import Loader from "@/components/common/Loader";
+import { getEnterprenuers } from "@/controllers/user_controller";
 import {
-  listMentorEnterprises,
-  getMentorEnterpriseDetails,
-  createMentorEnterpriseSession,
-} from "@/controllers/trackerController";
+  createCoachingSession,
+  getEntrepreneurCoachingSessions,
+} from "@/controllers/coaching_session_controller";
 
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 
@@ -90,8 +90,24 @@ const BdaCoachingSessions = () => {
   const setField = (key, value) => setSessionForm((prev) => ({ ...prev, [key]: value }));
 
   useEffect(() => {
-    listMentorEnterprises()
-      .then((list) => setEnterprises(Array.isArray(list) ? list : []))
+    // All entrepreneurs are eligible for coaching sessions (not only those
+    // with a tracker enterprise set up).
+    getEnterprenuers(1000, 1, " ")
+      .then((body) => {
+        const list = Array.isArray(body)
+          ? body
+          : Array.isArray(body?.data)
+            ? body.data
+            : [];
+        setEnterprises(
+          list
+            .filter((user) => Boolean(user?.uuid))
+            .map((user) => ({
+              uuid: user.uuid,
+              name: user.Business?.name || user.name || "Unnamed startup",
+            })),
+        );
+      })
       .catch(() => toast.error("Failed to load entrepreneurs"))
       .finally(() => setLoading(false));
   }, []);
@@ -103,8 +119,8 @@ const BdaCoachingSessions = () => {
     }
     setLoadingSessions(true);
     try {
-      const details = await getMentorEnterpriseDetails(uuid);
-      setSessions(Array.isArray(details?.sessions) ? details.sessions : []);
+      const data = await getEntrepreneurCoachingSessions(uuid);
+      setSessions(Array.isArray(data) ? data : []);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to load coaching sessions");
     } finally {
@@ -125,7 +141,10 @@ const BdaCoachingSessions = () => {
     }
     setIsSaving(true);
     try {
-      await createMentorEnterpriseSession(selectedUuid, sessionForm);
+      await createCoachingSession({
+        entreprenuer_uuid: selectedUuid,
+        ...sessionForm,
+      });
       toast.success("Coaching session saved");
       setShowModal(false);
       setSessionForm(EMPTY_SESSION);

@@ -108,10 +108,15 @@ const DashboardHero = ({ userDetails, data }) => {
           </p>
         </div>
 
-        {(userDetails?.role === "Investor" ||
-          userDetails?.role === "Mentor") && (
+        {["Investor", "Mentor", "Staff", "Reviewer"].includes(
+          userDetails?.role,
+        ) && (
           <Link
-            href="/dashboard/entreprenuer-profile"
+            href={
+              ["Investor", "Mentor"].includes(userDetails?.role)
+                ? "/dashboard/entreprenuer-profile"
+                : "/dashboard/edit-profile"
+            }
             className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
           >
             Edit Profile
@@ -182,7 +187,6 @@ const Dashboard = () => {
   const [aiReport, setAiReport] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
   const [mentorTrackerStats, setMentorTrackerStats] = useState(null);
-  const [adminTrackerStats, setAdminTrackerStats] = useState(null);
   const [myMilestonesCount, setMyMilestonesCount] = useState(0);
 
   useEffect(() => {
@@ -498,18 +502,6 @@ const Dashboard = () => {
             >
               <SlPeople className="text-lg text-primary dark:text-white" />
             </CardDataStats>
-
-            {userDetails.role === "Admin" && (
-              <CardDataStats
-                link="/dashboard/trackerAdminOverview"
-                title={t("dashboard.redFlags", "Red Flags")}
-                total={adminTrackerStats?.redFlags || 0}
-                rate="0.43%"
-                levelUp
-              >
-                <SlPeople className="text-lg text-primary dark:text-white" />
-              </CardDataStats>
-            )}
           </div>
         </div>
       )}

@@ -11,6 +11,7 @@ import {
   reviewTrackerMilestone,
 } from "@/controllers/trackerController";
 import { getReviewers } from "@/controllers/user_controller";
+import SignedContractCard from "@/components/tracker/SignedContractCard";
 import {
   PLAN_STATUS,
   planStatusLabel,
@@ -284,6 +285,14 @@ const FundingAgreements = () => {
                 </button>
               </div>
             </PortalCard>
+
+            <SignedContractCard
+              contractUrl={enterprise?.signedContractUrl}
+              uploadedAt={enterprise?.signedContractUploadedAt}
+              acknowledgedAt={enterprise?.contractAcknowledgedAt}
+              signedUrl={enterprise?.startupSignedContractUrl}
+              contractName={enterprise?.name ? `Grant Agreement — ${enterprise.name}` : undefined}
+            />
 
             <PortalCard
               icon={<Layers className="h-5 w-5" />}

@@ -237,10 +237,13 @@ import EnterpriseKyc from "./pages/tracker/mentor/EnterpriseKyc";
 import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
 import CoachingSessions from "./pages/tracker/entreprenuer/CoachingSessions";
 import ProgramMemberRoute from "./components/guards/ProgramMemberRoute";
+import RoleRoute from "./components/guards/RoleRoute";
 import BdaCoachingSessions from "./pages/tracker/mentor/BdaCoachingSessions";
-import AdminTrackerOverview from "./pages/tracker/admin/AdminTrackerOverview";
-import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
 import TrackerProgramDetails from "./pages/tracker/admin/TrackerProgramDetails";
+import FundingAgreements from "./pages/tracker/admin/FundingAgreements";
+import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
+import TrackerStartupDetails from "./pages/tracker/admin/TrackerStartupDetails";
+import StaffStartupMilestones from "./pages/tracker/mentor/StaffStartupMilestones";
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -351,6 +354,10 @@ function App() {
               element={<EnterpriseTrackerDetails />}
             />
             <Route
+              path="mentorTracker/startup/:entUuid/milestones"
+              element={<StaffStartupMilestones />}
+            />
+            <Route
               path="myMilestones"
               element={
                 <ProgramMemberRoute>
@@ -374,14 +381,46 @@ function App() {
                 </ProgramMemberRoute>
               }
             />
+
             <Route
               path="trackerAdminOverview"
-              element={<AdminTrackerOverview />}
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <TrackerPrograms />
+                </RoleRoute>
+              }
             />
-            <Route path="trackerPrograms" element={<TrackerPrograms />} />
+            <Route
+              path="trackerPrograms"
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <TrackerPrograms />
+                </RoleRoute>
+              }
+            />
             <Route
               path="trackerPrograms/:programUuid/details"
-              element={<TrackerProgramDetails />}
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <TrackerProgramDetails />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="trackerPrograms/:programUuid/startup/:entUuid"
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <TrackerStartupDetails />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="fundingAgreements"
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <FundingAgreements />
+                </RoleRoute>
+              }
             />
 
             {/* Investment Routes */}

@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import jsPDF from "jspdf";
+import { POPPINS_REGULAR, POPPINS_BOLD } from "./poppinsFont";
 
 // ─── OpenAI client ────────────────────────────────────────────────────────────
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -12,59 +13,175 @@ const openai = OPENAI_API_KEY
   ? new OpenAI({ apiKey: OPENAI_API_KEY, dangerouslyAllowBrowser: true })
   : null;
 
-// ─── Modern Capital Readiness PDF Generator ──────────────────────────────────
-
-const COLORS = {
-  navy: [15, 23, 42],
-  blue: [37, 99, 235],
-  indigo: [67, 56, 202],
-  softBlue: [239, 246, 255],
-  paleBlue: [248, 250, 252],
-  green: [34, 197, 94],
-  orange: [249, 115, 22],
-  red: [239, 68, 68],
-  gold: [234, 179, 8],
-  slate: [71, 85, 105],
-  muted: [100, 116, 139],
-  border: [226, 232, 240],
+// ─── Capital Readiness PDF — modern blue design ──────────────────────────────
+// Palette: the reference design uses a dark navy for its filled cards; per the
+// brief every "dark" surface here is a deep BLUE instead.
+const C = {
+  ink: [15, 23, 42], // headings (slate-900)
+  slate: [51, 65, 85], // body (slate-700)
+  muted: [100, 116, 139], // secondary (slate-500)
+  faint: [148, 163, 184], // captions (slate-400)
+  line: [226, 232, 240], // borders (slate-200)
+  track: [226, 232, 240], // bar / donut track
+  cardBg: [248, 250, 252], // light card fill (slate-50)
+  softBlue: [219, 234, 254], // blue-100 pill bg
+  blue: [37, 99, 235], // primary blue (blue-600)
+  blueMid: [59, 130, 246], // blue-500
+  blueDeep: [30, 58, 138], // deep blue card background (was dark navy)
+  blueLine: [51, 78, 160], // dividers on deep-blue cards
+  blueTrack: [71, 99, 175], // donut track on deep-blue cards
+  blueSoft: [191, 219, 254], // labels on deep-blue cards (blue-200)
+  amber: [245, 158, 11], // eyebrow / accent (amber-500)
+  gold: [234, 179, 8], // overall gauge arc
+  green: [22, 163, 74], // ready / on-track
+  greenSoft: [187, 247, 208],
+  greenText: [134, 239, 172],
+  red: [220, 38, 38], // not-ready / high-risk
+  redSoft: [254, 226, 226],
+  redText: [252, 165, 165],
   white: [255, 255, 255],
-  black: [0, 0, 0],
 };
 
-const LAYOUT = {
-  marginX: 16,
-  topY: 24,
-  footerY: 282,
-  pageCount: 8,
-  radius: 4,
-  gap: 6,
+// A5 landscape: 210mm wide x 148mm tall (same width as A4 portrait, half the height).
+const PW = 210;
+const PH = 148;
+const M = 12;
+const CW = PW - 2 * M; // content width
+
+// Report typeface — Poppins (embedded); falls back to helvetica if the font
+// fails to register in the current jsPDF build.
+let FONT = "Poppins";
+
+// Running section number; reset at the start of each report build.
+let SECTION_NO = 0;
+
+function registerFonts(doc) {
+  try {
+    doc.addFileToVFS("Poppins-Regular.ttf", POPPINS_REGULAR);
+    doc.addFont("Poppins-Regular.ttf", "Poppins", "normal");
+    doc.addFileToVFS("Poppins-SemiBold.ttf", POPPINS_BOLD);
+    doc.addFont("Poppins-SemiBold.ttf", "Poppins", "bold");
+    doc.setFont("Poppins", "normal");
+    FONT = "Poppins";
+  } catch (e) {
+    console.warn("Poppins font registration failed, using default:", e.message);
+    FONT = "helvetica";
+  }
+}
+
+// The overall score is a simple average of the four domains. The weights below
+// are informational — they express each domain's relative importance for
+// prioritising interventions — and drive the methodology table. Sum to 1.
+const DOMAINS = [
+  {
+    key: "commercial",
+    label: "Commercial",
+    sub: "Market",
+    full: "Commercial / Market",
+    weight: 0.25,
+    basis: "Revenue predictability and market traction underpin the investment case.",
+  },
+  {
+    key: "financial",
+    label: "Financial",
+    sub: "Management",
+    full: "Financial Management",
+    weight: 0.35,
+    basis: "Highest weight: financial transparency, controls and reporting are the primary determinant of capital readiness.",
+  },
+  {
+    key: "operations",
+    label: "Operations",
+    sub: "Resilience",
+    full: "Operations",
+    weight: 0.15,
+    basis: "Delivery resilience and scalability; material, but lower leverage on the funding decision.",
+  },
+  {
+    key: "legal",
+    label: "Legal",
+    sub: "Compliance",
+    full: "Legal & Compliance",
+    weight: 0.25,
+    basis: "Compliance, licensing and governance are gating items for investor due diligence.",
+  },
+];
+
+// Per-domain narrative content: a short tailored gap description, the detailed
+// findings (observations) and the recommended capacity interventions.
+const DOMAIN_CONTENT = {
+  commercial: {
+    gap: "Revenue is being generated, but the commercial engine still runs on informal, undocumented routines. There is no defined sales pipeline, market positioning is held tacitly rather than written down, and acquisition and retention are not measured. For investors this translates directly into uncertainty about how repeatable and predictable future revenue really is.",
+    intro:
+      "Commercial capability was assessed across the sales process, market positioning, and customer acquisition and retention.",
+    findings: [
+      "The sales process and revenue pipeline operate without documented stages, ownership or conversion tracking, which makes forecasting unreliable.",
+      "Market positioning and competitor intelligence are understood by the founder but are not documented or shared across the team.",
+      "Customer acquisition and retention run without measurable targets, so channel performance and churn cannot be actively managed.",
+    ],
+    recs: [
+      "Document the end-to-end sales process with defined stages, owners and conversion metrics, and review it monthly.",
+      "Maintain a living market-positioning and competitor-intelligence brief that informs pricing and messaging.",
+      "Adopt CRM-based pipeline tracking with explicit customer acquisition and retention KPIs.",
+    ],
+  },
+  financial: {
+    gap: "Core financial management is operating, but reporting and forecasting fall short of the standard investors expect during due diligence. Cash-flow is not modelled forward, records are not yet investor-grade, and management reporting lacks a regular cadence — all of which limit confidence in the numbers.",
+    intro:
+      "Financial capability was assessed across record quality, management reporting, cash-flow forecasting and controls.",
+    findings: [
+      "Cash-flow is not formalised into a rolling forward-looking model, leaving liquidity risk unmanaged as the business scales.",
+      "Financial records are maintained but are not yet investor-grade and have not been independently reviewed.",
+      "Accounting systems and management reporting lack the controls and monthly cadence investors expect.",
+    ],
+    recs: [
+      "Implement accounting software and produce disciplined monthly management accounts.",
+      "Build and maintain a rolling 12-month cash-flow forecast tied to the operating plan.",
+      "Prepare investor-grade financial statements and arrange an independent review or audit.",
+    ],
+  },
+  operations: {
+    gap: "Operational delivery works at the current scale, but it depends on undocumented, person-dependent routines. Processes live in people's heads, key functions rest on individuals, and performance is not tracked against targets — which caps resilience and makes scaling risky.",
+    intro:
+      "Operational capability was assessed across process documentation, key-person dependency and performance management.",
+    findings: [
+      "Core operating processes and standard procedures are not documented, so quality depends on specific individuals.",
+      "There is significant key-person dependency across critical functions, creating business-continuity risk.",
+      "Performance is not consistently tracked against defined KPIs, which limits operational visibility.",
+    ],
+    recs: [
+      "Document core processes and standard operating procedures for all critical functions.",
+      "Reduce key-person dependency through delegation, cross-training and succession planning.",
+      "Define operational KPIs and link them to a regular performance-management routine.",
+    ],
+  },
+  legal: {
+    gap: "Foundational legal structures are in place, but governance, contracts and compliance records are incomplete. Licences and agreements are not consolidated, compliance gaps remain open, and intellectual property and oversight are not fully established — the issues most likely to stall or derail investor due diligence.",
+    intro:
+      "Legal capability was assessed across registration, contracts, regulatory compliance, intellectual property and governance.",
+    findings: [
+      "Licences, permits, contracts and governance records require review and consolidation into a single verifiable set.",
+      "Compliance gaps remain open that could delay or complicate investor due diligence.",
+      "Intellectual property is unregistered and formal oversight and decision-rights structures are not established.",
+    ],
+    recs: [
+      "Review and consolidate licences, permits and key contracts into a diligence-ready pack.",
+      "Close outstanding compliance gaps and formalise governance and oversight structures.",
+      "Register intellectual property and document board composition and decision rights.",
+    ],
+  },
 };
 
-function pageWidth(doc) {
-  return doc.internal.pageSize.width;
+// ─── Shared helpers ──────────────────────────────────────────────────────────
+
+function clamp(v, min = 0, max = 100) {
+  return Math.max(min, Math.min(max, Math.round(Number(v || 0))));
 }
 
-function pageHeight(doc) {
-  return doc.internal.pageSize.height;
-}
-
-function contentWidth(doc) {
-  return pageWidth(doc) - LAYOUT.marginX * 2;
-}
-
-function clamp(value, min = 0, max = 100) {
-  return Math.max(min, Math.min(max, Number(value || 0)));
-}
-
+// Overall score: simple average of the four domain scores.
 function calcOverallScore(scoreData) {
-  const vals = [
-    scoreData?.commercial?.percentage || 0,
-    scoreData?.financial?.percentage || 0,
-    scoreData?.operations?.percentage || 0,
-    scoreData?.legal?.percentage || 0,
-  ];
-
-  return Math.round(vals.reduce((a, b) => a + b, 0) / vals.length);
+  const vals = DOMAINS.map((d) => scoreData?.[d.key]?.percentage || 0);
+  return Math.round(vals.reduce((a, b) => a + b, 0) / (vals.length || 1));
 }
 
 function getBusinessName(userDetails) {
@@ -77,18 +194,31 @@ function getBusinessName(userDetails) {
   );
 }
 
-function getScoreColor(score) {
-  const value = Number(score || 0);
-  if (value >= 60) return COLORS.green;
-  if (value >= 45) return COLORS.orange;
-  return COLORS.red;
+function getBusinessProfile(userDetails) {
+  const b = userDetails?.Business || {};
+  const pick = (...keys) => {
+    for (const k of keys) {
+      const v = b[k];
+      if (v != null && String(v).trim() !== "") return String(v).trim();
+    }
+    return "";
+  };
+  return {
+    sector: pick("sector", "businessSector", "industry"),
+    location: pick("location", "businessLocation", "region", "address"),
+    stage: pick("stage", "businessStage"),
+    founded: pick("foundedYear", "yearFounded", "establishedYear"),
+    team: pick("employees", "teamSize", "numberOfEmployees"),
+    website: pick("website", "url"),
+  };
 }
 
-function getStatus(score) {
-  const value = Number(score || 0);
-  if (value >= 75) return "Ready";
-  if (value >= 60) return "Partially Ready";
-  return "Not Ready";
+const pctOf = (sd, k) => clamp(sd?.[k]?.percentage || 0);
+const domainColor = (p) => (p >= 70 ? C.blue : C.red);
+
+function maturityLabel(pct) {
+  const tiers = ["Basic", "Developing", "Progressing", "Advanced", "Leading"];
+  return tiers[Math.min(4, Math.floor(clamp(pct) / 20))];
 }
 
 async function fetchImageAsBase64(url) {
@@ -96,7 +226,6 @@ async function fetchImageAsBase64(url) {
     const res = await fetch(url);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const blob = await res.blob();
-
     return await new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onloadend = () => resolve(reader.result);
@@ -109,1189 +238,1232 @@ async function fetchImageAsBase64(url) {
   }
 }
 
-// ─── Layout Helpers ──────────────────────────────────────────────────────────
+// ─── Drawing primitives ──────────────────────────────────────────────────────
 
-function drawPageHeader(doc, title, businessName, pageNumber) {
-  const PW = pageWidth(doc);
-  const PH = pageHeight(doc);
-
-  doc.setFillColor(...COLORS.paleBlue);
-  doc.rect(0, 0, PW, 18, "F");
-
-  doc.setTextColor(...COLORS.navy);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9.5);
-  doc.text(title.toUpperCase(), LAYOUT.marginX, 12);
-
-  doc.setDrawColor(...COLORS.border);
-  doc.setLineWidth(0.3);
-  doc.line(LAYOUT.marginX, PH - 14, PW - LAYOUT.marginX, PH - 14);
-
-  doc.setTextColor(...COLORS.muted);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.text(
-    `${businessName} — Capital Readiness Assessment Report`,
-    LAYOUT.marginX,
-    PH - 8,
-  );
-  doc.text(`${pageNumber} / ${LAYOUT.pageCount}`, PW - LAYOUT.marginX, PH - 8, {
-    align: "right",
-  });
-
-  return LAYOUT.topY;
-}
-
-function drawCard(doc, x, y, width, height, options = {}) {
-  const fill = options.fill || COLORS.white;
-  const border = options.border || COLORS.border;
-
-  doc.setFillColor(...fill);
-  doc.roundedRect(x, y, width, height, LAYOUT.radius, LAYOUT.radius, "F");
-
-  doc.setDrawColor(...border);
-  doc.setLineWidth(0.35);
-  doc.roundedRect(x, y, width, height, LAYOUT.radius, LAYOUT.radius, "S");
-
-  if (options.accent) {
-    doc.setFillColor(...options.accent);
-    doc.roundedRect(x, y, 3, height, LAYOUT.radius, LAYOUT.radius, "F");
+function card(doc, x, y, w, h, opt = {}) {
+  const r = opt.radius ?? 3;
+  doc.setFillColor(...(opt.fill || C.white));
+  doc.roundedRect(x, y, w, h, r, r, "F");
+  if (opt.border) {
+    doc.setDrawColor(...opt.border);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(x, y, w, h, r, r, "S");
   }
 }
 
-function drawSectionTitle(doc, title, x, y, width) {
-  doc.setFillColor(...COLORS.indigo);
-  doc.roundedRect(x, y, width, 9, 2, 2, "F");
-
-  doc.setTextColor(...COLORS.white);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8.5);
-  doc.text(title.toUpperCase(), x + 4, y + 6);
-
-  return y + 14;
+function eyebrow(doc, text, x, y, color) {
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...(color || C.ink));
+  doc.text(text, x, y, { charSpace: 0.5 });
 }
 
-function drawWrappedText(doc, text, x, y, width, options = {}) {
-  const fontSize = options.fontSize || 8.5;
-  const lineHeight = options.lineHeight || 4.2;
-  const color = options.color || COLORS.slate;
-  const style = options.style || "normal";
-
-  doc.setFont("helvetica", style);
-  doc.setFontSize(fontSize);
-  doc.setTextColor(...color);
-
-  const lines = doc.splitTextToSize(String(text || ""), width);
-  lines.forEach((line, index) => {
-    doc.text(line, x, y + index * lineHeight);
-  });
-
-  return y + lines.length * lineHeight;
+function wrap(doc, text, x, y, w, lh, fs, color) {
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(fs || 9);
+  doc.setTextColor(...(color || C.slate));
+  const lines = doc.splitTextToSize(String(text || ""), w);
+  lines.forEach((l, i) => doc.text(l, x, y + i * lh));
+  return y + lines.length * lh;
 }
 
-function textHeight(doc, text, width, lineHeight = 4.2) {
-  return doc.splitTextToSize(String(text || ""), width).length * lineHeight;
-}
-
-function drawMetricCard(doc, x, y, width, label, value) {
-  const color = getScoreColor(value);
-
-  drawCard(doc, x, y, width, 25, {
-    fill: COLORS.white,
-    accent: color,
-  });
-
-  doc.setTextColor(...COLORS.muted);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-
-  const labelLines = doc.splitTextToSize(label, width - 10);
-  doc.text(labelLines.slice(0, 2), x + 7, y + 8);
-
-  doc.setTextColor(...color);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(15);
-  doc.text(`${clamp(value)}%`, x + 7, y + 21);
-}
-
-function drawHorizontalBar(doc, x, y, width, label, value, options = {}) {
-  const safeValue = clamp(value);
-  const color = options.color || getScoreColor(safeValue);
-  const labelWidth = options.labelWidth || 42;
-  const barHeight = options.height || 5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7.5);
-  doc.setTextColor(...COLORS.slate);
-
-  const labelText = doc.splitTextToSize(label, labelWidth - 3)[0];
-  doc.text(labelText, x, y);
-
-  const barX = x + labelWidth;
-
-  doc.setFillColor(...COLORS.border);
-  doc.roundedRect(barX, y - 4, width, barHeight, 2, 2, "F");
-
+// Filled ring / arc (used by the donut gauges).
+function ringArc(doc, cx, cy, rIn, rOut, color, a1, a2, segs = 64) {
   doc.setFillColor(...color);
-  doc.roundedRect(barX, y - 4, (safeValue / 100) * width, barHeight, 2, 2, "F");
-
-  if (options.threshold !== false) {
-    const thresholdX = barX + width * 0.7;
-    doc.setDrawColor(...COLORS.gold);
-    doc.setLineWidth(1);
-    doc.line(thresholdX, y - 6, thresholdX, y + 3);
+  const step = (a2 - a1) / segs;
+  for (let i = 0; i < segs; i += 1) {
+    const p1 = a1 + i * step;
+    const p2 = p1 + step;
+    const x1 = cx + rIn * Math.cos(p1);
+    const y1 = cy + rIn * Math.sin(p1);
+    const x2 = cx + rOut * Math.cos(p1);
+    const y2 = cy + rOut * Math.sin(p1);
+    const x3 = cx + rOut * Math.cos(p2);
+    const y3 = cy + rOut * Math.sin(p2);
+    const x4 = cx + rIn * Math.cos(p2);
+    const y4 = cy + rIn * Math.sin(p2);
+    doc.lines(
+      [
+        [x2 - x1, y2 - y1],
+        [x3 - x2, y3 - y2],
+        [x4 - x3, y4 - y3],
+        [x1 - x4, y1 - y4],
+      ],
+      x1,
+      y1,
+      null,
+      "F",
+    );
   }
-
-  doc.setTextColor(...COLORS.slate);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text(`${safeValue}%`, barX + width + 5, y);
 }
 
-function drawBulletList(doc, items, x, y, width, options = {}) {
-  const fontSize = options.fontSize || 7.5;
-  const lineHeight = options.lineHeight || 3.6;
-  const bulletGap = 4;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(fontSize);
-  doc.setTextColor(...(options.color || COLORS.slate));
-
-  let cursorY = y;
-
-  items.forEach((item) => {
-    const lines = doc.splitTextToSize(String(item), width - bulletGap);
-    doc.text("•", x, cursorY);
-    lines.forEach((line) => {
-      doc.text(line, x + bulletGap, cursorY);
-      cursorY += lineHeight;
-    });
-    cursorY += 0.8;
-  });
-
-  return cursorY;
+function donut(doc, cx, cy, r, pct, o) {
+  const th = o.thickness || 6;
+  const rIn = r - th;
+  ringArc(doc, cx, cy, rIn, r, o.track, 0, Math.PI * 2);
+  const s = -Math.PI / 2;
+  const e = s + (clamp(pct) / 100) * 2 * Math.PI;
+  if (clamp(pct) > 0) {
+    ringArc(doc, cx, cy, rIn, r, o.arc, s, e);
+    const cr = (rIn + r) / 2;
+    doc.setFillColor(...o.arc);
+    doc.circle(cx + cr * Math.cos(s), cy + cr * Math.sin(s), th / 2, "F");
+    doc.circle(cx + cr * Math.cos(e), cy + cr * Math.sin(e), th / 2, "F");
+  }
+  const big = o.big || 16;
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(big);
+  doc.setTextColor(...o.textColor);
+  doc.text(`${clamp(pct)}%`, cx, cy + big * 0.125, { align: "center" });
+  if (o.sub) {
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(6.2);
+    doc.setTextColor(...(o.subColor || C.faint));
+    doc.text(o.sub, cx, cy + big * 0.125 + 4.5, { align: "center" });
+  }
 }
 
-// ─── Chart Helpers ───────────────────────────────────────────────────────────
-
-function drawRadarChart(doc, centerX, centerY, size, scores) {
-  const values = [
-    clamp(scores.commercial),
-    clamp(scores.financial),
-    clamp(scores.operations),
-    clamp(scores.legal),
-  ];
-
-  const labels = ["Commercial", "Financial", "Operations", "Legal"];
-
-  const points = [
-    { x: centerX, y: centerY - size },
-    { x: centerX + size, y: centerY },
-    { x: centerX, y: centerY + size },
-    { x: centerX - size, y: centerY },
-  ];
-
-  doc.setDrawColor(...COLORS.border);
-  doc.setLineWidth(0.4);
-
-  [0.25, 0.5, 0.75, 1].forEach((level) => {
-    const r = size * level;
-    doc.line(centerX, centerY - r, centerX + r, centerY);
-    doc.line(centerX + r, centerY, centerX, centerY + r);
-    doc.line(centerX, centerY + r, centerX - r, centerY);
-    doc.line(centerX - r, centerY, centerX, centerY - r);
-  });
-
-  doc.setDrawColor(...COLORS.muted);
-  doc.setLineWidth(0.5);
-  points.forEach((p) => doc.line(centerX, centerY, p.x, p.y));
-
-  const dataPoints = values.map((value, i) => ({
-    x: centerX + (points[i].x - centerX) * (value / 100),
-    y: centerY + (points[i].y - centerY) * (value / 100),
-  }));
-
-  if (dataPoints.length) {
-    const lines = [];
-    for (let i = 0; i < dataPoints.length; i++) {
-      const next = dataPoints[(i + 1) % dataPoints.length];
-      lines.push([next.x - dataPoints[i].x, next.y - dataPoints[i].y]);
-    }
-
-    doc.setFillColor(37, 99, 235, 0.18);
-    doc.setDrawColor(...COLORS.blue);
-    doc.setLineWidth(1.8);
-    doc.lines(lines, dataPoints[0].x, dataPoints[0].y, null, "FD");
-
-    doc.setFillColor(...COLORS.blue);
-    dataPoints.forEach((p) => doc.circle(p.x, p.y, 2, "F"));
-  }
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.setTextColor(...COLORS.slate);
-  doc.text(labels[0], centerX, centerY - size - 7, { align: "center" });
-  doc.text(labels[1], centerX + size + 7, centerY + 2, { align: "left" });
-  doc.text(labels[2], centerX, centerY + size + 9, { align: "center" });
-  doc.text(labels[3], centerX - size - 7, centerY + 2, { align: "right" });
-}
-
-function drawGaugeChart(doc, centerX, centerY, radius, percentage, label) {
-  const value = clamp(percentage);
-  const startAngle = Math.PI;
-  const endAngle = 2 * Math.PI;
-
-  function arcSegment(color, a1, a2) {
-    doc.setFillColor(...color);
-    const segments = 24;
-    const innerRadius = radius - 8;
-    const step = (a2 - a1) / segments;
-
-    for (let i = 0; i < segments; i++) {
-      const p1 = a1 + i * step;
-      const p2 = p1 + step;
-
-      const x1 = centerX + innerRadius * Math.cos(p1);
-      const y1 = centerY + innerRadius * Math.sin(p1);
-      const x2 = centerX + radius * Math.cos(p1);
-      const y2 = centerY + radius * Math.sin(p1);
-      const x3 = centerX + radius * Math.cos(p2);
-      const y3 = centerY + radius * Math.sin(p2);
-      const x4 = centerX + innerRadius * Math.cos(p2);
-      const y4 = centerY + innerRadius * Math.sin(p2);
-
-      doc.lines(
-        [
-          [x2 - x1, y2 - y1],
-          [x3 - x2, y3 - y2],
-          [x4 - x3, y4 - y3],
-          [x1 - x4, y1 - y4],
-        ],
-        x1,
-        y1,
-        null,
-        "F",
-      );
-    }
-  }
-
-  arcSegment(COLORS.red, startAngle, startAngle + 0.4 * Math.PI);
-  arcSegment(
-    COLORS.orange,
-    startAngle + 0.4 * Math.PI,
-    startAngle + 0.7 * Math.PI,
-  );
-  arcSegment(COLORS.green, startAngle + 0.7 * Math.PI, endAngle);
-
-  const needleAngle = startAngle + (value / 100) * Math.PI;
-  const needleX = centerX + (radius - 5) * Math.cos(needleAngle);
-  const needleY = centerY + (radius - 5) * Math.sin(needleAngle);
-
-  doc.setDrawColor(...COLORS.navy);
-  doc.setLineWidth(1.8);
-  doc.line(centerX, centerY, needleX, needleY);
-
-  doc.setFillColor(...COLORS.navy);
-  doc.circle(centerX, centerY, 2.7, "F");
-
-  doc.setTextColor(...getScoreColor(value));
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(22);
-  doc.text(`${value}%`, centerX, centerY + 16, { align: "center" });
-
-  doc.setTextColor(...COLORS.muted);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(8);
-  doc.text(label, centerX, centerY + 24, { align: "center" });
-}
-
-function drawLineChart(doc, x, y, width, height, points, threshold = 70) {
-  doc.setDrawColor(...COLORS.border);
-  doc.setLineWidth(0.3);
-
-  for (let i = 0; i <= 4; i++) {
-    const gridY = y + (i / 4) * height;
-    doc.line(x, gridY, x + width, gridY);
-  }
-
-  points.forEach((_, i) => {
-    const gridX = x + (i / (points.length - 1)) * width;
-    doc.line(gridX, y, gridX, y + height);
-  });
-
-  const thresholdY = y + height - (threshold / 100) * height;
-  doc.setDrawColor(...COLORS.gold);
+// Radial tick across a gauge ring marking a threshold (e.g. the 70% line).
+function gaugeThresholdTick(doc, cx, cy, rIn, rOut, pctMark, color) {
+  const a = -Math.PI / 2 + (clamp(pctMark) / 100) * 2 * Math.PI;
+  doc.setDrawColor(...color);
   doc.setLineWidth(0.8);
-  doc.setLineDash([2, 2]);
-  doc.line(x, thresholdY, x + width, thresholdY);
-  doc.setLineDash([]);
-
-  doc.setDrawColor(...COLORS.blue);
-  doc.setLineWidth(1.8);
-
-  points.forEach((point, i) => {
-    if (i >= points.length - 1) return;
-
-    const x1 = x + (i / (points.length - 1)) * width;
-    const y1 = y + height - (clamp(point.value) / 100) * height;
-    const x2 = x + ((i + 1) / (points.length - 1)) * width;
-    const y2 = y + height - (clamp(points[i + 1].value) / 100) * height;
-
-    doc.line(x1, y1, x2, y2);
-  });
-
-  points.forEach((point, i) => {
-    const px = x + (i / (points.length - 1)) * width;
-    const py = y + height - (clamp(point.value) / 100) * height;
-
-    doc.setFillColor(...COLORS.blue);
-    doc.circle(px, py, 2.2, "F");
-
-    doc.setTextColor(...COLORS.navy);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text(`${clamp(point.value)}%`, px, py - 4, { align: "center" });
-
-    doc.setTextColor(...COLORS.slate);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(String(point.label), px, y + height + 6, { align: "center" });
-  });
+  doc.line(
+    cx + rIn * Math.cos(a),
+    cy + rIn * Math.sin(a),
+    cx + rOut * Math.cos(a),
+    cy + rOut * Math.sin(a),
+  );
 }
 
-function drawStackedBar(doc, x, y, width, height, label, stacks) {
-  let currentY = y + height;
-
-  stacks.forEach((stack) => {
-    const stackHeight = (clamp(stack.value) / 100) * height;
-    currentY -= stackHeight;
-    doc.setFillColor(...stack.color);
-    doc.rect(x, currentY, width, stackHeight, "F");
-  });
-
-  doc.setDrawColor(...COLORS.border);
-  doc.rect(x, y, width, height, "S");
-
-  doc.setTextColor(...COLORS.slate);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
-  doc.text(label, x + width / 2, y + height + 5, { align: "center" });
-}
-
-function extractSubDomains(domainData, key, limit = 5) {
-  const rows = [];
-
-  if (Array.isArray(domainData?.[key]?.summary)) {
-    domainData[key].summary.slice(0, limit).forEach((item) => {
-      rows.push({
-        label: item.subDomain || item.name || "Unknown",
-        value: Math.round(((item.score || 0) / 2) * 100),
-      });
-    });
+// Pill / badge. opt: { bg, fg, dot, center, fs, h }
+function pill(doc, x, y, text, opt) {
+  const fs = opt.fs || 8;
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(fs);
+  const tw = doc.getTextWidth(text);
+  const hasDot = opt.dot != null;
+  const pw = tw + (hasDot ? 12 : 8);
+  const h = opt.h || 7.5;
+  const px = opt.center ? x - pw / 2 : x;
+  doc.setFillColor(...opt.bg);
+  doc.roundedRect(px, y, pw, h, h / 2, h / 2, "F");
+  if (hasDot) {
+    doc.setFillColor(...opt.dot);
+    doc.circle(px + 5, y + h / 2, 1.3, "F");
+    doc.setTextColor(...opt.fg);
+    doc.text(text, px + 9, y + h / 2 + fs * 0.16 + 0.2);
+  } else {
+    doc.setTextColor(...opt.fg);
+    doc.text(text, px + pw / 2, y + h / 2 + fs * 0.16 + 0.2, { align: "center" });
   }
-
-  while (rows.length < 4) rows.push({ label: "No data", value: 0 });
-  return rows.slice(0, limit);
+  return pw;
 }
 
-function drawSubDomainPanel(doc, x, y, width, title, rows) {
-  const height = 74;
+// Right-anchored pill; returns its left edge x.
+function pillRight(doc, xRight, y, text, bg, fg) {
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(6.8);
+  const pw = doc.getTextWidth(text) + 8;
+  const h = 6;
+  const x = xRight - pw;
+  doc.setFillColor(...bg);
+  doc.roundedRect(x, y, pw, h, h / 2, h / 2, "F");
+  doc.setTextColor(...fg);
+  doc.text(text, x + pw / 2, y + 4.1, { align: "center" });
+  return x;
+}
 
-  drawCard(doc, x, y, width, height, { fill: COLORS.paleBlue });
-
-  doc.setTextColor(...COLORS.navy);
-  doc.setFont("helvetica", "bold");
+function callout(doc, x, y, w, title, body, accent) {
+  const lines = doc.splitTextToSize(String(body || ""), w - 16);
+  const h = 15 + lines.length * 4.4 + 4;
+  card(doc, x, y, w, h, { fill: C.cardBg, radius: 3 });
+  doc.setFillColor(...accent);
+  doc.roundedRect(x, y, 2.4, h, 1, 1, "F");
+  eyebrow(doc, title, x + 8, y + 10, accent);
+  doc.setFont(FONT, "normal");
   doc.setFontSize(8.5);
-  doc.text(title, x + 7, y + 10);
+  doc.setTextColor(...C.slate);
+  lines.forEach((l, i) => doc.text(l, x + 8, y + 17 + i * 4.4));
+  return y + h;
+}
 
-  let rowY = y + 22;
+// Page header + footer chrome (drawn on every page).
+function chrome(doc, businessName) {
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...C.faint);
+  doc.text("CAPITAL READINESS ASSESSMENT", M, 12.3, { charSpace: 0.6 });
 
-  rows.slice(0, 5).forEach((row) => {
-    const value = clamp(row.value);
-    const label = doc.splitTextToSize(row.label, 36)[0];
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...C.faint);
+  doc.text(String(businessName), M, PH - 10);
+}
 
-    doc.setTextColor(...COLORS.slate);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.text(label, x + 7, rowY);
+// Inline section heading (number + title + sub) at the top of a section's
+// first content page; returns the content start-Y.
+function sectionHead(doc, num, title, sub) {
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...C.amber);
+  doc.text(num, M, 23);
+  const numW = doc.getTextWidth(num);
+  doc.setFontSize(15);
+  doc.setTextColor(...C.ink);
+  doc.text(title, M + numW + 4, 23);
 
-    const barX = x + 44;
-    const barW = width - 61;
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...C.muted);
+  const lines = doc.splitTextToSize(String(sub || ""), CW - 4);
+  lines.forEach((l, i) => doc.text(l, M, 30 + i * 4.4));
+  return 30 + lines.length * 4.4 + 5;
+}
 
-    doc.setFillColor(...COLORS.border);
-    doc.roundedRect(barX, rowY - 4, barW, 4.5, 2, 2, "F");
-
-    doc.setFillColor(...getScoreColor(value));
-    doc.roundedRect(barX, rowY - 4, (barW * value) / 100, 4.5, 2, 2, "F");
-
-    doc.setTextColor(...COLORS.slate);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(7);
-    doc.text(`${value}%`, x + width - 7, rowY, { align: "right" });
-
-    rowY += 10;
+function maturityBand(doc, x, y, w, pct) {
+  const tiers = ["Basic", "Developing", "Progressing", "Advanced", "Leading"];
+  const seg = w / 5;
+  const gap = 3;
+  const sw = seg - gap;
+  const idx = Math.min(4, Math.floor(clamp(pct) / 20));
+  tiers.forEach((t, i) => {
+    const sx = x + i * seg;
+    doc.setFillColor(...(i === idx ? C.amber : C.track));
+    doc.roundedRect(sx, y, sw, 5, 2, 2, "F");
+    doc.setFont(FONT, i === idx ? "bold" : "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...(i === idx ? C.ink : C.muted));
+    doc.text(t, sx + sw / 2, y + 12, { align: "center" });
   });
+  const cx = x + idx * seg + sw / 2;
+  const label = `You are here · ${clamp(pct)}%`;
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(7);
+  const pw = doc.getTextWidth(label) + 8;
+  doc.setFillColor(...C.ink);
+  doc.roundedRect(cx - pw / 2, y - 11, pw, 7, 3, 3, "F");
+  doc.setTextColor(...C.white);
+  doc.text(label, cx, y - 6.3, { align: "center" });
+}
 
-  return y + height + LAYOUT.gap;
+// Continued-page heading (for sections that overflow onto another page).
+function contHead(doc, num, title) {
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...C.amber);
+  doc.text(num, M, 23);
+  const numW = doc.getTextWidth(num);
+  doc.setFontSize(15);
+  doc.setTextColor(...C.ink);
+  doc.text(`${title} (continued)`, M + numW + 4, 23);
+  return 30;
 }
 
 // ─── Pages ───────────────────────────────────────────────────────────────────
 
-function drawCoverPage(doc, businessName, overallScore, date, logoDataUrl) {
-  const PW = pageWidth(doc);
-  const PH = pageHeight(doc);
+function drawCover(doc, ctx) {
+  const { name, overall, date } = ctx;
+  chrome(doc, name);
 
-  doc.setFillColor(...COLORS.navy);
-  doc.rect(0, 0, PW, PH, "F");
+  // Left: eyebrow, title, subtitle. Right: overall score card.
+  const leftW = 112;
 
-  doc.setDrawColor(59, 130, 246);
-  doc.setLineWidth(0.4);
-  for (let i = 0; i < 8; i++) {
-    doc.circle(PW - 10, PH - 12, 35 + i * 18, "S");
-  }
-
-  if (logoDataUrl) {
-    try {
-      const img = doc.getImageProperties(logoDataUrl);
-      const logoH = 13;
-      const logoW = (img.width / img.height) * logoH;
-      doc.addImage(
-        logoDataUrl,
-        "PNG",
-        PW - LAYOUT.marginX - logoW,
-        14,
-        logoW,
-        logoH,
-      );
-    } catch {
-      doc.setTextColor(...COLORS.white);
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(14);
-      doc.text("anza", PW - LAYOUT.marginX, 24, { align: "right" });
-    }
-  }
-
-  doc.setTextColor(191, 219, 254);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(9);
-  doc.text("CAPITAL READINESS ASSESSMENT", LAYOUT.marginX, 56);
-
-  doc.setTextColor(...COLORS.white);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(29);
-
-  const nameLines = doc.splitTextToSize(businessName, PW - 45);
-  let y = 75;
-
-  nameLines.slice(0, 4).forEach((line) => {
-    doc.text(line, LAYOUT.marginX, y);
-    y += 13;
-  });
-
-  y += 5;
-
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(14);
-  doc.setTextColor(226, 232, 240);
-  doc.text("Investment Readiness Report", LAYOUT.marginX, y);
-
-  y += 22;
-
-  drawCard(doc, LAYOUT.marginX, y, 76, 35, {
-    fill: COLORS.white,
-    border: COLORS.white,
-  });
-
-  doc.setTextColor(...COLORS.muted);
-  doc.setFont("helvetica", "normal");
+  doc.setFont(FONT, "bold");
   doc.setFontSize(8);
-  doc.text("Overall Readiness Score", LAYOUT.marginX + 7, y + 10);
+  doc.setTextColor(...C.amber);
+  doc.text("CAPITAL READINESS ASSESSMENT", M, 40, { charSpace: 1.2 });
 
-  doc.setTextColor(...getScoreColor(overallScore));
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(24);
-  doc.text(`${overallScore}%`, LAYOUT.marginX + 7, y + 28);
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(23);
+  doc.setTextColor(...C.ink);
+  const titleLines = doc.splitTextToSize(name, leftW).slice(0, 3);
+  let ty = 54;
+  titleLines.forEach((l) => {
+    doc.text(l, M, ty);
+    ty += 9.5;
+  });
 
-  doc.setTextColor(203, 213, 225);
-  doc.setFont("helvetica", "normal");
+  doc.setFont(FONT, "normal");
   doc.setFontSize(9);
-  doc.text(date, LAYOUT.marginX, PH - 22);
+  doc.setTextColor(...C.muted);
+  const sub =
+    "An independent evaluation of investment readiness across commercial, financial, operational and legal domains — with a structured 18-month improvement roadmap.";
+  doc.splitTextToSize(sub, leftW).forEach((l, i) => doc.text(l, M, ty + 3 + i * 4.6));
 
+  // Overall score card (deep blue), right column.
+  const cardX = M + leftW + 10;
+  const cardW = CW - leftW - 10;
+  const cardY = 36;
+  const cardH = 76;
+  card(doc, cardX, cardY, cardW, cardH, { fill: C.blueDeep, radius: 5 });
+  doc.setFont(FONT, "bold");
   doc.setFontSize(7);
+  doc.setTextColor(...C.blueSoft);
+  doc.text("OVERALL READINESS SCORE", cardX + cardW / 2, cardY + 11, {
+    align: "center",
+    charSpace: 0.5,
+  });
+  donut(doc, cardX + cardW / 2, cardY + 35, 17, overall, {
+    thickness: 5,
+    track: C.blueTrack,
+    arc: C.gold,
+    textColor: C.white,
+    big: 16,
+  });
+  gaugeThresholdTick(doc, cardX + cardW / 2, cardY + 35, 12, 17, 70, C.white);
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...C.white);
   doc.text(
-    `${businessName} — Capital Readiness Assessment Report`,
-    PW / 2,
-    PH - 10,
+    overall >= 70 ? "Meets the 70% threshold" : "Below the 70% threshold",
+    cardX + cardW / 2,
+    cardY + 60,
+    { align: "center" },
+  );
+  pill(
+    doc,
+    cardX + cardW / 2,
+    cardY + 64,
+    overall >= 70 ? "Investment ready" : "Not yet investment ready",
     {
-      align: "center",
+      bg: C.blueLine,
+      fg: overall >= 70 ? C.greenText : C.redText,
+      dot: overall >= 70 ? C.green : C.red,
+      center: true,
+      fs: 6.5,
+      h: 6.5,
     },
   );
+
+  doc.setDrawColor(...C.line);
+  doc.setLineWidth(0.3);
+  doc.line(M, 122, PW - M, 122);
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...C.muted);
+  doc.text(`Prepared on ${date} · Dar es Salaam, Tanzania`, M, 128);
+  doc.text("Confidential · CRAT Framework", PW - M, 128, { align: "right" });
 }
 
-function drawExecutiveSummary(doc, businessName, scoreData, overallScore) {
-  let y = drawPageHeader(doc, "Executive Summary", businessName, 2);
-  const x = LAYOUT.marginX;
-  const w = contentWidth(doc);
+function drawProfile(doc, ctx) {
+  const { name, overall, date, profile } = ctx;
+  const y = beginSection(
+    doc,
+    name,
+    "Company Profile",
+    `Who ${name} is, and the context of this capital readiness assessment.`,
+  ).y;
 
-  const metrics = [
-    ["Overall Score", overallScore],
-    ["Commercial / Market", scoreData?.commercial?.percentage || 0],
-    ["Financial", scoreData?.financial?.percentage || 0],
-    ["Operations", scoreData?.operations?.percentage || 0],
-    ["Legal & Compliance", scoreData?.legal?.percentage || 0],
+  const leftW = 116;
+  const rightX = M + leftW + 8;
+  const rightW = CW - leftW - 8;
+
+  // Left: company overview + at a glance.
+  let ly = y;
+  eyebrow(doc, "COMPANY OVERVIEW", M, ly);
+  ly += 6;
+  const overview = `${name} is a ${profile.sector || "growing"} company operating in ${
+    profile.location || "Tanzania"
+  }. This report evaluates its readiness to raise external capital across four domains — commercial, financial, operational, and legal & compliance — using the Capital Readiness Assessment (CRAT) framework, and sets out the roadmap required to reach investment readiness.`;
+  ly = wrap(doc, overview, M, ly, leftW, 4.2, 8) + 5;
+
+  eyebrow(doc, "AT A GLANCE", M, ly);
+  ly += 6;
+  const glance = [
+    ["SECTOR", profile.sector || "—"],
+    ["HEADQUARTERS", profile.location || "—"],
+    ["ASSESSMENT", "Capital Readiness (CRAT)"],
+    ["ASSESSMENT DATE", date],
+    ["FOCUS", "Investment Readiness"],
+    ["READINESS THRESHOLD", "70%"],
   ];
-
-  const gap = 4;
-  const cardW = (w - gap * 4) / 5;
-
-  metrics.forEach(([label, value], i) => {
-    drawMetricCard(doc, x + i * (cardW + gap), y, cardW, label, value);
-  });
-
-  y += 35;
-  y = drawSectionTitle(
-    doc,
-    "Domain Scores vs. 70% Investment Readiness Threshold",
-    x,
-    y,
-    w,
-  );
-
-  drawCard(doc, x, y, w, 60, { fill: COLORS.paleBlue });
-
-  const bars = [
-    ["Commercial", scoreData?.commercial?.percentage || 0],
-    ["Financial", scoreData?.financial?.percentage || 0],
-    ["Operations", scoreData?.operations?.percentage || 0],
-    ["Legal & Compliance", scoreData?.legal?.percentage || 0],
-    ["Overall", overallScore],
-  ];
-
-  let barY = y + 14;
-  bars.forEach(([label, value]) => {
-    drawHorizontalBar(doc, x + 8, barY, 92, label, value, {
-      color: label === "Overall" ? COLORS.blue : getScoreColor(value),
-    });
-    barY += 9;
-  });
-
-  y += 72;
-  y = drawSectionTitle(doc, "Readiness Profile Radar", x, y, w);
-
-  drawCard(doc, x, y, w, 74, { fill: COLORS.white });
-  drawRadarChart(doc, x + w / 2, y + 36, 23, {
-    commercial: scoreData?.commercial?.percentage || 0,
-    financial: scoreData?.financial?.percentage || 0,
-    operations: scoreData?.operations?.percentage || 0,
-    legal: scoreData?.legal?.percentage || 0,
-  });
-
-  y += 84;
-
-  const summaryText = `${businessName} achieved an overall Capital Readiness Score of ${overallScore}%, ${
-    overallScore >= 70 ? "meeting" : "remaining below"
-  } the 70% investment readiness threshold. The assessment shows Commercial at ${
-    scoreData?.commercial?.percentage || 0
-  }%, Financial at ${scoreData?.financial?.percentage || 0}%, Operations at ${
-    scoreData?.operations?.percentage || 0
-  }%, and Legal & Compliance at ${
-    scoreData?.legal?.percentage || 0
-  }%. The priority is to close the highest-risk capability gaps through a structured 18-month improvement roadmap.`;
-
-  const h = textHeight(doc, summaryText, w - 16) + 16;
-  drawCard(doc, x, y, w, h, {
-    fill: COLORS.paleBlue,
-    accent: COLORS.blue,
-  });
-
-  drawWrappedText(doc, summaryText, x + 8, y + 10, w - 16, {
-    fontSize: 8.5,
-    lineHeight: 4.2,
-  });
-}
-
-function drawOverallReadinessPage(
-  doc,
-  businessName,
-  scoreData,
-  overallScore,
-  domainData,
-) {
-  let y = drawPageHeader(doc, "Overall Readiness Score", businessName, 3);
-  const x = LAYOUT.marginX;
-  const w = contentWidth(doc);
-  const colGap = 8;
-  const colW = (w - colGap) / 2;
-
-  drawCard(doc, x, y, colW, 88, { fill: COLORS.white });
-  drawWrappedText(doc, "Capital Readiness Gauge", x + 8, y + 10, colW - 16, {
-    style: "bold",
-    color: COLORS.navy,
-  });
-  drawGaugeChart(
-    doc,
-    x + colW / 2,
-    y + 49,
-    28,
-    overallScore,
-    getStatus(overallScore),
-  );
-
-  drawCard(doc, x + colW + colGap, y, colW, 88, { fill: COLORS.white });
-  drawWrappedText(
-    doc,
-    "Domain Comparison",
-    x + colW + colGap + 8,
-    y + 10,
-    colW - 16,
-    {
-      style: "bold",
-      color: COLORS.navy,
-    },
-  );
-
-  let barY = y + 28;
-  [
-    ["Commercial", scoreData?.commercial?.percentage || 0],
-    ["Financial", scoreData?.financial?.percentage || 0],
-    ["Operations", scoreData?.operations?.percentage || 0],
-    ["Legal", scoreData?.legal?.percentage || 0],
-  ].forEach(([label, value]) => {
-    drawHorizontalBar(doc, x + colW + colGap + 8, barY, 40, label, value, {
-      labelWidth: 36,
-    });
-    barY += 13;
-  });
-
-  y += 100;
-  y = drawSectionTitle(doc, "Sub-Domain Breakdown", x, y, w);
-
-  const yStart = y;
-  drawSubDomainPanel(
-    doc,
-    x,
-    yStart,
-    colW,
-    "Commercial / Market",
-    extractSubDomains(domainData, "commercial"),
-  );
-  drawSubDomainPanel(
-    doc,
-    x + colW + colGap,
-    yStart,
-    colW,
-    "Financial",
-    extractSubDomains(domainData, "financial"),
-  );
-
-  y = yStart + 84;
-
-  const insightText =
-    "Sub-domain results identify the operating capabilities most likely to influence due diligence outcomes. Weak commercial systems typically reduce investor confidence in revenue predictability, while weak financial systems limit visibility into cash flow, margins, and scalability.";
-
-  drawCard(doc, x, y, w, 38, { fill: COLORS.paleBlue, accent: COLORS.indigo });
-  drawWrappedText(doc, insightText, x + 8, y + 10, w - 16);
-}
-
-function drawProjectionsPage(
-  doc,
-  businessName,
-  scoreData,
-  overallScore,
-  domainData,
-) {
-  let y = drawPageHeader(
-    doc,
-    "Operations, Legal & Score Projection",
-    businessName,
-    4,
-  );
-  const x = LAYOUT.marginX;
-  const w = contentWidth(doc);
-  const colGap = 8;
-  const colW = (w - colGap) / 2;
-
-  const yStart = y;
-  drawSubDomainPanel(
-    doc,
-    x,
-    yStart,
-    colW,
-    "Operations",
-    extractSubDomains(domainData, "operations"),
-  );
-  drawSubDomainPanel(
-    doc,
-    x + colW + colGap,
-    yStart,
-    colW,
-    "Legal & Compliance",
-    extractSubDomains(domainData, "legal"),
-  );
-
-  y = yStart + 86;
-  y = drawSectionTitle(doc, "18-Month Score Projection", x, y, w);
-
-  drawCard(doc, x, y, w, 70, { fill: COLORS.white });
-
-  const points = [
-    { label: "Now", value: overallScore },
-    { label: "3 mo", value: Math.min(overallScore + 12, 100) },
-    { label: "9 mo", value: Math.min(overallScore + 24, 100) },
-    { label: "18 mo", value: Math.min(overallScore + 39, 100) },
-  ];
-
-  drawLineChart(doc, x + 18, y + 14, w - 36, 38, points, 70);
-
-  y += 82;
-  y = drawSectionTitle(doc, "Domain Improvement Projection by Phase", x, y, w);
-
-  drawCard(doc, x, y, w, 70, { fill: COLORS.paleBlue });
-
-  const domains = [
-    ["Commercial", scoreData?.commercial?.percentage || 0],
-    ["Financial", scoreData?.financial?.percentage || 0],
-    ["Operations", scoreData?.operations?.percentage || 0],
-    ["Legal", scoreData?.legal?.percentage || 0],
-  ];
-
-  let stackX = x + 28;
-  domains.forEach(([label, current]) => {
-    const three = Math.max(0, Math.min(10, 70 - current));
-    const nine = Math.max(0, Math.min(15, 80 - current - three));
-    const eighteen = Math.max(0, Math.min(18, 90 - current - three - nine));
-
-    drawStackedBar(doc, stackX, y + 12, 24, 40, label, [
-      { value: current, color: COLORS.blue },
-      { value: three, color: COLORS.orange },
-      { value: nine, color: COLORS.gold },
-      { value: eighteen, color: COLORS.green },
-    ]);
-
-    stackX += 38;
-  });
-}
-
-function drawRiskAnalysisPage(doc, businessName, scoreData, overallScore) {
-  let y = drawPageHeader(
-    doc,
-    "Key Thematic Gaps & Risk Analysis",
-    businessName,
-    5,
-  );
-  const x = LAYOUT.marginX;
-  const w = contentWidth(doc);
-  const gap = 6;
-  const boxW = (w - gap) / 2;
-
-  const gaps = [
-    {
-      title: "Commercial / Market",
-      score: scoreData?.commercial?.percentage || 0,
-      items: [
-        "Sales process and revenue pipeline need stronger structure.",
-        "Market positioning and competitor intelligence should be documented.",
-        "Customer retention and acquisition channels need measurable controls.",
-      ],
-    },
-    {
-      title: "Financial Management",
-      score: scoreData?.financial?.percentage || 0,
-      items: [
-        "Cash flow forecasting should be formalised.",
-        "Investor-grade financial records should be prepared.",
-        "Accounting systems and projections need stronger controls.",
-      ],
-    },
-    {
-      title: "Operations",
-      score: scoreData?.operations?.percentage || 0,
-      items: [
-        "Core processes should be documented.",
-        "Key-person dependency should be reduced.",
-        "KPIs should be linked to performance management.",
-      ],
-    },
-    {
-      title: "Legal & Compliance",
-      score: scoreData?.legal?.percentage || 0,
-      items: [
-        "Licences, permits, contracts, and governance records should be reviewed.",
-        "Compliance gaps may delay investor due diligence.",
-        "IP and formal oversight structures should be strengthened.",
-      ],
-    },
-  ];
-
-  gaps.forEach((gapItem, index) => {
-    const col = index % 2;
-    const row = Math.floor(index / 2);
-    const gx = x + col * (boxW + gap);
-    const gy = y + row * 62;
-
-    drawCard(doc, gx, gy, boxW, 56, {
-      fill: COLORS.white,
-      accent: getScoreColor(gapItem.score),
-    });
-
-    doc.setTextColor(...COLORS.navy);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(8.5);
-    doc.text(`${gapItem.title} — ${clamp(gapItem.score)}%`, gx + 7, gy + 10);
-
-    drawBulletList(doc, gapItem.items, gx + 7, gy + 19, boxW - 13, {
-      fontSize: 7.2,
-      lineHeight: 3.5,
-    });
-  });
-
-  y += 130;
-  y = drawSectionTitle(doc, "Consolidated Risk Analysis", x, y, w);
-
-  drawCard(doc, x, y, w, 74, { fill: COLORS.paleBlue });
-
-  const riskText = `The consolidated risk profile indicates that ${businessName} should prioritise investment-readiness controls that directly affect due diligence: revenue predictability, financial transparency, operational resilience, and legal compliance. The current overall score of ${overallScore}% means the business should sequence corrective action by impact and investor relevance.`;
-
-  drawWrappedText(doc, riskText, x + 8, y + 12, w - 16);
-}
-
-function drawRoadmapPage(doc, businessName, overallScore) {
-  let y = drawPageHeader(doc, "Readiness Improvement Roadmap", businessName, 6);
-  const x = LAYOUT.marginX;
-  const w = contentWidth(doc);
-
-  y = drawSectionTitle(doc, "Projected Score Trajectory", x, y, w);
-
-  drawCard(doc, x, y, w, 58, { fill: COLORS.white });
-
-  drawLineChart(
-    doc,
-    x + 18,
-    y + 12,
-    w - 36,
-    30,
-    [
-      { label: "Now", value: overallScore },
-      { label: "3 mo", value: Math.min(overallScore + 12, 100) },
-      { label: "9 mo", value: Math.min(overallScore + 24, 100) },
-      { label: "18 mo", value: Math.min(overallScore + 39, 100) },
-    ],
-    70,
-  );
-
-  y += 70;
-  y = drawSectionTitle(doc, "Implementation Phases", x, y, w);
-
-  const phaseGap = 5;
-  const phaseW = (w - phaseGap * 2) / 3;
-
-  const phases = [
-    {
-      title: "0–3 Months",
-      subtitle: "Immediate Stabilisation",
-      fill: [254, 242, 242],
-      items: [
-        "Formalise financial records.",
-        "Confirm licences and permits.",
-        "Document core processes.",
-        "Prepare investor information pack.",
-        "Set up basic sales tracking.",
-      ],
-    },
-    {
-      title: "3–9 Months",
-      subtitle: "Control Building",
-      fill: [255, 251, 235],
-      items: [
-        "Implement accounting software.",
-        "Build rolling cash-flow forecast.",
-        "Formalise contracts.",
-        "Implement CRM pipeline tracking.",
-        "Launch structured team training.",
-      ],
-    },
-    {
-      title: "9–18 Months",
-      subtitle: "Investor Readiness",
-      fill: [240, 253, 244],
-      items: [
-        "Establish governance structure.",
-        "Register IP assets.",
-        "Prepare audited financials.",
-        "Strengthen commercial traction.",
-        "Reassess against 70%+ target.",
-      ],
-    },
-  ];
-
-  phases.forEach((phase, i) => {
-    const px = x + i * (phaseW + phaseGap);
-
-    drawCard(doc, px, y, phaseW, 72, { fill: phase.fill });
-
-    doc.setTextColor(...COLORS.navy);
-    doc.setFont("helvetica", "bold");
+  const gcW = (leftW - 6) / 2;
+  const gcH = 13;
+  glance.forEach((g, i) => {
+    const col = i % 2;
+    const row = Math.floor(i / 2);
+    const gx = M + col * (gcW + 6);
+    const gy = ly + row * (gcH + 3);
+    card(doc, gx, gy, gcW, gcH, { fill: C.cardBg, radius: 2.5 });
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(6);
+    doc.setTextColor(...C.faint);
+    doc.text(g[0], gx + 4, gy + 5, { charSpace: 0.3 });
+    doc.setFont(FONT, "bold");
     doc.setFontSize(8);
-    doc.text(phase.title, px + 7, y + 10);
+    doc.setTextColor(...C.ink);
+    doc.text(doc.splitTextToSize(g[1], gcW - 8)[0], gx + 4, gy + 10.5);
+  });
+  // Right: deep-blue assessment snapshot.
+  const snapH = 80;
+  card(doc, rightX, y, rightW, snapH, { fill: C.blueDeep, radius: 4 });
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...C.blueSoft);
+  doc.text("ASSESSMENT SNAPSHOT", rightX + rightW / 2, y + 10, {
+    align: "center",
+    charSpace: 0.5,
+  });
+  donut(doc, rightX + rightW / 2, y + 33, 15, overall, {
+    thickness: 5,
+    track: C.blueTrack,
+    arc: C.gold,
+    textColor: C.white,
+    big: 14,
+  });
+  let sy = y + 60;
+  doc.setDrawColor(...C.blueLine);
+  doc.setLineWidth(0.3);
+  doc.line(rightX + 8, sy - 4, rightX + rightW - 8, sy - 4);
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...C.blueSoft);
+  doc.text("Maturity", rightX + 8, sy);
+  doc.setFont(FONT, "bold");
+  doc.setTextColor(...C.white);
+  doc.text(maturityLabel(overall), rightX + rightW - 8, sy, { align: "right" });
+  sy += 12;
+  doc.setDrawColor(...C.blueLine);
+  doc.line(rightX + 8, sy - 4, rightX + rightW - 8, sy - 4);
+  doc.setFont(FONT, "normal");
+  doc.setTextColor(...C.blueSoft);
+  doc.text("Status", rightX + 8, sy);
+  doc.setFont(FONT, "bold");
+  doc.setTextColor(...(overall >= 70 ? C.greenText : C.redText));
+  doc.text(overall >= 70 ? "Ready" : "Not ready", rightX + rightW - 8, sy, {
+    align: "right",
+  });
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(...COLORS.muted);
-    doc.text(phase.subtitle, px + 7, y + 15);
+}
 
-    drawBulletList(doc, phase.items, px + 7, y + 25, phaseW - 13, {
-      fontSize: 6.8,
-      lineHeight: 3.3,
+function drawOverallFindings(doc, ctx) {
+  const { name, overall, scoreData } = ctx;
+  const ml = maturityLabel(overall);
+  const ready = overall >= 70;
+  const st = beginSection(
+    doc,
+    name,
+    "Overall Findings",
+    "Maturity level and readiness by domain, measured against the 70% threshold.",
+  );
+  const y = st.y;
+
+  // Maturity band.
+  card(doc, M, y, CW, 42, { fill: C.white, border: C.line, radius: 3 });
+  eyebrow(doc, "STARTUP MATURITY RATING", M + 8, y + 12);
+  maturityBand(doc, M + 8, y + 25, CW - 16, overall);
+
+  // Readiness by domain — one gauge per domain.
+  const gY = y + 48;
+  const gH = 52;
+  card(doc, M, gY, CW, gH, { fill: C.white, border: C.line, radius: 3 });
+  eyebrow(doc, "READINESS BY DOMAIN", M + 8, gY + 10);
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(6.5);
+  doc.setTextColor(...C.amber);
+  doc.text("| 70% threshold", PW - M - 8, gY + 10, { align: "right" });
+
+  const cellW = (CW - 16) / 4;
+  const gaugeR = 12;
+  const gaugeTh = 4;
+  DOMAINS.forEach((d, i) => {
+    const p = pctOf(scoreData, d.key);
+    const cx = M + 8 + i * cellW + cellW / 2;
+    const cy = gY + 28;
+    donut(doc, cx, cy, gaugeR, p, {
+      thickness: gaugeTh,
+      track: C.track,
+      arc: domainColor(p),
+      textColor: C.ink,
+      big: 10,
     });
-  });
-
-  y += 84;
-  y = drawSectionTitle(doc, "Conclusion & Recommendations", x, y, w);
-
-  const conclusion = `${businessName} has demonstrated commitment to capital readiness through participation in this assessment, achieving an overall score of ${overallScore}%. The most important opportunities are financial management, legal compliance, operational documentation, and commercial strategy development. Recommended next steps include using the CRAT framework as an ongoing monitoring tool, prioritising domain-specific gaps, engaging specialist advisors, and scheduling a follow-up assessment within 12 months.`;
-
-  const h = textHeight(doc, conclusion, w - 16) + 16;
-  drawCard(doc, x, y, w, h, { fill: COLORS.paleBlue, accent: COLORS.indigo });
-  drawWrappedText(doc, conclusion, x + 8, y + 10, w - 16);
-}
-
-function calculateBusinessModelMetrics(domainData) {
-  const commercial = extractSubDomains(domainData, "commercial");
-  const financial = extractSubDomains(domainData, "financial");
-  const operations = extractSubDomains(domainData, "operations");
-
-  const avg = (rows) =>
-    rows.length
-      ? Math.round(
-          rows.reduce((sum, r) => sum + clamp(r.value), 0) / rows.length,
-        )
-      : 0;
-
-  const commercialAvg = avg(commercial);
-  const financialAvg = avg(financial);
-  const operationsAvg = avg(operations);
-
-  return [
-    ["Revenue Diversity", commercialAvg],
-    ["Value Proposition", commercialAvg],
-    ["Competitive Position", commercialAvg],
-    ["Scalability", operationsAvg],
-    ["Unit Economics", financialAvg],
-  ];
-}
-
-function drawBusinessModelPage(doc, businessName, domainData) {
-  let y = drawPageHeader(doc, "Business Model Viability", businessName, 7);
-  const x = LAYOUT.marginX;
-  const w = contentWidth(doc);
-
-  const metrics = calculateBusinessModelMetrics(domainData);
-
-  y = drawSectionTitle(doc, "Business Model Viability Scorecard", x, y, w);
-
-  drawCard(doc, x, y, w, 76, { fill: COLORS.white });
-
-  let rowY = y + 16;
-  metrics.forEach(([label, value]) => {
-    drawHorizontalBar(doc, x + 10, rowY, 100, label, value, {
-      labelWidth: 52,
-    });
-    rowY += 11;
-  });
-
-  y += 88;
-  y = drawSectionTitle(doc, "Interpretive Insight", x, y, w);
-
-  const insight = `${businessName}'s business model viability depends on strengthening the connection between revenue quality, operating capacity, and financial visibility. Investors typically look for evidence that demand is repeatable, margins are understood, and the operating model can scale without disproportionate execution risk.`;
-
-  const h = textHeight(doc, insight, w - 16) + 16;
-  drawCard(doc, x, y, w, h, { fill: COLORS.paleBlue, accent: COLORS.blue });
-  drawWrappedText(doc, insight, x + 8, y + 10, w - 16);
-
-  y += h + 10;
-  y = drawSectionTitle(doc, "Governance Lens", x, y, w);
-
-  const governanceItems = [
-    "Document decision rights and escalation paths.",
-    "Track strategic KPIs monthly.",
-    "Maintain investor-ready financial and compliance records.",
-    "Create accountability for roadmap execution.",
-  ];
-
-  drawCard(doc, x, y, w, 54, { fill: COLORS.white });
-  drawBulletList(doc, governanceItems, x + 8, y + 14, w - 16);
-}
-
-function drawPrioritizationPage(doc, businessName) {
-  let y = drawPageHeader(doc, "Prioritisation Matrix", businessName, 8);
-  const x = LAYOUT.marginX;
-  const w = contentWidth(doc);
-
-  const intro = `Quick wins are high-impact actions requiring fewer resources. Bold plays require more effort but deliver greater capital readiness gains and should be sequenced into the 3–18 month programme.`;
-
-  drawCard(doc, x, y, w, 30, { fill: COLORS.paleBlue, accent: COLORS.gold });
-  drawWrappedText(doc, intro, x + 8, y + 10, w - 16);
-
-  y += 42;
-  y = drawSectionTitle(doc, "Impact vs. Ease of Implementation", x, y, w);
-
-  const matrixX = x + 12;
-  const matrixY = y + 8;
-  const matrixW = w - 24;
-  const matrixH = 92;
-
-  drawCard(doc, x, y, w, 112, { fill: COLORS.white });
-
-  doc.setFillColor(254, 242, 242);
-  doc.rect(matrixX, matrixY, matrixW / 2, matrixH / 2, "F");
-
-  doc.setFillColor(255, 251, 235);
-  doc.rect(matrixX + matrixW / 2, matrixY, matrixW / 2, matrixH / 2, "F");
-
-  doc.setFillColor(239, 246, 255);
-  doc.rect(matrixX, matrixY + matrixH / 2, matrixW / 2, matrixH / 2, "F");
-
-  doc.setFillColor(240, 253, 244);
-  doc.rect(
-    matrixX + matrixW / 2,
-    matrixY + matrixH / 2,
-    matrixW / 2,
-    matrixH / 2,
-    "F",
-  );
-
-  doc.setDrawColor(...COLORS.border);
-  doc.rect(matrixX, matrixY, matrixW, matrixH, "S");
-  doc.line(
-    matrixX + matrixW / 2,
-    matrixY,
-    matrixX + matrixW / 2,
-    matrixY + matrixH,
-  );
-  doc.line(
-    matrixX,
-    matrixY + matrixH / 2,
-    matrixX + matrixW,
-    matrixY + matrixH / 2,
-  );
-
-  doc.setTextColor(...COLORS.navy);
-  doc.setFont("helvetica", "bold");
-  doc.setFontSize(8);
-  doc.text("Bold Plays", matrixX + matrixW * 0.25, matrixY + 10, {
-    align: "center",
-  });
-  doc.text("Strategic Bets", matrixX + matrixW * 0.75, matrixY + 10, {
-    align: "center",
-  });
-  doc.text("Low Priority", matrixX + matrixW * 0.25, matrixY + matrixH - 8, {
-    align: "center",
-  });
-  doc.text("Quick Wins", matrixX + matrixW * 0.75, matrixY + matrixH - 8, {
-    align: "center",
-  });
-
-  const initiatives = [
-    { label: "Financial records", x: 0.78, y: 0.78, color: COLORS.green },
-    { label: "Licences review", x: 0.72, y: 0.7, color: COLORS.green },
-    { label: "CRM pipeline", x: 0.62, y: 0.6, color: COLORS.orange },
-    { label: "Governance board", x: 0.35, y: 0.75, color: COLORS.blue },
-    { label: "Audited accounts", x: 0.38, y: 0.65, color: COLORS.indigo },
-  ];
-
-  initiatives.forEach((item) => {
-    const px = matrixX + item.x * matrixW;
-    const py = matrixY + matrixH - item.y * matrixH;
-
-    doc.setFillColor(...item.color);
-    doc.circle(px, py, 3, "F");
-
-    doc.setTextColor(...COLORS.slate);
-    doc.setFont("helvetica", "normal");
+    gaugeThresholdTick(doc, cx, cy, gaugeR - gaugeTh, gaugeR, 70, C.amber);
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(8);
+    doc.setTextColor(...C.ink);
+    doc.text(d.label, cx, gY + 45, { align: "center" });
+    doc.setFont(FONT, "normal");
     doc.setFontSize(6.5);
-    doc.text(item.label, px + 4, py + 1.5);
+    doc.setTextColor(...C.muted);
+    doc.text(d.sub, cx, gY + 49, { align: "center" });
   });
 
-  doc.setTextColor(...COLORS.muted);
-  doc.setFont("helvetica", "normal");
-  doc.setFontSize(7);
+  // Overall readiness + narrative continue on the next page (A5 landscape).
+  doc.addPage();
+  chrome(doc, name);
+  const oY = contHead(doc, st.num, "Overall Findings");
+  const oH = 40;
+  card(doc, M, oY, CW, oH, { fill: C.blueDeep, radius: 4 });
+  donut(doc, M + 28, oY + 20, 14, overall, {
+    thickness: 4.5,
+    track: C.blueTrack,
+    arc: C.gold,
+    textColor: C.white,
+    big: 13,
+  });
+  gaugeThresholdTick(doc, M + 28, oY + 20, 9.5, 14, 70, C.white);
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...C.blueSoft);
+  doc.text("OVERALL READINESS", M + 52, oY + 13, { charSpace: 0.5 });
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(11);
+  doc.setTextColor(...C.white);
   doc.text(
-    "Ease of implementation →",
-    matrixX + matrixW / 2,
-    matrixY + matrixH + 8,
-    {
-      align: "center",
-    },
+    `${overall}% · ${ml} — ${ready ? "Investment ready" : "Not yet investment ready"}`,
+    M + 52,
+    oY + 23,
   );
-  doc.text("Impact →", matrixX - 5, matrixY + matrixH / 2, {
-    align: "center",
-    angle: 90,
-  });
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(...C.blueSoft);
+  doc.text(
+    "Measured against a 70% investment-readiness threshold.",
+    M + 52,
+    oY + 31,
+  );
 
-  y += 126;
-  y = drawSectionTitle(doc, "Recommended Sequencing", x, y, w);
-
-  const sequence = [
-    "Start with quick wins: records, licences, process documentation, and investor pack.",
-    "Move to control building: accounting system, CRM, contracts, and cash-flow forecasting.",
-    "Complete bold plays: audited accounts, governance structure, IP protection, and investor-grade reporting.",
-  ];
-
-  drawCard(doc, x, y, w, 46, { fill: COLORS.paleBlue, accent: COLORS.indigo });
-  drawBulletList(doc, sequence, x + 8, y + 13, w - 16);
+  // Narrative.
+  const grade = DOMAINS.filter((d) => pctOf(scoreData, d.key) >= 70).map((d) => d.label);
+  const risk = DOMAINS.filter((d) => pctOf(scoreData, d.key) < 70).map((d) => d.label);
+  const narrative = `${name} achieved an overall Capital Readiness Score of ${overall}%, placing it at the "${ml}" maturity level.${
+    grade.length
+      ? ` ${grade.join(" and ")} ${grade.length > 1 ? "are" : "is"} investment-grade.`
+      : ""
+  }${
+    risk.length
+      ? ` ${risk.join(" and ")} ${risk.length > 1 ? "carry" : "carries"} the highest-risk capability gaps.`
+      : ""
+  } Overall the business is ${
+    ready ? "investment-ready" : "not yet investment-ready"
+  }; the sections that follow detail the thematic gaps, domain findings and recommended interventions.`;
+  callout(doc, M, oY + oH + 8, CW, "READINESS LEVEL", narrative, C.blue);
 }
 
-// ─── Main PDF Builder ────────────────────────────────────────────────────────
+function drawDetailedFindings(doc, ctx) {
+  const { name, scoreData } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Detailed Findings",
+    "Domain-by-domain observations recorded during the assessment.",
+  );
+  let y = st.y;
+  const limit = PH - 16;
+
+  DOMAINS.forEach((d) => {
+    const p = pctOf(scoreData, d.key);
+    const ready = p >= 70;
+    const introLines = doc.splitTextToSize(DOMAIN_CONTENT[d.key].intro, CW - 16);
+    const findingLines = DOMAIN_CONTENT[d.key].findings.map((t) =>
+      doc.splitTextToSize(t, CW - 24),
+    );
+    const findingsH = findingLines.reduce((s, l) => s + l.length * 4.3 + 3.5, 0);
+    const h = 18 + introLines.length * 4.2 + 4 + findingsH + 4;
+    if (y + h > limit) {
+      doc.addPage();
+      chrome(doc, name);
+      y = contHead(doc, st.num, "Detailed Findings");
+    }
+
+    card(doc, M, y, CW, h, { fill: C.white, border: C.line, radius: 3 });
+    doc.setFillColor(...(ready ? C.blue : C.red));
+    doc.roundedRect(M, y, 2.4, h, 1, 1, "F");
+
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...C.ink);
+    doc.text(d.full, M + 8, y + 13);
+    pillRight(
+      doc,
+      M + CW - 8,
+      y + 8,
+      `${p}%`,
+      ready ? C.softBlue : C.redSoft,
+      ready ? C.blue : C.red,
+    );
+
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...C.muted);
+    introLines.forEach((l, li) => doc.text(l, M + 8, y + 20 + li * 4.2));
+
+    let by = y + 20 + introLines.length * 4.2 + 5;
+    findingLines.forEach((l) => {
+      doc.setFont(FONT, "bold");
+      doc.setFontSize(8);
+      doc.setTextColor(...domainColor(p));
+      doc.text("›", M + 8, by);
+      doc.setFont(FONT, "normal");
+      doc.setTextColor(...C.slate);
+      l.forEach((ln, li) => doc.text(ln, M + 13, by + li * 4.3));
+      by += l.length * 4.3 + 3.5;
+    });
+
+    y += h + 6;
+  });
+}
+
+function drawRecommendations(doc, ctx) {
+  const { name, scoreData } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Recommendations",
+    "Targeted capacity interventions to close the gap in each domain.",
+  );
+  let y = st.y;
+  const limit = PH - 16;
+
+  DOMAINS.forEach((d) => {
+    const p = pctOf(scoreData, d.key);
+    const ready = p >= 70;
+    const recLines = DOMAIN_CONTENT[d.key].recs.map((t) =>
+      doc.splitTextToSize(t, CW - 26),
+    );
+    const recsH = recLines.reduce((s, l) => s + l.length * 4.3 + 4, 0);
+    const h = 24 + recsH + 4;
+    if (y + h > limit) {
+      doc.addPage();
+      chrome(doc, name);
+      y = contHead(doc, st.num, "Recommendations");
+    }
+
+    card(doc, M, y, CW, h, { fill: C.cardBg, radius: 3 });
+    doc.setFillColor(...C.blue);
+    doc.roundedRect(M, y, CW, 2.4, 1, 1, "F");
+
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(...C.ink);
+    doc.text(d.full, M + 8, y + 14);
+    pillRight(
+      doc,
+      M + CW - 8,
+      y + 9,
+      `${p}%`,
+      ready ? C.softBlue : C.redSoft,
+      ready ? C.blue : C.red,
+    );
+
+    let by = y + 25;
+    recLines.forEach((l) => {
+      doc.setFillColor(...C.blue);
+      doc.circle(M + 9, by - 1.4, 1.5, "F");
+      doc.setFont(FONT, "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...C.slate);
+      l.forEach((ln, li) => doc.text(ln, M + 14, by + li * 4.3));
+      by += l.length * 4.3 + 4;
+    });
+
+    y += h + 6;
+  });
+}
+
+function drawGaps(doc, ctx) {
+  const { name, scoreData } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Key Thematic Gaps",
+    "The defining capability gap in each domain, with a tailored read on what it means for investment readiness.",
+  );
+  let y = st.y;
+  const limit = PH - 16;
+
+  DOMAINS.forEach((d) => {
+    const p = pctOf(scoreData, d.key);
+    const ready = p >= 70;
+    const lines = doc.splitTextToSize(DOMAIN_CONTENT[d.key].gap, CW - 16);
+    const h = 22 + lines.length * 4.6 + 6;
+    if (y + h > limit) {
+      doc.addPage();
+      chrome(doc, name);
+      y = contHead(doc, st.num, "Key Thematic Gaps");
+    }
+
+    card(doc, M, y, CW, h, { fill: C.white, border: C.line, radius: 3 });
+    doc.setFillColor(...(ready ? C.blue : C.red));
+    doc.roundedRect(M, y, 2.4, h, 1, 1, "F");
+
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(11.5);
+    doc.setTextColor(...C.ink);
+    doc.text(d.full, M + 8, y + 13);
+    const pillLeft = pillRight(
+      doc,
+      M + CW - 8,
+      y + 8,
+      ready ? "ON TRACK" : "HIGH RISK",
+      ready ? C.softBlue : C.redSoft,
+      ready ? C.blue : C.red,
+    );
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(12);
+    doc.setTextColor(...domainColor(p));
+    doc.text(`${p}%`, pillLeft - 4, y + 13, { align: "right" });
+
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...C.slate);
+    lines.forEach((l, li) => doc.text(l, M + 8, y + 22 + li * 4.6));
+
+    y += h + 6;
+  });
+}
+
+function drawInitiatives(doc, ctx) {
+  const { name } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Prioritisation",
+    "Quick wins are high-impact actions requiring fewer resources — sequence them first. Bold plays require more effort but deliver greater readiness gains.",
+  );
+  const y = st.y;
+  const limit = PH - 16;
+
+  const groups = [
+    {
+      title: "QUICK WINS",
+      subtitle: "High impact · fewer resources · sequence first",
+      start: 1,
+      items: [
+        "Formalise financial records",
+        "Confirm licences & permits",
+        "Document core processes",
+      ],
+    },
+    {
+      title: "BOLD PLAYS",
+      subtitle: "Greater effort · greater readiness gains",
+      start: 4,
+      items: [
+        "Implement CRM pipeline tracking",
+        "Build a rolling cash-flow forecast",
+        "Prepare audited financials",
+        "Establish a governance structure",
+        "Register intellectual-property assets",
+      ],
+    },
+  ];
+
+  let gy = y;
+  groups.forEach((g) => {
+    const h = 26 + g.items.length * 10 + 4;
+    if (gy + h > limit) {
+      doc.addPage();
+      chrome(doc, name);
+      gy = contHead(doc, st.num, "Prioritisation");
+    }
+    card(doc, M, gy, CW, h, { fill: C.cardBg, radius: 3 });
+    doc.setFillColor(...C.blue);
+    doc.roundedRect(M, gy, CW, 2.4, 1, 1, "F");
+    doc.setFillColor(...C.blue);
+    doc.circle(M + 10, gy + 13, 1.6, "F");
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(10);
+    doc.setTextColor(...C.blue);
+    doc.text(g.title, M + 15, gy + 14, { charSpace: 0.4 });
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...C.muted);
+    doc.text(g.subtitle, M + CW - 8, gy + 14, { align: "right" });
+
+    let iy = gy + 27;
+    g.items.forEach((t, i) => {
+      doc.setFillColor(...C.blue);
+      doc.circle(M + 11, iy - 1.5, 3.4, "F");
+      doc.setFont(FONT, "bold");
+      doc.setFontSize(7.5);
+      doc.setTextColor(...C.white);
+      doc.text(String(g.start + i), M + 11, iy + 0.5, { align: "center" });
+      doc.setFont(FONT, "normal");
+      doc.setFontSize(9);
+      doc.setTextColor(...C.ink);
+      doc.text(t, M + 18, iy);
+      iy += 10;
+    });
+
+    gy += h + 6;
+  });
+
+  const seq =
+    "Sequencing follows impact and investor relevance: stabilise the highest-risk domains first with the quick wins, then build the durable controls — CRM, audited financials, governance and IP — that carry the business past the 70% readiness threshold.";
+  const seqH = 15 + doc.splitTextToSize(seq, CW - 16).length * 4.4 + 4;
+  if (gy + seqH > limit) {
+    doc.addPage();
+    chrome(doc, name);
+    gy = contHead(doc, st.num, "Prioritisation");
+  }
+  callout(doc, M, gy, CW, "SEQUENCING", seq, C.amber);
+}
+
+// ─── Due-diligence flow helpers ──────────────────────────────────────────────
+
+// Per-domain evidence reviewed / missing evidence.
+const EV = {
+  commercial: {
+    evidence: "CRAT self-assessment responses on sales, market and customers; reviewer scoring.",
+    missing: "Sales-pipeline export, pricing sheet, top-customer contracts, marketing plan, churn / retention data.",
+  },
+  financial: {
+    evidence: "CRAT self-assessment responses on financial management; reviewer scoring.",
+    missing: "12-month management accounts, cash-flow model, bank statements, revenue ledger, accounting-system access.",
+  },
+  operations: {
+    evidence: "CRAT self-assessment responses on operations; reviewer scoring.",
+    missing: "Process / SOP documentation, organisation chart, KPI dashboard, key-person and succession plan.",
+  },
+  legal: {
+    evidence: "CRAT self-assessment responses on legal & compliance; reviewer scoring.",
+    missing: "Certificate of incorporation, licences / permits, key contracts, IP registrations, board and governance records.",
+  },
+};
+
+function riskFromScore(p) {
+  return p >= 70 ? "Low" : p >= 45 ? "Medium" : "High";
+}
+
+function riskColor(v) {
+  const s = String(v || "").toLowerCase();
+  if (s.includes("crit") || s.includes("high")) return C.red;
+  if (s.includes("med")) return C.amber;
+  if (s.includes("low")) return C.green;
+  return C.muted;
+}
+function riskSoft(v) {
+  const s = String(v || "").toLowerCase();
+  if (s.includes("crit") || s.includes("high")) return C.redSoft;
+  if (s.includes("med")) return [254, 243, 199];
+  if (s.includes("low")) return C.greenSoft;
+  return C.cardBg;
+}
+function cellColor(tone, val) {
+  const v = String(val || "").toLowerCase();
+  if (tone === "risk") return riskColor(v);
+  if (tone === "status") {
+    if (/(required|to provide|pending|missing|not in place|absent)/.test(v)) return C.amber;
+    if (/(provided|complete|in place|verified|yes|held)/.test(v)) return C.green;
+    return C.slate;
+  }
+  if (tone === "suit") {
+    if (v.includes("recommend")) return C.green;
+    if (v.includes("conditional")) return C.amber;
+    if (v.includes("not")) return C.red;
+    if (v.includes("optional")) return C.blue;
+    return C.slate;
+  }
+  return C.slate;
+}
+
+// Begin a section; the number is auto-assigned from the build order so that
+// adding/removing/reordering sections renumbers the whole report automatically.
+function beginSection(doc, name, title, sub) {
+  SECTION_NO += 1;
+  const num = String(SECTION_NO).padStart(2, "0");
+  chrome(doc, name);
+  const y = sectionHead(doc, num, title, sub);
+  return { doc, name, num, title, y };
+}
+
+// Page-break guard.
+function ensure(st, h) {
+  if (st.y + h > PH - 16) {
+    st.doc.addPage();
+    chrome(st.doc, st.name);
+    st.y = contHead(st.doc, st.num, st.title);
+  }
+}
+
+function heading(st, text) {
+  ensure(st, 14);
+  const { doc } = st;
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...C.blue);
+  doc.text(text, M, st.y + 4);
+  doc.setDrawColor(...C.line);
+  doc.setLineWidth(0.3);
+  doc.line(M, st.y + 6.5, M + CW, st.y + 6.5);
+  st.y += 12;
+}
+
+function para(st, text, opt = {}) {
+  const { doc } = st;
+  doc.setFont(FONT, opt.bold ? "bold" : "normal");
+  doc.setFontSize(opt.fs || 9);
+  const lh = opt.lh || 4.4;
+  const lines = doc.splitTextToSize(String(text || ""), CW);
+  lines.forEach((l) => {
+    ensure(st, lh);
+    doc.setFont(FONT, opt.bold ? "bold" : "normal");
+    doc.setFontSize(opt.fs || 9);
+    doc.setTextColor(...(opt.color || C.slate));
+    doc.text(l, M, st.y + 3.2);
+    st.y += lh;
+  });
+  st.y += opt.gap == null ? 3 : opt.gap;
+}
+
+function infoNote(st, text) {
+  const { doc } = st;
+  const lines = doc.splitTextToSize(String(text), CW - 16);
+  const h = 12 + lines.length * 4 + 3;
+  ensure(st, h);
+  card(doc, M, st.y, CW, h, { fill: [255, 251, 235], radius: 2 });
+  doc.setFillColor(...C.amber);
+  doc.roundedRect(M, st.y, 2.4, h, 1, 1, "F");
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.amber);
+  doc.text("INFORMATION REQUIRED FROM COMPANY", M + 8, st.y + 7, { charSpace: 0.3 });
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...C.slate);
+  lines.forEach((l, i) => doc.text(l, M + 8, st.y + 12 + i * 4));
+  st.y += h + 4;
+}
+
+// Generic table with wrapping, zebra rows, tone-coloured cells and header repeat.
+function tableRows(st, columns, rows) {
+  const { doc } = st;
+  const pad = 2.2;
+  const lh = 3.5;
+  const drawHead = () => {
+    doc.setFillColor(...C.blueDeep);
+    doc.roundedRect(M, st.y, CW, 8, 1.5, 1.5, "F");
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(6.8);
+    doc.setTextColor(...C.white);
+    let cx = M;
+    columns.forEach((c) => {
+      doc.text(String(c.header).toUpperCase(), cx + pad, st.y + 5.2, { charSpace: 0.2 });
+      cx += c.w;
+    });
+    st.y += 9;
+  };
+  ensure(st, 20);
+  drawHead();
+  rows.forEach((row, ri) => {
+    const cellLines = columns.map((c, ci) =>
+      doc.splitTextToSize(String(row[ci] == null ? "" : row[ci]), c.w - pad * 2),
+    );
+    const rowH = Math.max(...cellLines.map((l) => l.length)) * lh + 3.5;
+    if (st.y + rowH > PH - 16) {
+      st.doc.addPage();
+      chrome(doc, st.name);
+      st.y = contHead(doc, st.num, st.title);
+      drawHead();
+    }
+    if (ri % 2 === 1) {
+      doc.setFillColor(...C.cardBg);
+      doc.rect(M, st.y, CW, rowH, "F");
+    }
+    let cx = M;
+    columns.forEach((c, ci) => {
+      const color = c.tone ? cellColor(c.tone, row[ci]) : c.bold ? C.ink : C.slate;
+      doc.setFont(FONT, c.bold || c.tone ? "bold" : "normal");
+      doc.setFontSize(7.4);
+      doc.setTextColor(...color);
+      cellLines[ci].forEach((ln, li) => {
+        const tx = c.align === "right" ? cx + c.w - pad : cx + pad;
+        doc.text(ln, tx, st.y + 3.6 + li * lh, c.align === "right" ? { align: "right" } : {});
+      });
+      cx += c.w;
+    });
+    doc.setDrawColor(...C.line);
+    doc.setLineWidth(0.2);
+    doc.line(M, st.y + rowH, M + CW, st.y + rowH);
+    st.y += rowH;
+  });
+  st.y += 5;
+}
+
+// Finding block: statement + risk pill + evidence / missing / action.
+function findingBlock(st, f) {
+  const { doc } = st;
+  const evid = f.evidence || "Information required from company.";
+  const miss = f.missing || "Information required from company.";
+  const action = f.action || "—";
+  const parts = [
+    ["Evidence reviewed", evid],
+    ["Missing evidence", miss],
+    ["Recommended action", action],
+  ];
+  const titleLines = doc.splitTextToSize(f.finding, CW - 46);
+  const partLines = parts.map(([, v]) => doc.splitTextToSize(v, CW - 48));
+  let bodyH = 0;
+  partLines.forEach((l) => (bodyH += Math.max(4, l.length * 3.8) + 1.8));
+  const h = 9 + titleLines.length * 4.2 + 2 + bodyH + 3;
+  ensure(st, h);
+  card(doc, M, st.y, CW, h, { fill: C.white, border: C.line, radius: 3 });
+  doc.setFillColor(...riskColor(f.risk));
+  doc.roundedRect(M, st.y, 2.4, h, 1, 1, "F");
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(9.5);
+  doc.setTextColor(...C.ink);
+  titleLines.forEach((l, i) => doc.text(l, M + 8, st.y + 9 + i * 4.2));
+  pillRight(
+    doc,
+    M + CW - 8,
+    st.y + 4.5,
+    `${String(f.risk || "—").toUpperCase()} RISK`,
+    riskSoft(f.risk),
+    riskColor(f.risk),
+  );
+  let by = st.y + 9 + titleLines.length * 4.2 + 4;
+  parts.forEach(([lab], pi) => {
+    doc.setFont(FONT, "bold");
+    doc.setFontSize(7);
+    doc.setTextColor(...C.muted);
+    doc.text(lab.toUpperCase(), M + 8, by, { charSpace: 0.2 });
+    doc.setFont(FONT, "normal");
+    doc.setFontSize(7.8);
+    const req = /required/i.test(parts[pi][1]);
+    doc.setTextColor(...(req ? C.amber : C.slate));
+    partLines[pi].forEach((ln, li) => doc.text(ln, M + 40, by + li * 3.8));
+    by += Math.max(4, partLines[pi].length * 3.8) + 1.8;
+  });
+  st.y += h + 5;
+}
+
+// Funding-instrument suitability from the readiness profile.
+function fundingVerdict(overall, sd) {
+  const fin = pctOf(sd, "financial");
+  const legal = pctOf(sd, "legal");
+  const ops = pctOf(sd, "operations");
+  const rows = [
+    [
+      "Grant funding",
+      overall < 70 ? "Recommended" : "Optional",
+      "Suits early-stage capacity building and de-risking; least sensitive to the current gaps.",
+    ],
+    [
+      "Milestone-based catalytic",
+      overall >= 35 && overall < 78 ? "Recommended" : overall >= 78 ? "Optional" : "Conditional",
+      "Tranches released against verified readiness milestones; aligns directly with the improvement roadmap.",
+    ],
+    [
+      "Debt",
+      overall >= 60 && fin >= 60 ? "Conditional" : "Not yet",
+      "Requires reliable cash-flow, financial controls and clean legal standing before drawdown.",
+    ],
+    [
+      "Equity",
+      overall >= 70 && legal >= 55 && ops >= 55 ? "Conditional" : "Not yet",
+      "Requires investor-grade financials, governance and a clean legal / IP position for due diligence.",
+    ],
+  ];
+  let headline;
+  if (overall >= 70)
+    headline = "positioned to pursue structured debt or equity, subject to confirmatory due diligence";
+  else if (overall >= 50)
+    headline = "best matched to milestone-based catalytic funding and grants, with a clear 12–18 month path to debt or equity";
+  else
+    headline = "best matched to grant and milestone-based catalytic funding with technical assistance; it is not yet ready for commercial debt or equity";
+  return { rows, headline };
+}
+
+// ─── Due-diligence sections ──────────────────────────────────────────────────
+
+function drawExecSummary(doc, ctx) {
+  const { name, overall, scoreData } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Executive Summary",
+    `An investment-committee assessment of ${name}'s readiness to absorb and deploy external capital.`,
+  );
+  const v = fundingVerdict(overall, scoreData);
+
+  ensure(st, 42);
+  card(doc, M, st.y, CW, 42, { fill: C.blueDeep, radius: 4 });
+  donut(doc, M + 30, st.y + 21, 15, overall, {
+    thickness: 5,
+    track: C.blueTrack,
+    arc: C.gold,
+    textColor: C.white,
+    big: 15,
+    sub: "READINESS",
+    subColor: C.blueSoft,
+  });
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(8);
+  doc.setTextColor(...C.blueSoft);
+  doc.text("INVESTMENT-READINESS VERDICT", M + 58, st.y + 12, { charSpace: 0.5 });
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(12);
+  doc.setTextColor(...C.white);
+  doc.splitTextToSize(`${name} is ${v.headline}.`, CW - 66).slice(0, 4).forEach((l, i) =>
+    doc.text(l, M + 58, st.y + 20 + i * 5.4),
+  );
+  st.y += 47;
+
+  para(
+    st,
+    `${name} recorded an overall Capital Readiness Score of ${overall}% (${maturityLabel(overall)}). This report expands the summary assessment into a due-diligence-grade review across company, business model, market, financial, operational, legal and regulatory dimensions. For every finding it states the evidence reviewed, the missing evidence, the risk level and the recommended corrective action.`,
+  );
+  heading(st, "Funding-instrument suitability");
+  tableRows(
+    st,
+    [
+      { header: "Instrument", w: 44, bold: true },
+      { header: "Suitability", w: 34, tone: "suit" },
+      { header: "Rationale", w: 108 },
+    ],
+    v.rows,
+  );
+  infoNote(
+    st,
+    "Findings are marked “information required from company” wherever primary evidence was not provided. Supplying the missing evidence listed against each finding converts these into verified findings.",
+  );
+}
+
+function drawMethodology(doc, ctx) {
+  const { name } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Assessment Methodology & Weighting",
+    "How the Capital Readiness Assessment (CRAT) is conducted and weighted.",
+  );
+
+  heading(st, "Methodology");
+  para(
+    st,
+    "The assessment combines a structured entrepreneur self-assessment with independent reviewer scoring. Each question is scored on a 0–5 scale; where multiple reviewers score a question, the reviewer scores are averaged. Question scores are aggregated to domain scores and normalised to percentages, and the overall readiness score is the simple average of the four domain scores. A 70% overall score is treated as the investment-readiness threshold. Findings are triangulated against supporting evidence; where evidence was not provided, the finding is flagged as requiring company information rather than assumed.",
+  );
+
+  heading(st, "Domain weights");
+  para(
+    st,
+    "The headline readiness score is the simple average of the four domain scores. The weights below indicate each domain's relative importance to an investor's capital-allocation decision and are used to prioritise interventions; they sum to 100%.",
+  );
+  tableRows(
+    st,
+    [
+      { header: "Domain", w: 60, bold: true },
+      { header: "Weight", w: 26 },
+      { header: "Basis", w: 100 },
+    ],
+    DOMAINS.map((d) => [d.full, `${Math.round(d.weight * 100)}%`, d.basis]),
+  );
+}
+
+function drawEvidence(doc, ctx) {
+  const { name, scoreData } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Evidence Reviewed & Evidence Gaps",
+    "What was available to the assessment in each domain, and what must still be provided to verify the findings.",
+  );
+  DOMAINS.forEach((d) => {
+    const p = pctOf(scoreData, d.key);
+    findingBlock(st, {
+      finding: `${d.full} — assessed at ${p}% (${riskFromScore(p) === "Low" ? "on track" : "gap identified"}).`,
+      evidence: EV[d.key].evidence,
+      missing: EV[d.key].missing,
+      risk: riskFromScore(p),
+      action: `Provide the missing evidence for independent verification; without it the ${d.label.toLowerCase()} score cannot be confirmed for due diligence.`,
+    });
+  });
+}
+
+function drawRoadmap(doc, ctx) {
+  const { name, overall, scoreData } = ctx;
+  const st = beginSection(
+    doc,
+    name,
+    "Improvement Roadmap (6 / 12 / 18 months)",
+    "Sequenced interventions with owners, deadlines, expected outputs and readiness-score targets.",
+  );
+  const f = pctOf(scoreData, "financial");
+  const l = pctOf(scoreData, "legal");
+  const o = pctOf(scoreData, "operations");
+  const c = pctOf(scoreData, "commercial");
+  const cap = (x) => Math.min(100, x);
+  const cols = [
+    { header: "Intervention", w: 60, bold: true },
+    { header: "Owner", w: 28 },
+    { header: "Deadline", w: 20 },
+    { header: "Expected output", w: 46 },
+    { header: "Score target", w: 32 },
+  ];
+
+  heading(st, "Phase 1 — 0 to 6 months (stabilise)");
+  tableRows(st, cols, [
+    ["Adopt accounting software & monthly management accounts", "Finance Lead", "Month 3", "Monthly management accounts", `Financial ${f} → ${cap(f + 8)}`],
+    ["Consolidate licences, permits & key contracts", "Legal / Compliance", "Month 4", "Legal register", `Legal ${l} → ${cap(l + 23)}`],
+    ["Document core processes & SOPs", "Ops Lead", "Month 5", "SOP handbook", `Operations ${o} → ${cap(o + 22)}`],
+    ["Stand up AML/KYC & data-protection policies", "Legal / Compliance", "Month 6", "Approved policies + PDPA filing", `Legal ${cap(l + 23)} → ${cap(l + 33)}`],
+    ["Populate the investor data room", "CEO", "Month 6", "Virtual data room", `Overall ${overall} → ${cap(overall + 12)}`],
+  ]);
+
+  heading(st, "Phase 2 — 6 to 12 months (build controls)");
+  tableRows(st, cols, [
+    ["Rolling 12-month cash-flow forecast", "Finance Lead", "Month 9", "Board-reviewed model", `Financial ${cap(f + 8)} → ${cap(f + 12)}`],
+    ["Deploy CRM & pipeline tracking with KPIs", "Commercial Lead", "Month 9", "CRM + weekly pipeline reporting", `Commercial ${c} → ${cap(c + 10)}`],
+    ["KPI / performance-management routine", "Ops Lead", "Month 10", "Operational KPI dashboard", `Operations ${cap(o + 22)} → ${cap(o + 42)}`],
+    ["Progress BOT / e-money licensing pathway", "Legal / Compliance", "Month 12", "Application submitted / held", `Legal ${cap(l + 33)} → ${cap(l + 48)}`],
+    ["Reduce key-person dependency", "CEO / Ops Lead", "Month 12", "Delegation & succession plan", `Overall ${cap(overall + 12)} → ${cap(overall + 24)}`],
+  ]);
+
+  heading(st, "Phase 3 — 12 to 18 months (investor-ready)");
+  tableRows(st, cols, [
+    ["Prepare audited financial statements", "Finance Lead + Auditor", "Month 15", "Audited accounts", `Financial ${cap(f + 12)} → ${cap(f + 15)}`],
+    ["Formalise governance & board oversight", "CEO / Board", "Month 15", "Board charter & minutes", `Legal ${cap(l + 48)} → ${cap(l + 61)}`],
+    ["Register IP (trademark, code assignment)", "Legal / Compliance", "Month 16", "IP certificates", `Legal ${cap(l + 61)} → ${cap(l + 68)}`],
+    ["Strengthen cybersecurity & DR controls", "CTO", "Month 17", "Security policy, backups, IR plan", `Operations ${cap(o + 42)} → ${cap(o + 55)}`],
+    ["Re-run CRAT & prepare for diligence", "CEO", "Month 18", "Updated report ≥ 80%", `Overall ${cap(overall + 24)} → ${cap(overall + 36)}`],
+  ]);
+}
+
+// ─── PDF builder ─────────────────────────────────────────────────────────────
 
 async function buildPDF(domainData, scoreData, userDetails, logoDataUrl) {
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
+  const doc = new jsPDF({ unit: "mm", format: "a5", orientation: "landscape" });
+  registerFonts(doc);
 
-  const businessName = getBusinessName(userDetails);
-  const overallScore = calcOverallScore(scoreData);
-
+  const name = getBusinessName(userDetails);
+  const overall = calcOverallScore(scoreData);
   const date = new Date().toLocaleDateString("en-GB", {
     day: "numeric",
     month: "long",
     year: "numeric",
   });
+  const profile = getBusinessProfile(userDetails);
+  const ctx = { name, overall, date, profile, scoreData, logoDataUrl };
 
-  drawCoverPage(doc, businessName, overallScore, date, logoDataUrl);
+  // Section numbers are auto-assigned in this order (see beginSection).
+  SECTION_NO = 0;
+  const sections = [
+    drawExecSummary,
+    drawProfile,
+    drawMethodology,
+    drawOverallFindings,
+    drawGaps,
+    drawDetailedFindings,
+    drawEvidence,
+    drawRecommendations,
+    drawRoadmap,
+    drawInitiatives,
+  ];
+  drawCover(doc, ctx);
+  sections.forEach((fn) => {
+    doc.addPage();
+    fn(doc, ctx);
+  });
 
-  doc.addPage();
-  drawExecutiveSummary(doc, businessName, scoreData, overallScore);
-
-  doc.addPage();
-  drawOverallReadinessPage(
-    doc,
-    businessName,
-    scoreData,
-    overallScore,
-    domainData,
-  );
-
-  doc.addPage();
-  drawProjectionsPage(doc, businessName, scoreData, overallScore, domainData);
-
-  doc.addPage();
-  drawRiskAnalysisPage(doc, businessName, scoreData, overallScore);
-
-  doc.addPage();
-  drawRoadmapPage(doc, businessName, overallScore);
-
-  doc.addPage();
-  drawBusinessModelPage(doc, businessName, domainData);
-
-  doc.addPage();
-  drawPrioritizationPage(doc, businessName);
-
-  const safeTitle = businessName
+  const safeTitle = name
     .replace(/[^a-zA-Z0-9]/g, "_")
     .replace(/_+/g, "_")
     .replace(/^_|_$/g, "");
-
   const filename = `Capital_Readiness_Report_${safeTitle}_${Date.now()}.pdf`;
   doc.save(filename);
-
   return filename;
 }
 

@@ -385,6 +385,11 @@ const Report = () => {
 
           businessLocation: business?.location,
         },
+
+        // Tailored reviewer comments (rendered as a Reviewer Feedback page).
+        reviewerFeedback: Array.isArray(report?.reviewerFeedback)
+          ? report.reviewerFeedback
+          : [],
       };
 
       const { filename } = await generateCapitalReadinessPDF(

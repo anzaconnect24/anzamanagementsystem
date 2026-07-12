@@ -924,7 +924,7 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
                   <input className={baseInputClass} value={form.assignedBda} onChange={(e) => setField("assignedBda", e.target.value)} placeholder="Assigned BDA" />
                 </div>
                 <div>
-                  <FieldLabel>Grant USD</FieldLabel>
+                  <FieldLabel>Grant (TZS)</FieldLabel>
                   <input type="number" min="0" className={baseInputClass} value={form.grantUsd} onChange={(e) => setField("grantUsd", e.target.value)} placeholder="0" />
                 </div>
                 <div>

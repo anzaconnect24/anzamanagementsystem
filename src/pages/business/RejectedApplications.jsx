@@ -3,10 +3,12 @@ import { useContext, useEffect, useState } from "react";
 import {
   getPendingBusinesses,
   getRejectedBusinesses,
+  deleteBusiness,
 } from "../../controllers/business_controller";
 import Link from "../../utils/link";
 import Loader from "../../components/common/Loader";
 import NoData from "../../component/noData";
+import toast from "react-hot-toast";
 
 import { timeAgo } from "../../utils/time_ago";
 import { BusinessContext } from "../../context/BusinessContext";
@@ -16,7 +18,7 @@ const Page = () => {
   const { t } = useTranslation();
   const [applications, setApplications] = useState([]);
   const [ShowOptions, setShowOptions] = useState(false);
-  const { selectedBusiness, setSelectedBusiness } = useState();
+  const [deletingUuid, setDeletingUuid] = useState("");
   const [loading, setloading] = useState(true);
   useEffect(() => {
     getRejectedBusinesses(1, 10).then((data) => {
@@ -24,6 +26,30 @@ const Page = () => {
       setloading(false);
     });
   }, []);
+
+  const handleDelete = async (item) => {
+    const confirmed = window.confirm(
+      t(
+        "business.confirmDeleteApplication",
+        `Delete rejected application "${item.name}"? This cannot be undone.`,
+      ),
+    );
+    if (!confirmed) return;
+
+    setDeletingUuid(item.uuid);
+    const res = await deleteBusiness(item.uuid);
+    setDeletingUuid("");
+
+    if (res?.status) {
+      toast.success(t("business.applicationDeleted", "Application deleted"));
+      setApplications((prev) => prev.filter((b) => b.uuid !== item.uuid));
+    } else {
+      toast.error(
+        res?.message ||
+          t("business.deleteFailed", "Failed to delete application"),
+      );
+    }
+  };
 
   if (loading) return <Loader />;
 
@@ -88,13 +114,9 @@ const Page = () => {
                   <div className="col-span-1 flex items-center">
                     <div
                       onClick={() => {
-                        if (item.uuid == ShowOptions) {
-                          setShowOptions("");
-                          setSelectedBusiness(item);
-                        } else {
-                          setShowOptions(item.uuid);
-                          setSelectedBusiness(null);
-                        }
+                        setShowOptions(
+                          item.uuid == ShowOptions ? "" : item.uuid,
+                        );
                       }}
                       className="bg-primary hover:bg-primary/90 rounded text-white py-2 px-3 cursor-pointer  text-sm relative"
                     >
@@ -128,6 +150,20 @@ const Page = () => {
                             </div>
                           );
                         })}
+
+                        <button
+                          type="button"
+                          disabled={deletingUuid === item.uuid}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleDelete(item);
+                          }}
+                          className="block w-full text-left text-base font-medium text-red-600 hover:text-red-700 disabled:opacity-60"
+                        >
+                          {deletingUuid === item.uuid
+                            ? t("common.deleting", "Deleting...")
+                            : t("business.deleteApplication", "Delete application")}
+                        </button>
                       </div>
                     </div>
                   </div>

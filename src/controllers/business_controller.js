@@ -154,6 +154,17 @@ export const deleteBusinessDocument = async (uuid) => {
     return error.response;
   }
 };
+export const deleteBusiness = async (uuid) => {
+  try {
+    const response = await axios.delete(`${server_url}/business/${uuid}`, {
+      headers,
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return error.response;
+  }
+};
 export const getApprovedBusinesses = async (page, limit) => {
   try {
     const response = await axios.get(
