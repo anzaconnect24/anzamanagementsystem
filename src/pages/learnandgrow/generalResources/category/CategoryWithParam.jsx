@@ -25,6 +25,8 @@ import { BsTrash } from "react-icons/bs";
 
 import { useTranslation } from "../../../../locales";
 
+import { resolveResourceCategory } from "@/utils/resourceCategories";
+
 const CategoryResourcesPage = () => {
   const { t } = useTranslation();
   const { category } = useParams();
@@ -122,8 +124,10 @@ const CategoryResourcesPage = () => {
 
     getDocuments()
       .then((res) => {
+        const target =
+          resolveResourceCategory(decodedCategory) || decodedCategory;
         const categoryDocs = (res || []).filter(
-          (doc) => doc.category === decodedCategory
+          (doc) => resolveResourceCategory(doc.category) === target
         );
 
         setDocuments(categoryDocs);

@@ -15,6 +15,8 @@ import {
   FaClock,
 } from "react-icons/fa";
 
+import { resolveResourceCategory } from "@/utils/resourceCategories";
+
 const Page = () => {
   const { t } = useTranslation();
   const { userDetails } = useContext(UserContext);
@@ -120,7 +122,7 @@ const Page = () => {
         categoryMapping[englishCategory];
 
       acc[translatedCategory] = data.filter(
-        (doc) => doc.category === englishCategory
+        (doc) => resolveResourceCategory(doc.category) === englishCategory
       );
 
       return acc;
