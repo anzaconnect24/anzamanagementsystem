@@ -512,7 +512,7 @@ const MentorTracker = () => {
               No entrepreneurs assigned to you yet.
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {filteredTracked.map((row) => {
                 const { entrepreneur, enterprise } = row;
                 const business = entrepreneur?.Business || entrepreneur?.business || {};
