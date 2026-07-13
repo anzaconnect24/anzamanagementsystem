@@ -8,6 +8,7 @@ import { getUser } from "@/utils/local_storage";
 import { getMyInfo } from "@/controllers/user_controller";
 import { getDashboardData } from "@/controllers/dashboard_controller";
 import { createLog } from "@/controllers/log_controller";
+import WhatsAppSupport from "@/components/support/WhatsAppSupport";
 
 export const UserContext = createContext();
 
@@ -102,6 +103,8 @@ export default function DashboardLayout() {
                   </div>
                 </main>
               </div>
+
+              <WhatsAppSupport />
             </div>
           )}
         </div>

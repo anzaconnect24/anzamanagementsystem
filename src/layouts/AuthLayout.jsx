@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useTranslation } from "@/locales";
+import WhatsAppSupport from "@/components/support/WhatsAppSupport";
+import LanguageToggle from "@/components/LanguageToggle";
 
 const AuthLayout = ({ children }) => {
   const { t } = useTranslation();
@@ -72,6 +74,11 @@ const AuthLayout = ({ children }) => {
     <div className="flex min-h-screen bg-white">
       <Toaster position="top-right" />
 
+      {/* Language toggle (top-right, since auth pages have no header) */}
+      <div className="fixed right-4 top-4 z-50">
+        <LanguageToggle />
+      </div>
+
       {/* LEFT PANEL */}
       <div
         className="fixed hidden h-screen w-1/2 overflow-hidden bg-cover bg-center lg:block"
@@ -134,6 +141,8 @@ const AuthLayout = ({ children }) => {
           {children || <Outlet />}
         </div>
       </div>
+
+      <WhatsAppSupport />
     </div>
   );
 };

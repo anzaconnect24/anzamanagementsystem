@@ -1,6 +1,7 @@
 import Link from "@/utils/link";
 import DropdownNotification from "./DropdownNotification";
 import DropdownUser from "./DropdownUser";
+import LanguageToggle from "@/components/LanguageToggle";
 import Image from "@/utils/image";
 import { useContext } from "react";
 import { UserContext } from "@/layouts/DashboardLayout";
@@ -80,6 +81,12 @@ const Header = ({ sidebarOpen, setSidebarOpen }) => {
         )}
         <div className="flex items-center gap-3 2xsm:gap-7">
           <ul className="flex items-center gap-2 2xsm:gap-4">
+            {/* <!-- Language Toggle --> */}
+            <li>
+              <LanguageToggle />
+            </li>
+            {/* <!-- Language Toggle --> */}
+
             {/* <!-- Dark Mode Toggler --> */}
             {/* <DarkModeSwitcher /> */}
             {/* <!-- Dark Mode Toggler --> */}

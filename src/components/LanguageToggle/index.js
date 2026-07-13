@@ -11,10 +11,10 @@ const LanguageToggle = () => {
   };
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <div className="relative flex h-11 w-28 items-center rounded-[5px] border border-stroke bg-white p-1 shadow-lg dark:border-strokedark dark:bg-boxdark">
+    <div className="inline-block">
+      <div className="relative flex h-11 w-28 items-center rounded-full border border-stroke bg-white p-1 shadow-sm dark:border-strokedark dark:bg-boxdark">
         <div
-          className={`absolute left-1 top-1 h-9 w-[52px] rounded-[5px] bg-[#082d77] shadow transition-transform duration-300 ease-in-out ${
+          className={`absolute left-1 top-1 h-9 w-[52px] rounded-full bg-[#082d77] shadow transition-transform duration-300 ease-in-out ${
             isSwahili ? "translate-x-[52px]" : "translate-x-0"
           }`}
         />
@@ -22,7 +22,7 @@ const LanguageToggle = () => {
         <button
           type="button"
           onClick={() => handleToggle("en")}
-          className={`relative z-10 flex h-9 w-[52px] items-center justify-center rounded-[5px] text-sm font-semibold transition-colors duration-300 ${
+          className={`relative z-10 flex h-9 w-[52px] items-center justify-center rounded-full text-sm font-semibold transition-colors duration-300 ${
             isEnglish ? "text-white" : "text-gray-600 dark:text-gray-300"
           }`}
           aria-label="Switch to English"
@@ -33,7 +33,7 @@ const LanguageToggle = () => {
         <button
           type="button"
           onClick={() => handleToggle("sw")}
-          className={`relative z-10 flex h-9 w-[52px] items-center justify-center rounded-[5px] text-sm font-semibold transition-colors duration-300 ${
+          className={`relative z-10 flex h-9 w-[52px] items-center justify-center rounded-full text-sm font-semibold transition-colors duration-300 ${
             isSwahili ? "text-white" : "text-gray-600 dark:text-gray-300"
           }`}
           aria-label="Switch to Swahili"
