@@ -39,6 +39,15 @@ export default defineConfig({
     hmr: {
       overlay: false,
     },
+    proxy: {
+      "/api": {
+        target: "https://api.anzaconnect.co.tz",
+        changeOrigin: true,
+        secure: true,
+        ws: true,
+        rewrite: (requestPath) => requestPath.replace(/^\/api/, ""),
+      },
+    },
   },
   build: {
     outDir: "dist",
