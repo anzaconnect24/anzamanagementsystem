@@ -9,7 +9,7 @@ const SUPPORT_WHATSAPP_NUMBER =
 
 const DEFAULT_MESSAGE = "Hello Anza Support, I need help with ";
 
-const WhatsAppSupport = () => {
+const WhatsAppSupport = ({ leading = null }) => {
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -80,21 +80,27 @@ const WhatsAppSupport = () => {
       )}
 
       {/* Floating button */}
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        aria-label="WhatsApp support"
-        className="group flex items-center gap-2 rounded-full bg-[#25D366] py-3 pl-3 pr-3 text-white shadow-lg shadow-[#25D366]/40 transition hover:bg-[#1ebe5b] sm:pr-5"
-      >
-        {open ? (
-          <FaTimes className="h-6 w-6" />
-        ) : (
-          <FaWhatsapp className="h-6 w-6" />
-        )}
-        {!open && (
-          <span className="hidden text-sm font-bold sm:inline">Chat with us</span>
-        )}
-      </button>
+      <div className="flex items-center gap-3">
+        {leading}
+
+        <button
+          type="button"
+          onClick={() => setOpen((prev) => !prev)}
+          aria-label="WhatsApp support"
+          className="group flex items-center gap-2 rounded-full bg-[#25D366] py-3 pl-3 pr-3 text-white shadow-lg shadow-[#25D366]/40 transition hover:bg-[#1ebe5b] sm:pr-5"
+        >
+          {open ? (
+            <FaTimes className="h-6 w-6" />
+          ) : (
+            <FaWhatsapp className="h-6 w-6" />
+          )}
+          {!open && (
+            <span className="hidden text-sm font-bold sm:inline">
+              Chat with us
+            </span>
+          )}
+        </button>
+      </div>
     </div>
   );
 };

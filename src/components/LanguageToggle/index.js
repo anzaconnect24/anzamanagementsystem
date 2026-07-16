@@ -27,7 +27,7 @@ const LanguageToggle = () => {
           }`}
           aria-label="Switch to English"
         >
-          EN
+          En
         </button>
 
         <button
@@ -38,7 +38,7 @@ const LanguageToggle = () => {
           }`}
           aria-label="Switch to Swahili"
         >
-          SW
+          Sw
         </button>
       </div>
     </div>

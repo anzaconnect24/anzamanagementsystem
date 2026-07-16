@@ -74,11 +74,6 @@ const AuthLayout = ({ children }) => {
     <div className="flex min-h-screen bg-white">
       <Toaster position="top-right" />
 
-      {/* Language toggle (top-right, since auth pages have no header) */}
-      <div className="fixed right-4 top-4 z-50">
-        <LanguageToggle />
-      </div>
-
       {/* LEFT PANEL */}
       <div
         className="fixed hidden h-screen w-1/2 overflow-hidden bg-cover bg-center lg:block"
@@ -142,7 +137,9 @@ const AuthLayout = ({ children }) => {
         </div>
       </div>
 
-      <WhatsAppSupport />
+      {/* Auth pages have no header, so the language toggle sits beside the
+          WhatsApp button. */}
+      <WhatsAppSupport leading={<LanguageToggle />} />
     </div>
   );
 };
