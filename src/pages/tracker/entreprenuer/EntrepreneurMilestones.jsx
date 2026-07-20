@@ -1,5 +1,5 @@
 import { useContext, useMemo, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "@/layouts/DashboardLayout";
@@ -13,39 +13,27 @@ import {
   updateEntrepreneurEnterpriseKyc,
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
+import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
+import TrancheGroupList, {
+  groupMilestonesByTranche,
+} from "@/components/tracker/TrancheGroupList";
 import {
-  emptyKpi,
   PLAN_STATUS,
+  isPlanApproved,
   parseKpiPlan,
-  planStatusLabel,
-  planStatusPill,
 } from "@/utils/trancheWorkflow";
 import {
   UploadCloud,
   Building2,
-  Wallet,
   BarChart3,
   Flag,
   ClipboardList,
-  Layers,
   FileText,
-  ShieldCheck,
 } from "lucide-react";
 
 const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 const BRAND_BLUE = "#082d77";
-
-const formatDateDisplay = (value) => {
-  if (!value) return "N/A";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "N/A";
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 const formatStatusLabel = (value) =>
   String(value || "pending")
@@ -96,14 +84,22 @@ const getEnterpriseProgramName = (program, enterprise) =>
       "Program not set",
   ).trim();
 
-const getBusinessRiskLabel = (flag) => {
-  if (flag === "red") return "Critical";
-  if (flag === "amber") return "Medium";
-  return "Low";
-};
-
 const baseInputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77] focus:ring-4 focus:ring-[#082d77]/20 disabled:bg-slate-50 disabled:text-slate-400";
+
+const milestoneLabelClass =
+  "mb-1 block text-xs font-black tracking-wide text-[#082d77]";
+
+// How often the page quietly refetches so finance's changes (committed amount,
+// released tranches) appear without a manual reload.
+const DASHBOARD_REFRESH_MS = 60000;
+
+const emptyMilestoneRow = () => ({
+  title: "",
+  dueDate: "",
+  tranchePlannedUse: "",
+  description: "",
+});
 
 const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
   <section className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}>
@@ -127,12 +123,6 @@ const PortalCard = ({ icon, title, subtitle, action, children, className = "" })
   </section>
 );
 
-const FieldLabel = ({ children }) => (
-  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">
-    {children}
-  </label>
-);
-
 const DataTile = ({ label, value, helper }) => (
   <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
     <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
@@ -141,17 +131,19 @@ const DataTile = ({ label, value, helper }) => (
   </div>
 );
 
-const StatusText = ({ children }) => (
-  <span className="text-sm font-semibold text-slate-700">{children}</span>
-);
+// Completed reads green and pending amber, so a milestone's state is legible at
+// a glance rather than uniform grey.
+const statusTone = (value) => {
+  const label = String(value || "").toLowerCase();
+  if (label.includes("complete")) return "text-green-600";
+  if (label.includes("pending")) return "text-amber-600";
+  return "text-slate-700";
+};
 
-const ProgressBar = ({ value, className = "" }) => (
-  <div className={`h-2 rounded-full bg-slate-100 ${className}`}>
-    <div
-      className="h-2 rounded-full bg-[#082d77]"
-      style={{ width: `${Math.min(100, Math.max(0, Number(value || 0)))}%` }}
-    />
-  </div>
+const StatusText = ({ children }) => (
+  <span className={`text-sm font-semibold ${statusTone(children)}`}>
+    {children}
+  </span>
 );
 
 const EntrepreneurMilestones = () => {
@@ -200,31 +192,30 @@ const EntrepreneurMilestones = () => {
     capitalMobilised: "",
     activeCustomers: "",
   });
-  const [milestoneForm, setMilestoneForm] = useState({
-    title: "",
-    dueDate: "",
-    linkedTranche: "",
-    trancheAmount: "",
-    tranchePlannedUse: "",
-    description: "",
-    kpiPlan: [emptyKpi()],
-  });
+  // The milestone form collects Milestone / Key activities / Verification /
+  // Timeline, and takes several rows so a whole plan can be entered before it
+  // goes to the BDA. Key activities and Verification reuse the
+  // tranchePlannedUse and description fields the API already stores.
+  // The tranche is chosen once for the whole form — every milestone entered
+  // below is linked to it.
+  const [milestoneTranche, setMilestoneTranche] = useState("");
+  const [milestoneRows, setMilestoneRows] = useState([emptyMilestoneRow()]);
 
-  const addKpiRow = () =>
-    setMilestoneForm((prev) => ({ ...prev, kpiPlan: [...prev.kpiPlan, emptyKpi()] }));
-  const removeKpiRow = (index) =>
-    setMilestoneForm((prev) => ({
-      ...prev,
-      kpiPlan: prev.kpiPlan.length > 1 ? prev.kpiPlan.filter((_, i) => i !== index) : prev.kpiPlan,
-    }));
-  const updateKpiRow = (index, key, value) =>
-    setMilestoneForm((prev) => ({
-      ...prev,
-      kpiPlan: prev.kpiPlan.map((k, i) => (i === index ? { ...k, [key]: value } : k)),
-    }));
+  const addMilestoneRow = () =>
+    setMilestoneRows((prev) => [...prev, emptyMilestoneRow()]);
+  const removeMilestoneRow = (index) =>
+    setMilestoneRows((prev) =>
+      prev.length > 1 ? prev.filter((_, i) => i !== index) : prev,
+    );
+  const updateMilestoneRow = (index, key, value) =>
+    setMilestoneRows((prev) =>
+      prev.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    );
 
-  const loadDashboard = async (enterpriseUuid) => {
-    setLoading(true);
+  // `silent` refreshes in the background: no full-page loader, and a failed
+  // request leaves what's on screen alone rather than blanking it.
+  const loadDashboard = async (enterpriseUuid, { silent = false } = {}) => {
+    if (!silent) setLoading(true);
     try {
       const data = await getEntrepreneurTrackerDashboard({
         enterpriseUuid: enterpriseUuid || undefined,
@@ -240,6 +231,7 @@ const EntrepreneurMilestones = () => {
         setSelectedEnterpriseUuid(data.selectedEnterpriseUuid);
       }
     } catch {
+      if (silent) return;
       // No tracking workspace yet (the BDA hasn't set up tracking) — show a
       // friendly empty state instead of an error.
       setDashboard(null);
@@ -248,12 +240,32 @@ const EntrepreneurMilestones = () => {
       setSessions([]);
       setTrancheStages([]);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
   useEffect(() => {
     loadDashboard(selectedEnterpriseUuid);
+  }, [selectedEnterpriseUuid]);
+
+  // Finance can set the committed amount or release a tranche while this page is
+  // open, so pick those changes up without a manual reload: on a timer, and
+  // whenever the tab is brought back to the foreground.
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState !== "visible") return;
+      loadDashboard(selectedEnterpriseUuid, { silent: true });
+    };
+
+    const interval = setInterval(refresh, DASHBOARD_REFRESH_MS);
+    window.addEventListener("focus", refresh);
+    document.addEventListener("visibilitychange", refresh);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener("focus", refresh);
+      document.removeEventListener("visibilitychange", refresh);
+    };
   }, [selectedEnterpriseUuid]);
 
   const [signingContract, setSigningContract] = useState(false);
@@ -351,38 +363,57 @@ const EntrepreneurMilestones = () => {
   const onCreateMilestone = async (e) => {
     e.preventDefault();
 
-    if (!milestoneForm.title.trim()) {
-      toast.error("Milestone title is required");
+    // Ignore rows the user left completely untouched, but don't silently drop a
+    // half-filled one — every milestone that has any content needs a name.
+    const filled = milestoneRows.filter(
+      (row) =>
+        row.title.trim() ||
+        row.tranchePlannedUse.trim() ||
+        row.description.trim() ||
+        row.dueDate,
+    );
+
+    if (!filled.length) {
+      toast.error("Add at least one milestone");
+      return;
+    }
+    if (filled.some((row) => !row.title.trim())) {
+      toast.error("Every milestone needs a name");
       return;
     }
 
     setIsCreatingMilestone(true);
+    let created = 0;
     try {
-      await createTrackerMilestone({
-        title: milestoneForm.title.trim(),
-        dueDate: milestoneForm.dueDate || null,
-        linkedTranche: milestoneForm.linkedTranche.trim() || null,
-        trancheAmount: milestoneForm.trancheAmount || null,
-        tranchePlannedUse: milestoneForm.tranchePlannedUse.trim() || null,
-        description: milestoneForm.description.trim() || null,
-        kpiPlan: milestoneForm.kpiPlan.filter((kpi) => kpi.name.trim()),
-        planStatus: PLAN_STATUS.SUBMITTED,
-      });
+      for (const row of filled) {
+        await createTrackerMilestone({
+          title: row.title.trim(),
+          dueDate: row.dueDate || null,
+          linkedTranche: milestoneTranche || null,
+          tranchePlannedUse: row.tranchePlannedUse.trim() || null,
+          description: row.description.trim() || null,
+          planStatus: PLAN_STATUS.SUBMITTED,
+        });
+        created += 1;
+      }
 
-      setMilestoneForm({
-        title: "",
-        dueDate: "",
-        linkedTranche: "",
-        trancheAmount: "",
-        tranchePlannedUse: "",
-        description: "",
-        kpiPlan: [emptyKpi()],
-      });
+      setMilestoneRows([emptyMilestoneRow()]);
+      setMilestoneTranche("");
       setShowMilestoneForm(false);
-      toast.success("Milestone & KPI plan submitted for BDA review");
+      toast.success(
+        created === 1
+          ? "Milestone submitted for BDA review"
+          : `${created} milestones submitted for BDA review`,
+      );
       loadDashboard(selectedEnterpriseUuid);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to create milestone");
+      // Some rows may already be saved — reload so they aren't entered twice,
+      // and keep only the ones that never made it.
+      if (created > 0) {
+        setMilestoneRows(filled.slice(created));
+        loadDashboard(selectedEnterpriseUuid);
+      }
     } finally {
       setIsCreatingMilestone(false);
     }
@@ -390,17 +421,6 @@ const EntrepreneurMilestones = () => {
 
   const enterprise = dashboard?.enterprise || {};
   const program = dashboard?.program || enterprise?.Program || null;
-  const availableEnterprises = Array.isArray(dashboard?.availableEnterprises)
-    ? dashboard.availableEnterprises
-    : [];
-  const stats = dashboard?.stats || {
-    sessionsCount: 0,
-    weeklyLogsCount: 0,
-    milestonesCount: 0,
-    milestonesProgress: 0,
-    mentorshipHours: 0,
-  };
-
   useEffect(() => {
     setKpiForm({
       monthlyRevenue: String(enterprise?.monthlyRevenue ?? ""),
@@ -433,65 +453,153 @@ const EntrepreneurMilestones = () => {
   const programName = getEnterpriseProgramName(program, enterprise);
   const programDescription = getProgramDescription(program) || "Track your milestones, reports, mentorship engagement, KPIs, and tranche readiness from one workspace.";
 
-  const completedMilestones = useMemo(
-    () => milestones.filter((item) => item.status === "completed").length,
+  // The finance officer enters the committed amount and the tranche schedule on
+  // the program's startup list, which is stored in markers inside the program
+  // description. Mirroring that onto this startup's tracker enterprise is
+  // best-effort and depends on the API allowing it, so read the markers here
+  // too — finance's numbers then reach this page as soon as they save.
+  const financeMember = useMemo(() => {
+    const ids = [
+      userDetails?.uuid,
+      enterprise?.entreprenuer_uuid,
+      enterprise?.Entreprenuer?.uuid,
+    ].filter(Boolean);
+    if (!ids.length || !program) return null;
+    return (
+      parseTrackerProgramMeta(program).startups.find((member) =>
+        ids.includes(member?.entreprenuerUuid),
+      ) || null
+    );
+  }, [
+    program,
+    userDetails?.uuid,
+    enterprise?.entreprenuer_uuid,
+    enterprise?.Entreprenuer?.uuid,
+  ]);
+
+  // Tranches as this startup should see them: the stages mirrored onto their
+  // enterprise when that sync landed, otherwise finance's own schedule read
+  // straight from the program markers — with any status the mirror dropped
+  // filled back in from those markers.
+  const effectiveTrancheStages = useMemo(() => {
+    const mirrored = Array.isArray(trancheStages) ? trancheStages : [];
+    const fromFinance = (
+      Array.isArray(financeMember?.tranches) ? financeMember.tranches : []
+    )
+      .map((t) => ({
+        title: String(t.title || "").trim(),
+        date: t.plannedDate ? String(t.plannedDate).slice(0, 10) : "",
+        amount: Number(t.amount || 0),
+        status: t.status || "",
+      }))
+      .filter((t) => t.title);
+
+    const statusByTitle = new Map(fromFinance.map((t) => [t.title, t.status]));
+
+    return (mirrored.length ? mirrored : fromFinance).map((stage) => ({
+      ...stage,
+      status:
+        stage.status || statusByTitle.get(String(stage.title || "").trim()) || "",
+    }));
+  }, [trancheStages, financeMember]);
+
+  // A milestone is ready to report on once the BDA approves its plan. Approval
+  // only moves planStatus — the milestone's own status stays "pending" — so this
+  // must not key off `status`. Milestones predating the plan workflow have no
+  // planStatus, hence the fallback to an already-active work status.
+  // The open tranche lives in the URL so each section is its own page: the
+  // browser's back button returns to the tranche list and the view can be linked
+  // to. "" shows the list, "__all__" drops the filter.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openTranche = searchParams.get("tranche") || "";
+  const openReportTranche = searchParams.get("reportTranche") || "";
+  const setParam = (name, key) => {
+    const next = new URLSearchParams(searchParams);
+    if (key) next.set(name, key);
+    else next.delete(name);
+    setSearchParams(next);
+  };
+  const setOpenTranche = (key) => setParam("tranche", key);
+  const setOpenReportTranche = (key) => setParam("reportTranche", key);
+
+  const reportableMilestones = useMemo(
+    () =>
+      milestones.filter(
+        (item) =>
+          isPlanApproved(item.planStatus) ||
+          !["pending", "draft"].includes(
+            String(item.status || "pending").toLowerCase(),
+          ),
+      ),
     [milestones],
   );
 
-  const milestoneProgress = milestones.length
-    ? Math.round((completedMilestones / milestones.length) * 100)
-    : Number(stats.milestonesProgress || 0);
+  const milestoneGroups = useMemo(
+    () => groupMilestonesByTranche(milestones, effectiveTrancheStages),
+    [milestones, effectiveTrancheStages],
+  );
 
-  const completedTranches = useMemo(() => {
-    if (!Array.isArray(trancheStages) || trancheStages.length === 0) return 0;
+  const visibleMilestones = useMemo(() => {
+    if (openTranche === "__all__") return milestones;
+    return milestoneGroups.find((g) => g.key === openTranche)?.items || milestones;
+  }, [openTranche, milestoneGroups, milestones]);
 
-    const completedTrancheNames = new Set(
-      milestones
-        .filter((item) => item.status === "completed" && item.linkedTranche)
-        .map((item) => item.linkedTranche),
+  const reportGroups = useMemo(
+    () => groupMilestonesByTranche(reportableMilestones, effectiveTrancheStages),
+    [reportableMilestones, effectiveTrancheStages],
+  );
+
+  const visibleReportables = useMemo(() => {
+    if (openReportTranche === "__all__") return reportableMilestones;
+    return (
+      reportGroups.find((g) => g.key === openReportTranche)?.items ||
+      reportableMilestones
     );
+  }, [openReportTranche, reportGroups, reportableMilestones]);
 
-    return trancheStages.filter((item) => completedTrancheNames.has(item.title)).length;
-  }, [milestones, trancheStages]);
-
-  const trancheProgress = trancheStages.length
-    ? Math.round((completedTranches / trancheStages.length) * 100)
-    : milestoneProgress;
+  // The tranche picked on the milestone form — its date is shown read-only.
+  const selectedMilestoneTranche = effectiveTrancheStages.find(
+    (stage) => stage.title === milestoneTranche,
+  );
 
   const activeCustomers = Number(kpiForm.activeCustomers || enterprise?.activeCustomers || 0);
   const employees = Number(kpiForm.employees || enterprise?.employees || 0);
   const monthlyRevenue = Number(kpiForm.monthlyRevenue || enterprise?.monthlyRevenue || 0);
-  const capitalMobilised = Number(kpiForm.capitalMobilised || enterprise?.capitalMobilised || 0);
   const wasteDiverted = Number(kpiForm.wasteDiverted || enterprise?.wasteDiverted || 0);
   const ceReadiness = kpiForm.ceReadinessScore === ""
     ? (enterprise?.ceReadinessScore === null || enterprise?.ceReadinessScore === undefined ? "-" : Number(enterprise.ceReadinessScore))
     : Number(kpiForm.ceReadinessScore);
-  const pendingApprovalCount = milestones.filter((item) => ["pending", "draft"].includes(String(item.status || "pending"))).length;
-  const submittedReportCount = milestones.filter((item) => String(item.status || "").toLowerCase() === "submitted").length;
 
   // Financial summary shown in the stat cards below the hero (mirrors the
   // finance officer's view). Disbursement is derived from tranche stages whose
   // linked milestone has been disbursed.
   const grantStats = useMemo(() => {
-    const stages = Array.isArray(trancheStages) ? trancheStages : [];
-    const isTrancheDisbursed = (title) => {
-      const linked = milestones.find((m) => m.linkedTranche === title);
+    const stages = effectiveTrancheStages;
+    // A tranche counts as released either because finance marked the stage
+    // itself Disbursed, or because the milestone linked to it was disbursed
+    // through the plan workflow. The first works even with no milestone linked.
+    const isTrancheDisbursed = (stage) => {
+      if (String(stage?.status || "").toLowerCase() === "disbursed") return true;
+      const linked = milestones.find((m) => m.linkedTranche === stage?.title);
       return Boolean(
         linked &&
           (String(linked.planStatus) === PLAN_STATUS.DISBURSED || linked.disbursed),
       );
     };
     const stagesTotal = stages.reduce((sum, t) => sum + Number(t.amount || 0), 0);
-    const committed = Number(enterprise?.grantUsd || 0) || stagesTotal;
+    const committed =
+      Number(enterprise?.grantUsd || 0) ||
+      Number(financeMember?.grantUsd || 0) ||
+      stagesTotal;
     const disbursed = stages
-      .filter((t) => isTrancheDisbursed(t.title))
+      .filter(isTrancheDisbursed)
       .reduce((sum, t) => sum + Number(t.amount || 0), 0);
     const remaining = Math.max(0, committed - disbursed);
     const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
     const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
-    const next = stages.find((t) => !isTrancheDisbursed(t.title)) || null;
+    const next = stages.find((stage) => !isTrancheDisbursed(stage)) || null;
     return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
-  }, [enterprise?.grantUsd, trancheStages, milestones]);
+  }, [enterprise?.grantUsd, trancheStages, milestones, financeMember]);
 
   // Context for the AI grant report download.
   const reportContext = useMemo(() => {
@@ -571,22 +679,6 @@ const EntrepreneurMilestones = () => {
                 </div>
               </div>
 
-              {availableEnterprises.length > 1 && (
-                <div className="w-full max-w-xs rounded-xl bg-white/15 p-3 backdrop-blur-md">
-                  <FieldLabel>Switch Program / Enterprise</FieldLabel>
-                  <select
-                    className="w-full rounded-xl border border-white/20 bg-white/90 px-3 py-2 text-sm font-semibold text-slate-700 outline-none"
-                    value={selectedEnterpriseUuid || enterprise?.uuid || ""}
-                    onChange={(e) => setSelectedEnterpriseUuid(e.target.value)}
-                  >
-                    {availableEnterprises.map((item) => (
-                      <option key={item.uuid} value={item.uuid}>
-                        {item.programTitle} - {item.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
             </div>
 
           </div>
@@ -624,36 +716,20 @@ const EntrepreneurMilestones = () => {
             </PortalCard>
 
             <SignedContractCard
-              contractUrl={enterprise?.signedContractUrl}
-              uploadedAt={enterprise?.signedContractUploadedAt}
+              contractUrl={
+                enterprise?.signedContractUrl || financeMember?.signedContractUrl
+              }
+              uploadedAt={
+                enterprise?.signedContractUploadedAt ||
+                financeMember?.signedContractUploadedAt
+              }
               acknowledgedAt={enterprise?.contractAcknowledgedAt}
               signedUrl={enterprise?.startupSignedContractUrl}
-              contractName={enterprise?.name ? `Grant Agreement — ${enterprise.name}` : undefined}
+              contractName={enterprise?.name || undefined}
               canSign
               signing={signingContract}
               onSignUpload={onUploadSignedContract}
             />
-
-            <PortalCard icon={<Wallet className="h-5 w-5" />} title="Funding Summary" subtitle="Capital mobilisation, tranche progress, and milestone-linked readiness.">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
-                <DataTile label="Capital mobilised" value={formatCurrency(capitalMobilised)} />
-                <DataTile label="Tranches completed" value={`${completedTranches}/${trancheStages.length || 0}`} />
-                <DataTile label="Milestones completed" value={`${completedMilestones}/${milestones.length || 0}`} />
-                <DataTile label="Progress" value={`${trancheProgress}%`} />
-                <DataTile label="Pending mentor approval" value={pendingApprovalCount} />
-                <DataTile label="Reports submitted" value={submittedReportCount} />
-              </div>
-              <div className="mt-5 rounded-2xl border border-slate-100 bg-white p-5">
-                <div className="mb-2 flex items-center justify-between text-sm">
-                  <span className="font-bold text-slate-700">Program progress</span>
-                  <span className="font-black text-slate-950">{trancheProgress}%</span>
-                </div>
-                <ProgressBar value={trancheProgress} />
-                <p className="mt-3 text-sm text-slate-500">
-                  Progress is calculated from completed milestone-linked tranche stages where tranche stages are available.
-                </p>
-              </div>
-            </PortalCard>
 
             <PortalCard
               icon={<BarChart3 className="h-5 w-5" />}
@@ -691,7 +767,7 @@ const EntrepreneurMilestones = () => {
             <PortalCard
               icon={<Flag className="h-5 w-5" />}
               title="Milestones"
-              subtitle="Create milestones with linked tranche details and amounts, then wait for mentor approval."
+              subtitle="Create milestones with their key activities, verification and timeline, then wait for mentor approval."
               action={
                 <button
                   type="button"
@@ -703,94 +779,142 @@ const EntrepreneurMilestones = () => {
               }
             >
               {showMilestoneForm && (
-                <form onSubmit={onCreateMilestone} className="mb-5 grid grid-cols-1 gap-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4 md:grid-cols-2">
-                  <input
-                    className={baseInputClass}
-                    placeholder="Milestone title"
-                    value={milestoneForm.title}
-                    onChange={(e) => setMilestoneForm((prev) => ({ ...prev, title: e.target.value }))}
-                    required
-                  />
-                  <input
-                    className={baseInputClass}
-                    type="date"
-                    value={milestoneForm.dueDate}
-                    onChange={(e) => setMilestoneForm((prev) => ({ ...prev, dueDate: e.target.value }))}
-                  />
-                  <input
-                    className={baseInputClass}
-                    placeholder="Linked tranche title, e.g. Tranche 1"
-                    value={milestoneForm.linkedTranche}
-                    onChange={(e) => setMilestoneForm((prev) => ({ ...prev, linkedTranche: e.target.value }))}
-                  />
-                  <input
-                    className={baseInputClass}
-                    type="number"
-                    min="0"
-                    placeholder="Tranche amount"
-                    value={milestoneForm.trancheAmount}
-                    onChange={(e) => setMilestoneForm((prev) => ({ ...prev, trancheAmount: e.target.value }))}
-                  />
-                  <textarea
-                    className={`${baseInputClass} min-h-[90px] md:col-span-2`}
-                    placeholder="Planned use of tranche funds"
-                    value={milestoneForm.tranchePlannedUse}
-                    onChange={(e) => setMilestoneForm((prev) => ({ ...prev, tranchePlannedUse: e.target.value }))}
-                  />
-                  <textarea
-                    className={`${baseInputClass} min-h-[90px] md:col-span-2`}
-                    placeholder="Milestone details and expected outputs"
-                    value={milestoneForm.description}
-                    onChange={(e) => setMilestoneForm((prev) => ({ ...prev, description: e.target.value }))}
-                  />
-
-                  <div className="space-y-3 rounded-2xl border border-[#082d77]/10 bg-white p-4 md:col-span-2">
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs font-black uppercase tracking-wide text-[#082d77]">KPI plan</p>
-                      <button type="button" onClick={addKpiRow} className="text-xs font-bold text-[#082d77] hover:text-[#061f54]">
-                        + Add KPI
-                      </button>
+                <form onSubmit={onCreateMilestone} className="mb-5 space-y-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4">
+                  {/* Step 1 — pick the tranche these milestones belong to. Its
+                      date comes from the schedule the finance officer set, so it
+                      is shown for reference only. */}
+                  <div className="grid grid-cols-1 gap-3 rounded-2xl border border-[#082d77]/10 bg-white p-4 md:grid-cols-2">
+                    <div>
+                      <label className={milestoneLabelClass} htmlFor="milestone-tranche">
+                        Tranche
+                      </label>
+                      <select
+                        id="milestone-tranche"
+                        className={baseInputClass}
+                        value={milestoneTranche}
+                        onChange={(e) => setMilestoneTranche(e.target.value)}
+                      >
+                        <option value="">No tranche</option>
+                        {effectiveTrancheStages.map((stage) => (
+                          <option key={stage.title} value={stage.title}>
+                            {stage.title}
+                          </option>
+                        ))}
+                      </select>
                     </div>
-                    <p className="text-xs text-slate-500">
-                      Define measurable KPIs and their evidence source for this tranche. The BDA reviews and approves this plan.
+                    <div>
+                      <label className={milestoneLabelClass} htmlFor="milestone-tranche-date">
+                        Tranche date
+                      </label>
+                      <input
+                        id="milestone-tranche-date"
+                        className={baseInputClass}
+                        type="date"
+                        value={String(selectedMilestoneTranche?.date || "").slice(0, 10)}
+                        disabled
+                        readOnly
+                      />
+                    </div>
+                    <p className="text-xs text-slate-500 md:col-span-2">
+                      {effectiveTrancheStages.length === 0
+                        ? "No tranches have been configured for your grant yet, so the tranche list is empty."
+                        : "Every milestone below is linked to the tranche selected here."}
                     </p>
-                    {milestoneForm.kpiPlan.map((kpi, idx) => (
-                      <div key={idx} className="grid grid-cols-1 gap-2 md:grid-cols-[1fr_130px_1fr_auto]">
-                        <input
-                          className={baseInputClass}
-                          placeholder="KPI, e.g. 20 pilot users onboarded"
-                          value={kpi.name}
-                          onChange={(e) => updateKpiRow(idx, "name", e.target.value)}
-                        />
-                        <input
-                          className={baseInputClass}
-                          placeholder="Target"
-                          value={kpi.target}
-                          onChange={(e) => updateKpiRow(idx, "target", e.target.value)}
-                        />
-                        <input
-                          className={baseInputClass}
-                          placeholder="Evidence source"
-                          value={kpi.evidenceSource}
-                          onChange={(e) => updateKpiRow(idx, "evidenceSource", e.target.value)}
-                        />
-                        <button
-                          type="button"
-                          onClick={() => removeKpiRow(idx)}
-                          disabled={milestoneForm.kpiPlan.length <= 1}
-                          className="rounded-xl bg-rose-50 px-3 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
-                        >
-                          Remove
-                        </button>
-                      </div>
-                    ))}
                   </div>
 
-                  <div className="flex justify-end md:col-span-2">
+                  {/* Step 2 — the milestones themselves. Key activities and
+                      Verification are stored on the existing tranchePlannedUse /
+                      description fields. Labels repeat on mobile, where the row
+                      stacks. */}
+                  {milestoneRows.map((row, idx) => (
+                    <div
+                      key={idx}
+                      className="grid grid-cols-1 gap-3 md:grid-cols-[repeat(4,minmax(0,1fr))_auto] md:items-end"
+                    >
+                      <div>
+                        <label
+                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
+                          htmlFor={`milestone-title-${idx}`}
+                        >
+                          Milestone
+                        </label>
+                        <input
+                          id={`milestone-title-${idx}`}
+                          className={baseInputClass}
+                          placeholder="Milestone"
+                          value={row.title}
+                          onChange={(e) => updateMilestoneRow(idx, "title", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
+                          htmlFor={`milestone-activities-${idx}`}
+                        >
+                          Key activities
+                        </label>
+                        <input
+                          id={`milestone-activities-${idx}`}
+                          className={baseInputClass}
+                          placeholder="Key activities"
+                          value={row.tranchePlannedUse}
+                          onChange={(e) => updateMilestoneRow(idx, "tranchePlannedUse", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
+                          htmlFor={`milestone-verification-${idx}`}
+                        >
+                          Verification
+                        </label>
+                        <input
+                          id={`milestone-verification-${idx}`}
+                          className={baseInputClass}
+                          placeholder="How it is verified"
+                          value={row.description}
+                          onChange={(e) => updateMilestoneRow(idx, "description", e.target.value)}
+                        />
+                      </div>
+                      <div>
+                        <label
+                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
+                          htmlFor={`milestone-timeline-${idx}`}
+                        >
+                          Timeline
+                        </label>
+                        <input
+                          id={`milestone-timeline-${idx}`}
+                          className={baseInputClass}
+                          type="date"
+                          value={row.dueDate}
+                          onChange={(e) => updateMilestoneRow(idx, "dueDate", e.target.value)}
+                        />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeMilestoneRow(idx)}
+                        disabled={milestoneRows.length <= 1}
+                        title="Remove milestone"
+                        className="rounded-xl bg-rose-50 px-3 py-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ))}
+
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <button
+                      type="button"
+                      onClick={addMilestoneRow}
+                      className="text-xs font-bold text-[#082d77] hover:text-[#061f54]"
+                    >
+                      + Add another milestone
+                    </button>
                     <button
                       type="submit"
                       disabled={isCreatingMilestone}
-                      className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-70"
+                      className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-70"
                     >
                       {isCreatingMilestone ? "Submitting..." : "Submit plan for BDA review"}
                     </button>
@@ -805,38 +929,61 @@ const EntrepreneurMilestones = () => {
                   </div>
                 )}
 
-                {milestones.map((item, index) => {
+                {/* Tranche picker — drill into one tranche rather than listing
+                    every milestone at once. */}
+                {milestones.length > 0 && !openTranche && (
+                  <TrancheGroupList
+                    title="Tranche Milestones"
+                    groups={milestoneGroups.map((g) => ({
+                      key: g.key,
+                      title: `${g.title} Milestones`,
+                    }))}
+                    onSelect={setOpenTranche}
+                    onViewAll={() => setOpenTranche("__all__")}
+                    emptyText="No milestones yet."
+                  />
+                )}
+
+                {openTranche && (
+                  <p className="text-sm font-bold text-slate-950">
+                    {openTranche === "__all__" ? "All milestones" : openTranche}
+                  </p>
+                )}
+
+                {(openTranche ? visibleMilestones : []).map((item, index) => {
                   const normalizedStatus = String(item.status || "pending").toLowerCase();
-                  const waitingForApproval = ["pending", "draft"].includes(normalizedStatus);
+                  // Approval moves planStatus, not status — so a milestone the
+                  // BDA has approved must stop claiming it is still waiting.
+                  const waitingForApproval =
+                    !isPlanApproved(item.planStatus) &&
+                    ["pending", "draft"].includes(normalizedStatus);
 
                   return (
                     <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                      <div className="flex flex-wrap items-start justify-between gap-3">
-                        <div className="flex gap-3">
-                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
-                            {item.status === "completed" ? "✓" : index + 1}
-                          </div>
-                          <div>
-                            <p className="font-black text-slate-950">{item.title}</p>
-                            <p className="mt-1 text-xs text-slate-500">Due {formatDateDisplay(item.dueDate)}</p>
-                            <p className="mt-1 text-xs text-slate-500">Linked tranche: {item.linkedTranche || "N/A"}</p>
-                            {item.trancheAmount ? (
-                              <p className="mt-1 text-xs text-slate-500">Tranche amount: {formatCurrency(item.trancheAmount)}</p>
-                            ) : null}
-                          </div>
+                      <div className="flex gap-3">
+                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
+                          {item.status === "completed" ? "✓" : index + 1}
                         </div>
-                        <StatusText>{formatStatusLabel(item.status)}</StatusText>
+                        {/* Activities and status sit in the title's column so
+                            they line up with the milestone name, not the badge. */}
+                        <div className="min-w-0 flex-1">
+                          <p className="font-black text-slate-950">{item.title}</p>
+
+                          {/* Key activities, which the milestone form stores on
+                              tranchePlannedUse — the milestone's description. */}
+                          {item.tranchePlannedUse ? (
+                            <p className="mt-2 text-sm leading-6 text-slate-600">
+                              {item.tranchePlannedUse}
+                            </p>
+                          ) : null}
+
+                          {waitingForApproval && (
+                            <p className="mt-2 text-sm font-semibold text-slate-700">
+                              Waiting for mentor approval before report submission.
+                            </p>
+                          )}
+                        </div>
                       </div>
-
-                      <p className="mt-4 text-sm leading-6 text-slate-600">
-                        {item.description || "No description provided."}
-                      </p>
-
-                      {waitingForApproval && (
-                        <p className="mt-4 text-sm font-semibold text-slate-700">
-                          Waiting for mentor approval before report submission.
-                        </p>
-                      )}
                     </div>
                   );
                 })}
@@ -849,39 +996,76 @@ const EntrepreneurMilestones = () => {
               subtitle="Report on mentor-approved milestones and tranches, and provide supporting evidence for review."
             >
               <div className="space-y-4">
-                {milestones.filter((item) => !["pending", "draft"].includes(String(item.status || "pending").toLowerCase())).length === 0 && (
+                {reportableMilestones.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
                     No milestones are ready for reporting yet. Milestones appear here once a mentor approves them.
                   </div>
                 )}
 
-                {milestones
-                  .filter((item) => !["pending", "draft"].includes(String(item.status || "pending").toLowerCase()))
-                  .map((item) => {
+                {/* Same drill-down for reports: pick a tranche, then report on
+                    its milestones. */}
+                {reportableMilestones.length > 0 && !openReportTranche && (
+                  <TrancheGroupList
+                    title="Tranche Reports"
+                    groups={reportGroups.map((g) => ({
+                      key: g.key,
+                      title: `${g.title} Reports`,
+                    }))}
+                    onSelect={setOpenReportTranche}
+                    onViewAll={() => setOpenReportTranche("__all__")}
+                    emptyText="No milestones are ready for reporting yet."
+                  />
+                )}
+
+                {openReportTranche && (
+                  <p className="text-sm font-bold text-slate-950">
+                    {openReportTranche === "__all__"
+                      ? "All reports"
+                      : openReportTranche}
+                  </p>
+                )}
+
+                {(openReportTranche ? visibleReportables : [])
+                  .map((item, index) => {
                     const attachments = parseSubmissionAttachments(item.submissionAttachments);
                     const normalizedStatus = String(item.status || "pending").toLowerCase();
-                    const canSubmit = ["in_progress", "overdue", "rejected"].includes(normalizedStatus);
                     const ps = item.planStatus || "";
+                    // An approved plan is the startup's cue to report, whatever
+                    // the work status still says — otherwise the milestone would
+                    // show up here with no way to submit anything.
+                    const canSubmit = isPlanApproved(ps)
+                      ? !["submitted", "completed"].includes(normalizedStatus)
+                      : ["in_progress", "overdue", "rejected"].includes(normalizedStatus);
+                    // The mentor declined the report — it comes back for edits.
+                    const wasDeclined = normalizedStatus === "rejected";
                     const disbursed = ps === PLAN_STATUS.DISBURSED || Boolean(item.disbursed);
                     const kpiProgress = getKpiProgress(item);
 
                     return (
                       <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                        {/* Numbered like the milestone list, with the key
+                            activity beneath the name. */}
                         <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div>
-                            <p className="font-black text-slate-950">{item.title}</p>
-                            <p className="mt-1 text-xs text-slate-500">Linked tranche: {item.linkedTranche || "N/A"}</p>
+                          <div className="flex min-w-0 flex-1 gap-3">
+                            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
+                              {normalizedStatus === "completed" ? "✓" : index + 1}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="font-black text-slate-950">{item.title}</p>
+                              {item.tranchePlannedUse ? (
+                                <p className="mt-2 text-sm leading-6 text-slate-600">
+                                  {item.tranchePlannedUse}
+                                </p>
+                              ) : null}
+                            </div>
                           </div>
-                          <div className="flex flex-col items-end gap-1">
-                            {ps && (
-                              <span className={`rounded-full px-3 py-1 text-[10px] font-bold ${planStatusPill(ps)}`}>
-                                {planStatusLabel(ps)}
-                              </span>
-                            )}
-                            <StatusText>{formatStatusLabel(item.status)}</StatusText>
-                          </div>
+                          <StatusText>{formatStatusLabel(item.status)}</StatusText>
                         </div>
 
+                        {/* Indented to clear the number badge (2.5rem + 0.75rem
+                            gap) so the report and its form line up with the
+                            milestone name. */}
+                        <div className="sm:pl-[3.25rem]">
                         {(item.submissionNotes || item.mentorReviewNotes || attachments.length > 0) && (
                           <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
                             {item.submissionNotes && (
@@ -898,7 +1082,7 @@ const EntrepreneurMilestones = () => {
                                     href={url}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="rounded-xl bg-[#082d77]/5 px-3 py-1.5 text-xs font-bold text-[#082d77] underline"
+                                    className="text-xs font-bold text-green-600 transition hover:text-green-700"
                                   >
                                     Attachment {idx + 1}
                                   </a>
@@ -954,12 +1138,24 @@ const EntrepreneurMilestones = () => {
                           </div>
                         )}
 
+                        {wasDeclined && (
+                          <p className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-700">
+                            Your mentor declined this report. Update it below and
+                            submit it again.
+                          </p>
+                        )}
+
                         {canSubmit && (
                           <div className="mt-4 space-y-3">
+                            {/* A declined report starts from what was sent, so the
+                                startup edits it rather than retyping. */}
                             <textarea
                               className={`${baseInputClass} min-h-[90px]`}
                               placeholder="Submit tranche-stage report for mentor review"
-                              value={notesById[item.uuid] || ""}
+                              value={
+                                notesById[item.uuid] ??
+                                (wasDeclined ? item.submissionNotes || "" : "")
+                              }
                               onChange={(e) =>
                                 setNotesById((prev) => ({
                                   ...prev,
@@ -969,7 +1165,7 @@ const EntrepreneurMilestones = () => {
                             />
 
                             <div className="flex flex-wrap items-center justify-between gap-3">
-                              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-[#082d77]/30 bg-[#082d77]/5 px-4 py-3 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10">
+                              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-green-600/40 bg-green-50 px-4 py-3 text-sm font-bold text-green-700 transition hover:bg-green-100">
                                 <UploadCloud className="h-5 w-5" />
                                 {Array.isArray(filesById[item.uuid]) && filesById[item.uuid].length > 0
                                   ? `${filesById[item.uuid].length} file(s) selected`
@@ -990,7 +1186,7 @@ const EntrepreneurMilestones = () => {
                               <button
                                 type="button"
                                 onClick={() => onSubmitMilestone(item.uuid)}
-                                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-70"
+                                className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-70"
                                 disabled={submittingById[item.uuid]}
                               >
                                 {submittingById[item.uuid] ? "Submitting..." : "Submit report"}
@@ -1010,6 +1206,7 @@ const EntrepreneurMilestones = () => {
                             Milestone completed. No further report submission needed.
                           </p>
                         )}
+                        </div>
                       </div>
                     );
                   })}
@@ -1019,38 +1216,7 @@ const EntrepreneurMilestones = () => {
           </div>
 
           <aside className="space-y-8">
-            <PortalCard icon={<Layers className="h-5 w-5" />} title="Milestone Linked Tranches" subtitle="Each tranche is controlled by one linked milestone.">
-              <div className="space-y-4">
-                {trancheStages.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                    No tranche stages have been set yet.
-                  </div>
-                )}
-
-                {trancheStages.map((item, index) => {
-                  const linkedMilestone = milestones.find((milestone) => milestone.linkedTranche === item.title);
-
-                  return (
-                    <div key={`${item.title}-${index}`} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <p className="font-black text-slate-950">{item.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">{formatCurrency(item.amount)}</p>
-                        </div>
-                        <StatusText>{formatStatusLabel(linkedMilestone?.status || "pending")}</StatusText>
-                      </div>
-                      <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                        <p><span className="font-bold text-slate-950">Linked milestone:</span> {linkedMilestone?.title || "No milestone linked"}</p>
-                        <p><span className="font-bold text-slate-950">Target date:</span> {formatDateDisplay(item.date)}</p>
-                        <p><span className="font-bold text-slate-950">Amount:</span> {formatCurrency(item.amount)}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </PortalCard>
-
-            <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Evidence and reporting documents submitted for mentor review.">
+            <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Reporting documents submitted for mentor review.">
               <div className="space-y-3">
                 {milestones.flatMap((item) =>
                   parseSubmissionAttachments(item.submissionAttachments).map((url, idx) => ({
@@ -1071,29 +1237,26 @@ const EntrepreneurMilestones = () => {
                     url,
                   })),
                 ).map((document) => (
-                  <div key={document.id} className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <div className="grid h-9 w-9 place-items-center rounded-xl bg-[#082d77]/5 text-[#082d77]">
-                        <UploadCloud className="h-5 w-5" />
-                      </div>
-                      <p className="text-sm font-bold text-slate-950">{document.label}</p>
+                  // The row itself opens the document, so no separate View
+                  // button is needed.
+                  <a
+                    key={document.id}
+                    href={document.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition hover:border-slate-200 hover:shadow-md"
+                  >
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-green-50 text-green-600">
+                      <UploadCloud className="h-5 w-5" />
                     </div>
-                    <a href={document.url} target="_blank" rel="noreferrer" className="text-xs font-bold text-[#082d77] hover:text-[#061f54]">
-                      View
-                    </a>
-                  </div>
+                    <p className="truncate text-sm font-bold text-slate-950">
+                      {document.label}
+                    </p>
+                  </a>
                 ))}
               </div>
             </PortalCard>
 
-            <PortalCard icon={<ShieldCheck className="h-5 w-5" />} title="Risk & Governance" subtitle="Current control signals for the entrepreneur workspace.">
-              <div className="space-y-3">
-                <DataTile label="Business risk" value={getBusinessRiskLabel(enterprise?.flag)} />
-                <DataTile label="Reports pending" value={milestones.filter((item) => item.status !== "completed" && item.status !== "submitted").length} />
-                <DataTile label="Submitted reports" value={milestones.filter((item) => item.status === "submitted").length} />
-                <DataTile label="Overdue milestones" value={milestones.filter((item) => item.status === "overdue").length} />
-              </div>
-            </PortalCard>
           </aside>
         </div>
       </main>

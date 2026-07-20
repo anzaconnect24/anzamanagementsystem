@@ -1,164 +1,229 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { CalendarDays } from "lucide-react";
-import Loader from "@/components/common/Loader";
-import { getEnterprenuers } from "@/controllers/user_controller";
 import {
-  createCoachingSession,
-  getEntrepreneurCoachingSessions,
-} from "@/controllers/coaching_session_controller";
+  FaArrowRight,
+  FaBuilding,
+  FaCalendarAlt,
+  FaMapMarkerAlt,
+  FaSearch,
+} from "react-icons/fa";
+import Loader from "@/components/common/Loader";
+import { UserContext } from "@/layouts/DashboardLayout";
+import { getEnterprenuers } from "@/controllers/user_controller";
+import { getPrograms } from "@/controllers/program_controller";
+import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
 
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 
-const FLAG_OPTIONS = [
-  { value: "green", label: "Green - on track" },
-  { value: "amber", label: "Amber - at risk" },
-  { value: "red", label: "Red - critical" },
-];
-
-const EMPTY_SESSION = {
-  sessionDate: "",
-  facilitator: "",
-  sessionType: "Weekly coaching",
-  issuesDiscussed: "",
-  recommendationsGiven: "",
-  actionsAgreed: "",
-  nextSessionDate: "",
-  flag: "green",
-};
-
-const baseInputClass =
-  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77] focus:ring-4 focus:ring-[#082d77]/20 disabled:bg-slate-50 disabled:text-slate-400";
-
-const formatDateDisplay = (value) => {
-  if (!value) return "N/A";
+const formatProgramDate = (value) => {
+  if (!value) return "Not set";
   const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "N/A";
-  return date.toLocaleDateString("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
+  if (Number.isNaN(date.getTime())) return "Not set";
+  return date.toLocaleDateString("en-GB");
 };
 
-const getFlagLabel = (flag) => {
-  if (flag === "green") return "On track";
-  if (flag === "amber") return "At risk";
-  if (flag === "red") return "Critical";
-  return "N/A";
+// The program description carries the tracker markers; show only the prose.
+const getProgramBlurb = (program) => {
+  const text = String(program?.description || "");
+  const idx = [
+    text.indexOf("__TRACKER_CATEGORIES__:"),
+    text.indexOf("__TRACKER_STARTUPS__:"),
+  ].filter((i) => i >= 0);
+  return (idx.length ? text.slice(0, Math.min(...idx)) : text).trim();
 };
 
-const FieldLabel = ({ children }) => (
-  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">{children}</label>
-);
+// Defined at module scope so it is not remounted on every keystroke in the
+// search box, which would close an open menu mid-interaction.
+const FilterDropdown = ({ id, label, value, options, onPick, open, setOpen }) => (
+  <div className="relative inline-block">
+    <button
+      type="button"
+      onClick={() => setOpen((prev) => (prev === id ? "" : id))}
+      className={`inline-flex items-center gap-2 rounded-md border px-4 py-3 text-sm transition-colors ${
+        label !== "Sort" && value !== options[0]
+          ? "border-green-600 bg-green-50 text-green-700"
+          : "border-black/10 bg-white text-[#6f6f72] hover:border-green-600"
+      }`}
+    >
+      <span>{label === "Sort" ? `Sort: ${value}` : value}</span>
+      <span>{open === id ? "⌃" : "⌄"}</span>
+    </button>
 
-const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
-  <section className={`rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/70 ${className}`}>
-    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-6 py-5">
-      <div className="flex items-start gap-3">
-        {icon && (
-          <div className="grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#082d77]/5 text-[#082d77]">
-            {icon}
-          </div>
-        )}
-        <div>
-          <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>
-          {subtitle && <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>}
-        </div>
+    {open === id && (
+      <div className="absolute z-20 mt-2 max-h-64 w-64 overflow-y-auto rounded-xl border border-black/10 bg-white shadow-lg">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => {
+              onPick(option);
+              setOpen("");
+            }}
+            className={`block w-full px-4 py-2 text-left text-sm ${
+              value === option
+                ? "bg-green-50 text-green-700"
+                : "text-[#6f6f72] hover:bg-[#f8f8f6]"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
       </div>
-      {action}
-    </div>
-    <div className="p-6">{children}</div>
-  </section>
+    )}
+  </div>
 );
 
-const modalOverlayClass =
-  "fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm";
-const modalCardClass =
-  "max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl shadow-slate-950/20";
-
+// Startup picker for coaching sessions. Selecting one opens its own setup page;
+// the sessions themselves live there, not here.
 const BdaCoachingSessions = () => {
+  const { userDetails } = useContext(UserContext);
+  const navigate = useNavigate();
+  // The open program lives in the URL so it is its own view and the browser's
+  // back button returns to the program list.
+  const [searchParams, setSearchParams] = useSearchParams();
+
   const [loading, setLoading] = useState(true);
   const [enterprises, setEnterprises] = useState([]);
-  const [selectedUuid, setSelectedUuid] = useState("");
-  const [sessions, setSessions] = useState([]);
-  const [loadingSessions, setLoadingSessions] = useState(false);
-  const [showModal, setShowModal] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
-  const [sessionForm, setSessionForm] = useState(EMPTY_SESSION);
-
-  const setField = (key, value) => setSessionForm((prev) => ({ ...prev, [key]: value }));
+  const [keyword, setKeyword] = useState("");
+  const [sectorFilter, setSectorFilter] = useState("All Sectors");
+  const [programFilter, setProgramFilter] = useState("All Programs");
+  const [sortKey, setSortKey] = useState("name");
+  const [openDropdown, setOpenDropdown] = useState("");
 
   useEffect(() => {
-    // All entrepreneurs are eligible for coaching sessions (not only those
-    // with a tracker enterprise set up).
-    getEnterprenuers(1000, 1, " ")
-      .then((body) => {
-        const list = Array.isArray(body)
-          ? body
-          : Array.isArray(body?.data)
-            ? body.data
+    // Only startups selected into a grant program and assigned to this BDA can
+    // be coached — the same list their tracker shows. The names come from the
+    // entrepreneur pool so they match the rest of the app.
+    const bdaUuid = String(userDetails?.uuid || "").trim();
+    if (!bdaUuid) {
+      setEnterprises([]);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+    Promise.all([getPrograms(1, 500), getEnterprenuers(1000, 1, " ")])
+      .then(([programsResponse, poolBody]) => {
+        const programs = Array.isArray(programsResponse?.data)
+          ? programsResponse.data
+          : [];
+
+        const pool = Array.isArray(poolBody)
+          ? poolBody
+          : Array.isArray(poolBody?.data)
+            ? poolBody.data
             : [];
-        setEnterprises(
-          list
-            .filter((user) => Boolean(user?.uuid))
-            .map((user) => ({
-              uuid: user.uuid,
-              name: user.Business?.name || user.name || "Unnamed startup",
-            })),
+        const poolByUuid = new Map(
+          pool.filter((u) => u?.uuid).map((u) => [u.uuid, u]),
         );
+
+        const seen = new Set();
+        const assigned = [];
+        programs.forEach((program) => {
+          parseTrackerProgramMeta(program).startups.forEach((member) => {
+            const uuid = member?.entreprenuerUuid;
+            if (!uuid || seen.has(uuid)) return;
+            if (String(member?.bdaUuid || "").trim() !== bdaUuid) return;
+            seen.add(uuid);
+
+            const poolUser = poolByUuid.get(uuid);
+            const business = poolUser?.Business || poolUser?.business || null;
+            const joined = business?.createdAt || poolUser?.createdAt;
+
+            assigned.push({
+              uuid,
+              name:
+                business?.name || poolUser?.name || member.name || "Unnamed startup",
+              email: poolUser?.email || "",
+              image: poolUser?.image || "",
+              sector:
+                business?.BusinessSector?.name ||
+                business?.sector ||
+                member.sector ||
+                "",
+              location: business?.location || "",
+              joined: joined ? new Date(joined).getFullYear() : null,
+              program: program?.title || "",
+              // Kept so the program card can show its blurb and dates.
+              programRecord: program || null,
+            });
+          });
+        });
+
+        setEnterprises(assigned);
       })
-      .catch(() => toast.error("Failed to load entrepreneurs"))
+      .catch(() => toast.error("Failed to load your startups"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [userDetails?.uuid]);
 
-  const loadSessions = async (uuid) => {
-    if (!uuid) {
-      setSessions([]);
-      return;
-    }
-    setLoadingSessions(true);
-    try {
-      const data = await getEntrepreneurCoachingSessions(uuid);
-      setSessions(Array.isArray(data) ? data : []);
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load coaching sessions");
-    } finally {
-      setLoadingSessions(false);
-    }
+  // Selecting a startup opens its own coaching-session setup page. The name
+  // rides along so that page can title itself without another lookup.
+  const onSelectEnterprise = (item) => {
+    navigate(
+      `/dashboard/bdaCoachingSessions/${item.uuid}?name=${encodeURIComponent(
+        item.name || "",
+      )}`,
+    );
   };
 
-  const onSelectEnterprise = (uuid) => {
-    setSelectedUuid(uuid);
-    loadSessions(uuid);
-  };
+  // Filter options are built from the startups actually assigned to this BDA, so
+  // the lists never offer a sector or program that yields nothing.
+  const sectorOptions = [
+    "All Sectors",
+    ...Array.from(new Set(enterprises.map((e) => e.sector).filter(Boolean))).sort(),
+  ];
+  const programOptions = [
+    "All Programs",
+    ...Array.from(new Set(enterprises.map((e) => e.program).filter(Boolean))).sort(),
+  ];
 
-  const onSubmitSession = async (e) => {
-    e.preventDefault();
-    if (!selectedUuid) {
-      toast.error("Select an entrepreneur first");
-      return;
-    }
-    setIsSaving(true);
-    try {
-      await createCoachingSession({
-        entreprenuer_uuid: selectedUuid,
-        ...sessionForm,
-      });
-      toast.success("Coaching session saved");
-      setShowModal(false);
-      setSessionForm(EMPTY_SESSION);
-      loadSessions(selectedUuid);
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to save coaching session");
-    } finally {
-      setIsSaving(false);
-    }
+  const visible = enterprises
+    .filter((item) => {
+      if (sectorFilter !== "All Sectors" && item.sector !== sectorFilter) return false;
+      if (programFilter !== "All Programs" && item.program !== programFilter)
+        return false;
+      const q = keyword.trim().toLowerCase();
+      if (!q) return true;
+      return [item.name, item.email, item.sector, item.location, item.program]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(q));
+    })
+    .sort((a, b) => {
+      if (sortKey === "recent") return (b.joined || 0) - (a.joined || 0);
+      if (sortKey === "sector")
+        return String(a.sector).localeCompare(String(b.sector));
+      return String(a.name).localeCompare(String(b.name));
+    });
+
+  // Startups are grouped under the program they were selected into: the page
+  // lists the programs first, and opening one shows its startups.
+  const programCards = (() => {
+    const map = new Map();
+    visible.forEach((item) => {
+      // A startup only appears once it has been selected into a program; there
+      // is no catch-all group for unassigned ones.
+      const key = String(item.program || "").trim();
+      if (!key) return;
+      if (!map.has(key)) {
+        map.set(key, { name: key, rows: [], program: item.programRecord });
+      }
+      map.get(key).rows.push(item);
+    });
+    return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+  })();
+
+  const openProgram = searchParams.get("program") || "";
+  const openProgramRows =
+    programCards.find((p) => p.name === openProgram)?.rows || [];
+  const setOpenProgram = (name) => {
+    const next = new URLSearchParams(searchParams);
+    if (name) next.set("program", name);
+    else next.delete("program");
+    setSearchParams(next);
   };
 
   if (loading) return <Loader />;
-
-  const selectedEnterprise = enterprises.find((item) => item.uuid === selectedUuid);
 
   return (
     <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
@@ -176,166 +241,210 @@ const BdaCoachingSessions = () => {
               <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
               Coaching Sessions
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Coaching Sessions</h1>
+            <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
+              Coaching Sessions
+            </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
               Log and review coaching sessions for the entrepreneurs assigned to you.
             </p>
           </div>
         </section>
 
-        <PortalCard
-          icon={<CalendarDays className="h-5 w-5" />}
-          title="Coaching Sessions"
-          subtitle="Select an entrepreneur to log and review their coaching sessions."
-          action={
-            <button
-              type="button"
-              disabled={!selectedUuid}
-              onClick={() => {
-                setSessionForm(EMPTY_SESSION);
-                setShowModal(true);
-              }}
-              className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              + Coaching Session
-            </button>
-          }
-        >
-          <div className="mb-5 max-w-md">
-            <FieldLabel>Entrepreneur</FieldLabel>
-            <select
-              className={baseInputClass}
-              value={selectedUuid}
-              onChange={(e) => onSelectEnterprise(e.target.value)}
-            >
-              <option value="">Select an entrepreneur</option>
-              {enterprises.map((item) => (
-                <option key={item.uuid} value={item.uuid}>
-                  {item.name || "Unnamed startup"}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {!selectedUuid ? (
+        <div>
+          {enterprises.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-              Select an entrepreneur to view their coaching sessions.
-            </div>
-          ) : loadingSessions ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-              Loading sessions...
+              No startups have been assigned to you in a grant program yet. Once a
+              finance officer selects a startup into a program and assigns you as
+              their BDA, they will appear here.
             </div>
           ) : (
-            <div className="space-y-4">
-              {sessions.length === 0 && (
+            <>
+              <h2 className="mb-6 text-2xl font-bold text-[#172033]">
+                Available Programs
+              </h2>
+
+              <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="flex flex-1 flex-wrap items-center gap-3">
+                    <FilterDropdown
+                      id="sector"
+                      label="Sector"
+                      value={sectorFilter}
+                      options={sectorOptions}
+                      onPick={setSectorFilter}
+                      open={openDropdown}
+                      setOpen={setOpenDropdown}
+                    />
+                    <FilterDropdown
+                      id="program"
+                      label="Program"
+                      value={programFilter}
+                      options={programOptions}
+                      onPick={setProgramFilter}
+                      open={openDropdown}
+                      setOpen={setOpenDropdown}
+                    />
+                    <FilterDropdown
+                      id="sort"
+                      label="Sort"
+                      value={sortKey}
+                      options={["name", "sector", "recent"]}
+                      onPick={setSortKey}
+                      open={openDropdown}
+                      setOpen={setOpenDropdown}
+                    />
+                  </div>
+
+                  <div className="relative ml-auto w-full sm:w-72">
+                    <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8f98]" />
+                    <input
+                      type="text"
+                      placeholder="Search entrepreneurs..."
+                      value={keyword}
+                      onChange={(e) => setKeyword(e.target.value)}
+                      className="w-full rounded-md border border-black/10 bg-white px-4 py-3 pl-10 text-sm text-[#172033] outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {visible.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                  No coaching sessions logged yet for {selectedEnterprise?.name || "this entrepreneur"}.
+                  No entrepreneurs match your filters.
+                </div>
+              ) : !openProgram ? (
+                /* Programs first — opening one shows the startups inside it. */
+                <div className="space-y-6">
+                  {programCards.map(({ name, rows, program }) => (
+                    <article
+                      key={name}
+                      className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm"
+                    >
+                      <h3 className="text-xl font-black tracking-tight text-[#172033]">
+                        {name}
+                      </h3>
+
+                      {getProgramBlurb(program) && (
+                        <p className="mt-3 text-sm leading-6 text-[#6f6f72]">
+                          {getProgramBlurb(program)}
+                        </p>
+                      )}
+
+                      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="rounded-xl bg-slate-50 p-4">
+                          <p className="text-xs font-bold text-slate-400">Start</p>
+                          <p className="mt-1 text-sm font-black text-slate-950">
+                            {formatProgramDate(program?.startDate)}
+                          </p>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-4">
+                          <p className="text-xs font-bold text-slate-400">End</p>
+                          <p className="mt-1 text-sm font-black text-slate-950">
+                            {formatProgramDate(program?.endDate)}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="mt-5 flex items-center justify-between border-t border-black/10 pt-4">
+                        <span className="text-xs font-bold text-[#8a8f98]">
+                          {rows.length} startup{rows.length === 1 ? "" : "s"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setOpenProgram(name)}
+                          className="flex items-center gap-1 text-sm font-bold text-green-600 transition hover:text-green-700"
+                        >
+                          View Details
+                          <FaArrowRight />
+                        </button>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <h3 className="text-lg font-black tracking-tight text-[#172033]">
+                      {openProgram}
+                    </h3>
+                    <button
+                      type="button"
+                      onClick={() => setOpenProgram("")}
+                      className="text-sm font-semibold text-[#082d77]"
+                    >
+                      All programs
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
+                  {openProgramRows.map((item) => (
+                    <button
+                      key={item.uuid}
+                      type="button"
+                      onClick={() => onSelectEnterprise(item)}
+                      className="group overflow-hidden rounded-xl bg-white text-left shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
+                    >
+                      <div className="relative h-56 overflow-hidden bg-black">
+                        <img
+                          src={item.image || "/images/default-avatar.png"}
+                          alt={`${item.name} profile`}
+                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                        <div className="absolute bottom-4 left-4">
+                          <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
+                            {item.sector || "No Sector"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex min-h-[230px] flex-col p-5">
+                        <h3 className="mb-2 line-clamp-2 text-lg font-bold text-[#111827]">
+                          {item.name}
+                        </h3>
+                        <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
+                          {item.email || "No email provided"}
+                        </p>
+
+                        <div className="space-y-3 text-sm text-[#6f6f72]">
+                          {item.program && (
+                            <div className="flex items-center gap-2">
+                              <FaBuilding className="shrink-0" />
+                              <span className="line-clamp-1">{item.program}</span>
+                            </div>
+                          )}
+                          {item.location && (
+                            <div className="flex items-center gap-2">
+                              <FaMapMarkerAlt className="shrink-0" />
+                              <span className="line-clamp-1">{item.location}</span>
+                            </div>
+                          )}
+                          <div className="flex items-center gap-2">
+                            <FaCalendarAlt className="shrink-0" />
+                            <span>Joined {item.joined || "N/A"}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-auto flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                          <span className="flex items-center gap-1">
+                            <FaBuilding />
+                            Profile
+                          </span>
+                          <span className="flex items-center gap-1 font-medium text-green-600">
+                            Coaching Sessions
+                            <FaArrowRight />
+                          </span>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                  </div>
                 </div>
               )}
-
-              {sessions.map((item) => (
-                <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div>
-                      <p className="font-black text-slate-950">{formatDateDisplay(item.sessionDate)}</p>
-                      <p className="mt-1 text-xs text-slate-500">{item.sessionType || "Coaching session"}</p>
-                    </div>
-                    <span className="text-sm font-semibold text-slate-700">{getFlagLabel(item.flag)}</span>
-                  </div>
-                  <div className="mt-4 space-y-1 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                    <p><span className="font-bold text-slate-950">Facilitator:</span> {item.facilitator || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Issues discussed:</span> {item.issuesDiscussed || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Recommendations:</span> {item.recommendationsGiven || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Actions agreed:</span> {item.actionsAgreed || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Next session:</span> {item.nextSessionDate ? formatDateDisplay(item.nextSessionDate) : "N/A"}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            </>
           )}
-        </PortalCard>
-      </main>
-
-      {showModal && (
-        <div className={modalOverlayClass}>
-          <form onSubmit={onSubmitSession} className={modalCardClass}>
-            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
-              <div>
-                <h3 className="text-2xl font-black text-slate-950">Log a coaching session</h3>
-                <p className="mt-1 text-sm text-slate-500">
-                  For {selectedEnterprise?.name || "the selected entrepreneur"}.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
-              >
-                ×
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
-              <div>
-                <FieldLabel>Session date</FieldLabel>
-                <input className={baseInputClass} type="date" value={sessionForm.sessionDate} onChange={(e) => setField("sessionDate", e.target.value)} required />
-              </div>
-              <div>
-                <FieldLabel>BDA / Facilitator</FieldLabel>
-                <input className={baseInputClass} placeholder="BDA / Facilitator" value={sessionForm.facilitator} onChange={(e) => setField("facilitator", e.target.value)} />
-              </div>
-              <div>
-                <FieldLabel>Session type</FieldLabel>
-                <select className={baseInputClass} value={sessionForm.sessionType} onChange={(e) => setField("sessionType", e.target.value)}>
-                  <option value="Weekly coaching">Weekly coaching</option>
-                  <option value="Financial advisory">Financial advisory</option>
-                  <option value="Milestone review">Milestone review</option>
-                </select>
-              </div>
-              <div>
-                <FieldLabel>Session status</FieldLabel>
-                <select className={baseInputClass} value={sessionForm.flag} onChange={(e) => setField("flag", e.target.value)}>
-                  {FLAG_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <FieldLabel>Issues discussed</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Issues discussed" value={sessionForm.issuesDiscussed} onChange={(e) => setField("issuesDiscussed", e.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <FieldLabel>Recommendations given</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Recommendations given" value={sessionForm.recommendationsGiven} onChange={(e) => setField("recommendationsGiven", e.target.value)} />
-              </div>
-              <div className="md:col-span-2">
-                <FieldLabel>Actions agreed</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Actions agreed" value={sessionForm.actionsAgreed} onChange={(e) => setField("actionsAgreed", e.target.value)} />
-              </div>
-              <div>
-                <FieldLabel>Next session date</FieldLabel>
-                <input className={baseInputClass} type="date" value={sessionForm.nextSessionDate} onChange={(e) => setField("nextSessionDate", e.target.value)} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
-              <button
-                type="button"
-                onClick={() => setShowModal(false)}
-                disabled={isSaving}
-                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                disabled={isSaving}
-                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
-              >
-                {isSaving ? "Saving..." : "Save coaching session"}
-              </button>
-            </div>
-          </form>
         </div>
-      )}
+      </main>
     </div>
   );
 };

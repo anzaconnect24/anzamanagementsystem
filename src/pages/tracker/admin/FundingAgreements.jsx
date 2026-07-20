@@ -291,7 +291,7 @@ const FundingAgreements = () => {
               uploadedAt={enterprise?.signedContractUploadedAt}
               acknowledgedAt={enterprise?.contractAcknowledgedAt}
               signedUrl={enterprise?.startupSignedContractUrl}
-              contractName={enterprise?.name ? `Grant Agreement — ${enterprise.name}` : undefined}
+              contractName={enterprise?.name || undefined}
             />
 
             <PortalCard

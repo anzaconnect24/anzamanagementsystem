@@ -4,29 +4,23 @@ import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import {
   createMentorEnterpriseMilestone,
-  createMentorEnterpriseSession,
   createMentorEnterpriseWeeklyLog,
   getMentorEnterpriseDetails,
   reviewTrackerMilestone,
-  updateMentorEnterpriseTrancheStages,
-  updateMentorEnterpriseKpis,
 } from "@/controllers/trackerController";
 import SignedContractCard from "@/components/tracker/SignedContractCard";
+import GrantSummaryCards from "@/components/tracker/GrantSummaryCards";
+import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
+import TrancheGroupList, {
+  groupMilestonesByTranche,
+} from "@/components/tracker/TrancheGroupList";
 import {
   UploadCloud,
-  Building2,
-  BarChart3,
   Flag,
-  CalendarDays,
-  Layers,
   FileText,
-  ShieldCheck,
 } from "lucide-react";
 import {
   PLAN_STATUS,
-  parseKpiPlan,
-  planStatusLabel,
-  planStatusPill,
   canReviewPlan,
   VERIFICATION_OPTIONS,
   verificationLabel,
@@ -42,12 +36,6 @@ const formatCurrency = (value, currency = "TZS") => {
   const amount = Number(value || 0);
   if (!Number.isFinite(amount)) return `${currency} 0`;
   return `${currency} ${amount.toLocaleString()}`;
-};
-
-const getBusinessRiskLabel = (flag) => {
-  if (flag === "red") return "Critical";
-  if (flag === "amber") return "Medium";
-  return "Low";
 };
 
 const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
@@ -78,16 +66,19 @@ const FieldLabel = ({ children }) => (
   </label>
 );
 
-const DataTile = ({ label, value, helper }) => (
-  <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
-    <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
-    <p className="mt-1 text-base font-black text-slate-950">{value}</p>
-    {helper && <p className="mt-1 text-xs text-slate-500">{helper}</p>}
-  </div>
-);
+// Completed reads green and pending amber, so a milestone's state is legible at
+// a glance rather than uniform grey.
+const statusTone = (value) => {
+  const label = String(value || "").toLowerCase();
+  if (label.includes("complete")) return "text-green-600";
+  if (label.includes("pending")) return "text-amber-600";
+  return "text-slate-700";
+};
 
 const StatusText = ({ children }) => (
-  <span className="text-sm font-semibold text-slate-700">{children}</span>
+  <span className={`text-sm font-semibold ${statusTone(children)}`}>
+    {children}
+  </span>
 );
 
 const modalOverlayClass =
@@ -100,12 +91,6 @@ const modalCancelClass =
   "rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50";
 const modalSubmitClass =
   "rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-60";
-
-const FLAG_OPTIONS = [
-  { value: "green", label: "Green - on track" },
-  { value: "amber", label: "Amber - at risk" },
-  { value: "red", label: "Red - critical" },
-];
 
 const ACTIVITY_OPTIONS = [
   "Weekly coaching call",
@@ -126,34 +111,10 @@ const formatDateDisplay = (value) => {
   return date.toLocaleDateString("en-GB");
 };
 
-const getFlagLabel = (flag) => {
-  if (flag === "green") return "On track";
-  if (flag === "amber") return "At risk";
-  if (flag === "red") return "Critical";
-  return "Unknown";
-};
-
 const formatMilestoneStatus = (status) =>
   String(status || "")
     .replaceAll("_", " ")
     .replace(/\b\w/g, (char) => char.toUpperCase());
-
-const getLinkedTrancheDisplay = (milestone) => {
-  if (milestone?.linkedTranche) {
-    return milestone.linkedTranche;
-  }
-
-  const description = milestone?.description || "";
-  const match = description.match(/Linked tranche:\s*(.+)$/i);
-  return match ? match[1].trim() : "N/A";
-};
-
-const getMilestoneDescriptionDisplay = (milestone) => {
-  const description = milestone?.description || "";
-  return (
-    description.replace(/\n?\n?Linked tranche:\s*.+$/i, "").trim() || "N/A"
-  );
-};
 
 const normalizeTrancheStages = (value) => {
   if (Array.isArray(value)) {
@@ -162,8 +123,13 @@ const normalizeTrancheStages = (value) => {
         title: String(item?.title || "").trim(),
         date: item?.date ? String(item.date).slice(0, 10) : "",
         amount: Number(item?.amount || 0),
+        // Finance marks a stage Disbursed when it releases the tranche — keep it
+        // so the summary cards can tell which tranches are already out.
+        status: item?.status ? String(item.status) : "",
       }))
-      .filter((item) => item.title && item.date);
+      // A tranche without a planned date is still a tranche; it must not vanish
+      // from the totals just because finance left the date blank.
+      .filter((item) => item.title);
   }
 
   if (typeof value === "string") {
@@ -198,41 +164,27 @@ const parseSubmissionAttachments = (value) => {
 const EnterpriseTrackerDetails = () => {
   const { enterpriseUuid } = useParams();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   // Read-only mode (e.g. admin viewing from the tracker overview).
   const readOnly = searchParams.get("view") === "1";
 
   const [loading, setLoading] = useState(true);
   const [details, setDetails] = useState(null);
 
-  const [showKpiModal, setShowKpiModal] = useState(false);
-  const [showSessionModal, setShowSessionModal] = useState(false);
   const [showWeekLogModal, setShowWeekLogModal] = useState(false);
   const [showMilestoneModal, setShowMilestoneModal] = useState(false);
-  const [expandedSessionUuid, setExpandedSessionUuid] = useState(null);
   const [expandedWeeklyUuid, setExpandedWeeklyUuid] = useState(null);
   const [expandedMilestoneUuid, setExpandedMilestoneUuid] = useState(null);
-  const [isSavingTrancheStages, setIsSavingTrancheStages] = useState(false);
-
-  const [kpiForm, setKpiForm] = useState({
-    monthlyRevenue: "0",
-    employees: "0",
-    wasteDiverted: "0",
-    ceReadinessScore: "",
-    capitalMobilised: "0",
-    activeCustomers: "0",
-  });
-
-  const [sessionForm, setSessionForm] = useState({
-    sessionDate: "",
-    facilitator: "",
-    sessionType: "Weekly coaching",
-    issuesDiscussed: "",
-    recommendationsGiven: "",
-    actionsAgreed: "",
-    nextSessionDate: "",
-    flag: "green",
-  });
+  // The open tranche lives in the URL so it is its own page: the browser's back
+  // button returns to the tranche list and the view can be linked to.
+  // "" shows the list, "__all__" shows every milestone.
+  const openTranche = searchParams.get("tranche") || "";
+  const setOpenTranche = (key) => {
+    const next = new URLSearchParams(searchParams);
+    if (key) next.set("tranche", key);
+    else next.delete("tranche");
+    setSearchParams(next);
+  };
 
   const [weekLogForm, setWeekLogForm] = useState({
     weekStart: "",
@@ -256,19 +208,12 @@ const EnterpriseTrackerDetails = () => {
     description: "",
   });
 
-  const [trancheForm, setTrancheForm] = useState({
-    title: "",
-    date: "",
-    amount: "",
-  });
   const [reviewState, setReviewState] = useState({});
   const [reviewingById, setReviewingById] = useState({});
 
   const enterprise = details?.enterprise;
-  const sessions = details?.sessions || [];
   const weeklyLogs = details?.weeklyLogs || [];
   const milestones = details?.milestones || [];
-  const stats = details?.stats || {};
   const trancheStages = useMemo(() => {
     const fromResponse = details?.trancheStages;
     if (Array.isArray(fromResponse)) {
@@ -278,26 +223,63 @@ const EnterpriseTrackerDetails = () => {
     return normalizeTrancheStages(enterprise?.trancheStages);
   }, [details?.trancheStages, enterprise?.trancheStages]);
 
-  const metricCards = useMemo(
-    () => [
-      {
-        label: "Revenue/month",
-        value: `TZS ${Number(enterprise?.monthlyRevenue || 0).toLocaleString()}`,
-        sub: "TZS",
-      },
-      {
-        label: "Employees",
-        value: Number(enterprise?.employees || 0),
-        sub: "FTE",
-      },
-      {
-        label: "Mentorship hrs",
-        value: Number(stats.mentorshipHours || 0).toFixed(1),
-        sub: `${stats.weeklyLogsCount || 0} weeks`,
-      },
-    ],
-    [enterprise, stats],
+  const milestoneGroups = useMemo(
+    () => groupMilestonesByTranche(milestones, trancheStages),
+    [milestones, trancheStages],
   );
+
+  const visibleMilestones = useMemo(() => {
+    if (openTranche === "__all__") return milestones;
+    return (
+      milestoneGroups.find((g) => g.key === openTranche)?.items || milestones
+    );
+  }, [openTranche, milestoneGroups, milestones]);
+
+  // The finance officer mirrors the grant contract onto this startup's entry in
+  // the program markers, which persist reliably. Read it from there when the
+  // enterprise record does not carry it — the program is already attached to the
+  // enterprise, so this costs no extra request.
+  const financeMember = useMemo(() => {
+    const program = details?.program || enterprise?.Program || null;
+    const entUuid =
+      enterprise?.entreprenuer_uuid || enterprise?.Entreprenuer?.uuid || "";
+    if (!program || !entUuid) return null;
+    return (
+      parseTrackerProgramMeta(program).startups.find(
+        (m) => m?.entreprenuerUuid === entUuid,
+      ) || null
+    );
+  }, [details?.program, enterprise]);
+
+  // Grant financial summary shown below the hero — the same cards the startup
+  // and the finance officer see. A tranche counts as released either because
+  // finance marked the stage Disbursed, or because the milestone linked to it
+  // was disbursed through the plan workflow.
+  const grantStats = useMemo(() => {
+    const isTrancheDisbursed = (stage) => {
+      if (String(stage?.status || "").toLowerCase() === "disbursed") return true;
+      const linked = milestones.find((m) => m.linkedTranche === stage?.title);
+      return Boolean(
+        linked &&
+          (String(linked.planStatus) === PLAN_STATUS.DISBURSED || linked.disbursed),
+      );
+    };
+
+    const stagesTotal = trancheStages.reduce(
+      (sum, t) => sum + Number(t.amount || 0),
+      0,
+    );
+    const committed = Number(enterprise?.grantUsd || 0) || stagesTotal;
+    const disbursed = trancheStages
+      .filter(isTrancheDisbursed)
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    const remaining = Math.max(0, committed - disbursed);
+    const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
+    const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
+    const next = trancheStages.find((stage) => !isTrancheDisbursed(stage)) || null;
+
+    return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
+  }, [enterprise?.grantUsd, trancheStages, milestones]);
 
   const loadDetails = async () => {
     if (!enterpriseUuid) return;
@@ -306,24 +288,6 @@ const EnterpriseTrackerDetails = () => {
     try {
       const response = await getMentorEnterpriseDetails(enterpriseUuid);
       setDetails(response);
-
-      const currentEnterprise = response?.enterprise;
-      setKpiForm({
-        monthlyRevenue: String(Number(currentEnterprise?.monthlyRevenue || 0)),
-        employees: String(Number(currentEnterprise?.employees || 0)),
-        wasteDiverted: String(Number(currentEnterprise?.wasteDiverted || 0)),
-        ceReadinessScore:
-          currentEnterprise?.ceReadinessScore === null ||
-          currentEnterprise?.ceReadinessScore === undefined
-            ? ""
-            : String(Number(currentEnterprise?.ceReadinessScore || 0)),
-        capitalMobilised: String(
-          Number(currentEnterprise?.capitalMobilised || 0),
-        ),
-        activeCustomers: String(
-          Number(currentEnterprise?.activeCustomers || 0),
-        ),
-      });
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Failed to load enterprise",
@@ -350,39 +314,6 @@ const EnterpriseTrackerDetails = () => {
     });
   };
 
-  const onSubmitKpis = async (e) => {
-    e.preventDefault();
-    try {
-      await updateMentorEnterpriseKpis(enterpriseUuid, kpiForm);
-      toast.success("KPIs updated");
-      setShowKpiModal(false);
-      loadDetails();
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to update KPIs");
-    }
-  };
-
-  const onSubmitSession = async (e) => {
-    e.preventDefault();
-    try {
-      await createMentorEnterpriseSession(enterpriseUuid, sessionForm);
-      toast.success("Session saved");
-      setShowSessionModal(false);
-      setSessionForm({
-        sessionDate: "",
-        facilitator: "",
-        sessionType: "Weekly coaching",
-        issuesDiscussed: "",
-        recommendationsGiven: "",
-        actionsAgreed: "",
-        nextSessionDate: "",
-        flag: "green",
-      });
-      loadDetails();
-    } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to save session");
-    }
-  };
 
   const onSubmitWeekLog = async (e) => {
     e.preventDefault();
@@ -430,26 +361,35 @@ const EnterpriseTrackerDetails = () => {
     }
   };
 
-  const onReviewMilestone = async (uuid) => {
-    const payload = reviewState[uuid] || {};
-    if (!payload.status) {
-      toast.error("Select a review status");
+  // The BDA accepts or declines the startup's submitted report. Declining sets
+  // the milestone back to "rejected", which is a status the startup can submit
+  // from again — so a declined report can be edited and resubmitted. Accepting
+  // hands it to the finance officer: SENT_TO_FINANCE is what puts the milestone
+  // in front of them with the disburse decision (see canDisburse).
+  const onReviewReport = async (uuid, accepted) => {
+    const note = reviewState[uuid]?.reportReviewNotes || "";
+    if (!accepted && !note.trim()) {
+      toast.error("Add a comment so the startup knows what to change");
       return;
     }
 
     setReviewingById((prev) => ({ ...prev, [uuid]: true }));
     try {
       await reviewTrackerMilestone(uuid, {
-        status: payload.status,
-        mentorReviewNotes: payload.mentorReviewNotes || "",
+        status: accepted ? "completed" : "rejected",
+        mentorReviewNotes: note,
+        ...(accepted ? { planStatus: PLAN_STATUS.SENT_TO_FINANCE } : {}),
       });
-      toast.success("Milestone reviewed");
-      setReviewState((prev) => ({ ...prev, [uuid]: {} }));
+      toast.success(
+        accepted ? "Report approved and sent to finance" : "Report declined",
+      );
+      setReviewState((prev) => ({
+        ...prev,
+        [uuid]: { ...prev[uuid], reportReviewNotes: "" },
+      }));
       loadDetails();
     } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Failed to review milestone",
-      );
+      toast.error(error?.response?.data?.message || "Failed to review the report");
     } finally {
       setReviewingById((prev) => ({ ...prev, [uuid]: false }));
     }
@@ -497,102 +437,6 @@ const EnterpriseTrackerDetails = () => {
     }
   };
 
-  const persistTrancheStages = async (nextTrancheStages) => {
-    setIsSavingTrancheStages(true);
-    try {
-      const response = await updateMentorEnterpriseTrancheStages(
-        enterpriseUuid,
-        {
-          trancheStages: nextTrancheStages,
-        },
-      );
-
-      const savedStages = normalizeTrancheStages(
-        response?.trancheStages || nextTrancheStages,
-      );
-
-      setDetails((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          trancheStages: savedStages,
-          enterprise: {
-            ...prev.enterprise,
-            trancheStages: JSON.stringify(savedStages),
-          },
-        };
-      });
-
-      return savedStages;
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Failed to update tranche stages",
-      );
-      return null;
-    } finally {
-      setIsSavingTrancheStages(false);
-    }
-  };
-
-  const onAddTrancheStage = async (e) => {
-    e.preventDefault();
-
-    const title = trancheForm.title.trim();
-    const date = trancheForm.date;
-    const amount = Number(trancheForm.amount);
-
-    if (!title || !date) {
-      toast.error("Tranche title and date are required");
-      return;
-    }
-
-    if (!Number.isFinite(amount) || amount < 0) {
-      toast.error("Tranche amount must be a valid number");
-      return;
-    }
-
-    const nextTrancheStages = [
-      ...trancheStages,
-      {
-        title,
-        date,
-        amount,
-      },
-    ];
-
-    const savedStages = await persistTrancheStages(nextTrancheStages);
-    if (!savedStages) {
-      return;
-    }
-
-    setTrancheForm({ title: "", date: "", amount: "" });
-    toast.success("Tranche stage added");
-  };
-
-  const onRemoveTrancheStage = async (indexToRemove) => {
-    const nextTrancheStages = trancheStages.filter(
-      (_, index) => index !== indexToRemove,
-    );
-
-    const savedStages = await persistTrancheStages(nextTrancheStages);
-    if (!savedStages) {
-      return;
-    }
-
-    setMilestoneForm((prev) => {
-      if (prev.linkedTranche === "None") {
-        return prev;
-      }
-
-      const exists = savedStages.some(
-        (item) => item.title === prev.linkedTranche,
-      );
-      return exists ? prev : { ...prev, linkedTranche: "None" };
-    });
-
-    toast.success("Tranche stage removed");
-  };
-
   if (loading) {
     return <Loader />;
   }
@@ -603,16 +447,6 @@ const EnterpriseTrackerDetails = () => {
   const milestoneProgress = milestones.length
     ? Math.round((completedMilestones / milestones.length) * 100)
     : 0;
-  const submittedMilestones = milestones.filter(
-    (item) => String(item.status || "").toLowerCase() === "submitted",
-  ).length;
-  const overdueMilestones = milestones.filter(
-    (item) => String(item.status || "").toLowerCase() === "overdue",
-  ).length;
-  const totalTrancheAmount = trancheStages.reduce(
-    (sum, item) => sum + Number(item.amount || 0),
-    0,
-  );
   const submittedDocuments = milestones.flatMap((milestone) =>
     parseSubmissionAttachments(milestone.submissionAttachments).map((url, index) => ({
       id: `${milestone.uuid || milestone.title}-${index}`,
@@ -668,13 +502,6 @@ const EnterpriseTrackerDetails = () => {
                   <>
                     <button
                       type="button"
-                      onClick={() => setShowSessionModal(true)}
-                      className="rounded-xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
-                    >
-                      + Coaching Session
-                    </button>
-                    <button
-                      type="button"
                       onClick={() => setShowMilestoneModal(true)}
                       className="rounded-xl bg-white px-4 py-2.5 text-sm font-black text-[#082d77] shadow-sm transition hover:bg-white/90"
                     >
@@ -698,51 +525,30 @@ const EnterpriseTrackerDetails = () => {
           </div>
         </section>
 
+        <GrantSummaryCards
+          committed={grantStats.committed}
+          disbursed={grantStats.disbursed}
+          remaining={grantStats.remaining}
+          disbursedPct={grantStats.disbursedPct}
+          remainingPct={grantStats.remainingPct}
+          next={grantStats.next}
+          programName={enterprise?.Program?.title}
+        />
+
         <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.45fr_0.75fr]">
           <div className="space-y-8">
-            <PortalCard icon={<Building2 className="h-5 w-5" />} title="Startup Information" subtitle="Core startup profile and program details.">
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <DataTile label="Business name" value={enterprise?.name || "N/A"} />
-                <DataTile label="Sector" value={enterprise?.ceSector || "N/A"} />
-                <DataTile label="Region" value={enterprise?.district || "N/A"} />
-                <DataTile label="Lead contact" value={enterprise?.leadContact || "N/A"} />
-                <DataTile label="Grant" value={formatCurrency(enterprise?.grantUsd)} />
-                <DataTile
-                  label="Mentorship hours"
-                  value={Number(stats.mentorshipHours || 0).toFixed(1)}
-                  helper={`${stats.weeklyLogsCount || 0} weeks`}
-                />
-              </div>
-              <div className="mt-5 rounded-2xl border border-slate-100 bg-slate-50/70 p-5">
-                <p className="text-xs font-bold tracking-wide text-slate-400">Business Description</p>
-                <p className="mt-2 text-sm leading-7 text-slate-600">
-                  {enterprise?.businessDescription || "No business description provided."}
-                </p>
-              </div>
-            </PortalCard>
-
-            <PortalCard
-              icon={<BarChart3 className="h-5 w-5" />}
-              title="KPI Tracking"
-              subtitle="Operational indicators for enterprise growth and reporting."
-              action={
-                readOnly ? undefined : (
-                  <button
-                    type="button"
-                    onClick={() => setShowKpiModal(true)}
-                    className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
-                  >
-                    Edit KPIs
-                  </button>
-                )
+            <SignedContractCard
+              contractUrl={
+                enterprise?.signedContractUrl || financeMember?.signedContractUrl
               }
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3 xl:grid-cols-6">
-                {metricCards.map((item) => (
-                  <DataTile key={item.label} label={item.label} value={item.value} helper={item.sub} />
-                ))}
-              </div>
-            </PortalCard>
+              uploadedAt={
+                enterprise?.signedContractUploadedAt ||
+                financeMember?.signedContractUploadedAt
+              }
+              acknowledgedAt={enterprise?.contractAcknowledgedAt}
+              signedUrl={enterprise?.startupSignedContractUrl}
+              contractName={enterprise?.name || undefined}
+            />
 
             <PortalCard
               icon={<Flag className="h-5 w-5" />}
@@ -767,13 +573,36 @@ const EnterpriseTrackerDetails = () => {
                   </div>
                 )}
 
-                {milestones.map((item) => {
+                {/* Tranche picker — drill into one tranche rather than listing
+                    every milestone at once. */}
+                {milestones.length > 0 && !openTranche && (
+                  <TrancheGroupList
+                    title="Tranche Milestones"
+                    groups={milestoneGroups.map((g) => ({
+                      key: g.key,
+                      title: `${g.title} Milestones`,
+                    }))}
+                    onSelect={setOpenTranche}
+                    onViewAll={() => setOpenTranche("__all__")}
+                    emptyText="No milestones yet."
+                  />
+                )}
+
+                {openTranche && (
+                  <p className="text-sm font-bold text-slate-950">
+                    {openTranche === "__all__" ? "All milestones" : openTranche}
+                  </p>
+                )}
+
+                {(openTranche ? visibleMilestones : []).map((item, index) => {
                   const attachments = parseSubmissionAttachments(item.submissionAttachments);
                   const expanded = expandedMilestoneUuid === item.uuid;
-                  const kpiPlan = parseKpiPlan(item.kpiPlan);
                   const ps = item.planStatus || "";
                   const vs = item.verificationStatus || "";
                   const verificationRequested = Boolean(item.verificationRequested);
+                  // The startup has sent a report and it has not been ruled on.
+                  const reportAwaitingReview =
+                    String(item.status || "").toLowerCase() === "submitted";
 
                   return (
                     <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
@@ -784,79 +613,119 @@ const EnterpriseTrackerDetails = () => {
                         }
                         className="flex w-full flex-wrap items-start justify-between gap-3 text-left"
                       >
-                        <div>
-                          <p className="font-black text-slate-950">{item.title}</p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Due {item.dueDate ? formatDateDisplay(item.dueDate) : "N/A"}
-                          </p>
-                          <p className="mt-1 text-xs text-slate-500">
-                            Linked tranche: {getLinkedTrancheDisplay(item)}
-                          </p>
+                        {/* Same shape as the startup's own milestone list: the
+                            name, with key activities (stored on
+                            tranchePlannedUse) as the description. */}
+                        <div className="flex min-w-0 flex-1 gap-3">
+                          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
+                            {item.status === "completed" ? "✓" : index + 1}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-black text-slate-950">{item.title}</p>
+                            {item.tranchePlannedUse ? (
+                              <p className="mt-2 text-sm leading-6 text-slate-600">
+                                {item.tranchePlannedUse}
+                              </p>
+                            ) : null}
+                          </div>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          {ps && (
-                            <span className={`rounded-full px-3 py-1 text-[10px] font-bold ${planStatusPill(ps)}`}>
-                              {planStatusLabel(ps)}
-                            </span>
-                          )}
                           <StatusText>{formatMilestoneStatus(item.status)}</StatusText>
                         </div>
                       </button>
 
+                      {/* Indented to clear the number badge (2.5rem + 0.75rem
+                          gap) so the report lines up with the milestone name. */}
                       {expanded && (
-                        <div className="mt-4 space-y-3">
-                          <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                            <p>
-                              <span className="font-bold text-slate-950">Description:</span>{" "}
-                              {getMilestoneDescriptionDisplay(item)}
-                            </p>
-                            <p>
-                              <span className="font-bold text-slate-950">Submission notes:</span>{" "}
-                              {item.submissionNotes || "N/A"}
-                            </p>
-                            <p>
-                              <span className="font-bold text-slate-950">Review notes:</span>{" "}
-                              {item.mentorReviewNotes || "N/A"}
-                            </p>
-                            {attachments.length > 0 && (
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {attachments.map((url, idx) => (
-                                  <a
-                                    key={`${item.uuid}-attachment-${idx}`}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="rounded-xl bg-[#082d77]/5 px-3 py-1.5 text-xs font-bold text-[#082d77] underline"
-                                  >
-                                    Attachment {idx + 1}
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                        <div className="mt-4 space-y-3 sm:pl-[3.25rem]">
+                          {/* The startup's submitted report: their comments, the
+                              evidence they attached, and any feedback already
+                              given on it. */}
+                          {(item.submissionNotes ||
+                            item.mentorReviewNotes ||
+                            attachments.length > 0) && (
+                            <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+                              {item.submissionNotes && (
+                                <p>
+                                  <span className="font-bold text-slate-950">
+                                    Submitted report:
+                                  </span>{" "}
+                                  {item.submissionNotes}
+                                </p>
+                              )}
+                              {item.mentorReviewNotes && (
+                                <p>
+                                  <span className="font-bold text-slate-950">
+                                    Your feedback:
+                                  </span>{" "}
+                                  {item.mentorReviewNotes}
+                                </p>
+                              )}
+                              {attachments.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-2">
+                                  {attachments.map((url, idx) => (
+                                    <a
+                                      key={`${item.uuid}-attachment-${idx}`}
+                                      href={url}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-xs font-bold text-green-600 transition hover:text-green-700"
+                                    >
+                                      Attachment {idx + 1}
+                                    </a>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
 
-                          <div className="rounded-2xl border border-slate-100 p-4">
-                            <p className="text-xs font-black uppercase tracking-wide text-[#082d77]">KPI plan</p>
-                            {kpiPlan.length === 0 ? (
-                              <p className="mt-2 text-sm text-slate-500">No KPI plan submitted.</p>
-                            ) : (
-                              <div className="mt-3 space-y-2">
-                                {kpiPlan.map((kpi, idx) => (
-                                  <div key={idx} className="rounded-xl bg-slate-50 p-3 text-sm text-slate-600">
-                                    <p className="font-bold text-slate-950">{kpi.name}</p>
-                                    <p className="mt-0.5 text-xs text-slate-500">
-                                      Target: {kpi.target || "—"} • Evidence: {kpi.evidenceSource || "—"}
-                                      {kpi.currentValue ? ` • Current: ${kpi.currentValue}` : ""}
-                                    </p>
-                                  </div>
-                                ))}
-                              </div>
-                            )}
-
-                            {!readOnly && canReviewPlan(ps) && (
-                              <div className="mt-4 space-y-2">
+                          {/* Accept or decline that report. Declining returns it
+                              to the startup to edit and resubmit. */}
+                          {!readOnly && reportAwaitingReview && (
+                            <div className="rounded-2xl border border-slate-100 p-4">
+                              <div className="flex flex-col gap-2 md:flex-row md:items-center">
                                 <input
-                                  className={baseInputClass}
+                                  className={`${baseInputClass} md:flex-1`}
+                                  placeholder="Comment (required when declining)"
+                                  value={reviewState[item.uuid]?.reportReviewNotes || ""}
+                                  onChange={(e) =>
+                                    setReviewState((prev) => ({
+                                      ...prev,
+                                      [item.uuid]: {
+                                        ...prev[item.uuid],
+                                        reportReviewNotes: e.target.value,
+                                      },
+                                    }))
+                                  }
+                                />
+                                <div className="flex flex-wrap gap-2 md:shrink-0">
+                                  <button
+                                    type="button"
+                                    onClick={() => onReviewReport(item.uuid, true)}
+                                    disabled={reviewingById[item.uuid]}
+                                    className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+                                  >
+                                    Approve report
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onReviewReport(item.uuid, false)}
+                                    disabled={reviewingById[item.uuid]}
+                                    className="rounded-xl bg-rose-600 px-4 py-2.5 text-sm font-bold text-white transition hover:bg-rose-700 disabled:opacity-60"
+                                  >
+                                    Decline report
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          )}
+
+                          {!readOnly && canReviewPlan(ps) && (
+                            <div className="rounded-2xl border border-slate-100 p-4">
+                              {/* Note and the three verdicts on one row. */}
+                              <div className="flex flex-col gap-2 md:flex-row md:items-center">
+                                <input
+                                  className={`${baseInputClass} md:flex-1`}
                                   placeholder="Review note (optional for approve, recommended for revision/reject)"
                                   value={reviewState[item.uuid]?.mentorReviewNotes || ""}
                                   onChange={(e) =>
@@ -866,7 +735,7 @@ const EnterpriseTrackerDetails = () => {
                                     }))
                                   }
                                 />
-                                <div className="flex flex-wrap gap-2">
+                                <div className="flex flex-wrap gap-2 md:shrink-0">
                                   <button
                                     type="button"
                                     onClick={() => onReviewPlan(item.uuid, PLAN_STATUS.APPROVED)}
@@ -893,8 +762,8 @@ const EnterpriseTrackerDetails = () => {
                                   </button>
                                 </div>
                               </div>
-                            )}
-                          </div>
+                            </div>
+                          )}
 
                           {(verificationRequested || vs) && (
                             <div className="rounded-2xl border border-slate-100 p-4">
@@ -927,109 +796,9 @@ const EnterpriseTrackerDetails = () => {
                             </div>
                           )}
 
-                          {!readOnly && (
-                          <div className="grid gap-2 md:grid-cols-[210px_1fr_auto]">
-                            <select
-                              className={baseInputClass}
-                              value={reviewState[item.uuid]?.status || ""}
-                              onChange={(e) =>
-                                setReviewState((prev) => ({
-                                  ...prev,
-                                  [item.uuid]: {
-                                    ...prev[item.uuid],
-                                    status: e.target.value,
-                                  },
-                                }))
-                              }
-                            >
-                              <option value="">Review status</option>
-                              <option value="in_progress">In progress</option>
-                              <option value="completed">Completed</option>
-                              <option value="overdue">Overdue</option>
-                              <option value="rejected">Rejected</option>
-                            </select>
-                            <input
-                              className={baseInputClass}
-                              placeholder="Review note"
-                              value={reviewState[item.uuid]?.mentorReviewNotes || ""}
-                              onChange={(e) =>
-                                setReviewState((prev) => ({
-                                  ...prev,
-                                  [item.uuid]: {
-                                    ...prev[item.uuid],
-                                    mentorReviewNotes: e.target.value,
-                                  },
-                                }))
-                              }
-                            />
-                            <button
-                              type="button"
-                              onClick={() => onReviewMilestone(item.uuid)}
-                              disabled={reviewingById[item.uuid]}
-                              className="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              {reviewingById[item.uuid] ? "Updating..." : "Update"}
-                            </button>
-                          </div>
-                          )}
                         </div>
                       )}
                     </div>
-                  );
-                })}
-              </div>
-            </PortalCard>
-
-            <PortalCard
-              icon={<CalendarDays className="h-5 w-5" />}
-              title="Coaching Sessions"
-              subtitle="Coaching sessions and engagement records for this entrepreneur."
-              action={
-                readOnly ? undefined : (
-                  <button
-                    type="button"
-                    onClick={() => setShowSessionModal(true)}
-                    className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
-                  >
-                    + Coaching Session
-                  </button>
-                )
-              }
-            >
-              <div className="space-y-3">
-                {sessions.length === 0 && <p className="text-sm text-slate-500">No sessions logged yet.</p>}
-                {sessions.map((item) => {
-                  const expanded = expandedSessionUuid === item.uuid;
-                  return (
-                    <button
-                      type="button"
-                      key={item.uuid}
-                      onClick={() =>
-                        setExpandedSessionUuid((prev) => (prev === item.uuid ? null : item.uuid))
-                      }
-                      className="w-full rounded-2xl bg-slate-50 p-4 text-left"
-                    >
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-bold text-slate-950">
-                          {item.sessionDate ? formatDateDisplay(item.sessionDate) : "N/A"}
-                        </p>
-                        <StatusText>{getFlagLabel(item.flag)}</StatusText>
-                      </div>
-                      <p className="mt-1 text-xs text-slate-500">{item.sessionType || "Session"}</p>
-                      {expanded ? (
-                        <div className="mt-3 space-y-1 text-sm leading-6 text-slate-600">
-                          <p><span className="font-bold text-slate-950">Facilitator:</span> {item.facilitator || "N/A"}</p>
-                          <p><span className="font-bold text-slate-950">Issues discussed:</span> {item.issuesDiscussed || "N/A"}</p>
-                          <p><span className="font-bold text-slate-950">Recommendations:</span> {item.recommendationsGiven || "N/A"}</p>
-                          <p><span className="font-bold text-slate-950">Actions agreed:</span> {item.actionsAgreed || "N/A"}</p>
-                          <p><span className="font-bold text-slate-950">Next session:</span> {item.nextSessionDate ? formatDateDisplay(item.nextSessionDate) : "N/A"}</p>
-                        </div>
-                      ) : (
-                        <p className="mt-1 line-clamp-1 text-sm text-slate-500">
-                          {item.issuesDiscussed || "No issues recorded"}
-                        </p>
-                      )}
-                    </button>
                   );
                 })}
               </div>
@@ -1037,90 +806,7 @@ const EnterpriseTrackerDetails = () => {
           </div>
 
           <aside className="space-y-8">
-            <PortalCard icon={<Layers className="h-5 w-5" />} title="Tranche Stages" subtitle="Milestone-linked funding tranches for this startup.">
-              {!readOnly && (
-              <form
-                onSubmit={onAddTrancheStage}
-                className="mb-5 grid grid-cols-1 gap-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4"
-              >
-                <input
-                  className={baseInputClass}
-                  placeholder="Tranche title"
-                  value={trancheForm.title}
-                  onChange={(e) => setTrancheForm((prev) => ({ ...prev, title: e.target.value }))}
-                  required
-                />
-                <input
-                  className={baseInputClass}
-                  type="date"
-                  value={trancheForm.date}
-                  onChange={(e) => setTrancheForm((prev) => ({ ...prev, date: e.target.value }))}
-                  required
-                />
-                <input
-                  className={baseInputClass}
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="Amount (TZS)"
-                  value={trancheForm.amount}
-                  onChange={(e) => setTrancheForm((prev) => ({ ...prev, amount: e.target.value }))}
-                  required
-                />
-                <div className="flex justify-end">
-                  <button
-                    type="submit"
-                    disabled={isSavingTrancheStages}
-                    className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {isSavingTrancheStages ? "Saving..." : "Add tranche"}
-                  </button>
-                </div>
-              </form>
-              )}
-
-              <div className="space-y-3">
-                {trancheStages.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                    No tranche stages added yet.
-                  </div>
-                )}
-
-                {trancheStages.map((item, index) => (
-                  <div
-                    key={`${item.title}-${item.date}-${index}`}
-                    className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
-                  >
-                    <div className="min-w-0">
-                      <p className="truncate text-sm font-bold text-slate-950">{item.title}</p>
-                      <p className="text-xs text-slate-500">
-                        {formatDateDisplay(item.date)} • {formatCurrency(item.amount)}
-                      </p>
-                    </div>
-                    {!readOnly && (
-                      <button
-                        type="button"
-                        onClick={() => onRemoveTrancheStage(index)}
-                        disabled={isSavingTrancheStages}
-                        className="rounded-xl bg-rose-50 px-4 py-2 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-60"
-                      >
-                        Remove
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </PortalCard>
-
-            <SignedContractCard
-              contractUrl={enterprise?.signedContractUrl}
-              uploadedAt={enterprise?.signedContractUploadedAt}
-              acknowledgedAt={enterprise?.contractAcknowledgedAt}
-              signedUrl={enterprise?.startupSignedContractUrl}
-              contractName={enterprise?.name ? `Grant Agreement — ${enterprise.name}` : undefined}
-            />
-
-            <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Evidence and reporting documents submitted by the entrepreneur.">
+            <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Reporting documents submitted by the entrepreneur.">
               <div className="space-y-3">
                 {submittedDocuments.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
@@ -1128,149 +814,30 @@ const EnterpriseTrackerDetails = () => {
                   </div>
                 )}
 
+                {/* The row itself opens the document, so no separate View
+                    button is needed. */}
                 {submittedDocuments.map((document) => (
-                  <div
+                  <a
                     key={document.id}
-                    className="flex items-center justify-between rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
+                    href={document.url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition hover:border-slate-200 hover:shadow-md"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
-                      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#082d77]/5 text-[#082d77]">
-                        <UploadCloud className="h-5 w-5" />
-                      </div>
-                      <p className="truncate text-sm font-bold text-slate-950">{document.title}</p>
+                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-green-50 text-green-600">
+                      <UploadCloud className="h-5 w-5" />
                     </div>
-                    <a
-                      href={document.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs font-bold text-[#082d77] hover:text-[#061f54]"
-                    >
-                      View
-                    </a>
-                  </div>
+                    <p className="truncate text-sm font-bold text-slate-950">
+                      {document.title}
+                    </p>
+                  </a>
                 ))}
               </div>
             </PortalCard>
 
-            <PortalCard icon={<ShieldCheck className="h-5 w-5" />} title="Risk & Governance" subtitle="Current control signals for this startup.">
-              <div className="space-y-3">
-                <DataTile label="Business risk" value={getBusinessRiskLabel(enterprise?.flag)} />
-                <DataTile label="Submitted reports" value={submittedMilestones} />
-                <DataTile label="Overdue milestones" value={overdueMilestones} />
-                <DataTile
-                  label="Tranche stages"
-                  value={trancheStages.length}
-                  helper={formatCurrency(totalTrancheAmount)}
-                />
-              </div>
-            </PortalCard>
           </aside>
         </div>
       </main>
-
-      {showKpiModal && (
-        <div className={modalOverlayClass}>
-          <form onSubmit={onSubmitKpis} className={modalCardClass}>
-            <div className={modalHeaderClass}>
-              <div>
-                <h3 className="text-2xl font-black text-slate-950">KPIs — {enterprise?.name}</h3>
-                <p className="mt-1 text-sm text-slate-500">Update the operational indicators for this startup.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowKpiModal(false)}
-                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
-              >
-                ×
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
-              <div>
-                <FieldLabel>Monthly revenue (TZS)</FieldLabel>
-                <input className={baseInputClass} type="number" min="0" value={kpiForm.monthlyRevenue} onChange={(e) => setKpiForm((prev) => ({ ...prev, monthlyRevenue: e.target.value }))} />
-              </div>
-              <div>
-                <FieldLabel>Employees (FTE)</FieldLabel>
-                <input className={baseInputClass} type="number" min="0" value={kpiForm.employees} onChange={(e) => setKpiForm((prev) => ({ ...prev, employees: e.target.value }))} />
-              </div>
-              <div>
-                <FieldLabel>Active customers</FieldLabel>
-                <input className={baseInputClass} type="number" min="0" value={kpiForm.activeCustomers} onChange={(e) => setKpiForm((prev) => ({ ...prev, activeCustomers: e.target.value }))} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
-              <button type="button" onClick={() => setShowKpiModal(false)} className={modalCancelClass}>Cancel</button>
-              <button type="submit" className={modalSubmitClass}>Update KPIs</button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {showSessionModal && (
-        <div className={modalOverlayClass}>
-          <form onSubmit={onSubmitSession} className={modalCardClass}>
-            <div className={modalHeaderClass}>
-              <div>
-                <h3 className="text-2xl font-black text-slate-950">Log a coaching session</h3>
-                <p className="mt-1 text-sm text-slate-500">Record a coaching session for {enterprise?.name || "this startup"}.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setShowSessionModal(false)}
-                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
-              >
-                ×
-              </button>
-            </div>
-            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
-              <div>
-                <FieldLabel>Session date</FieldLabel>
-                <input className={baseInputClass} type="date" value={sessionForm.sessionDate} onChange={(e) => setSessionForm((prev) => ({ ...prev, sessionDate: e.target.value }))} required />
-              </div>
-              <div>
-                <FieldLabel>BDA / Facilitator</FieldLabel>
-                <input className={baseInputClass} placeholder="BDA / Facilitator" value={sessionForm.facilitator} onChange={(e) => setSessionForm((prev) => ({ ...prev, facilitator: e.target.value }))} />
-              </div>
-              <div>
-                <FieldLabel>Session type</FieldLabel>
-                <select className={baseInputClass} value={sessionForm.sessionType} onChange={(e) => setSessionForm((prev) => ({ ...prev, sessionType: e.target.value }))}>
-                  <option value="Weekly coaching">Weekly coaching</option>
-                  <option value="Financial advisory">Financial advisory</option>
-                  <option value="Milestone review">Milestone review</option>
-                </select>
-              </div>
-              <div>
-                <FieldLabel>Session status</FieldLabel>
-                <select className={baseInputClass} value={sessionForm.flag} onChange={(e) => setSessionForm((prev) => ({ ...prev, flag: e.target.value }))}>
-                  {FLAG_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="md:col-span-2">
-                <FieldLabel>Issues discussed</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Issues discussed" value={sessionForm.issuesDiscussed} onChange={(e) => setSessionForm((prev) => ({ ...prev, issuesDiscussed: e.target.value }))} />
-              </div>
-              <div className="md:col-span-2">
-                <FieldLabel>Recommendations given</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Recommendations given" value={sessionForm.recommendationsGiven} onChange={(e) => setSessionForm((prev) => ({ ...prev, recommendationsGiven: e.target.value }))} />
-              </div>
-              <div className="md:col-span-2">
-                <FieldLabel>Actions agreed</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Actions agreed" value={sessionForm.actionsAgreed} onChange={(e) => setSessionForm((prev) => ({ ...prev, actionsAgreed: e.target.value }))} />
-              </div>
-              <div>
-                <FieldLabel>Next session date</FieldLabel>
-                <input className={baseInputClass} type="date" value={sessionForm.nextSessionDate} onChange={(e) => setSessionForm((prev) => ({ ...prev, nextSessionDate: e.target.value }))} />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
-              <button type="button" onClick={() => setShowSessionModal(false)} className={modalCancelClass}>Cancel</button>
-              <button type="submit" className={modalSubmitClass}>Save coaching session</button>
-            </div>
-          </form>
-        </div>
-      )}
 
       {showMilestoneModal && (
         <div className={modalOverlayClass}>

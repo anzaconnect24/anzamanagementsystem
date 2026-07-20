@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import {
@@ -34,6 +34,9 @@ import {
   ClipboardList,
   FileText,
 } from "lucide-react";
+import TrancheGroupList, {
+  groupMilestonesByTranche,
+} from "@/components/tracker/TrancheGroupList";
 import {
   buildDescriptionWithMeta,
   parseTrackerProgramMeta,
@@ -54,6 +57,8 @@ const parseAttachments = (value) => {
   }
   return [];
 };
+
+const fmtTZS = (value) => `TZS ${Number(value || 0).toLocaleString()}`;
 
 const fmtDate = (value) => {
   if (!value) return "";
@@ -76,6 +81,17 @@ const TrackerStartupDetails = () => {
   const [enterprise, setEnterprise] = useState(null);
   const [milestones, setMilestones] = useState([]);
   const [reviewingId, setReviewingId] = useState("");
+  // The open tranche lives in the URL so it is its own page: the browser's back
+  // button returns to the tranche list and the view can be linked to.
+  // "" shows the list, "__all__" shows every milestone.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openTranche = searchParams.get("tranche") || "";
+  const setOpenTranche = (key) => {
+    const next = new URLSearchParams(searchParams);
+    if (key) next.set("tranche", key);
+    else next.delete("tranche");
+    setSearchParams(next);
+  };
   const [form, setForm] = useState({
     name: "",
     sector: "",
@@ -126,6 +142,10 @@ const TrackerStartupDetails = () => {
         entreprenuerUuid: member.entreprenuerUuid || "",
         businessUuid: member.businessUuid || "",
         tranches: Array.isArray(member.tranches) ? member.tranches : [],
+        // Contract mirrored into the markers on upload — read back here so it
+        // shows even when the enterprise record does not carry it.
+        signedContractUrl: member.signedContractUrl || "",
+        signedContractUploadedAt: member.signedContractUploadedAt || "",
       });
 
       const enterprises = Array.isArray(overview?.enterprises)
@@ -134,14 +154,32 @@ const TrackerStartupDetails = () => {
       const match = enterprises.find(
         (e) => (e?.Entreprenuer?.uuid || e?.entreprenuer_uuid) === entUuid,
       );
-      setEnterprise(match || null);
+      // The overview request is best-effort (its failure is swallowed above), so
+      // an empty result means "could not tell", not "no enterprise". Keep what we
+      // already resolved rather than erasing it and losing the contract.
+      setEnterprise((prev) => match || prev || null);
 
       // Milestones (set/approved by the BDA) + the startup's reports, so the
-      // finance officer can approve or decline the next tranche.
-      if (match?.uuid) {
+      // finance officer can approve or decline the next tranche. Fall back to an
+      // enterprise we already resolved: the overview is best-effort, and a miss
+      // must not blank the milestone list — that would hide every report the BDA
+      // has approved and sent here.
+      const detailUuid = match?.uuid || enterprise?.uuid || "";
+      if (detailUuid) {
         try {
-          const detail = await getMentorEnterpriseDetails(match.uuid);
+          const detail = await getMentorEnterpriseDetails(detailUuid);
           setMilestones(Array.isArray(detail?.milestones) ? detail.milestones : []);
+          // The overview list carries a summary of each enterprise, which omits
+          // fields like the grant contract. Prefer the full record the detail
+          // endpoint returns — it is the same one the BDA reads — so the
+          // contract shows here as well.
+          if (detail?.enterprise) {
+            setEnterprise((prev) => ({
+              ...(prev || {}),
+              ...(match || {}),
+              ...detail.enterprise,
+            }));
+          }
         } catch {
           setMilestones([]);
         }
@@ -175,6 +213,32 @@ const TrackerStartupDetails = () => {
       toast.error("This startup has no linked entrepreneur.");
       return;
     }
+    // Also record the contract on this startup's entry in the program markers.
+    // Those live inside the program description and are known to round-trip, so
+    // the contract survives even if the enterprise endpoint drops the fields.
+    const saveContractToMarkers = async (patch) => {
+      if (!program?.uuid) return;
+      const fresh = (await getProgram(program.uuid)) || program;
+      const meta = parseTrackerProgramMeta(fresh);
+      const startups = Array.isArray(meta.startups) ? [...meta.startups] : [];
+      const idx = startups.findIndex((s) => s.entreprenuerUuid === entUuid);
+      if (idx === -1) return;
+
+      startups[idx] = { ...startups[idx], ...patch };
+      await editProgram(program.uuid, {
+        title: fresh.title,
+        description: buildDescriptionWithMeta(
+          meta.cleanDescription,
+          meta.categories,
+          startups,
+        ),
+        programCategory: fresh.programCategory,
+        type: "grant",
+        startDate: fresh.startDate || null,
+        endDate: fresh.endDate || null,
+        image: fresh.image,
+      });
+    };
     setContractUploading(true);
     try {
       const formData = new FormData();
@@ -187,19 +251,33 @@ const TrackerStartupDetails = () => {
         signedContractUploadedAt: new Date().toISOString(),
       };
 
-      if (enterprise?.uuid) {
-        await updateMentorEnterprise(enterprise.uuid, contractFields);
-      } else {
-        await upsertMentorEnterprise({
-          entreprenuer_uuid: form.entreprenuerUuid,
-          program_uuid: programUuid,
-          name: form.name || undefined,
-          ...contractFields,
-        });
+      const saved = enterprise?.uuid
+        ? await updateMentorEnterprise(enterprise.uuid, contractFields)
+        : await upsertMentorEnterprise({
+            entreprenuer_uuid: form.entreprenuerUuid,
+            program_uuid: programUuid,
+            name: form.name || undefined,
+            ...contractFields,
+          });
+
+      // Best-effort: the enterprise write above is the primary channel, this is
+      // the durable fallback every role can read.
+      try {
+        await saveContractToMarkers(contractFields);
+      } catch {
+        // Non-fatal — the enterprise write may still have carried it.
       }
 
       toast.success("Contract uploaded");
       await loadDetails();
+
+      // Take the contract straight from the write's own response. The reload
+      // above re-derives `enterprise` from the program overview, which will not
+      // list an enterprise that was just created — without this the card would
+      // still read "Not uploaded yet" immediately after a successful upload.
+      if (saved?.uuid || saved?.signedContractUrl) {
+        setEnterprise((prev) => ({ ...(prev || {}), ...saved }));
+      }
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Failed to upload the contract",
@@ -304,8 +382,31 @@ const TrackerStartupDetails = () => {
     const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
     const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
     const next = tranches.find((t) => !isDisbursed(t)) || null;
-    return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
+    // Total scheduled across every tranche, disbursed or not — used to flag a
+    // schedule that over-allocates the committed amount.
+    const allocated = tranches.reduce((sum, t) => sum + Number(t.amount || 0), 0);
+    return {
+      committed,
+      disbursed,
+      remaining,
+      disbursedPct,
+      remainingPct,
+      next,
+      allocated,
+    };
   }, [form.grantUsd, form.disbursedAmount, form.tranches]);
+
+  const milestoneGroups = useMemo(
+    () => groupMilestonesByTranche(milestones, form.tranches),
+    [milestones, form.tranches],
+  );
+
+  const visibleMilestones = useMemo(() => {
+    if (openTranche === "__all__") return milestones;
+    return (
+      milestoneGroups.find((g) => g.key === openTranche)?.items || milestones
+    );
+  }, [openTranche, milestoneGroups, milestones]);
 
   const onSave = async () => {
     if (!program) return;
@@ -348,12 +449,15 @@ const TrackerStartupDetails = () => {
       // Mirror the configured tranches onto the startup's tracker enterprise so
       // the startup and their BDA see the same tranche stages (and can link
       // milestones to them). Staff/startup read tranches from the enterprise,
-      // not from the program markers.
+      // not from the program markers. The status travels with each stage so a
+      // released tranche reaches the startup on its own, without depending on a
+      // milestone being linked to it.
       const trancheStages = (Array.isArray(form.tranches) ? form.tranches : [])
         .map((t) => ({
           title: String(t.title || "").trim(),
           date: t.plannedDate ? String(t.plannedDate).slice(0, 10) : "",
           amount: Number(t.amount || 0),
+          status: isDisbursed(t) ? "Disbursed" : "Pending",
         }))
         .filter((t) => t.title);
 
@@ -367,10 +471,30 @@ const TrackerStartupDetails = () => {
           });
           enterpriseUuid = created?.uuid;
         } catch {
-          // Fall through — surfaced by the sync error toast below.
+          // Reported below — without an enterprise there is nothing to sync to.
         }
       }
+      if (!enterpriseUuid) {
+        // Everything above only wrote the program markers, which the startup
+        // cannot read. Say so plainly: otherwise finance sees "Startup updated"
+        // and their own cards fill in, while the startup's stay at zero.
+        toast.error(
+          "Saved for finance only — this startup has no tracker workspace yet, so the funds and tranches will not show on their dashboard.",
+        );
+      }
       if (enterpriseUuid) {
+        // The startup and BDA read the committed amount from the enterprise, not
+        // from the program markers, so mirror it there too.
+        try {
+          await updateMentorEnterprise(enterpriseUuid, {
+            grantUsd: Number(form.grantUsd || 0),
+          });
+        } catch {
+          toast.error(
+            "Committed amount saved for finance, but syncing it to the startup failed.",
+          );
+        }
+
         try {
           await updateMentorEnterpriseTrancheStages(enterpriseUuid, {
             trancheStages,
@@ -380,6 +504,36 @@ const TrackerStartupDetails = () => {
             "Tranches saved for finance, but syncing them to the startup failed.",
           );
         }
+      }
+
+      // Releasing a tranche here marks its linked milestone disbursed. That flag
+      // is the channel the startup and BDA read tranche progress from, so
+      // without it a tranche marked "Disbursed" would never reach them.
+      const releaseFailures = [];
+      for (const tranche of Array.isArray(form.tranches) ? form.tranches : []) {
+        if (!isDisbursed(tranche)) continue;
+
+        const title = String(tranche.title || "").trim();
+        const linked = milestones.find((m) => m.linkedTranche === title);
+        if (!title || !linked) continue;
+
+        const alreadyReleased =
+          String(linked.planStatus) === PLAN_STATUS.DISBURSED || linked.disbursed;
+        if (alreadyReleased) continue;
+
+        try {
+          await reviewTrackerMilestone(linked.uuid, {
+            planStatus: PLAN_STATUS.DISBURSED,
+            disbursed: true,
+          });
+        } catch {
+          releaseFailures.push(title);
+        }
+      }
+      if (releaseFailures.length) {
+        toast.error(
+          `Could not release ${releaseFailures.join(", ")} to the startup.`,
+        );
       }
 
       if (form.bdaUuid && form.entreprenuerUuid) {
@@ -478,11 +632,13 @@ const TrackerStartupDetails = () => {
       />
 
       <SignedContractCard
-        contractUrl={enterprise?.signedContractUrl}
-        uploadedAt={enterprise?.signedContractUploadedAt}
+        contractUrl={enterprise?.signedContractUrl || form.signedContractUrl}
+        uploadedAt={
+          enterprise?.signedContractUploadedAt || form.signedContractUploadedAt
+        }
         acknowledgedAt={enterprise?.contractAcknowledgedAt}
         signedUrl={enterprise?.startupSignedContractUrl}
-        contractName={form.name ? `Grant Agreement — ${form.name}` : undefined}
+        contractName={form.name || undefined}
         canUpload
         uploading={contractUploading}
         onUpload={onUploadContract}
@@ -523,7 +679,7 @@ const TrackerStartupDetails = () => {
                 disabled={saving}
                 className="rounded-lg bg-[#163b8f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0f2a66] disabled:opacity-60"
               >
-                {saving ? "Saving..." : "Save tranches"}
+                {saving ? "Saving..." : "Save changes"}
               </button>
             </div>
           ) : (
@@ -535,9 +691,41 @@ const TrackerStartupDetails = () => {
               }}
               className="rounded-lg bg-[#163b8f] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#0f2a66]"
             >
-              Configure tranches
+              Configure disbursement
             </button>
           )}
+        </div>
+
+        {/* Total grant committed. Drives the summary cards above: disbursed is
+            summed from the tranches below, and remaining / the percentages are
+            derived from both, so the cards follow disbursement automatically. */}
+        <div className="mb-5 rounded-xl border border-black/10 bg-[#f8fafc] p-4">
+          <label className={labelClass} htmlFor="grant-committed">
+            Total Grant Committed (TZS)
+          </label>
+          {editingTranches ? (
+            <input
+              id="grant-committed"
+              type="number"
+              min="0"
+              className={`${inputClass} md:max-w-xs`}
+              value={form.grantUsd ?? ""}
+              placeholder="0"
+              onChange={(e) =>
+                setForm((prev) => ({ ...prev, grantUsd: e.target.value }))
+              }
+            />
+          ) : (
+            <p className="text-xl font-black tracking-tight text-[#111827]">
+              {fmtTZS(stats.committed)}
+            </p>
+          )}
+          {stats.committed > 0 && stats.allocated > stats.committed ? (
+            <p className="mt-2 text-xs font-semibold text-rose-600">
+              Tranches exceed the committed amount by{" "}
+              {fmtTZS(stats.allocated - stats.committed)}.
+            </p>
+          ) : null}
         </div>
 
         {editingTranches ? (
@@ -679,7 +867,7 @@ const TrackerStartupDetails = () => {
         <div className="mb-1 flex items-center gap-2">
           <ClipboardList className="h-5 w-5 text-emerald-600" />
           <h2 className="text-lg font-black tracking-tight text-[#111827]">
-            Milestones &amp; Reports
+            Milestones and Reports
           </h2>
         </div>
         <p className="mb-4 text-sm text-[#64748b]">
@@ -687,13 +875,34 @@ const TrackerStartupDetails = () => {
           reports. Approve the next tranche once the plan is BDA-approved, or decline it.
         </p>
 
+        {/* Tranche picker — opens a tranche as its own view. Replaced by that
+            tranche's milestones once one is selected. */}
+        {milestones.length > 0 && !openTranche && (
+          <TrancheGroupList
+            title="Tranche Milestones"
+            groups={milestoneGroups.map((g) => ({
+              key: g.key,
+              title: `${g.title} Milestones`,
+            }))}
+            onSelect={setOpenTranche}
+            onViewAll={() => setOpenTranche("__all__")}
+            emptyText="No milestones have been set for this startup yet."
+          />
+        )}
+
+        {openTranche && (
+          <p className="mb-4 text-sm font-bold text-[#111827]">
+            {openTranche === "__all__" ? "All milestones" : openTranche}
+          </p>
+        )}
+
         {milestones.length === 0 ? (
           <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
             No milestones have been set for this startup yet.
           </div>
-        ) : (
+        ) : !openTranche ? null : (
           <div className="space-y-3">
-            {milestones.map((milestone) => {
+            {visibleMilestones.map((milestone) => {
               const ps = milestone.planStatus || "";
               const vs = milestone.verificationStatus || "";
               const disbursed =
@@ -702,6 +911,11 @@ const TrackerStartupDetails = () => {
               const attachments = parseAttachments(milestone.submissionAttachments);
               const kpis = parseKpiPlan(milestone.kpiPlan);
               const busy = reviewingId === milestone.uuid;
+              // The startup has sent a report the BDA has not ruled on yet. The
+              // BDA reviews first; it reaches finance as SENT_TO_FINANCE.
+              const reportAwaitingBda =
+                String(milestone.status || "").toLowerCase() === "submitted" &&
+                ps !== PLAN_STATUS.SENT_TO_FINANCE;
 
               return (
                 <div
@@ -742,6 +956,14 @@ const TrackerStartupDetails = () => {
                       <span className="font-semibold text-[#111827]">Report:</span>{" "}
                       {milestone.submissionNotes || "No report submitted yet."}
                     </p>
+                    {milestone.mentorReviewNotes && (
+                      <p className="mt-1 text-[#334155]">
+                        <span className="font-semibold text-[#111827]">
+                          BDA comment:
+                        </span>{" "}
+                        {milestone.mentorReviewNotes}
+                      </p>
+                    )}
                     {attachments.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
                         {attachments.map((url, i) => (
@@ -750,7 +972,7 @@ const TrackerStartupDetails = () => {
                             href={url}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#b7c5e5] bg-white px-3 py-1.5 text-xs font-semibold text-[#163b8f] hover:bg-[#163b8f]/5"
+                            className="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 transition hover:text-green-700"
                           >
                             <FileText className="h-3.5 w-3.5" />
                             Evidence {i + 1}
@@ -759,6 +981,14 @@ const TrackerStartupDetails = () => {
                       </div>
                     )}
                   </div>
+
+                  {/* A report the startup has sent but the BDA has not reviewed
+                      yet — finance waits for that verdict before acting. */}
+                  {reportAwaitingBda && (
+                    <p className="mt-3 text-xs font-semibold text-[#8a6500]">
+                      Report submitted — awaiting BDA review
+                    </p>
+                  )}
 
                   {/* KPI plan */}
                   {kpis.length > 0 && (
@@ -786,6 +1016,13 @@ const TrackerStartupDetails = () => {
 
                   {/* Finance action */}
                   <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-black/5 pt-3">
+                    {/* The BDA approved the startup's report and passed it here
+                        for the disbursement decision. */}
+                    {!disbursed && ps === PLAN_STATUS.SENT_TO_FINANCE && (
+                      <span className="mr-auto text-xs font-semibold text-[#163b8f]">
+                        Report approved by the BDA — awaiting your decision
+                      </span>
+                    )}
                     {disbursed ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e1f0d8] px-3 py-1 text-xs font-bold text-[#2d6e1f]">
                         <CheckCircle2 className="h-3.5 w-3.5" />

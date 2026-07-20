@@ -5,20 +5,9 @@ import { Briefcase, Layers, Wallet, CalendarDays } from "lucide-react";
 //
 // Props (a computed stats object):
 //   committed, disbursed, remaining, disbursedPct, remainingPct
-//   next        - the next (not-yet-disbursed) tranche { title, amount, plannedDate|date }
+//   next        - the next (not-yet-disbursed) tranche { title, amount }
 //   programName - shown on the committed card
 const fmtTZS = (value) => `TZS ${Number(value || 0).toLocaleString()}`;
-
-const fmtDate = (value) => {
-  if (!value) return "";
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return "";
-  return d.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  });
-};
 
 const StatCard = ({ icon, tint, label, value, sub }) => (
   <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
@@ -71,15 +60,7 @@ const GrantSummaryCards = ({
       tint="bg-violet-50 text-violet-600"
       label="Next Disbursement"
       value={fmtTZS(next?.amount || 0)}
-      sub={
-        next
-          ? `${next.title || "Next tranche"}${
-              next.plannedDate || next.date
-                ? ` • ${fmtDate(next.plannedDate || next.date)}`
-                : ""
-            }`
-          : "No upcoming tranche"
-      }
+      sub={next ? next.title || "Next tranche" : "No upcoming tranche"}
     />
   </div>
 );
