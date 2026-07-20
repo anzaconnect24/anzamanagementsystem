@@ -19,6 +19,7 @@ import { getStaffAssignedEntreprenuers } from "@/controllers/staffEntreprenuerCo
 import { getPrograms } from "@/controllers/program_controller";
 import {
   getMentorEnterpriseDetails,
+  listMentorEnterprises,
   upsertMentorEnterprise,
   updateMentorEnterprise,
   getEntrepreneurTrackerDashboard,
@@ -26,7 +27,10 @@ import {
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import { getBusiness } from "@/controllers/business_controller";
-import { getCatalog, getCurrentAssessment } from "@/controllers/crat_controller";
+import {
+  getCatalog,
+  getCurrentAssessment,
+} from "@/controllers/crat_controller";
 
 // Fix Leaflet default marker icons (bundlers strip the relative asset paths).
 delete L.Icon.Default.prototype._getIconUrl;
@@ -121,7 +125,9 @@ const parseListValue = (value) => {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          return parsed.map((item) => String(item || "").trim()).filter(Boolean);
+          return parsed
+            .map((item) => String(item || "").trim())
+            .filter(Boolean);
         }
       } catch (_) {
         // fall through to delimiter parsing
@@ -199,10 +205,20 @@ const EXCLUDED_PROGRAM_STAGE_LABELS = [
 ];
 
 const getProgramDisplayName = (program) =>
-  String(program?.title || program?.name || program?.programName || program?.programCategory || "").trim();
+  String(
+    program?.title ||
+      program?.name ||
+      program?.programName ||
+      program?.programCategory ||
+      "",
+  ).trim();
 
 const isExcludedProgramStageLabel = (value) =>
-  EXCLUDED_PROGRAM_STAGE_LABELS.includes(String(value || "").trim().toLowerCase());
+  EXCLUDED_PROGRAM_STAGE_LABELS.includes(
+    String(value || "")
+      .trim()
+      .toLowerCase(),
+  );
 
 const getEnterpriseProgramName = (enterprise) =>
   String(
@@ -219,7 +235,8 @@ const getEnterpriseEntrepreneurUuid = (enterprise) =>
 
 const getAssignedBusinessName = (assignment) => {
   const entrepreneur = assignment?.Entreprenuer;
-  const directBusinessName = entrepreneur?.Business?.name || entrepreneur?.business?.name;
+  const directBusinessName =
+    entrepreneur?.Business?.name || entrepreneur?.business?.name;
   if (directBusinessName) return directBusinessName;
 
   const businessList = Array.isArray(entrepreneur?.Businesses)
@@ -281,7 +298,9 @@ const parseDocuments = (value) => {
   if (typeof value === "string") {
     try {
       const parsed = JSON.parse(value);
-      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : {};
     } catch {
       return {};
     }
@@ -293,7 +312,9 @@ const baseInputClass =
   "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77] focus:ring-4 focus:ring-[#082d77]/20 disabled:bg-slate-50 disabled:text-slate-400";
 
 const FieldLabel = ({ children }) => (
-  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">{children}</label>
+  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">
+    {children}
+  </label>
 );
 
 const ProfileField = ({ label, value }) => (
@@ -306,12 +327,16 @@ const ProfileField = ({ label, value }) => (
 const ProfileText = ({ label, value }) => (
   <div className="rounded-2xl border border-slate-100 bg-slate-50/70 p-4">
     <p className="text-xs font-bold tracking-wide text-slate-400">{label}</p>
-    <p className="mt-1 whitespace-pre-line text-sm leading-7 text-slate-600">{value || "N/A"}</p>
+    <p className="mt-1 whitespace-pre-line text-sm leading-7 text-slate-600">
+      {value || "N/A"}
+    </p>
   </div>
 );
 
 const Card = ({ icon, title, subtitle, action, children, className = "" }) => (
-  <section className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}>
+  <section
+    className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}
+  >
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div className="flex items-start gap-3">
         {icon && (
@@ -320,8 +345,12 @@ const Card = ({ icon, title, subtitle, action, children, className = "" }) => (
           </div>
         )}
         <div>
-          <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>
-          {subtitle && <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>}
+          <h2 className="text-lg font-black tracking-tight text-slate-950">
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>
+          )}
         </div>
       </div>
       {action}
@@ -377,20 +406,35 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
   const readOnly = searchParams.get("view") === "1";
   // BDA/staff viewing an assigned entrepreneur's KYC before tracking is set up.
   const viewEntrepreneurUuid =
-    !isEntrepreneur && readOnly && !enterpriseUuid ? searchParams.get("entreprenuer") || "" : "";
+    !isEntrepreneur && readOnly && !enterpriseUuid
+      ? searchParams.get("entreprenuer") || ""
+      : "";
+  const viewEnterpriseUuid =
+    !isEntrepreneur && readOnly && !enterpriseUuid
+      ? searchParams.get("enterprise") || ""
+      : "";
+  const viewBusinessUuid =
+    !isEntrepreneur && readOnly && !enterpriseUuid
+      ? searchParams.get("business") || ""
+      : "";
   const isEntrepreneurKycView = Boolean(viewEntrepreneurUuid);
 
   // KYC (personal / business / documents) is filled by the entrepreneur only.
   // The mentor registers funding/program details and reviews KYC read-only.
   const kycEditable = isEntrepreneur && !readOnly;
-  const fundingEditable = !isEntrepreneur && !readOnly && !isEntrepreneurKycView;
+  const fundingEditable =
+    !isEntrepreneur && !readOnly && !isEntrepreneurKycView;
   const showFunding = !isEntrepreneur && !isEntrepreneurKycView;
   // Show KYC cards for the entrepreneur, an existing enterprise, or an
   // assigned-entrepreneur KYC view.
-  const showKyc = isEntrepreneur || Boolean(enterpriseUuid) || isEntrepreneurKycView;
+  const showKyc =
+    isEntrepreneur || Boolean(enterpriseUuid) || isEntrepreneurKycView;
   // BDA registering a brand-new startup (Set up tracking).
   const isRegisterFlow = !isEntrepreneur && !readOnly && !enterpriseUuid;
-  const backTarget = isEntrepreneur ? "/dashboard/myMilestones" : "/dashboard/mentorTracker";
+  const returnTo = searchParams.get("returnTo");
+  const backTarget =
+    returnTo ||
+    (isEntrepreneur ? "/dashboard/myMilestones" : "/dashboard/mentorTracker");
 
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -420,7 +464,8 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
           getCatalog(businessId),
           getCurrentAssessment(businessId),
         ]);
-        if (active) setCratAttachments(buildCratAttachmentMap(catalog, current));
+        if (active)
+          setCratAttachments(buildCratAttachmentMap(catalog, current));
       } catch (_) {
         if (active) setCratAttachments([]);
       }
@@ -454,9 +499,12 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
     });
   }, [cratAttachments]);
 
-  const isEditing = isEntrepreneur ? Boolean(ownEnterpriseUuid) : Boolean(enterpriseUuid);
+  const isEditing = isEntrepreneur
+    ? Boolean(ownEnterpriseUuid)
+    : Boolean(enterpriseUuid);
 
-  const setField = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
+  const setField = (key, value) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const assignedEntrepreneurOptions = useMemo(
     () =>
@@ -472,8 +520,17 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
   const programOptions = useMemo(
     () =>
       programs
-        .map((program) => ({ uuid: program.uuid, name: getProgramDisplayName(program) }))
-        .filter((program) => Boolean(program.uuid && program.name && !isExcludedProgramStageLabel(program.name))),
+        .map((program) => ({
+          uuid: program.uuid,
+          name: getProgramDisplayName(program),
+        }))
+        .filter((program) =>
+          Boolean(
+            program.uuid &&
+            program.name &&
+            !isExcludedProgramStageLabel(program.name),
+          ),
+        ),
     [programs],
   );
 
@@ -496,18 +553,21 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
       awardDate: formatDateForInput(enterprise.awardDate),
       firstName: enterprise.firstName || "",
       lastName: enterprise.lastName || "",
-      representativeEmail: enterprise.representativeEmail || enterprise.leadContact || "",
+      representativeEmail:
+        enterprise.representativeEmail || enterprise.leadContact || "",
       representativePhone: enterprise.representativePhone || "",
       gender: enterprise.gender || "",
       nationalId: enterprise.nationalId || "",
       tin: enterprise.tin || "",
-      registeredBusinessName: enterprise.registeredBusinessName || enterprise.name || "",
+      registeredBusinessName:
+        enterprise.registeredBusinessName || enterprise.name || "",
       displayName: enterprise.displayName || enterprise.name || "",
       businessPhone: enterprise.businessPhone || "",
       country: enterprise.country || "TANZANIA",
       district: enterprise.district || "",
       latitude: enterprise.latitude != null ? String(enterprise.latitude) : "",
-      longitude: enterprise.longitude != null ? String(enterprise.longitude) : "",
+      longitude:
+        enterprise.longitude != null ? String(enterprise.longitude) : "",
       businessDescription: enterprise.businessDescription || "",
       documents: parseDocuments(enterprise.documents),
     });
@@ -518,7 +578,10 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
   // Existing (saved) KYC values take precedence; only empty fields are filled.
   const applySignupDefaults = (user, business) => {
     if (!user && !business) return;
-    const parts = String(user?.name || "").trim().split(/\s+/).filter(Boolean);
+    const parts = String(user?.name || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
     const firstName = parts[0] || "";
     const lastName = parts.slice(1).join(" ");
     const biz = business || {};
@@ -544,10 +607,32 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
       formData.append("file", file);
       const url = await uploadFile(formData);
       if (typeof url === "string" && url.trim()) {
+        const nextDocuments = { ...form.documents, [name]: url.trim() };
         setForm((prev) => ({
           ...prev,
-          documents: { ...prev.documents, [name]: url.trim() },
+          documents: nextDocuments,
         }));
+
+        // Persist uploaded documents immediately so refresh does not lose them.
+        if (kycEditable) {
+          const saved = await updateEntrepreneurEnterpriseKyc({
+            ...form,
+            documents: nextDocuments,
+            enterpriseUuid: ownEnterpriseUuid,
+            leadContact:
+              form.representativeEmail ||
+              form.representativePhone ||
+              form.leadContact ||
+              "",
+            representativeName: `${form.firstName} ${form.lastName}`.trim(),
+          });
+
+          const savedUuid = saved?.uuid;
+          if (savedUuid && !ownEnterpriseUuid) {
+            setOwnEnterpriseUuid(savedUuid);
+          }
+        }
+
         // A manual upload replaces any CRAT-sourced file for this document.
         setCratSourced((current) => ({ ...current, [name]: false }));
         toast.success(`${name} uploaded`);
@@ -593,14 +678,21 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
           setBusinessProfile(business);
           applySignupDefaults(userDetails, business);
         } else {
-          const [ents, programsResponse, enterpriseResponse] = await Promise.all([
-            userDetails?.uuid ? getStaffAssignedEntreprenuers(userDetails.uuid) : Promise.resolve([]),
-            getPrograms(1, 500),
-            enterpriseUuid ? getMentorEnterpriseDetails(enterpriseUuid) : Promise.resolve(null),
-          ]);
+          const [ents, programsResponse, enterpriseResponse] =
+            await Promise.all([
+              userDetails?.uuid
+                ? getStaffAssignedEntreprenuers(userDetails.uuid)
+                : Promise.resolve([]),
+              getPrograms(1, 500),
+              enterpriseUuid
+                ? getMentorEnterpriseDetails(enterpriseUuid)
+                : Promise.resolve(null),
+            ]);
 
           setEntrepreneurs(Array.isArray(ents) ? ents : []);
-          const programList = Array.isArray(programsResponse?.data) ? programsResponse.data : [];
+          const programList = Array.isArray(programsResponse?.data)
+            ? programsResponse.data
+            : [];
           setPrograms(programList);
 
           const enterprise = enterpriseResponse?.enterprise;
@@ -608,8 +700,53 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
             fillFormFromEnterprise(enterprise, programList);
           } else if (isEntrepreneurKycView) {
             // Read-only KYC = the business details the entrepreneur entered.
+            if (viewEnterpriseUuid) {
+              try {
+                const specificEnterprise =
+                  await getMentorEnterpriseDetails(viewEnterpriseUuid);
+                if (specificEnterprise?.enterprise) {
+                  fillFormFromEnterprise(
+                    specificEnterprise.enterprise,
+                    programList,
+                  );
+                }
+              } catch {
+                // fallback to list lookup below
+              }
+            }
+
+            try {
+              const enterpriseList = await listMentorEnterprises();
+              const matchedEnterprise = (
+                Array.isArray(enterpriseList) ? enterpriseList : []
+              )
+                .filter((item) => {
+                  if (
+                    getEnterpriseEntrepreneurUuid(item) !== viewEntrepreneurUuid
+                  ) {
+                    return false;
+                  }
+                  if (!viewBusinessUuid) {
+                    return true;
+                  }
+                  return item?.Business?.uuid === viewBusinessUuid;
+                })
+                .sort(
+                  (a, b) =>
+                    new Date(b?.updatedAt || 0).getTime() -
+                    new Date(a?.updatedAt || 0).getTime(),
+                )[0];
+              if (matchedEnterprise) {
+                fillFormFromEnterprise(matchedEnterprise, programList);
+              }
+            } catch {
+              // fallback to signup/business defaults only
+            }
+
             const match = (Array.isArray(ents) ? ents : []).find(
-              (a) => (a?.Entreprenuer?.uuid || a?.entreprenuer_uuid) === viewEntrepreneurUuid,
+              (a) =>
+                (a?.Entreprenuer?.uuid || a?.entreprenuer_uuid) ===
+                viewEntrepreneurUuid,
             );
             const ent = match?.Entreprenuer || null;
             let business = ent?.Business || ent?.business || null;
@@ -632,8 +769,11 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
           }
         }
       } catch (error) {
-        toast.error(error?.response?.data?.message || "Failed to load KYC data");
-        if (!isEntrepreneur && enterpriseUuid) navigate("/dashboard/mentorTracker");
+        toast.error(
+          error?.response?.data?.message || "Failed to load KYC data",
+        );
+        if (!isEntrepreneur && enterpriseUuid)
+          navigate("/dashboard/mentorTracker");
       } finally {
         setLoading(false);
       }
@@ -666,7 +806,11 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
 
     const payload = {
       ...form,
-      leadContact: form.representativeEmail || form.representativePhone || form.leadContact || "",
+      leadContact:
+        form.representativeEmail ||
+        form.representativePhone ||
+        form.leadContact ||
+        "",
       representativeName: `${form.firstName} ${form.lastName}`.trim(),
     };
 
@@ -674,7 +818,10 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
       setIsSaving(true);
 
       if (isEntrepreneur) {
-        await updateEntrepreneurEnterpriseKyc({ ...payload, enterpriseUuid: ownEnterpriseUuid });
+        await updateEntrepreneurEnterpriseKyc({
+          ...payload,
+          enterpriseUuid: ownEnterpriseUuid,
+        });
         toast.success("KYC saved");
         navigate("/dashboard/myMilestones");
         return;
@@ -707,9 +854,16 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
 
   const lat = Number(form.latitude);
   const lng = Number(form.longitude);
-  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) && form.latitude !== "" && form.longitude !== "";
+  const hasCoords =
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    form.latitude !== "" &&
+    form.longitude !== "";
   const mapCenter = hasCoords ? [lat, lng] : DEFAULT_CENTER;
-  const coordinatesText = form.latitude && form.longitude ? `${form.latitude}, ${form.longitude}` : "";
+  const coordinatesText =
+    form.latitude && form.longitude
+      ? `${form.latitude}, ${form.longitude}`
+      : "";
 
   const heroTitle = isEntrepreneur
     ? "Complete your KYC"
@@ -745,7 +899,11 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
               disabled={isSaving}
               className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
             >
-              {isSaving ? "Saving..." : isEntrepreneur ? "Save KYC" : "Update startup"}
+              {isSaving
+                ? "Saving..."
+                : isEntrepreneur
+                  ? "Save KYC"
+                  : "Update startup"}
             </button>
           )}
         </div>
@@ -763,258 +921,403 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
               <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
               {isEntrepreneur ? "Enterprise Growth" : "Portfolio Support"}
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">{heroTitle}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">{heroSubtitle}</p>
+            <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
+              {heroTitle}
+            </h1>
+            <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
+              {heroSubtitle}
+            </p>
           </div>
         </section>
 
-        <div className={`grid grid-cols-1 gap-6 ${showKyc ? "xl:grid-cols-[1fr_360px]" : ""}`}>
+        <div
+          className={`grid grid-cols-1 gap-6 ${showKyc ? "xl:grid-cols-[1fr_360px]" : ""}`}
+        >
           <div className="space-y-6">
             {showKyc && (
-            <fieldset disabled={!kycEditable} className="contents">
-            <Card
-              icon={<User className="h-5 w-5" />}
-              title="Personal KYC"
-              subtitle="Your personal identity and verification status."
-              action={
-                kycEditable ? (
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#15803d] disabled:opacity-60"
-                  >
-                    <ShieldCheck className="h-4 w-4" />
-                    {isSaving ? "Saving..." : "Save Personal Details"}
-                  </button>
-                ) : null
-              }
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <div>
-                  <FieldLabel>First Name</FieldLabel>
-                  <input className={baseInputClass} value={form.firstName} onChange={(e) => setField("firstName", e.target.value)} placeholder="First name" />
-                </div>
-                <div>
-                  <FieldLabel>Last Name</FieldLabel>
-                  <input className={baseInputClass} value={form.lastName} onChange={(e) => setField("lastName", e.target.value)} placeholder="Last name" />
-                </div>
-                <div>
-                  <FieldLabel>Email Address</FieldLabel>
-                  <input type="email" className={baseInputClass} value={form.representativeEmail} onChange={(e) => setField("representativeEmail", e.target.value)} placeholder="name@gmail.com" />
-                </div>
-                <div>
-                  <FieldLabel>Primary Phone</FieldLabel>
-                  <input className={baseInputClass} value={form.representativePhone} onChange={(e) => setField("representativePhone", e.target.value)} placeholder="+255..." />
-                </div>
-                <div>
-                  <FieldLabel>Gender</FieldLabel>
-                  <select className={baseInputClass} value={form.gender} onChange={(e) => setField("gender", e.target.value)}>
-                    <option value="">Select gender</option>
-                    {GENDERS.map((item) => (
-                      <option key={item} value={item}>{item}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>National ID</FieldLabel>
-                  <input className={baseInputClass} value={form.nationalId} onChange={(e) => setField("nationalId", e.target.value)} placeholder="NIDA number" />
-                </div>
-                <div>
-                  <FieldLabel>TRA PIN</FieldLabel>
-                  <input className={baseInputClass} value={form.tin} onChange={(e) => setField("tin", e.target.value)} placeholder="TRA PIN / TIN" />
-                </div>
-              </div>
-            </Card>
+              <fieldset disabled={!kycEditable} className="contents">
+                <Card
+                  icon={<User className="h-5 w-5" />}
+                  title="Personal KYC"
+                  subtitle="Your personal identity and verification status."
+                  action={
+                    kycEditable ? (
+                      <button
+                        type="submit"
+                        disabled={isSaving}
+                        className="inline-flex items-center gap-2 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-[#15803d] disabled:opacity-60"
+                      >
+                        <ShieldCheck className="h-4 w-4" />
+                        {isSaving ? "Saving..." : "Save Personal Details"}
+                      </button>
+                    ) : null
+                  }
+                >
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                    <div>
+                      <FieldLabel>First Name</FieldLabel>
+                      <input
+                        className={baseInputClass}
+                        value={form.firstName}
+                        onChange={(e) => setField("firstName", e.target.value)}
+                        placeholder="First name"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>Last Name</FieldLabel>
+                      <input
+                        className={baseInputClass}
+                        value={form.lastName}
+                        onChange={(e) => setField("lastName", e.target.value)}
+                        placeholder="Last name"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>Email Address</FieldLabel>
+                      <input
+                        type="email"
+                        className={baseInputClass}
+                        value={form.representativeEmail}
+                        onChange={(e) =>
+                          setField("representativeEmail", e.target.value)
+                        }
+                        placeholder="name@gmail.com"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>Primary Phone</FieldLabel>
+                      <input
+                        className={baseInputClass}
+                        value={form.representativePhone}
+                        onChange={(e) =>
+                          setField("representativePhone", e.target.value)
+                        }
+                        placeholder="+255..."
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>Gender</FieldLabel>
+                      <select
+                        className={baseInputClass}
+                        value={form.gender}
+                        onChange={(e) => setField("gender", e.target.value)}
+                      >
+                        <option value="">Select gender</option>
+                        {GENDERS.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <FieldLabel>National ID</FieldLabel>
+                      <input
+                        className={baseInputClass}
+                        value={form.nationalId}
+                        onChange={(e) => setField("nationalId", e.target.value)}
+                        placeholder="NIDA number"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>TRA PIN</FieldLabel>
+                      <input
+                        className={baseInputClass}
+                        value={form.tin}
+                        onChange={(e) => setField("tin", e.target.value)}
+                        placeholder="TRA PIN / TIN"
+                      />
+                    </div>
+                  </div>
+                </Card>
 
-            {businessProfile && (
-              <Card
-                icon={<FileText className="h-5 w-5" />}
-                title="Business Profile"
-                subtitle="Details from the entrepreneur's business profile."
-                className="mt-12"
-              >
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                  <ProfileField label="Business name" value={businessProfile.name} />
-                  <ProfileField label="Country" value={businessProfile.country || "Tanzania"} />
-                  <ProfileField label="Region" value={businessProfile.location} />
-                  <ProfileField
-                    label="Sector"
-                    value={businessProfile.BusinessSector?.name || businessProfile.sector}
-                  />
-                  <ProfileField label="Stage" value={businessProfile.stage} />
-                  <ProfileField label="Registration" value={businessProfile.registration} />
-                  <ProfileField label="Annual revenue" value={businessProfile.revenue} />
-                  <ProfileField label="Team size" value={businessProfile.team} />
-                  <ProfileField label="Customers" value={businessProfile.numberOfCustomers} />
-                </div>
-                <div className="mt-4 space-y-3">
-                  <ProfileText label="Bio" value={businessProfile.description} />
-                  <ProfileText label="Problem" value={businessProfile.problem} />
-                  <ProfileText label="Solution" value={businessProfile.solution} />
-                  <ProfileText label="Traction" value={businessProfile.traction} />
-                  <ProfileText label="Target market" value={businessProfile.market} />
-                  <ProfileText label="Impact" value={businessProfile.impact} />
-                  <ProfileText label="Growth plan" value={businessProfile.growthPlan} />
-                  <ProfileText
-                    label="Fundraising needs"
-                    value={businessProfile.fundraisingNeeds}
-                  />
-                </div>
-              </Card>
-            )}
-            </fieldset>
+                {businessProfile && (
+                  <Card
+                    icon={<FileText className="h-5 w-5" />}
+                    title="Business Profile"
+                    subtitle="Details from the entrepreneur's business profile."
+                    className="mt-12"
+                  >
+                    <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+                      <ProfileField
+                        label="Business name"
+                        value={businessProfile.name}
+                      />
+                      <ProfileField
+                        label="Country"
+                        value={businessProfile.country || "Tanzania"}
+                      />
+                      <ProfileField
+                        label="Region"
+                        value={businessProfile.location}
+                      />
+                      <ProfileField
+                        label="Sector"
+                        value={
+                          businessProfile.BusinessSector?.name ||
+                          businessProfile.sector
+                        }
+                      />
+                      <ProfileField
+                        label="Stage"
+                        value={businessProfile.stage}
+                      />
+                      <ProfileField
+                        label="Registration"
+                        value={businessProfile.registration}
+                      />
+                      <ProfileField
+                        label="Annual revenue"
+                        value={businessProfile.revenue}
+                      />
+                      <ProfileField
+                        label="Team size"
+                        value={businessProfile.team}
+                      />
+                      <ProfileField
+                        label="Customers"
+                        value={businessProfile.numberOfCustomers}
+                      />
+                    </div>
+                    <div className="mt-4 space-y-3">
+                      <ProfileText
+                        label="Bio"
+                        value={businessProfile.description}
+                      />
+                      <ProfileText
+                        label="Problem"
+                        value={businessProfile.problem}
+                      />
+                      <ProfileText
+                        label="Solution"
+                        value={businessProfile.solution}
+                      />
+                      <ProfileText
+                        label="Traction"
+                        value={businessProfile.traction}
+                      />
+                      <ProfileText
+                        label="Target market"
+                        value={businessProfile.market}
+                      />
+                      <ProfileText
+                        label="Impact"
+                        value={businessProfile.impact}
+                      />
+                      <ProfileText
+                        label="Growth plan"
+                        value={businessProfile.growthPlan}
+                      />
+                      <ProfileText
+                        label="Fundraising needs"
+                        value={businessProfile.fundraisingNeeds}
+                      />
+                    </div>
+                  </Card>
+                )}
+              </fieldset>
             )}
 
             {showFunding && (
-            <fieldset disabled={!fundingEditable} className="contents">
-            <Card
-              icon={<FileText className="h-5 w-5" />}
-              title="Program & Funding"
-              subtitle="Funding context required to register this startup."
-            >
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                <div>
-                  <FieldLabel>Assigned entrepreneur *</FieldLabel>
-                  <select
-                    className={baseInputClass}
-                    value={form.entreprenuer_uuid}
-                    onChange={(e) => setField("entreprenuer_uuid", e.target.value)}
-                    disabled={isEditing}
-                    required={!isEditing}
-                  >
-                    <option value="">Select assigned entrepreneur</option>
-                    {assignedEntrepreneurOptions.map((item) => (
-                      <option key={item.uuid} value={item.uuid}>{item.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>Anza program undergone *</FieldLabel>
-                  <select
-                    className={baseInputClass}
-                    value={form.program_uuid}
-                    onChange={(e) => {
-                      const nextProgramUuid = e.target.value;
-                      const nextProgram = programs.find((item) => item.uuid === nextProgramUuid) || null;
-                      setForm((prev) => ({
-                        ...prev,
-                        program_uuid: nextProgramUuid,
-                        category: getProgramDisplayName(nextProgram),
-                      }));
-                    }}
-                    required={!isEditing}
-                  >
-                    <option value="">Select program</option>
-                    {programOptions.map((item) => (
-                      <option key={item.uuid} value={item.uuid}>{item.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>Sector</FieldLabel>
-                  <select className={baseInputClass} value={form.ceSector} onChange={(e) => setField("ceSector", e.target.value)}>
-                    <option value="">Select sector</option>
-                    {CE_SECTORS.map((sector) => (
-                      <option key={sector} value={sector}>{sector}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>Assigned BDA</FieldLabel>
-                  <input className={baseInputClass} value={form.assignedBda} onChange={(e) => setField("assignedBda", e.target.value)} placeholder="Assigned BDA" />
-                </div>
-                <div>
-                  <FieldLabel>Grant (TZS)</FieldLabel>
-                  <input type="number" min="0" className={baseInputClass} value={form.grantUsd} onChange={(e) => setField("grantUsd", e.target.value)} placeholder="0" />
-                </div>
-                <div>
-                  <FieldLabel>Award date</FieldLabel>
-                  <input type="date" className={baseInputClass} value={formatDateForInput(form.awardDate)} onChange={(e) => setField("awardDate", e.target.value)} />
-                </div>
-                <div className="md:col-span-2">
-                  <FieldLabel>Business description</FieldLabel>
-                  <textarea className={`${baseInputClass} min-h-[110px] resize-y`} value={form.businessDescription} onChange={(e) => setField("businessDescription", e.target.value)} placeholder="Brief description of the business" />
-                </div>
-              </div>
-            </Card>
-            </fieldset>
+              <fieldset disabled={!fundingEditable} className="contents">
+                <Card
+                  icon={<FileText className="h-5 w-5" />}
+                  title="Program & Funding"
+                  subtitle="Funding context required to register this startup."
+                >
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div>
+                      <FieldLabel>Assigned entrepreneur *</FieldLabel>
+                      <select
+                        className={baseInputClass}
+                        value={form.entreprenuer_uuid}
+                        onChange={(e) =>
+                          setField("entreprenuer_uuid", e.target.value)
+                        }
+                        disabled={isEditing}
+                        required={!isEditing}
+                      >
+                        <option value="">Select assigned entrepreneur</option>
+                        {assignedEntrepreneurOptions.map((item) => (
+                          <option key={item.uuid} value={item.uuid}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <FieldLabel>Anza program undergone *</FieldLabel>
+                      <select
+                        className={baseInputClass}
+                        value={form.program_uuid}
+                        onChange={(e) => {
+                          const nextProgramUuid = e.target.value;
+                          const nextProgram =
+                            programs.find(
+                              (item) => item.uuid === nextProgramUuid,
+                            ) || null;
+                          setForm((prev) => ({
+                            ...prev,
+                            program_uuid: nextProgramUuid,
+                            category: getProgramDisplayName(nextProgram),
+                          }));
+                        }}
+                        required={!isEditing}
+                      >
+                        <option value="">Select program</option>
+                        {programOptions.map((item) => (
+                          <option key={item.uuid} value={item.uuid}>
+                            {item.name}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <FieldLabel>Sector</FieldLabel>
+                      <select
+                        className={baseInputClass}
+                        value={form.ceSector}
+                        onChange={(e) => setField("ceSector", e.target.value)}
+                      >
+                        <option value="">Select sector</option>
+                        {CE_SECTORS.map((sector) => (
+                          <option key={sector} value={sector}>
+                            {sector}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <FieldLabel>Assigned BDA</FieldLabel>
+                      <input
+                        className={baseInputClass}
+                        value={form.assignedBda}
+                        onChange={(e) =>
+                          setField("assignedBda", e.target.value)
+                        }
+                        placeholder="Assigned BDA"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>Grant (TZS)</FieldLabel>
+                      <input
+                        type="number"
+                        min="0"
+                        className={baseInputClass}
+                        value={form.grantUsd}
+                        onChange={(e) => setField("grantUsd", e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <FieldLabel>Award date</FieldLabel>
+                      <input
+                        type="date"
+                        className={baseInputClass}
+                        value={formatDateForInput(form.awardDate)}
+                        onChange={(e) => setField("awardDate", e.target.value)}
+                      />
+                    </div>
+                    <div className="md:col-span-2">
+                      <FieldLabel>Business description</FieldLabel>
+                      <textarea
+                        className={`${baseInputClass} min-h-[110px] resize-y`}
+                        value={form.businessDescription}
+                        onChange={(e) =>
+                          setField("businessDescription", e.target.value)
+                        }
+                        placeholder="Brief description of the business"
+                      />
+                    </div>
+                  </div>
+                </Card>
+              </fieldset>
             )}
           </div>
 
           {showKyc && (
-          <aside>
-            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70">
-              <h2 className="text-lg font-black tracking-tight text-slate-950">Documents</h2>
-              <p className="mt-1 text-sm leading-6 text-slate-500">
-                {kycEditable
-                  ? "Upload clear digital copies of your official documents."
-                  : "Documents submitted by the entrepreneur."}
-              </p>
+            <aside>
+              <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70">
+                <h2 className="text-lg font-black tracking-tight text-slate-950">
+                  Documents
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-slate-500">
+                  {kycEditable
+                    ? "Upload clear digital copies of your official documents."
+                    : "Documents submitted by the entrepreneur."}
+                </p>
 
-              <div className="mt-5 space-y-3">
-                {DOCUMENTS.map((name) => {
-                  const url = form.documents?.[name];
-                  const isUploading = uploadingDoc === name;
-                  const statusLabel = isUploading
-                    ? "Uploading..."
-                    : url
-                      ? "Attached"
-                      : "Not attached";
-                  return (
-                    <div
-                      key={name}
-                      className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#082d77]/5 text-[#082d77]">
-                          <FileText className="h-5 w-5" />
+                <div className="mt-5 space-y-3">
+                  {DOCUMENTS.map((name) => {
+                    const url = form.documents?.[name];
+                    const isUploading = uploadingDoc === name;
+                    const statusLabel = isUploading
+                      ? "Uploading..."
+                      : url
+                        ? "Attached"
+                        : "Not attached";
+                    return (
+                      <div
+                        key={name}
+                        className="flex items-center justify-between gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm"
+                      >
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[#082d77]/5 text-[#082d77]">
+                            <FileText className="h-5 w-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-bold text-slate-950">
+                              {name}
+                            </p>
+                            <p
+                              className={`text-[10px] font-black tracking-wide ${url ? "text-[#16a34a]" : "text-slate-400"}`}
+                            >
+                              {statusLabel}
+                            </p>
+                          </div>
                         </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-bold text-slate-950">{name}</p>
-                          <p
-                            className={`text-[10px] font-black tracking-wide ${url ? "text-[#16a34a]" : "text-slate-400"}`}
-                          >
-                            {statusLabel}
-                          </p>
+                        <div className="flex shrink-0 items-center gap-2">
+                          {kycEditable && (
+                            <label
+                              className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-[#16a34a] transition hover:bg-slate-50"
+                              title={url ? "Replace" : "Upload"}
+                            >
+                              <UploadCloud className="h-4 w-4" />
+                              <input
+                                type="file"
+                                className="hidden"
+                                disabled={isUploading}
+                                onChange={(e) =>
+                                  onUploadDocument(name, e.target.files?.[0])
+                                }
+                              />
+                            </label>
+                          )}
+                          {url ? (
+                            <a
+                              href={url}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="grid h-7 w-7 place-items-center rounded-lg text-[#082d77] transition hover:bg-slate-50"
+                              title="View"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </a>
+                          ) : (
+                            <span
+                              className="grid h-7 w-7 place-items-center rounded-lg text-slate-300"
+                              title="No file"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </span>
+                          )}
                         </div>
                       </div>
-                      <div className="flex shrink-0 items-center gap-2">
-                        {kycEditable && (
-                          <label
-                            className="grid h-7 w-7 cursor-pointer place-items-center rounded-lg text-[#16a34a] transition hover:bg-slate-50"
-                            title={url ? "Replace" : "Upload"}
-                          >
-                            <UploadCloud className="h-4 w-4" />
-                            <input
-                              type="file"
-                              className="hidden"
-                              disabled={isUploading}
-                              onChange={(e) => onUploadDocument(name, e.target.files?.[0])}
-                            />
-                          </label>
-                        )}
-                        {url ? (
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="grid h-7 w-7 place-items-center rounded-lg text-[#082d77] transition hover:bg-slate-50"
-                            title="View"
-                          >
-                            <Eye className="h-4 w-4" />
-                          </a>
-                        ) : (
-                          <span className="grid h-7 w-7 place-items-center rounded-lg text-slate-300" title="No file">
-                            <Eye className="h-4 w-4" />
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </section>
-          </aside>
+                    );
+                  })}
+                </div>
+              </section>
+            </aside>
           )}
         </div>
 

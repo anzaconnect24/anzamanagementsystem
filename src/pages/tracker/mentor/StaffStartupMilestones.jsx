@@ -2,7 +2,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Loader from "@/components/common/Loader";
 import GrantSummaryCards from "@/components/tracker/GrantSummaryCards";
-import { listTrackerMilestones } from "@/controllers/trackerController";
+import {
+  getMentorEnterpriseDetails,
+  listMentorEnterprises,
+  listTrackerMilestones,
+} from "@/controllers/trackerController";
 import { PLAN_STATUS } from "@/utils/trancheWorkflow";
 import { ArrowLeft, ClipboardList } from "lucide-react";
 
@@ -16,6 +20,7 @@ const StaffStartupMilestones = () => {
   const { entUuid } = useParams();
   const [searchParams] = useSearchParams();
   const businessUuid = searchParams.get("business") || "";
+  const enterpriseUuid = searchParams.get("enterprise") || "";
   const name = searchParams.get("name") || "Startup";
 
   const [loading, setLoading] = useState(true);
@@ -26,8 +31,43 @@ const StaffStartupMilestones = () => {
     (async () => {
       setLoading(true);
       try {
-        const data = await listTrackerMilestones();
-        const list = Array.isArray(data) ? data : data?.body || [];
+        let list = [];
+
+        // Prefer the exact tracker enterprise detail payload. This is the same
+        // source used by the startup and finance pages, so it stays aligned
+        // even when the generic milestones endpoint is filtered differently.
+        try {
+          const enterpriseRows = await listMentorEnterprises();
+          const enterprise = (
+            Array.isArray(enterpriseRows) ? enterpriseRows : []
+          ).find((item) => {
+            const itemEntUuid =
+              item?.Entreprenuer?.uuid || item?.entreprenuer_uuid;
+            const itemBusinessUuid = item?.Business?.uuid || item?.businessUuid;
+            return (
+              itemEntUuid === entUuid &&
+              (!businessUuid || itemBusinessUuid === businessUuid)
+            );
+          });
+
+          if (enterprise?.uuid) {
+            const detail = await getMentorEnterpriseDetails(enterprise.uuid);
+            list = Array.isArray(detail?.milestones) ? detail.milestones : [];
+          }
+        } catch {
+          list = [];
+        }
+
+        // Fallback to the generic milestones endpoint only if the enterprise
+        // detail lookup returned nothing.
+        if ((!Array.isArray(list) || list.length === 0) && entUuid) {
+          const data = await listTrackerMilestones({
+            entreprenuer_uuid: entUuid,
+            business_uuid: businessUuid,
+          });
+          list = Array.isArray(data) ? data : data?.body || [];
+        }
+
         if (active) setMilestones(Array.isArray(list) ? list : []);
       } finally {
         if (active) setLoading(false);
@@ -74,7 +114,14 @@ const StaffStartupMilestones = () => {
     const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
     const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
     const next = tranches.find((t) => !t.disbursed) || null;
-    return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
+    return {
+      committed,
+      disbursed,
+      remaining,
+      disbursedPct,
+      remainingPct,
+      next,
+    };
   }, [rows]);
 
   if (loading) return <Loader />;
@@ -117,7 +164,7 @@ const StaffStartupMilestones = () => {
                 navigate(
                   `/dashboard/mentorTracker/enterprise-kyc?entreprenuer=${entUuid}${
                     businessUuid ? `&business=${businessUuid}` : ""
-                  }&view=1`,
+                  }${enterpriseUuid ? `&enterprise=${enterpriseUuid}` : ""}&view=1`,
                 )
               }
               className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/25 disabled:opacity-50"

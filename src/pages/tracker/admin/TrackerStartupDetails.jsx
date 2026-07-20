@@ -5,6 +5,7 @@ import Loader from "@/components/common/Loader";
 import {
   getTrackerProgramOverview,
   getMentorEnterpriseDetails,
+  listTrackerMilestones,
   reviewTrackerMilestone,
   updateMentorEnterprise,
   upsertMentorEnterprise,
@@ -40,7 +41,8 @@ import {
 } from "@/utils/trackerProgramMarkers";
 
 const labelClass = "mb-1 block text-xs font-semibold text-[#64748b]";
-const inputClass = "w-full rounded-lg border border-[#b7c5e5] px-3 py-2 text-sm";
+const inputClass =
+  "w-full rounded-lg border border-[#b7c5e5] px-3 py-2 text-sm";
 
 const parseAttachments = (value) => {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -113,6 +115,21 @@ const TrackerStartupDetails = () => {
       const member = startups.find((s) => s.entreprenuerUuid === entUuid);
       if (!member) throw new Error("Startup not found in this program");
 
+      let scopedMilestones = [];
+      try {
+        const filteredMilestones = await listTrackerMilestones({
+          entreprenuer_uuid: member.entreprenuerUuid,
+          business_uuid: member.businessUuid,
+        });
+        scopedMilestones = Array.isArray(filteredMilestones)
+          ? filteredMilestones
+          : Array.isArray(filteredMilestones?.body)
+            ? filteredMilestones.body
+            : [];
+      } catch {
+        scopedMilestones = [];
+      }
+
       setForm({
         name: member.name || "",
         sector: member.sector || "",
@@ -128,12 +145,21 @@ const TrackerStartupDetails = () => {
         tranches: Array.isArray(member.tranches) ? member.tranches : [],
       });
 
-      const enterprises = Array.isArray(overview?.enterprises)
+      const enterpriseRows = Array.isArray(overview?.enterprises)
         ? overview.enterprises
         : [];
+
+      // Backend may return either raw enterprise records or wrapped rows
+      // shaped like { enterprise, sessions, milestones, stats }.
+      const enterprises = enterpriseRows
+        .map((row) => row?.enterprise || row)
+        .filter(Boolean);
+
       const match = enterprises.find(
-        (e) => (e?.Entreprenuer?.uuid || e?.entreprenuer_uuid) === entUuid,
+        (item) =>
+          (item?.Entreprenuer?.uuid || item?.entreprenuer_uuid) === entUuid,
       );
+
       setEnterprise(match || null);
 
       // Milestones (set/approved by the BDA) + the startup's reports, so the
@@ -141,12 +167,20 @@ const TrackerStartupDetails = () => {
       if (match?.uuid) {
         try {
           const detail = await getMentorEnterpriseDetails(match.uuid);
-          setMilestones(Array.isArray(detail?.milestones) ? detail.milestones : []);
+          const enterpriseMilestones = Array.isArray(detail?.milestones)
+            ? detail.milestones
+            : [];
+          setMilestones(
+            enterpriseMilestones.length
+              ? enterpriseMilestones
+              : scopedMilestones,
+          );
+          setEnterprise(detail?.enterprise || match);
         } catch {
-          setMilestones([]);
+          setMilestones(scopedMilestones);
         }
       } else {
-        setMilestones([]);
+        setMilestones(scopedMilestones);
       }
     } catch (error) {
       toast.error(
@@ -192,6 +226,7 @@ const TrackerStartupDetails = () => {
       } else {
         await upsertMentorEnterprise({
           entreprenuer_uuid: form.entreprenuerUuid,
+          mentor_uuid: form.bdaUuid || undefined,
           program_uuid: programUuid,
           name: form.name || undefined,
           ...contractFields,
@@ -283,7 +318,8 @@ const TrackerStartupDetails = () => {
 
   const balance = useMemo(
     () =>
-      Number(form.disbursedAmount || form.grantUsd || 0) - Number(form.utilized || 0),
+      Number(form.disbursedAmount || form.grantUsd || 0) -
+      Number(form.utilized || 0),
     [form.disbursedAmount, form.grantUsd, form.utilized],
   );
 
@@ -304,7 +340,14 @@ const TrackerStartupDetails = () => {
     const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
     const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
     const next = tranches.find((t) => !isDisbursed(t)) || null;
-    return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
+    return {
+      committed,
+      disbursed,
+      remaining,
+      disbursedPct,
+      remainingPct,
+      next,
+    };
   }, [form.grantUsd, form.disbursedAmount, form.tranches]);
 
   const onSave = async () => {
@@ -362,6 +405,7 @@ const TrackerStartupDetails = () => {
         try {
           const created = await upsertMentorEnterprise({
             entreprenuer_uuid: form.entreprenuerUuid,
+            mentor_uuid: form.bdaUuid || undefined,
             program_uuid: program.uuid,
             name: form.name || startups[idx]?.name || undefined,
           });
@@ -372,6 +416,13 @@ const TrackerStartupDetails = () => {
       }
       if (enterpriseUuid) {
         try {
+          if (form.bdaUuid) {
+            await updateMentorEnterprise(enterpriseUuid, {
+              mentor_uuid: form.bdaUuid,
+              assignedBda: form.bdaName || undefined,
+            });
+          }
+
           await updateMentorEnterpriseTrancheStages(enterpriseUuid, {
             trancheStages,
           });
@@ -396,7 +447,9 @@ const TrackerStartupDetails = () => {
       toast.success("Startup updated");
       loadDetails();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to save the startup");
+      toast.error(
+        error?.response?.data?.message || "Failed to save the startup",
+      );
     } finally {
       setSaving(false);
     }
@@ -408,7 +461,9 @@ const TrackerStartupDetails = () => {
     <div className="space-y-6 bg-[#eef2f8] px-6 py-6">
       <button
         type="button"
-        onClick={() => navigate(`/dashboard/trackerPrograms/${programUuid}/details`)}
+        onClick={() =>
+          navigate(`/dashboard/trackerPrograms/${programUuid}/details`)
+        }
         className="text-sm font-semibold text-[#163b8f]"
       >
         Back to program startups
@@ -441,7 +496,9 @@ const TrackerStartupDetails = () => {
                 navigate(
                   `/dashboard/mentorTracker/enterprise-kyc?entreprenuer=${form.entreprenuerUuid}${
                     form.businessUuid ? `&business=${form.businessUuid}` : ""
-                  }&view=1`,
+                  }${enterprise?.uuid ? `&enterprise=${enterprise.uuid}` : ""}&view=1&returnTo=${encodeURIComponent(
+                    `/dashboard/trackerPrograms/${programUuid}/startup/${entUuid}`,
+                  )}`,
                 )
               }
               className="rounded-lg bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/25 disabled:opacity-50"
@@ -492,7 +549,9 @@ const TrackerStartupDetails = () => {
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-5 w-5 text-emerald-600" />
-            <h2 className="text-lg font-black tracking-tight text-[#111827]">Grant Disbursement</h2>
+            <h2 className="text-lg font-black tracking-tight text-[#111827]">
+              Grant Disbursement
+            </h2>
           </div>
           {editingTranches ? (
             <div className="flex items-center gap-2">
@@ -544,7 +603,8 @@ const TrackerStartupDetails = () => {
           <div className="space-y-3">
             {(form.tranches || []).length === 0 ? (
               <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
-                No tranches yet. Use “Add tranche” to create the disbursement schedule.
+                No tranches yet. Use “Add tranche” to create the disbursement
+                schedule.
               </div>
             ) : (
               (form.tranches || []).map((tranche, index) => (
@@ -559,7 +619,9 @@ const TrackerStartupDetails = () => {
                       className={inputClass}
                       value={tranche.title || ""}
                       placeholder={`Tranche ${index + 1}`}
-                      onChange={(e) => setTranche(index, "title", e.target.value)}
+                      onChange={(e) =>
+                        setTranche(index, "title", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -569,7 +631,9 @@ const TrackerStartupDetails = () => {
                       min="0"
                       className={inputClass}
                       value={tranche.amount || ""}
-                      onChange={(e) => setTranche(index, "amount", e.target.value)}
+                      onChange={(e) =>
+                        setTranche(index, "amount", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -578,7 +642,9 @@ const TrackerStartupDetails = () => {
                       type="date"
                       className={inputClass}
                       value={tranche.plannedDate || ""}
-                      onChange={(e) => setTranche(index, "plannedDate", e.target.value)}
+                      onChange={(e) =>
+                        setTranche(index, "plannedDate", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -587,7 +653,9 @@ const TrackerStartupDetails = () => {
                       type="date"
                       className={inputClass}
                       value={tranche.actualDate || ""}
-                      onChange={(e) => setTranche(index, "actualDate", e.target.value)}
+                      onChange={(e) =>
+                        setTranche(index, "actualDate", e.target.value)
+                      }
                     />
                   </div>
                   <div>
@@ -595,7 +663,9 @@ const TrackerStartupDetails = () => {
                     <select
                       className={inputClass}
                       value={tranche.status || "Pending"}
-                      onChange={(e) => setTranche(index, "status", e.target.value)}
+                      onChange={(e) =>
+                        setTranche(index, "status", e.target.value)
+                      }
                     >
                       <option value="Pending">Pending</option>
                       <option value="Disbursed">Disbursed</option>
@@ -615,8 +685,8 @@ const TrackerStartupDetails = () => {
           </div>
         ) : (form.tranches || []).length === 0 ? (
           <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
-            No disbursement tranches configured yet. Click “Configure tranches” to set the
-            schedule and planned disbursement dates.
+            No disbursement tranches configured yet. Click “Configure tranches”
+            to set the schedule and planned disbursement dates.
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -683,8 +753,9 @@ const TrackerStartupDetails = () => {
           </h2>
         </div>
         <p className="mb-4 text-sm text-[#64748b]">
-          Milestones set and approved by the business development advisor, with the startup's
-          reports. Approve the next tranche once the plan is BDA-approved, or decline it.
+          Milestones set and approved by the business development advisor, with
+          the startup's reports. Approve the next tranche once the plan is
+          BDA-approved, or decline it.
         </p>
 
         {milestones.length === 0 ? (
@@ -699,7 +770,9 @@ const TrackerStartupDetails = () => {
               const disbursed =
                 ps === PLAN_STATUS.DISBURSED || Boolean(milestone.disbursed);
               const disbursable = canDisburse(ps, disbursed);
-              const attachments = parseAttachments(milestone.submissionAttachments);
+              const attachments = parseAttachments(
+                milestone.submissionAttachments,
+              );
               const kpis = parseKpiPlan(milestone.kpiPlan);
               const busy = reviewingId === milestone.uuid;
 
@@ -710,10 +783,14 @@ const TrackerStartupDetails = () => {
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
-                      <p className="font-bold text-[#111827]">{milestone.title}</p>
+                      <p className="font-bold text-[#111827]">
+                        {milestone.title}
+                      </p>
                       <p className="mt-1 text-xs text-[#64748b]">
-                        Due {milestone.dueDate ? fmtDate(milestone.dueDate) : "N/A"}
-                        {milestone.linkedTranche && milestone.linkedTranche !== "None"
+                        Due{" "}
+                        {milestone.dueDate ? fmtDate(milestone.dueDate) : "N/A"}
+                        {milestone.linkedTranche &&
+                        milestone.linkedTranche !== "None"
                           ? ` • Linked tranche: ${milestone.linkedTranche}`
                           : ""}
                       </p>
@@ -739,7 +816,9 @@ const TrackerStartupDetails = () => {
                   {/* Report */}
                   <div className="mt-3 rounded-lg bg-[#f8fafc] p-3 text-sm">
                     <p className="text-[#334155]">
-                      <span className="font-semibold text-[#111827]">Report:</span>{" "}
+                      <span className="font-semibold text-[#111827]">
+                        Report:
+                      </span>{" "}
                       {milestone.submissionNotes || "No report submitted yet."}
                     </p>
                     {attachments.length > 0 && (
@@ -774,9 +853,15 @@ const TrackerStartupDetails = () => {
                         <tbody>
                           {kpis.map((kpi, i) => (
                             <tr key={i} className="border-t border-black/5">
-                              <td className="py-1 pr-3 text-[#334155]">{kpi.name || "—"}</td>
-                              <td className="py-1 pr-3 text-[#334155]">{kpi.target || "—"}</td>
-                              <td className="py-1 text-[#334155]">{kpi.currentValue || "—"}</td>
+                              <td className="py-1 pr-3 text-[#334155]">
+                                {kpi.name || "—"}
+                              </td>
+                              <td className="py-1 pr-3 text-[#334155]">
+                                {kpi.target || "—"}
+                              </td>
+                              <td className="py-1 text-[#334155]">
+                                {kpi.currentValue || "—"}
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -819,7 +904,9 @@ const TrackerStartupDetails = () => {
                         </button>
                       </>
                     ) : ps === PLAN_STATUS.REJECTED ? (
-                      <span className="text-xs font-semibold text-rose-600">Declined</span>
+                      <span className="text-xs font-semibold text-rose-600">
+                        Declined
+                      </span>
                     ) : ps === PLAN_STATUS.REVISION_REQUESTED ? (
                       <span className="text-xs font-semibold text-[#8a6500]">
                         Information requested from the startup

@@ -7,7 +7,8 @@ import {
   editProgram,
   getPrograms,
 } from "@/controllers/program_controller";
-import { getEnterprenuers } from "@/controllers/user_controller";
+import { assignEntreprenuerToStaff } from "@/controllers/staffEntreprenuerController";
+import { getEnterprenuers, getReviewers } from "@/controllers/user_controller";
 import { isTrackerProgram } from "@/utils/programMeta";
 
 const PROGRAM_CATEGORIES = [
@@ -66,7 +67,10 @@ const normalizeCategories = (categories = []) => {
 const parseMarkerJson = (text, marker) => {
   const idx = text.lastIndexOf(marker);
   if (idx === -1) return [];
-  const line = text.slice(idx + marker.length).split("\n")[0].trim();
+  const line = text
+    .slice(idx + marker.length)
+    .split("\n")[0]
+    .trim();
   try {
     const value = JSON.parse(line);
     return Array.isArray(value) ? value : [];
@@ -83,7 +87,9 @@ const parseTrackerProgramMeta = (program) => {
   ].filter((i) => i >= 0);
   const firstMarker = indices.length ? Math.min(...indices) : -1;
   const cleanDescription =
-    firstMarker === -1 ? rawDescription : rawDescription.slice(0, firstMarker).trim();
+    firstMarker === -1
+      ? rawDescription
+      : rawDescription.slice(0, firstMarker).trim();
 
   const categories = normalizeCategories([
     ...parseMarkerJson(rawDescription, TRACKER_CATEGORIES_MARKER),
@@ -119,15 +125,30 @@ const TrackerPrograms = () => {
   const [form, setForm] = useState(emptyForm);
   const [categoryInput, setCategoryInput] = useState("");
   const [pool, setPool] = useState([]);
+  const [staffs, setStaffs] = useState([]);
   const [poolSearch, setPoolSearch] = useState("");
 
   useEffect(() => {
-    getEnterprenuers(1000, 1, " ")
-      .then((body) => {
-        const list = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
-        setPool(list);
+    Promise.all([getEnterprenuers(1000, 1, " "), getReviewers(50, 1)])
+      .then(([entrepreneurBody, staffBody]) => {
+        const startupList = Array.isArray(entrepreneurBody)
+          ? entrepreneurBody
+          : Array.isArray(entrepreneurBody?.data)
+            ? entrepreneurBody.data
+            : [];
+        const staffList = Array.isArray(staffBody)
+          ? staffBody
+          : Array.isArray(staffBody?.data)
+            ? staffBody.data
+            : [];
+
+        setPool(startupList);
+        setStaffs(staffList);
       })
-      .catch(() => setPool([]));
+      .catch(() => {
+        setPool([]);
+        setStaffs([]);
+      });
   }, []);
 
   const toStartupMember = (item) => ({
@@ -139,6 +160,8 @@ const TrackerPrograms = () => {
     grantUsd: "",
     disbursedAmount: "",
     grantPurpose: "",
+    mentorUuid: "",
+    mentorName: "",
     bdaUuid: "",
     bdaName: "",
     utilized: "",
@@ -150,9 +173,32 @@ const TrackerPrograms = () => {
   const isStartupSelected = (uuid) =>
     (form.startups || []).some((s) => s.entreprenuerUuid === uuid);
 
+  const setStartupStaff = (entreprenuerUuid, staff) => {
+    const staffUuid = staff?.uuid || "";
+    const staffName = staff?.name || staff?.email || "";
+
+    setForm((prev) => ({
+      ...prev,
+      startups: (prev.startups || []).map((startup) =>
+        startup.entreprenuerUuid === entreprenuerUuid
+          ? {
+              ...startup,
+              mentorUuid: staffUuid,
+              mentorName: staffName,
+              // Keep legacy BDA fields in sync for existing pages.
+              bdaUuid: staffUuid,
+              bdaName: staffName,
+            }
+          : startup,
+      ),
+    }));
+  };
+
   const toggleStartup = (item) =>
     setForm((prev) => {
-      const exists = (prev.startups || []).some((s) => s.entreprenuerUuid === item.uuid);
+      const exists = (prev.startups || []).some(
+        (s) => s.entreprenuerUuid === item.uuid,
+      );
       return {
         ...prev,
         startups: exists
@@ -170,7 +216,9 @@ const TrackerPrograms = () => {
       // carry the tracker metadata markers). Learn-and-grow courses such as
       // BFA and Investment Readiness are excluded — they live under Classes.
       if (Array.isArray(response?.data)) {
-        setPrograms(response.data.filter((program) => isTrackerProgram(program)));
+        setPrograms(
+          response.data.filter((program) => isTrackerProgram(program)),
+        );
       } else {
         setPrograms([]);
       }
@@ -296,6 +344,31 @@ const TrackerPrograms = () => {
         toast.success("Program created");
       }
 
+      const assignmentTargets = (form.startups || []).filter(
+        (startup) => startup?.entreprenuerUuid && startup?.bdaUuid,
+      );
+
+      if (assignmentTargets.length > 0) {
+        const assignmentResults = await Promise.allSettled(
+          assignmentTargets.map((startup) =>
+            assignEntreprenuerToStaff({
+              staff_uuid: startup.bdaUuid,
+              entreprenuer_uuid: startup.entreprenuerUuid,
+            }),
+          ),
+        );
+
+        const failedAssignments = assignmentResults.filter(
+          (result) => result.status === "rejected",
+        );
+
+        if (failedAssignments.length > 0) {
+          toast.error(
+            "Program saved, but some BDA assignments failed to sync.",
+          );
+        }
+      }
+
       closeModal();
       loadPrograms();
     } catch (error) {
@@ -341,7 +414,9 @@ const TrackerPrograms = () => {
             <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
             Tracker Programs
           </div>
-          <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Tracker Programs</h1>
+          <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
+            Tracker Programs
+          </h1>
           <p className="mt-3 text-sm leading-7 text-white/85 md:text-base">
             Manage BDA-tracker programs used in enterprise enrollment.
           </p>
@@ -391,7 +466,8 @@ const TrackerPrograms = () => {
                     </div>
 
                     <p className="mt-2 line-clamp-3 text-sm leading-6 text-slate-500">
-                      {parsedMeta.cleanDescription || "No description provided."}
+                      {parsedMeta.cleanDescription ||
+                        "No description provided."}
                     </p>
 
                     {parsedMeta.categories.length > 0 && (
@@ -409,12 +485,20 @@ const TrackerPrograms = () => {
 
                     <div className="mt-4 grid grid-cols-2 gap-3">
                       <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                        <p className="text-xs font-bold tracking-wide text-slate-400">Start</p>
-                        <p className="mt-1 text-sm font-black text-slate-950">{formatDate(program.startDate)}</p>
+                        <p className="text-xs font-bold tracking-wide text-slate-400">
+                          Start
+                        </p>
+                        <p className="mt-1 text-sm font-black text-slate-950">
+                          {formatDate(program.startDate)}
+                        </p>
                       </div>
                       <div className="rounded-xl border border-slate-100 bg-slate-50/70 p-3">
-                        <p className="text-xs font-bold tracking-wide text-slate-400">End</p>
-                        <p className="mt-1 text-sm font-black text-slate-950">{formatDate(program.endDate)}</p>
+                        <p className="text-xs font-bold tracking-wide text-slate-400">
+                          End
+                        </p>
+                        <p className="mt-1 text-sm font-black text-slate-950">
+                          {formatDate(program.endDate)}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -456,10 +540,10 @@ const TrackerPrograms = () => {
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black/40 p-4 md:p-6">
           <form
             onSubmit={onSubmit}
-            className="w-full max-w-2xl rounded-2xl bg-white p-6"
+            className="mx-auto my-4 w-full max-w-2xl rounded-2xl bg-white p-6 md:my-8 md:max-h-[88vh] md:overflow-y-auto"
           >
             <h3 className="mb-4 text-2xl font-semibold text-[#111827]">
               {editingProgram ? "Edit Program" : "Add Program"}
@@ -585,7 +669,8 @@ const TrackerPrograms = () => {
 
               <div className="md:col-span-2">
                 <label className="mb-1 block text-sm font-medium text-[#475569]">
-                  Startups in this program ({(form.startups || []).length} selected)
+                  Startups in this program ({(form.startups || []).length}{" "}
+                  selected)
                 </label>
                 <input
                   className="mb-2 w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
@@ -595,29 +680,82 @@ const TrackerPrograms = () => {
                 />
                 <div className="max-h-56 space-y-1 overflow-auto rounded-lg border border-[#b7c5e5] p-2">
                   {pool.length === 0 && (
-                    <p className="p-2 text-sm text-[#64748b]">No startups available in the pool.</p>
+                    <p className="p-2 text-sm text-[#64748b]">
+                      No startups available in the pool.
+                    </p>
                   )}
                   {pool
                     .filter((item) => {
-                      const name = (item?.Business?.name || item?.name || "").toLowerCase();
-                      return !poolSearch || name.includes(poolSearch.toLowerCase());
+                      const name = (
+                        item?.Business?.name ||
+                        item?.name ||
+                        ""
+                      ).toLowerCase();
+                      return (
+                        !poolSearch || name.includes(poolSearch.toLowerCase())
+                      );
                     })
-                    .map((item) => (
-                      <label
-                        key={item.uuid}
-                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[#f1f5f9]"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isStartupSelected(item.uuid)}
-                          onChange={() => toggleStartup(item)}
-                        />
-                        <span className="font-medium text-[#111827]">
-                          {item?.Business?.name || item?.name || "Unnamed startup"}
-                        </span>
-                        {item?.email && <span className="text-xs text-[#64748b]">{item.email}</span>}
-                      </label>
-                    ))}
+                    .map((item) => {
+                      const selectedStartup = (form.startups || []).find(
+                        (startup) => startup.entreprenuerUuid === item.uuid,
+                      );
+                      const selectedStaffUuid =
+                        selectedStartup?.mentorUuid ||
+                        selectedStartup?.bdaUuid ||
+                        "";
+
+                      return (
+                        <div
+                          key={item.uuid}
+                          className="rounded-md border border-transparent px-2 py-2 text-sm hover:border-[#dbe5ff] hover:bg-[#f8faff]"
+                        >
+                          <div className="flex flex-wrap items-center justify-between gap-3">
+                            <label className="flex cursor-pointer items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isStartupSelected(item.uuid)}
+                                onChange={() => toggleStartup(item)}
+                              />
+                              <span className="font-medium text-[#111827]">
+                                {item?.Business?.name ||
+                                  item?.name ||
+                                  "Unnamed startup"}
+                              </span>
+                              {item?.email && (
+                                <span className="text-xs text-[#64748b]">
+                                  {item.email}
+                                </span>
+                              )}
+                            </label>
+
+                            <select
+                              className="min-w-[210px] rounded-lg border border-[#d0d7e8] bg-white px-2 py-1.5 text-xs text-[#334155] disabled:bg-[#f8fafc] disabled:text-[#94a3b8]"
+                              value={selectedStaffUuid}
+                              disabled={!selectedStartup}
+                              onChange={(e) => {
+                                const staff = staffs.find(
+                                  (staffItem) =>
+                                    staffItem.uuid === e.target.value,
+                                );
+                                setStartupStaff(item.uuid, staff || null);
+                              }}
+                            >
+                              <option value="">Assign BDA</option>
+                              {staffs.map((staffItem) => (
+                                <option
+                                  key={staffItem.uuid}
+                                  value={staffItem.uuid}
+                                >
+                                  {staffItem.name ||
+                                    staffItem.email ||
+                                    "Unnamed staff"}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               </div>
             </div>

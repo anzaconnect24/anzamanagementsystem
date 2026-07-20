@@ -20,9 +20,6 @@ const FLAG_LABEL_MAP = {
   red: "Critical",
 };
 
-
-
-
 const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
 const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
 
@@ -58,10 +55,20 @@ const EXCLUDED_PROGRAM_STAGE_LABELS = [
 ];
 
 const getProgramDisplayName = (program) =>
-  String(program?.title || program?.name || program?.programName || program?.programCategory || "").trim();
+  String(
+    program?.title ||
+      program?.name ||
+      program?.programName ||
+      program?.programCategory ||
+      "",
+  ).trim();
 
 const isExcludedProgramStageLabel = (value) =>
-  EXCLUDED_PROGRAM_STAGE_LABELS.includes(String(value || "").trim().toLowerCase());
+  EXCLUDED_PROGRAM_STAGE_LABELS.includes(
+    String(value || "")
+      .trim()
+      .toLowerCase(),
+  );
 
 const getEnterpriseProgramName = (enterprise) =>
   String(
@@ -72,7 +79,6 @@ const getEnterpriseProgramName = (enterprise) =>
       enterprise?.category ||
       "",
   ).trim();
-
 
 const formatHours = (value) => {
   const parsed = Number(value || 0);
@@ -85,13 +91,13 @@ const formatMoney = (value, currency = "TZS") => {
   return `${currency} ${parsed.toLocaleString()}`;
 };
 
-
 const getEnterpriseEntrepreneurUuid = (enterprise) =>
   enterprise?.Entreprenuer?.uuid || enterprise?.entreprenuer_uuid;
 
 const getAssignedBusinessName = (assignment) => {
   const entrepreneur = assignment?.Entreprenuer;
-  const directBusinessName = entrepreneur?.Business?.name || entrepreneur?.business?.name;
+  const directBusinessName =
+    entrepreneur?.Business?.name || entrepreneur?.business?.name;
   if (directBusinessName) return directBusinessName;
 
   const businessList = Array.isArray(entrepreneur?.Businesses)
@@ -145,11 +151,24 @@ const getProgramCategories = (program) => {
 const getInitials = (name = "") => {
   const parts = String(name).trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "--";
-  return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 };
 
-const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
-  <section className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}>
+const PortalCard = ({
+  icon,
+  title,
+  subtitle,
+  action,
+  children,
+  className = "",
+}) => (
+  <section
+    className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}
+  >
     {(title || subtitle || action || icon) && (
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
@@ -159,17 +178,26 @@ const PortalCard = ({ icon, title, subtitle, action, children, className = "" })
             </div>
           )}
           <div>
-            {title && <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>}
-            {subtitle && <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>}
+            {title && (
+              <h2 className="text-lg font-black tracking-tight text-slate-950">
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
         {action}
       </div>
     )}
-    <div className={title || subtitle || action || icon ? "mt-6" : ""}>{children}</div>
+    <div className={title || subtitle || action || icon ? "mt-6" : ""}>
+      {children}
+    </div>
   </section>
 );
-
 
 const DataTile = ({ label, value, helper }) => (
   <div className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm shadow-slate-200/70">
@@ -224,7 +252,13 @@ const MentorTracker = () => {
           uuid: program.uuid,
           name: getProgramDisplayName(program),
         }))
-        .filter((program) => Boolean(program.uuid && program.name && !isExcludedProgramStageLabel(program.name))),
+        .filter((program) =>
+          Boolean(
+            program.uuid &&
+            program.name &&
+            !isExcludedProgramStageLabel(program.name),
+          ),
+        ),
     [programs],
   );
 
@@ -233,7 +267,11 @@ const MentorTracker = () => {
       new Set(
         enterprises
           .map((item) => getEnterpriseProgramName(item))
-          .filter((value) => Boolean(value && value.trim() && !isExcludedProgramStageLabel(value))),
+          .filter((value) =>
+            Boolean(
+              value && value.trim() && !isExcludedProgramStageLabel(value),
+            ),
+          ),
       ),
     );
   }, [enterprises]);
@@ -281,7 +319,8 @@ const MentorTracker = () => {
     const enterpriseByEnt = new Map();
     enterprises.forEach((enterprise) => {
       const uuid = getEnterpriseEntrepreneurUuid(enterprise);
-      if (uuid && !enterpriseByEnt.has(uuid)) enterpriseByEnt.set(uuid, enterprise);
+      if (uuid && !enterpriseByEnt.has(uuid))
+        enterpriseByEnt.set(uuid, enterprise);
     });
 
     const rows = [];
@@ -291,7 +330,11 @@ const MentorTracker = () => {
       const ent = assignment?.Entreprenuer;
       if (!ent?.uuid || seen.has(ent.uuid)) return;
       seen.add(ent.uuid);
-      rows.push({ key: ent.uuid, entrepreneur: ent, enterprise: enterpriseByEnt.get(ent.uuid) || null });
+      rows.push({
+        key: ent.uuid,
+        entrepreneur: ent,
+        enterprise: enterpriseByEnt.get(ent.uuid) || null,
+      });
     });
 
     // Include any registered enterprise whose entrepreneur isn't in the assigned list.
@@ -301,7 +344,8 @@ const MentorTracker = () => {
       if (uuid) seen.add(uuid);
       rows.push({
         key: enterprise.uuid || uuid || enterprise.id,
-        entrepreneur: enterprise.Entreprenuer || enterprise.entreprenuer || null,
+        entrepreneur:
+          enterprise.Entreprenuer || enterprise.entreprenuer || null,
         enterprise,
       });
     });
@@ -339,19 +383,26 @@ const MentorTracker = () => {
   const filteredTracked = useMemo(() => {
     return trackedList.filter((row) => {
       if (enterpriseFilter === "all") return true;
-      const programName = row.enterprise ? getEnterpriseProgramName(row.enterprise) : "";
+      const programName = row.enterprise
+        ? getEnterpriseProgramName(row.enterprise)
+        : "";
       return programName === enterpriseFilter;
     });
   }, [trackedList, enterpriseFilter]);
-
 
   const portfolioStats = useMemo(() => {
     const all = enterprises.length;
     const onTrack = enterprises.filter((e) => e.flag === "green").length;
     const atRisk = enterprises.filter((e) => e.flag === "amber").length;
     const critical = enterprises.filter((e) => e.flag === "red").length;
-    const mentorshipHours = weeklyLogs.reduce((sum, log) => sum + Number(log.hours || 0), 0);
-    const totalGrant = enterprises.reduce((sum, item) => sum + Number(item.grantUsd || 0), 0);
+    const mentorshipHours = weeklyLogs.reduce(
+      (sum, log) => sum + Number(log.hours || 0),
+      0,
+    );
+    const totalGrant = enterprises.reduce(
+      (sum, item) => sum + Number(item.grantUsd || 0),
+      0,
+    );
 
     return {
       all,
@@ -394,7 +445,9 @@ const MentorTracker = () => {
       setMilestones(Array.isArray(ms) ? ms : []);
       setEntrepreneurs(Array.isArray(ents) ? ents : []);
       setEnterprises(Array.isArray(enterpriseList) ? enterpriseList : []);
-      setPrograms(Array.isArray(programsResponse?.data) ? programsResponse.data : []);
+      setPrograms(
+        Array.isArray(programsResponse?.data) ? programsResponse.data : [],
+      );
       setEntrepreneurPool(
         Array.isArray(poolResponse)
           ? poolResponse
@@ -412,7 +465,6 @@ const MentorTracker = () => {
   useEffect(() => {
     if (userDetails?.uuid) loadData();
   }, [userDetails?.uuid]);
-
 
   const onDeleteEnterprise = async (enterprise) => {
     const shouldDelete = window.confirm(`Delete startup "${enterprise.name}"?`);
@@ -432,7 +484,6 @@ const MentorTracker = () => {
 
   if (loading) return <Loader />;
 
-
   return (
     <div className="min-h-screen px-4 py-6 text-slate-950 md:px-8 xl:px-12">
       <main className="mx-auto max-w-[1480px] space-y-6">
@@ -451,24 +502,33 @@ const MentorTracker = () => {
                   <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
                   Business Development Advisor
                 </div>
-                <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Startup Portfolio</h1>
+                <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
+                  Startup Portfolio
+                </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-                  Monitor startup progress, milestones, evidence, and grant governance for the entrepreneurs assigned to you.
+                  Monitor startup progress, milestones, evidence, and grant
+                  governance for the entrepreneurs assigned to you.
                 </p>
               </div>
             </div>
 
             <div className="flex flex-wrap gap-6 text-sm font-bold text-white/90">
               <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">◈</span>
+                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
+                  ◈
+                </span>
                 Startups
               </div>
               <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">□</span>
+                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
+                  □
+                </span>
                 Milestones
               </div>
               <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">$</span>
+                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
+                  $
+                </span>
                 Grant Governance
               </div>
             </div>
@@ -478,8 +538,14 @@ const MentorTracker = () => {
         <section className="grid grid-cols-1 gap-4 md:grid-cols-4">
           <DataTile label="Startups" value={portfolioStats.all} />
           <DataTile label="On track" value={portfolioStats.onTrack} />
-          <DataTile label="Mentorship hours" value={formatHours(portfolioStats.mentorshipHours)} />
-          <DataTile label="Approved grants" value={formatMoney(portfolioStats.totalGrant)} />
+          <DataTile
+            label="Mentorship hours"
+            value={formatHours(portfolioStats.mentorshipHours)}
+          />
+          <DataTile
+            label="Approved grants"
+            value={formatMoney(portfolioStats.totalGrant)}
+          />
         </section>
 
         <PortalCard
@@ -515,17 +581,37 @@ const MentorTracker = () => {
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {filteredTracked.map((row) => {
                 const { entrepreneur, enterprise } = row;
-                const business = entrepreneur?.Business || entrepreneur?.business || {};
-                const name = enterprise?.name || business?.name || entrepreneur?.name || "Unnamed startup";
-                const sector = enterprise?.ceSector || business?.BusinessSector?.name || "Sector";
-                const region = enterprise?.district || business?.location || "N/A";
+                const business =
+                  entrepreneur?.Business || entrepreneur?.business || {};
+                const name =
+                  enterprise?.name ||
+                  business?.name ||
+                  entrepreneur?.name ||
+                  "Unnamed startup";
+                const sector =
+                  enterprise?.ceSector ||
+                  business?.BusinessSector?.name ||
+                  "Sector";
+                const region =
+                  enterprise?.district || business?.location || "N/A";
                 const coverImage =
-                  entrepreneur?.image || enterprise?.image || business?.image || HERO_IMAGE_URL;
+                  entrepreneur?.image ||
+                  enterprise?.image ||
+                  business?.image ||
+                  HERO_IMAGE_URL;
                 const joined = new Date(
-                  enterprise?.awardDate || business?.createdAt || entrepreneur?.createdAt || enterprise?.createdAt || "",
+                  enterprise?.awardDate ||
+                    business?.createdAt ||
+                    entrepreneur?.createdAt ||
+                    enterprise?.createdAt ||
+                    "",
                 );
-                const joinedYear = Number.isNaN(joined.getTime()) ? null : joined.getFullYear();
-                const entUuid = entrepreneur?.uuid || getEnterpriseEntrepreneurUuid(enterprise || {});
+                const joinedYear = Number.isNaN(joined.getTime())
+                  ? null
+                  : joined.getFullYear();
+                const entUuid =
+                  entrepreneur?.uuid ||
+                  getEnterpriseEntrepreneurUuid(enterprise || {});
 
                 return (
                   <article
@@ -544,7 +630,9 @@ const MentorTracker = () => {
                     </div>
 
                     <div className="p-5">
-                      <h3 className="truncate text-xl font-black text-slate-950">{name}</h3>
+                      <h3 className="truncate text-xl font-black text-slate-950">
+                        {name}
+                      </h3>
 
                       <div className="mt-4 space-y-2 text-sm text-slate-600">
                         <div className="flex items-center gap-2">
@@ -553,7 +641,9 @@ const MentorTracker = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <CalendarDays className="h-4 w-4 text-slate-400" />
-                          {joinedYear ? `Joined ${joinedYear}` : "Join date not set"}
+                          {joinedYear
+                            ? `Joined ${joinedYear}`
+                            : "Join date not set"}
                         </div>
                       </div>
                     </div>
@@ -563,14 +653,22 @@ const MentorTracker = () => {
                         <div className="flex flex-wrap items-center gap-4 text-xs font-bold">
                           <button
                             type="button"
-                            onClick={() => navigate(`/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}?view=1`)}
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}?view=1`,
+                              )
+                            }
                             className="text-slate-500 transition hover:text-[#082d77]"
                           >
                             View KYC
                           </button>
                           <button
                             type="button"
-                            onClick={() => navigate(`/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}`)}
+                            onClick={() =>
+                              navigate(
+                                `/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}`,
+                              )
+                            }
                             className="text-slate-500 transition hover:text-[#082d77]"
                           >
                             Edit
@@ -578,15 +676,23 @@ const MentorTracker = () => {
                           <button
                             type="button"
                             onClick={() => onDeleteEnterprise(enterprise)}
-                            disabled={deletingEnterpriseUuid === enterprise.uuid}
+                            disabled={
+                              deletingEnterpriseUuid === enterprise.uuid
+                            }
                             className="text-rose-600 transition hover:text-rose-700 disabled:opacity-60"
                           >
-                            {deletingEnterpriseUuid === enterprise.uuid ? "Deleting..." : "Delete"}
+                            {deletingEnterpriseUuid === enterprise.uuid
+                              ? "Deleting..."
+                              : "Delete"}
                           </button>
                         </div>
                         <button
                           type="button"
-                          onClick={() => navigate(`/dashboard/mentorTracker/enterprise/${enterprise.uuid}`)}
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/mentorTracker/enterprise/${enterprise.uuid}`,
+                            )
+                          }
                           className="flex items-center gap-1.5 text-sm font-bold text-emerald-600 transition hover:text-emerald-700"
                         >
                           View Details <span aria-hidden>&rarr;</span>
@@ -600,7 +706,9 @@ const MentorTracker = () => {
                           onClick={() =>
                             navigate(
                               `/dashboard/mentorTracker/enterprise-kyc?entreprenuer=${entUuid}${
-                                business?.uuid ? `&business=${business.uuid}` : ""
+                                business?.uuid
+                                  ? `&business=${business.uuid}`
+                                  : ""
                               }&view=1`,
                             )
                           }
@@ -615,7 +723,7 @@ const MentorTracker = () => {
                             navigate(
                               `/dashboard/mentorTracker/startup/${entUuid}/milestones?name=${encodeURIComponent(
                                 name || "",
-                              )}${business?.uuid ? `&business=${business.uuid}` : ""}`,
+                              )}${business?.uuid ? `&business=${business.uuid}` : ""}${enterprise?.uuid ? `&enterprise=${enterprise.uuid}` : ""}`,
                             )
                           }
                           className="text-xs font-bold text-slate-500 transition hover:text-[#082d77] disabled:opacity-50"

@@ -272,11 +272,25 @@ export const createMentorEnterpriseMilestone = async (uuid, data) => {
   }
 };
 
-export const listTrackerMilestones = async () => {
+export const listTrackerMilestones = async ({
+  entreprenuer_uuid,
+  business_uuid,
+} = {}) => {
   try {
-    const response = await axios.get(`${server_url}/tracker/milestones`, {
-      headers: authHeaders(),
-    });
+    const params = new URLSearchParams();
+    if (entreprenuer_uuid) {
+      params.set("entreprenuer_uuid", entreprenuer_uuid);
+    }
+    if (business_uuid) {
+      params.set("business_uuid", business_uuid);
+    }
+
+    const response = await axios.get(
+      `${server_url}/tracker/milestones${params.toString() ? `?${params.toString()}` : ""}`,
+      {
+        headers: authHeaders(),
+      },
+    );
     return response.data.body;
   } catch (error) {
     return error.response;

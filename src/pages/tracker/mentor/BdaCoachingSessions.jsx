@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { CalendarDays } from "lucide-react";
 import Loader from "@/components/common/Loader";
-import { getEnterprenuers } from "@/controllers/user_controller";
+import { UserContext } from "@/layouts/DashboardLayout";
+import { getStaffAssignedEntreprenuers } from "@/controllers/staffEntreprenuerController";
 import {
   createCoachingSession,
   getEntrepreneurCoachingSessions,
@@ -49,11 +50,22 @@ const getFlagLabel = (flag) => {
 };
 
 const FieldLabel = ({ children }) => (
-  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">{children}</label>
+  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">
+    {children}
+  </label>
 );
 
-const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
-  <section className={`rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/70 ${className}`}>
+const PortalCard = ({
+  icon,
+  title,
+  subtitle,
+  action,
+  children,
+  className = "",
+}) => (
+  <section
+    className={`rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/70 ${className}`}
+  >
     <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-100 px-6 py-5">
       <div className="flex items-start gap-3">
         {icon && (
@@ -62,8 +74,12 @@ const PortalCard = ({ icon, title, subtitle, action, children, className = "" })
           </div>
         )}
         <div>
-          <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>
-          {subtitle && <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>}
+          <h2 className="text-lg font-black tracking-tight text-slate-950">
+            {title}
+          </h2>
+          {subtitle && (
+            <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>
+          )}
         </div>
       </div>
       {action}
@@ -78,6 +94,7 @@ const modalCardClass =
   "max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl shadow-slate-950/20";
 
 const BdaCoachingSessions = () => {
+  const { userDetails } = useContext(UserContext);
   const [loading, setLoading] = useState(true);
   const [enterprises, setEnterprises] = useState([]);
   const [selectedUuid, setSelectedUuid] = useState("");
@@ -87,30 +104,34 @@ const BdaCoachingSessions = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [sessionForm, setSessionForm] = useState(EMPTY_SESSION);
 
-  const setField = (key, value) => setSessionForm((prev) => ({ ...prev, [key]: value }));
+  const setField = (key, value) =>
+    setSessionForm((prev) => ({ ...prev, [key]: value }));
 
   useEffect(() => {
-    // All entrepreneurs are eligible for coaching sessions (not only those
-    // with a tracker enterprise set up).
-    getEnterprenuers(1000, 1, " ")
+    if (!userDetails?.uuid) {
+      setLoading(false);
+      return;
+    }
+
+    // Load only entrepreneurs assigned to this BDA/Staff.
+    getStaffAssignedEntreprenuers(userDetails.uuid)
       .then((body) => {
-        const list = Array.isArray(body)
-          ? body
-          : Array.isArray(body?.data)
-            ? body.data
-            : [];
+        const list = Array.isArray(body) ? body : [];
         setEnterprises(
           list
-            .filter((user) => Boolean(user?.uuid))
-            .map((user) => ({
-              uuid: user.uuid,
-              name: user.Business?.name || user.name || "Unnamed startup",
+            .filter((assignment) => Boolean(assignment?.Entreprenuer?.uuid))
+            .map((assignment) => ({
+              uuid: assignment.Entreprenuer.uuid,
+              name:
+                assignment.Entreprenuer.Business?.name ||
+                assignment.Entreprenuer.name ||
+                "Unnamed startup",
             })),
         );
       })
-      .catch(() => toast.error("Failed to load entrepreneurs"))
+      .catch(() => toast.error("Failed to load assigned entrepreneurs"))
       .finally(() => setLoading(false));
-  }, []);
+  }, [userDetails?.uuid]);
 
   const loadSessions = async (uuid) => {
     if (!uuid) {
@@ -122,7 +143,9 @@ const BdaCoachingSessions = () => {
       const data = await getEntrepreneurCoachingSessions(uuid);
       setSessions(Array.isArray(data) ? data : []);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to load coaching sessions");
+      toast.error(
+        error?.response?.data?.message || "Failed to load coaching sessions",
+      );
     } finally {
       setLoadingSessions(false);
     }
@@ -150,7 +173,9 @@ const BdaCoachingSessions = () => {
       setSessionForm(EMPTY_SESSION);
       loadSessions(selectedUuid);
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to save coaching session");
+      toast.error(
+        error?.response?.data?.message || "Failed to save coaching session",
+      );
     } finally {
       setIsSaving(false);
     }
@@ -158,7 +183,9 @@ const BdaCoachingSessions = () => {
 
   if (loading) return <Loader />;
 
-  const selectedEnterprise = enterprises.find((item) => item.uuid === selectedUuid);
+  const selectedEnterprise = enterprises.find(
+    (item) => item.uuid === selectedUuid,
+  );
 
   return (
     <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
@@ -176,9 +203,12 @@ const BdaCoachingSessions = () => {
               <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
               Coaching Sessions
             </div>
-            <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Coaching Sessions</h1>
+            <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
+              Coaching Sessions
+            </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-              Log and review coaching sessions for the entrepreneurs assigned to you.
+              Log and review coaching sessions for the entrepreneurs assigned to
+              you.
             </p>
           </div>
         </section>
@@ -229,25 +259,62 @@ const BdaCoachingSessions = () => {
             <div className="space-y-4">
               {sessions.length === 0 && (
                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                  No coaching sessions logged yet for {selectedEnterprise?.name || "this entrepreneur"}.
+                  No coaching sessions logged yet for{" "}
+                  {selectedEnterprise?.name || "this entrepreneur"}.
                 </div>
               )}
 
               {sessions.map((item) => (
-                <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
+                <div
+                  key={item.uuid}
+                  className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm"
+                >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
-                      <p className="font-black text-slate-950">{formatDateDisplay(item.sessionDate)}</p>
-                      <p className="mt-1 text-xs text-slate-500">{item.sessionType || "Coaching session"}</p>
+                      <p className="font-black text-slate-950">
+                        {formatDateDisplay(item.sessionDate)}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        {item.sessionType || "Coaching session"}
+                      </p>
                     </div>
-                    <span className="text-sm font-semibold text-slate-700">{getFlagLabel(item.flag)}</span>
+                    <span className="text-sm font-semibold text-slate-700">
+                      {getFlagLabel(item.flag)}
+                    </span>
                   </div>
                   <div className="mt-4 space-y-1 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                    <p><span className="font-bold text-slate-950">Facilitator:</span> {item.facilitator || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Issues discussed:</span> {item.issuesDiscussed || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Recommendations:</span> {item.recommendationsGiven || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Actions agreed:</span> {item.actionsAgreed || "N/A"}</p>
-                    <p><span className="font-bold text-slate-950">Next session:</span> {item.nextSessionDate ? formatDateDisplay(item.nextSessionDate) : "N/A"}</p>
+                    <p>
+                      <span className="font-bold text-slate-950">
+                        Facilitator:
+                      </span>{" "}
+                      {item.facilitator || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-bold text-slate-950">
+                        Issues discussed:
+                      </span>{" "}
+                      {item.issuesDiscussed || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-bold text-slate-950">
+                        Recommendations:
+                      </span>{" "}
+                      {item.recommendationsGiven || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-bold text-slate-950">
+                        Actions agreed:
+                      </span>{" "}
+                      {item.actionsAgreed || "N/A"}
+                    </p>
+                    <p>
+                      <span className="font-bold text-slate-950">
+                        Next session:
+                      </span>{" "}
+                      {item.nextSessionDate
+                        ? formatDateDisplay(item.nextSessionDate)
+                        : "N/A"}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -261,7 +328,9 @@ const BdaCoachingSessions = () => {
           <form onSubmit={onSubmitSession} className={modalCardClass}>
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
               <div>
-                <h3 className="text-2xl font-black text-slate-950">Log a coaching session</h3>
+                <h3 className="text-2xl font-black text-slate-950">
+                  Log a coaching session
+                </h3>
                 <p className="mt-1 text-sm text-slate-500">
                   For {selectedEnterprise?.name || "the selected entrepreneur"}.
                 </p>
@@ -277,15 +346,30 @@ const BdaCoachingSessions = () => {
             <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
               <div>
                 <FieldLabel>Session date</FieldLabel>
-                <input className={baseInputClass} type="date" value={sessionForm.sessionDate} onChange={(e) => setField("sessionDate", e.target.value)} required />
+                <input
+                  className={baseInputClass}
+                  type="date"
+                  value={sessionForm.sessionDate}
+                  onChange={(e) => setField("sessionDate", e.target.value)}
+                  required
+                />
               </div>
               <div>
                 <FieldLabel>BDA / Facilitator</FieldLabel>
-                <input className={baseInputClass} placeholder="BDA / Facilitator" value={sessionForm.facilitator} onChange={(e) => setField("facilitator", e.target.value)} />
+                <input
+                  className={baseInputClass}
+                  placeholder="BDA / Facilitator"
+                  value={sessionForm.facilitator}
+                  onChange={(e) => setField("facilitator", e.target.value)}
+                />
               </div>
               <div>
                 <FieldLabel>Session type</FieldLabel>
-                <select className={baseInputClass} value={sessionForm.sessionType} onChange={(e) => setField("sessionType", e.target.value)}>
+                <select
+                  className={baseInputClass}
+                  value={sessionForm.sessionType}
+                  onChange={(e) => setField("sessionType", e.target.value)}
+                >
                   <option value="Weekly coaching">Weekly coaching</option>
                   <option value="Financial advisory">Financial advisory</option>
                   <option value="Milestone review">Milestone review</option>
@@ -293,27 +377,55 @@ const BdaCoachingSessions = () => {
               </div>
               <div>
                 <FieldLabel>Session status</FieldLabel>
-                <select className={baseInputClass} value={sessionForm.flag} onChange={(e) => setField("flag", e.target.value)}>
+                <select
+                  className={baseInputClass}
+                  value={sessionForm.flag}
+                  onChange={(e) => setField("flag", e.target.value)}
+                >
                   {FLAG_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>{option.label}</option>
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
                   ))}
                 </select>
               </div>
               <div className="md:col-span-2">
                 <FieldLabel>Issues discussed</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Issues discussed" value={sessionForm.issuesDiscussed} onChange={(e) => setField("issuesDiscussed", e.target.value)} />
+                <textarea
+                  className={`${baseInputClass} min-h-[90px]`}
+                  placeholder="Issues discussed"
+                  value={sessionForm.issuesDiscussed}
+                  onChange={(e) => setField("issuesDiscussed", e.target.value)}
+                />
               </div>
               <div className="md:col-span-2">
                 <FieldLabel>Recommendations given</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Recommendations given" value={sessionForm.recommendationsGiven} onChange={(e) => setField("recommendationsGiven", e.target.value)} />
+                <textarea
+                  className={`${baseInputClass} min-h-[90px]`}
+                  placeholder="Recommendations given"
+                  value={sessionForm.recommendationsGiven}
+                  onChange={(e) =>
+                    setField("recommendationsGiven", e.target.value)
+                  }
+                />
               </div>
               <div className="md:col-span-2">
                 <FieldLabel>Actions agreed</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Actions agreed" value={sessionForm.actionsAgreed} onChange={(e) => setField("actionsAgreed", e.target.value)} />
+                <textarea
+                  className={`${baseInputClass} min-h-[90px]`}
+                  placeholder="Actions agreed"
+                  value={sessionForm.actionsAgreed}
+                  onChange={(e) => setField("actionsAgreed", e.target.value)}
+                />
               </div>
               <div>
                 <FieldLabel>Next session date</FieldLabel>
-                <input className={baseInputClass} type="date" value={sessionForm.nextSessionDate} onChange={(e) => setField("nextSessionDate", e.target.value)} />
+                <input
+                  className={baseInputClass}
+                  type="date"
+                  value={sessionForm.nextSessionDate}
+                  onChange={(e) => setField("nextSessionDate", e.target.value)}
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
