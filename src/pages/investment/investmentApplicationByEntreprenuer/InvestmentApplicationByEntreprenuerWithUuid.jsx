@@ -8,6 +8,7 @@ import { uploadFile } from "@/controllers/file_upload_controller";
 import { sendInvestmentApplication } from "@/controllers/investment_applications_controllers";
 import { useTranslation } from "@/locales";
 import { useParams } from "react-router-dom";
+import { FaCloudUploadAlt, FaRegFileAlt } from "react-icons/fa";
 
 const Page = () => {
   const { t } = useTranslation();
@@ -18,6 +19,8 @@ const Page = () => {
   const router = useRouter();
 
   const [loading, setloading] = useState(false);
+  // Name of the chosen pitch deck, so the card can show it instead of "Missing".
+  const [pitchDeckName, setPitchDeckName] = useState("");
 
   const optionLabel = (val) => {
     switch (val) {
@@ -210,12 +213,36 @@ const Page = () => {
             </p>
           </div>
 
-          <input
-            name="pitchdeck"
-            type="file"
-            required
-            className="w-full rounded-xl border border-dashed border-black/20 bg-transparent px-4 py-5 text-sm outline-none transition hover:border-green-600"
-          />
+          {/* The file input stays in the form (submit reads
+              e.target.pitchdeck.files[0]) — it is just hidden behind this card. */}
+          <label className="flex w-full cursor-pointer items-center gap-4 rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:border-green-600 hover:shadow-md">
+            <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-slate-100 text-[#082d77]">
+              <FaRegFileAlt className="h-6 w-6" />
+            </span>
+
+            <span className="min-w-0 flex-1">
+              <span className="block text-base font-bold text-[#172033]">
+                Pitch deck
+              </span>
+              <span
+                className={`mt-0.5 block truncate text-sm font-semibold ${
+                  pitchDeckName ? "text-green-600" : "text-[#e07a1f]"
+                }`}
+              >
+                {pitchDeckName || "Missing"}
+              </span>
+            </span>
+
+            <FaCloudUploadAlt className="h-6 w-6 shrink-0 text-[#082d77]" />
+
+            <input
+              name="pitchdeck"
+              type="file"
+              required
+              hidden
+              onChange={(e) => setPitchDeckName(e.target.files?.[0]?.name || "")}
+            />
+          </label>
 
           <p className="mt-2 text-xs text-[#8a8f98]">
             Upload PDF, PPT, PPTX or presentation documents.

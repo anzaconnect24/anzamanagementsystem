@@ -253,14 +253,25 @@ const SignUp = () => {
               let mentorData;
 
               if (role === "Mentor") {
+                // These keys are the MentorProfile columns the mentor list and
+                // mentor detail pages read. The signup form collects all of
+                // them; anything dropped here shows as "N/A" on the profile.
                 mentorData = {
                   description: formValues.mentorDescription,
-                  areasOfExperties: formValues.mentorAreaOfExpertise,
-                  industries: formValues.mentorIndustries,
-                  mentorshipFocus: formValues.mentorMentorshipFocus,
+                  business_sector_uuid: e.target.business_sector_uuid?.value,
+                  organisation: formValues.mentorOrganisation,
+                  position: formValues.mentorPosition,
+                  linkedinURL: formValues.mentorLinkedIn,
+                  location: e.target.location?.value,
+                  language: e.target.language?.value,
+                  smeFocus: formValues.smeFocus,
+                  // Index-keyed maps — the shape every mentor view reads.
+                  areasOfExperties: formValues.mentorExpertise || {},
+                  mentoringFormat: formValues.mentorFormat || {},
                   mentorAvailability: formValues.mentorAvailability,
-                  mentorPreviousExperience: formValues.mentorPreviousExperience,
-                  mentorMotivation: formValues.mentorMotivation,
+                  mentorHours: formValues.mentorHours || null,
+                  mentorshipFocus: formValues.mentorshipFocus,
+                  industries: formValues.mentorIndustries,
                 };
               }
 
@@ -286,7 +297,15 @@ const SignUp = () => {
 
                   if (role === "Mentor") {
                     mentorData.user_uuid = data.body.uuid;
-                    createMentorProfile(mentorData);
+                    // Surfaced rather than swallowed: without this profile the
+                    // mentor signs up but their details never appear anywhere.
+                    createMentorProfile(mentorData).then((res) => {
+                      if (!res?.status) {
+                        toast.error(
+                          "Your account was created, but your mentor details could not be saved. Please add them from Edit Profile.",
+                        );
+                      }
+                    });
                   }
 
                   if (role === "Enterprenuer") {

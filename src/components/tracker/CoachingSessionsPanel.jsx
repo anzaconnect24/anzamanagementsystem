@@ -1,5 +1,7 @@
+import { useSearchParams } from "react-router-dom";
 import {
   CalendarDays,
+  ChevronRight,
   ClipboardCheck,
   Lightbulb,
   ListChecks,
@@ -54,20 +56,18 @@ const daysUntil = (value) => {
   return Math.round((startOfDay(target) - startOfDay(new Date())) / 86400000);
 };
 
-const StatCard = ({ label, value, sub, icon }) => (
-  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/50">
+// Value first and large, label beneath, and a small tinted icon top-right.
+const StatCard = ({ label, value, sub, icon, tone = "text-[#0b2b5c]" }) => (
+  <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
     <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <p className="text-sm font-semibold text-slate-500">{label}</p>
-        <p className="mt-2 truncate text-2xl font-black tracking-tight text-slate-950">
-          {value}
-        </p>
-        {sub}
-      </div>
-      <div className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#0b2b5c]/5 text-[#0b2b5c]">
-        {icon}
-      </div>
+      <p className="min-w-0 truncate text-3xl font-black tracking-tight text-slate-950">
+        {value}
+      </p>
+      <span className={`shrink-0 ${tone}`}>{icon}</span>
     </div>
+
+    <p className="mt-3 text-sm font-medium text-slate-500">{label}</p>
+    {sub}
   </div>
 );
 
@@ -102,6 +102,18 @@ const CoachingSessionsPanel = ({
   const sessionNumber = new Map(
     [...ordered].reverse().map((s, i) => [s.uuid, i + 1]),
   );
+
+  // The open session lives in the URL so it is its own view and the browser's
+  // back button returns to the list.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const openSession = searchParams.get("session") || "";
+  const activeSession = ordered.find((s) => s.uuid === openSession) || null;
+  const setOpenSession = (uuid) => {
+    const next = new URLSearchParams(searchParams);
+    if (uuid) next.set("session", uuid);
+    else next.delete("session");
+    setSearchParams(next);
+  };
 
   // The next session is the soonest date still ahead of us; fall back to the
   // latest session's stated next date so something sensible shows.
@@ -158,49 +170,96 @@ const CoachingSessionsPanel = ({
         <StatCard
           label="Total Sessions"
           value={ordered.length}
-          sub={<p className="mt-1 text-xs text-slate-400">All time</p>}
-          icon={<Users className="h-5 w-5" />}
+          icon={<Users className="h-6 w-6" />}
+          tone="text-[#0b2b5c]"
         />
         <StatCard
           label="Current Status"
           value={status}
-          sub={
-            ordered.length > 0 ? (
-              <span
-                className={`mt-2 inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-bold ${flagTone(latest?.flag).pill}`}
-              >
-                <span
-                  className={`h-1.5 w-1.5 rounded-full ${flagTone(latest?.flag).dot}`}
-                />
-                {status}
-              </span>
-            ) : null
+          icon={<Target className="h-6 w-6" />}
+          tone={
+            latest?.flag === "red"
+              ? "text-rose-500"
+              : latest?.flag === "amber"
+                ? "text-amber-500"
+                : "text-emerald-500"
           }
-          icon={<Target className="h-5 w-5" />}
         />
         <StatCard
           label="Next Session"
           value={nextLabel}
           sub={<p className="mt-1 text-xs text-slate-400">{nextSub}</p>}
-          icon={<CalendarDays className="h-5 w-5" />}
+          icon={<CalendarDays className="h-6 w-6" />}
+          tone="text-amber-500"
         />
         <StatCard
           label="Action Items"
           value={actionCount}
-          sub={<p className="mt-1 text-xs text-slate-400">From sessions</p>}
-          icon={<ListChecks className="h-5 w-5" />}
+          icon={<ListChecks className="h-6 w-6" />}
+          tone="text-[#0b2b5c]"
         />
 
       </section>
 
-      {/* Sessions */}
+      {/* Sessions — the heading names the list, and is dropped once a single
+          session is open since that view carries its own title. */}
+      {!openSession && (
+        <div>
+          <h2 className="text-lg font-black tracking-tight text-slate-950">
+            Session History
+          </h2>
+          <p className="mt-1 text-sm text-slate-500">
+            Select a session to see what was discussed and agreed.
+          </p>
+        </div>
+      )}
+
       {ordered.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-12 text-center text-sm text-slate-500">
           {emptyText}
         </div>
+      ) : !openSession ? (
+        /* Sessions list — "Session 1 - Milestone review". Opening one shows its
+           information. */
+        <div className="space-y-3">
+          {ordered.map((item) => {
+            const tone = flagTone(item.flag);
+            return (
+              <button
+                key={item.uuid}
+                type="button"
+                onClick={() => setOpenSession(item.uuid)}
+                className="flex w-full items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-6 py-5 text-left shadow-sm transition hover:border-slate-300 hover:shadow-md"
+              >
+                <CalendarDays className="h-6 w-6 shrink-0 text-[#0b2b5c]" />
+
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-base font-bold text-slate-950">
+                    Session {sessionNumber.get(item.uuid) ?? "—"}
+                    {item.sessionType ? ` - ${item.sessionType}` : ""}
+                  </span>
+                  <span
+                    className={`mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold ${
+                      item.flag === "red"
+                        ? "text-rose-600"
+                        : item.flag === "amber"
+                          ? "text-amber-600"
+                          : "text-emerald-600"
+                    }`}
+                  >
+                    <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
+                    {getFlagLabel(item.flag)}
+                  </span>
+                </span>
+
+                <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
+              </button>
+            );
+          })}
+        </div>
       ) : (
         <div className="space-y-6">
-          {ordered.map((item) => {
+          {[activeSession].filter(Boolean).map((item) => {
             const tone = flagTone(item.flag);
             return (
               <div key={item.uuid}>
@@ -209,10 +268,15 @@ const CoachingSessionsPanel = ({
                   <div>
                     <p className="text-xl font-black tracking-tight text-slate-950">
                       Session {sessionNumber.get(item.uuid) ?? "—"}
+                      {item.sessionType ? ` - ${item.sessionType}` : ""}
                     </p>
-                    <p className="mt-0.5 text-sm text-slate-500">
-                      {item.sessionType || "Coaching session"}
-                    </p>
+                    <button
+                      type="button"
+                      onClick={() => setOpenSession("")}
+                      className="mt-1 text-sm font-semibold text-[#0b2b5c]"
+                    >
+                      All sessions
+                    </button>
                   </div>
 
                   <span

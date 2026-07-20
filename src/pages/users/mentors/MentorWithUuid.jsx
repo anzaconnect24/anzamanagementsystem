@@ -4,6 +4,7 @@ import { useRouter } from "@/utils/navigation";
 import { useParams } from "react-router-dom";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
+import { expertiseList } from "@/utils/mentorProfile";
 import { toast } from "react-hot-toast";
 import { createConversation } from "@/controllers/conversation_controller";
 import { UserContext } from "../../../layouts/DashboardLayout";
@@ -11,6 +12,11 @@ import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { createNotification } from "@/controllers/notification_controller";
 import { useTranslation } from "../../../locales";
 import { getUserInfo } from "../../../controllers/user_controller";
+
+const capitalizeFirst = (value) => {
+  const text = String(value || "").trim();
+  return text ? text[0].toUpperCase() + text.slice(1) : "";
+};
 
 const Page = () => {
   const { t, isSwahili } = useTranslation();
@@ -46,7 +52,7 @@ const Page = () => {
     },
     {
       label: t("mentorProfile.areasOfExpertise", "Areas of expertise"),
-      value: Object.values(user?.MentorProfile?.areasOfExperties || {}).join(", ") || t("common.notAvailable", "N/A"),
+      value: expertiseList(user?.MentorProfile?.areasOfExperties).join(", ") || t("common.notAvailable", "N/A"),
     },
     {
       label: t("business.sector", "Sector"),
@@ -111,75 +117,93 @@ const Page = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">🙍</span>
-            {t("mentorProfile.bio", "Bio")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {user?.MentorProfile?.description ||
-              t("mentorProfile.noInfo", "No Information Available")}
-          </p>
+      {/* Bio on the left, mentorship details in the panel on the right. */}
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[2.4fr_1fr]">
+        <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm transition-all duration-300 hover:shadow-md">
+          <div className="mb-4">
+            <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
+              <span className="text-xl mr-3">🙍</span>
+              {t("mentorProfile.bio", "Bio")}
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
+              {user?.MentorProfile?.description ||
+                t("mentorProfile.noInfo", "No Information Available")}
+            </p>
+          </div>
         </div>
-      </div>
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">🎯</span>
-            {t("mentorProfile.mentorshipFocus", "Mentorship focus")}
+      {/* Mentorship focus, availability, expertise and language live in their
+          own panel beside the bio rather than stacked down the page. */}
+      <aside className="mt-6 space-y-4 xl:mt-0">
+        <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-boxdark">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+            {t("mentorProfile.mentorshipDetails", "Mentorship Details")}
           </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {Object.keys(user?.MentorProfile?.mentorshipFocus || {}).length > 0 ? (
-              Object.values(user.MentorProfile.mentorshipFocus).join(", ")
-            ) : (
-              t("common.notAvailable", "N/A")
+          <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+            {t(
+              "mentorProfile.mentorshipDetailsSub",
+              "How this mentor works and where they can support you.",
             )}
           </p>
-        </div>
-      </div>
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">🗣️</span>
-            {t("mentorProfile.languages", "Languages")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {user?.MentorProfile?.language ||
-              t("mentorProfile.noInfo", "No Information Available")}
-          </p>
+          <div className="mt-5 space-y-3">
+            {[
+              {
+                icon: "🎯",
+                label: t("mentorProfile.mentorshipFocus", "Mentorship focus"),
+                value:
+                  Object.keys(user?.MentorProfile?.mentorshipFocus || {}).length > 0
+                    ? Object.values(user.MentorProfile.mentorshipFocus).join(", ")
+                    : typeof user?.MentorProfile?.mentorshipFocus === "string"
+                      ? user.MentorProfile.mentorshipFocus
+                      : "",
+              },
+              {
+                icon: "📅",
+                label: t("mentorProfile.availability", "Availability"),
+                // Stored lower-case by some records ("weekly"), so present it
+                // with a capital first letter.
+                value: capitalizeFirst(user?.MentorProfile?.mentorAvailability),
+              },
+              {
+                icon: "🌎",
+                label: t("mentorProfile.areasOfExpertise", "Areas of expertise"),
+                value: expertiseList(
+                  user?.MentorProfile?.areasOfExperties,
+                ).join(", "),
+              },
+              {
+                icon: "🗣️",
+                label: t("mentorProfile.languages", "Languages"),
+                value: user?.MentorProfile?.language,
+              },
+            ].map((row) => (
+              <div
+                key={row.label}
+                className="flex items-start gap-3 rounded-xl bg-gray-50 p-4 dark:bg-meta-4"
+              >
+                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-lg shadow-sm dark:bg-boxdark">
+                  {row.icon}
+                </span>
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">
+                    {row.label}
+                  </p>
+                  <p
+                    className={`mt-0.5 text-sm leading-6 ${
+                      row.value
+                        ? "text-gray-600 dark:text-gray-300"
+                        : "font-semibold text-[#e07a1f]"
+                    }`}
+                  >
+                    {row.value || t("common.notAvailable", "Not provided")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-      </div>
-
-      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">📅 </span>
-            {t("mentorProfile.availability", "Availability")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {user?.MentorProfile?.mentorAvailability ||
-              t("mentorProfile.noInfo", "No Information Available")}
-          </p>
-        </div>
-      </div>
-
-      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">🌎</span>
-            {t("mentorProfile.areasOfExpertise", "Areas of expertise")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {Object.keys(user?.MentorProfile?.areasOfExperties || {}).length > 0 ? (
-              Object.values(user.MentorProfile.areasOfExperties).join(", ")
-            ) : (
-              t("mentorProfile.noInfo", "No Information Available")
-            )}
-          </p>
-        </div>
+      </aside>
       </div>
 
       <div className="flex space-x-4 mt-6">
