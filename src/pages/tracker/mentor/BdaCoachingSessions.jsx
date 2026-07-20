@@ -11,8 +11,6 @@ import {
   FaMapMarkerAlt,
   FaSearch,
 } from "react-icons/fa";
-import Loader from "@/components/common/Loader";
-import { UserContext } from "@/layouts/DashboardLayout";
 import { getEnterprenuers } from "@/controllers/user_controller";
 import { getPrograms } from "@/controllers/program_controller";
 import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
