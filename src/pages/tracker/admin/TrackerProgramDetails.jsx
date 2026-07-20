@@ -6,7 +6,54 @@ import { getTrackerProgramOverview } from "@/controllers/trackerController";
 import { getProgram } from "@/controllers/program_controller";
 import { getEnterprenuers } from "@/controllers/user_controller";
 import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
-import { FaBuilding, FaMapMarkerAlt, FaCalendarAlt, FaArrowRight } from "react-icons/fa";
+import {
+  FaBuilding,
+  FaMapMarkerAlt,
+  FaCalendarAlt,
+  FaArrowRight,
+  FaSearch,
+} from "react-icons/fa";
+
+// Module scope so it is not remounted on every keystroke in the search box,
+// which would close an open menu mid-interaction.
+const FilterDropdown = ({ id, label, value, options, onPick, open, setOpen }) => (
+  <div className="relative inline-block">
+    <button
+      type="button"
+      onClick={() => setOpen((prev) => (prev === id ? "" : id))}
+      className={`inline-flex items-center gap-2 rounded-md border px-4 py-3 text-sm transition-colors ${
+        label !== "Sort" && value !== options[0]
+          ? "border-green-600 bg-green-50 text-green-700"
+          : "border-black/10 bg-white text-[#6f6f72] hover:border-green-600"
+      }`}
+    >
+      <span>{label === "Sort" ? `Sort: ${value}` : value}</span>
+      <span>{open === id ? "⌃" : "⌄"}</span>
+    </button>
+
+    {open === id && (
+      <div className="absolute z-20 mt-2 max-h-64 w-64 overflow-y-auto rounded-xl border border-black/10 bg-white shadow-lg">
+        {options.map((option) => (
+          <button
+            key={option}
+            type="button"
+            onClick={() => {
+              onPick(option);
+              setOpen("");
+            }}
+            className={`block w-full px-4 py-2 text-left text-sm ${
+              value === option
+                ? "bg-green-50 text-green-700"
+                : "text-[#6f6f72] hover:bg-[#f8f8f6]"
+            }`}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+    )}
+  </div>
+);
 
 const TrackerProgramDetails = () => {
   const navigate = useNavigate();
@@ -18,6 +65,10 @@ const TrackerProgramDetails = () => {
   // entrepreneur uuid -> full entrepreneur record (image, email, business,
   // sector, location, join date) for the startup cards.
   const [entByUuid, setEntByUuid] = useState({});
+  const [keyword, setKeyword] = useState("");
+  const [sectorFilter, setSectorFilter] = useState("All Sectors");
+  const [sortKey, setSortKey] = useState("name");
+  const [openDropdown, setOpenDropdown] = useState("");
 
   useEffect(() => {
     const meta = parseTrackerProgramMeta(overview?.program);
@@ -104,6 +155,55 @@ const TrackerProgramDetails = () => {
     [program],
   );
 
+  // Flatten each member's display fields once so the filters, the sort and the
+  // card all read the same values.
+  const cards = useMemo(
+    () =>
+      members.map((member, index) => {
+        const item = entByUuid[member.entreprenuerUuid] || {};
+        const business = item.Business || {};
+        const joinedRaw = business?.createdAt || item?.createdAt;
+        return {
+          key: member.entreprenuerUuid || index,
+          entreprenuerUuid: member.entreprenuerUuid,
+          name: member.name || business.name || item.name || "Unnamed startup",
+          sector: business?.BusinessSector?.name || member.sector || "",
+          email: business?.email || item?.email || "",
+          location: business?.location || member.district || "",
+          joinedYear: joinedRaw ? new Date(joinedRaw).getFullYear() : null,
+          coverImage: item?.image || "/images/default-avatar.png",
+        };
+      }),
+    [members, entByUuid],
+  );
+
+  const sectorOptions = useMemo(
+    () => [
+      "All Sectors",
+      ...Array.from(new Set(cards.map((c) => c.sector).filter(Boolean))).sort(),
+    ],
+    [cards],
+  );
+
+  const visibleCards = useMemo(() => {
+    const q = keyword.trim().toLowerCase();
+    return cards
+      .filter((card) => {
+        if (sectorFilter !== "All Sectors" && card.sector !== sectorFilter)
+          return false;
+        if (!q) return true;
+        return [card.name, card.email, card.sector, card.location]
+          .filter(Boolean)
+          .some((field) => String(field).toLowerCase().includes(q));
+      })
+      .sort((a, b) => {
+        if (sortKey === "recent") return (b.joinedYear || 0) - (a.joinedYear || 0);
+        if (sortKey === "sector")
+          return String(a.sector).localeCompare(String(b.sector));
+        return String(a.name).localeCompare(String(b.name));
+      });
+  }, [cards, sectorFilter, sortKey, keyword]);
+
   if (loading) {
     return <Loader />;
   }
@@ -155,37 +255,72 @@ const TrackerProgramDetails = () => {
       </section>
 
       <div>
-        <div className="mb-4">
-          <h2 className="text-lg font-semibold text-[#111827]">
-            Program startups ({members.length})
-          </h2>
-          <p className="text-sm text-[#64748b]">
-            Open a startup to manage its grant, assigned BDA, contract and reports.
-          </p>
-        </div>
+        <h2 className="mb-6 text-2xl font-bold text-[#172033]">
+          Available Entrepreneurs
+        </h2>
+
+        {members.length > 0 && (
+          <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-1 flex-wrap items-center gap-3">
+                <FilterDropdown
+                  id="sector"
+                  label="Sector"
+                  value={sectorFilter}
+                  options={sectorOptions}
+                  onPick={setSectorFilter}
+                  open={openDropdown}
+                  setOpen={setOpenDropdown}
+                />
+                <FilterDropdown
+                  id="sort"
+                  label="Sort"
+                  value={sortKey}
+                  options={["name", "sector", "recent"]}
+                  onPick={setSortKey}
+                  open={openDropdown}
+                  setOpen={setOpenDropdown}
+                />
+              </div>
+
+              <div className="relative ml-auto w-full sm:w-72">
+                <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8a8f98]" />
+                <input
+                  type="text"
+                  placeholder="Search entrepreneurs..."
+                  value={keyword}
+                  onChange={(e) => setKeyword(e.target.value)}
+                  className="w-full rounded-md border border-black/10 bg-white px-4 py-3 pl-10 text-sm text-[#172033] outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+                />
+              </div>
+            </div>
+          </div>
+        )}
 
         {members.length === 0 ? (
           <div className="rounded-xl border border-dashed border-black/20 bg-white p-6 text-sm text-[#64748b]">
             No startups added to this program yet. Edit the program to select startups from the pool.
           </div>
+        ) : visibleCards.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-black/20 bg-white p-6 text-center text-sm text-[#64748b]">
+            No entrepreneurs match your filters.
+          </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-            {members.map((member, index) => {
-              const item = entByUuid[member.entreprenuerUuid] || {};
-              const business = item.Business || {};
-              const name = member.name || business.name || item.name || "Unnamed startup";
-              const sector =
-                business?.BusinessSector?.name || member.sector || "No Sector";
-              const email = business?.email || item?.email || "No email provided";
-              const location = business?.location || member.district || "";
-              const joinedRaw = business?.createdAt || item?.createdAt;
-              const joinedYear = joinedRaw ? new Date(joinedRaw).getFullYear() : null;
-              const coverImage = item?.image || "/images/default-avatar.png";
+            {visibleCards.map((member) => {
+              const {
+                name,
+                email,
+                location,
+                joinedYear,
+                coverImage,
+              } = member;
+              const sector = member.sector || "No Sector";
               const canOpen = Boolean(member.entreprenuerUuid);
 
               return (
                 <div
-                  key={member.entreprenuerUuid || index}
+                  key={member.key}
                   role="button"
                   tabIndex={0}
                   onClick={() =>
@@ -203,12 +338,12 @@ const TrackerProgramDetails = () => {
                   }}
                   className="group flex cursor-pointer flex-col overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg"
                 >
-                  <div className="relative h-44 w-full overflow-hidden bg-slate-100">
+                  <div className="relative h-56 w-full overflow-hidden bg-black">
                     <div
                       className="absolute inset-0 bg-cover bg-center transition duration-300 group-hover:scale-105"
                       style={{ backgroundImage: `url(${coverImage})` }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-black/10 to-transparent" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
                     <div className="absolute bottom-4 left-4">
                       <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
                         {sector}
@@ -221,7 +356,9 @@ const TrackerProgramDetails = () => {
                       {name}
                     </h3>
 
-                    <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">{email}</p>
+                    <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
+                      {email || "No email provided"}
+                    </p>
 
                     <div className="space-y-3 text-sm text-[#6f6f72]">
                       {location && (

@@ -53,10 +53,10 @@ const FilePicker = ({ uploading, onUpload, children, className }) => (
   </label>
 );
 
-const Detail = ({ label, value, children }) => (
+const Detail = ({ label, value }) => (
   <div className="flex items-center gap-3 text-sm">
     <span className="w-24 shrink-0 text-slate-500">{label}</span>
-    {children || <span className="font-semibold text-slate-900">{value}</span>}
+    <span className="font-semibold text-slate-900">{value}</span>
   </div>
 );
 
@@ -87,7 +87,9 @@ const SignedContractCard = ({
 
   return (
     <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70">
-      <div className="grid gap-6 lg:grid-cols-[1.7fr_1fr]">
+      {/* The actions column is sized to its content so the buttons stay on one
+          horizontal row instead of wrapping in a fixed narrow column. */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_auto]">
         {/* Left — attached contract details */}
         <div>
           <div className="mb-4 flex items-center gap-2">
@@ -97,33 +99,16 @@ const SignedContractCard = ({
             </h2>
           </div>
 
-          <div className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-            <Detail
-              label="Contract Name"
-              value={hasContract ? displayName : "Not uploaded yet"}
-            />
-            <Detail label="Status">
-              {!hasContract ? (
-                <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-500">
-                  Awaiting upload
-                </span>
-              ) : acknowledgedAt ? (
-                <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700">
-                  Signed
-                </span>
-              ) : (
-                <span className="rounded-full bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700">
-                  Awaiting signature
-                </span>
-              )}
-            </Detail>
-          </div>
+          <Detail
+            label="Contract Name"
+            value={hasContract ? displayName : "Not uploaded yet"}
+          />
         </div>
 
         {/* Right — actions (always shown) */}
         <div className="lg:pl-6">
           <h3 className="mb-4 text-sm font-bold tracking-tight text-slate-900">Actions</h3>
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-center gap-3 lg:flex-nowrap">
             {/* View Contract is hidden for the startup — they only download and
                 upload the signed copy. */}
             {!canSign &&

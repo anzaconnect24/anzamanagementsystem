@@ -238,6 +238,7 @@ import CoachingSessions from "./pages/tracker/entreprenuer/CoachingSessions";
 import ProgramMemberRoute from "./components/guards/ProgramMemberRoute";
 import RoleRoute from "./components/guards/RoleRoute";
 import BdaCoachingSessions from "./pages/tracker/mentor/BdaCoachingSessions";
+import BdaCoachingSessionSetup from "./pages/tracker/mentor/BdaCoachingSessionSetup";
 import TrackerProgramDetails from "./pages/tracker/admin/TrackerProgramDetails";
 import FundingAgreements from "./pages/tracker/admin/FundingAgreements";
 import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
@@ -340,6 +341,10 @@ function App() {
             <Route path="mentorReports" element={<MentorReports />} />
             <Route path="mentorTracker" element={<MentorTracker />} />
             <Route path="bdaCoachingSessions" element={<BdaCoachingSessions />} />
+            <Route
+              path="bdaCoachingSessions/:entUuid"
+              element={<BdaCoachingSessionSetup />}
+            />
             <Route
               path="mentorTracker/enterprise-kyc"
               element={<EnterpriseKyc />}

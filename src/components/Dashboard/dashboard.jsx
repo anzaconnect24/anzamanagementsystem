@@ -108,15 +108,11 @@ const DashboardHero = ({ userDetails, data }) => {
           </p>
         </div>
 
-        {["Investor", "Mentor", "Staff", "Reviewer"].includes(
-          userDetails?.role,
-        ) && (
+        {/* Staff users are stored as either "Staff" or "Reviewer" (see SignUp),
+            so both are excluded here. */}
+        {["Investor", "Mentor"].includes(userDetails?.role) && (
           <Link
-            href={
-              ["Investor", "Mentor"].includes(userDetails?.role)
-                ? "/dashboard/entreprenuer-profile"
-                : "/dashboard/edit-profile"
-            }
+            href="/dashboard/entreprenuer-profile"
             className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
           >
             Edit Profile
@@ -450,7 +446,7 @@ const Dashboard = () => {
 
       {["Admin", "Reviewer"].includes(userDetails.role) && (
         <div>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
             <CardDataStats
               link="/dashboard/pendingApplications"
               title={t(

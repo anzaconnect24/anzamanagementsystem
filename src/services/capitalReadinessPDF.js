@@ -111,6 +111,9 @@ const DOMAINS = [
 // findings (observations) and the recommended capacity interventions.
 const DOMAIN_CONTENT = {
   commercial: {
+    // gapTitle is the bold lead-in on the one-page report; gap is the body.
+    gapTitle:
+      "Weak commercial systems limiting predictable and scalable revenue growth",
     gap: "Revenue is being generated, but the commercial engine still runs on informal, undocumented routines. There is no defined sales pipeline, market positioning is held tacitly rather than written down, and acquisition and retention are not measured. For investors this translates directly into uncertainty about how repeatable and predictable future revenue really is.",
     intro:
       "Commercial capability was assessed across the sales process, market positioning, and customer acquisition and retention.",
@@ -126,6 +129,8 @@ const DOMAIN_CONTENT = {
     ],
   },
   financial: {
+    gapTitle:
+      "Limited financial planning and reporting reducing investment readiness",
     gap: "Core financial management is operating, but reporting and forecasting fall short of the standard investors expect during due diligence. Cash-flow is not modelled forward, records are not yet investor-grade, and management reporting lacks a regular cadence — all of which limit confidence in the numbers.",
     intro:
       "Financial capability was assessed across record quality, management reporting, cash-flow forecasting and controls.",
@@ -141,6 +146,8 @@ const DOMAIN_CONTENT = {
     ],
   },
   operations: {
+    gapTitle:
+      "High operational dependency caused by undocumented processes and weak performance management",
     gap: "Operational delivery works at the current scale, but it depends on undocumented, person-dependent routines. Processes live in people's heads, key functions rest on individuals, and performance is not tracked against targets — which caps resilience and makes scaling risky.",
     intro:
       "Operational capability was assessed across process documentation, key-person dependency and performance management.",
@@ -156,6 +163,8 @@ const DOMAIN_CONTENT = {
     ],
   },
   legal: {
+    gapTitle:
+      "Incomplete governance and compliance framework increasing due diligence risk",
     gap: "Foundational legal structures are in place, but governance, contracts and compliance records are incomplete. Licences and agreements are not consolidated, compliance gaps remain open, and intellectual property and oversight are not fully established — the issues most likely to stall or derail investor due diligence.",
     intro:
       "Legal capability was assessed across registration, contracts, regulatory compliance, intellectual property and governance.",
@@ -1646,6 +1655,386 @@ export async function generateCapitalReadinessContent(
   return { success: true, content };
 }
 
+// ─── One-page report (A4 landscape) ──────────────────────────────────────────
+// The delivered CRAT report is a single A4 landscape page: identity and summary
+// on the left, findings on the right. Everything below is sized to that page —
+// nothing here may call addPage(). Where content could overflow, the type size
+// steps down and the list is capped rather than spilling to a second page.
+
+const P1 = { W: 297, H: 210, M: 14 };
+
+// Bar colour by score band, matching the reference: strong = green through to
+// weak = red, so the profile reads at a glance.
+function p1ScoreColor(pct) {
+  const p = clamp(pct);
+  if (p >= 70) return [22, 128, 61];
+  if (p >= 60) return [132, 204, 122];
+  if (p >= 40) return [234, 179, 8];
+  if (p >= 20) return [244, 162, 97];
+  return [220, 38, 38];
+}
+
+// Priority follows the overall score; the note names the two weakest domains so
+// it says what actually has to happen next.
+function p1Priority(scoreData) {
+  const overall = calcOverallScore(scoreData);
+  const weakest = [...DOMAINS]
+    .sort((a, b) => pctOf(scoreData, a.key) - pctOf(scoreData, b.key))
+    .slice(0, 2)
+    .map((d) => d.label.toLowerCase());
+  const gaps = `${weakest[0]} & ${weakest[1]} gaps`;
+
+  if (overall >= 70)
+    return {
+      label: "Low",
+      note: "Investment-ready — proceed to investor matchmaking.",
+    };
+  if (overall >= 55)
+    return {
+      label: "Medium",
+      note: `Proceed to acceleration while closing ${gaps}.`,
+    };
+  if (overall >= 40)
+    return {
+      label: "Medium-High",
+      note: `Proceed to acceleration after ${gaps} are addressed.`,
+    };
+  return {
+    label: "High",
+    note: `Foundational support required before acceleration — ${gaps} are critical.`,
+  };
+}
+
+// Strengths: every domain at or above the 70% threshold, strongest first, then
+// the maturity read. Returns [] when nothing clears the bar rather than
+// inventing a strength.
+function p1Strengths(scoreData) {
+  const out = [];
+  [...DOMAINS]
+    .filter((d) => pctOf(scoreData, d.key) >= 70)
+    .sort((a, b) => pctOf(scoreData, b.key) - pctOf(scoreData, a.key))
+    .forEach((d) => {
+      const p = pctOf(scoreData, d.key);
+      out.push({
+        lead: `Strong ${d.full} (${p}%):`,
+        body: `the business demonstrates established ${d.label.toLowerCase()} capability, with core systems in place, making this domain investment-grade.`,
+      });
+    });
+
+  const overall = calcOverallScore(scoreData);
+  out.push({
+    lead: `${maturityLabel(overall)} Business Maturity:`,
+    body: `the business sits at the "${maturityLabel(overall).toLowerCase()}" maturity level on an overall score of ${overall}%, with a defined path to investment readiness once the identified gaps are closed.`,
+  });
+  return out;
+}
+
+// Section header bar.
+function p1Bar(doc, x, y, w, title) {
+  doc.setFillColor(...C.blue);
+  doc.rect(x, y, w, 8.4, "F");
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(...C.white);
+  doc.text(title, x + w / 2, y + 5.8, { align: "center" });
+  return y + 8.4;
+}
+
+// Lay out a bold lead-in followed by body text, wrapped as one paragraph.
+// jsPDF has no inline rich text, so words are measured and placed individually.
+function p1Rich(doc, x, y, w, lead, body, fs, lh, dry) {
+  const tokens = [
+    ...String(lead || "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((t) => ({ t, bold: true })),
+    ...String(body || "")
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((t) => ({ t, bold: false })),
+  ];
+
+  doc.setFontSize(fs);
+  let cx = x;
+  let cy = y;
+  let lines = 1;
+
+  tokens.forEach((tok) => {
+    doc.setFont(FONT, tok.bold ? "bold" : "normal");
+    const tw = doc.getTextWidth(tok.t + " ");
+    if (cx + tw > x + w && cx > x) {
+      cx = x;
+      cy += lh;
+      lines += 1;
+    }
+    if (!dry) {
+      doc.setTextColor(...(tok.bold ? C.ink : C.slate));
+      doc.text(tok.t, cx, cy);
+    }
+    cx += tw;
+  });
+
+  return lines * lh;
+}
+
+// A bulleted list of { lead, body } (or plain strings). Returns the height used;
+// pass dry to measure without drawing.
+function p1Bullets(doc, x, y, w, items, fs, lh, dry) {
+  let cy = y;
+  items.forEach((it) => {
+    const lead = typeof it === "string" ? "" : it.lead;
+    const body = typeof it === "string" ? it : it.body;
+    if (!dry) {
+      doc.setFont(FONT, "normal");
+      doc.setFontSize(fs);
+      doc.setTextColor(...C.blue);
+      doc.text("•", x, cy);
+    }
+    cy += p1Rich(doc, x + 3.6, cy, w - 3.6, lead, body, fs, lh, dry) + 1.6;
+  });
+  return cy - y;
+}
+
+const P1_SIZES = [8.6, 8.2, 7.8, 7.4, 7, 6.6];
+
+// Largest type size at which `items` fit `avail`, or null if none do.
+function p1FitSize(doc, w, items, avail, extra = 0) {
+  for (const fs of P1_SIZES) {
+    const lh = fs * 0.47;
+    if (p1Bullets(doc, 0, 0, w, items, fs, lh, true) + extra <= avail) {
+      return { fs, lh, items };
+    }
+  }
+  return null;
+}
+
+// Fit a list to the space available: shrink the type first, and only drop
+// entries once the smallest size still overflows. Always returns something that
+// fits, so the page can never spill onto a second one.
+function p1Fit(doc, w, items, avail, extra = 0) {
+  const whole = p1FitSize(doc, w, items, avail, extra);
+  if (whole) return whole;
+
+  const fs = P1_SIZES[P1_SIZES.length - 1];
+  const lh = fs * 0.47;
+  for (let keep = items.length - 1; keep >= 1; keep -= 1) {
+    const slice = items.slice(0, keep);
+    if (p1Bullets(doc, 0, 0, w, slice, fs, lh, true) + extra <= avail) {
+      return { fs, lh, items: slice };
+    }
+  }
+  return { fs, lh, items: items.slice(0, 1) };
+}
+
+function buildOnePager(data, scoreData, userDetails) {
+  const doc = new jsPDF({
+    orientation: "landscape",
+    unit: "mm",
+    format: "a4",
+  });
+  registerFonts(doc);
+
+  const { W, H, M: m } = P1;
+  const name = getBusinessName(userDetails);
+  const overall = calcOverallScore(scoreData);
+  const priority = p1Priority(scoreData);
+  const profile = getBusinessProfile(userDetails);
+
+  const description =
+    userDetails?.Business?.description ||
+    userDetails?.Business?.businessDescription ||
+    `${name} is a business assessed under the CRAT capital readiness framework${
+      profile.sector ? ` operating in the ${profile.sector} sector` : ""
+    }${profile.location ? `, based in ${profile.location}` : ""}.`;
+
+  // ── Header: name + description, full width.
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(19);
+  doc.setTextColor(...C.blue);
+  doc.text(name, m, m + 7);
+
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(8.6);
+  doc.setTextColor(...C.slate);
+  const descLines = doc.splitTextToSize(String(description), W - 2 * m).slice(0, 3);
+  descLines.forEach((l, i) => doc.text(l, m, m + 15 + i * 4.2));
+
+  const top = m + 15 + descLines.length * 4.2 + 5;
+
+  // ── Two columns.
+  const leftW = 112;
+  const gutter = 11;
+  const rightX = m + leftW + gutter;
+  const rightW = W - m - rightX;
+
+  // ── LEFT: priority, rating, domain bars, summary, strengths.
+  let ly = top;
+
+  doc.setFillColor(...C.amber);
+  doc.rect(m, ly, 52, 7.6, "F");
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(...C.ink);
+  doc.text(`Priority: ${priority.label}`, m + 3.5, ly + 5.3);
+  ly += 12.5;
+
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(8.4);
+  doc.setTextColor(...C.slate);
+  doc.splitTextToSize(priority.note, leftW).forEach((l, i) => {
+    doc.text(l, m, ly + i * 4.1);
+  });
+  ly += doc.splitTextToSize(priority.note, leftW).length * 4.1 + 4;
+
+  ly = p1Bar(doc, m, ly, leftW, "Startup Rating") + 7;
+
+  // Maturity tiers — the reached tier carries the score.
+  const tiers = ["Basic", "Developing", "Progressing", "Advanced", "Leading"];
+  const idx = Math.min(4, Math.floor(clamp(overall) / 20));
+  const segW = leftW / 5;
+  tiers.forEach((t, i) => {
+    const sx = m + i * segW;
+    const active = i === idx;
+    doc.setFillColor(...(active ? C.amber : i < idx ? C.softBlue : C.track));
+    doc.rect(sx, ly, segW - 1.2, 6.4, "F");
+    doc.setFont(FONT, active ? "bold" : "normal");
+    doc.setFontSize(active ? 6.6 : 6.4);
+    doc.setTextColor(...(active ? C.ink : C.muted));
+    doc.text(
+      active ? `${t} · ${overall}%` : t,
+      sx + (segW - 1.2) / 2,
+      ly + 4.3,
+      { align: "center" },
+    );
+  });
+  ly += 12;
+
+  doc.setFont(FONT, "bold");
+  doc.setFontSize(8.6);
+  doc.setTextColor(...C.blue);
+  doc.text("Readiness by domain", m, ly);
+
+  doc.setFontSize(6.6);
+  doc.setTextColor(...C.red);
+  doc.text("70% target", m + leftW * 0.7, ly, { align: "center" });
+  ly += 4;
+
+  // Domain bars + overall.
+  const rows = [
+    ...DOMAINS.map((d) => ({
+      label: d.label,
+      pct: pctOf(scoreData, d.key),
+      bold: false,
+    })),
+    { label: "Overall", pct: overall, bold: true },
+  ];
+
+  const labelW = 24;
+  const valW = 12;
+  const barX = m + labelW;
+  const barW = leftW - labelW - valW;
+
+  rows.forEach((r) => {
+    doc.setFont(FONT, r.bold ? "bold" : "normal");
+    doc.setFontSize(8);
+    doc.setTextColor(...C.ink);
+    doc.text(r.label, m, ly + 4.2);
+
+    doc.setFillColor(...C.track);
+    doc.rect(barX, ly, barW, 5.6, "F");
+
+    const fw = Math.max(1.2, (barW * clamp(r.pct)) / 100);
+    doc.setFillColor(...p1ScoreColor(r.pct));
+    doc.rect(barX, ly, fw, 5.6, "F");
+
+    // 70% threshold marker.
+    const tx = barX + barW * 0.7;
+    doc.setDrawColor(...C.red);
+    doc.setLineWidth(0.5);
+    doc.line(tx, ly - 0.7, tx, ly + 6.3);
+
+    doc.setFont(FONT, "bold");
+    doc.setTextColor(...p1ScoreColor(r.pct));
+    doc.text(`${clamp(r.pct)}%`, m + leftW, ly + 4.2, { align: "right" });
+
+    ly += 9.4;
+  });
+
+  ly += 1.5;
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(8.2);
+  doc.setTextColor(...C.slate);
+  const verdict = `The business achieved an overall Capital Readiness Score of ${overall}%, placing it at the "${maturityLabel(
+    overall,
+  )}" maturity level. As such, it is ${
+    overall >= 70 ? "investment-ready" : "not yet investment-ready"
+  }.`;
+  doc.splitTextToSize(verdict, leftW).forEach((l, i) => {
+    doc.text(l, m, ly + i * 4.1);
+  });
+  ly += doc.splitTextToSize(verdict, leftW).length * 4.1 + 5;
+
+  // Strengths — sized to whatever space is left in the column.
+  const strengths = p1Strengths(scoreData);
+  const footerY = H - 10;
+  ly = p1Bar(doc, m, ly, leftW, "Strengths") + 6;
+
+  const str = p1Fit(doc, leftW, strengths, footerY - 5 - ly);
+  p1Bullets(doc, m, ly, leftW, str.items, str.fs, str.lh, false);
+
+  // ── RIGHT: thematic gaps + recommendations.
+  const gaps = DOMAINS.map((d) => ({
+    lead: `${DOMAIN_CONTENT[d.key].gapTitle || d.full}:`,
+    body: DOMAIN_CONTENT[d.key].gap,
+  }));
+  // Recommendations are taken round-robin across the domains so every domain is
+  // represented rather than the first ones crowding the list out.
+  const byDomain = DOMAINS.map((d) => DOMAIN_CONTENT[d.key].recs || []);
+  const recs = [];
+  for (let i = 0; i < Math.max(...byDomain.map((r) => r.length)); i += 1) {
+    byDomain.forEach((list) => {
+      if (list[i]) recs.push(list[i]);
+    });
+  }
+
+  // Gaps and recommendations share the column, so they are fitted together at a
+  // single size: gaps first (they are fixed at four), then whatever space is
+  // left goes to the recommendations.
+  const rightAvail = footerY - 5 - top;
+  const gapFit = p1Fit(doc, rightW, gaps, rightAvail * 0.52, 12);
+  const usedByGaps =
+    p1Bullets(doc, 0, 0, rightW, gapFit.items, gapFit.fs, gapFit.lh, true) + 12;
+  const recFit = p1Fit(doc, rightW, recs, rightAvail - usedByGaps, 12);
+
+  let ry = top;
+  ry = p1Bar(doc, rightX, ry, rightW, "Key Thematic Gaps") + 6;
+  ry +=
+    p1Bullets(doc, rightX, ry, rightW, gapFit.items, gapFit.fs, gapFit.lh, false) +
+    4;
+
+  ry = p1Bar(doc, rightX, ry, rightW, "Key Recommendations") + 6;
+  p1Bullets(doc, rightX, ry, rightW, recFit.items, recFit.fs, recFit.lh, false);
+
+  // ── Footer.
+  doc.setDrawColor(...C.line);
+  doc.setLineWidth(0.3);
+  doc.line(m, footerY - 4, W - m, footerY - 4);
+  doc.setFont(FONT, "normal");
+  doc.setFontSize(7);
+  doc.setTextColor(...C.faint);
+  doc.text(`${name} — Capital Readiness Assessment`, m, footerY);
+  doc.text(String(new Date().getFullYear()), W - m, footerY, {
+    align: "right",
+  });
+
+  const filename = `Capital_Readiness_Report_${String(name).replace(
+    /[^a-z0-9]+/gi,
+    "_",
+  )}_${Date.now()}.pdf`;
+  doc.save(filename);
+  return filename;
+}
+
 // ─── Main Export ─────────────────────────────────────────────────────────────
 
 export async function generateCapitalReadinessPDF(
@@ -1678,12 +2067,11 @@ export async function generateCapitalReadinessPDF(
     );
   }
 
-  onStatus?.("Preparing PDF report...");
+  onStatus?.("Building report...");
 
-  const logoDataUrl = await fetchImageAsBase64("/logo.png");
-
-  onStatus?.("Building PDF...");
-  const filename = await buildPDF(data, scoreData, userDetails, logoDataUrl);
+  // The delivered report is the single-page summary. buildPDF below still holds
+  // the long-form multi-page version if it is ever needed again.
+  const filename = buildOnePager(data, scoreData, userDetails);
 
   onStatus?.("Done!");
   return { success: true, filename };

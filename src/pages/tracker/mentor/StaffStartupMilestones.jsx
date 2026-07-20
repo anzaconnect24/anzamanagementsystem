@@ -200,37 +200,42 @@ const StaffStartupMilestones = () => {
             </div>
           )}
 
-          {rows.map((m) => (
-            <div
-              key={m.uuid || m.id}
-              className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-sm font-black text-slate-950">{m.title}</p>
-                <span className="shrink-0 rounded-full bg-slate-100 px-3 py-1 text-[10px] font-black uppercase tracking-wide text-slate-600">
-                  {String(m.status || "pending").replaceAll("_", " ")}
-                </span>
+          {/* Same shape as the startup's own milestone list: the name, with key
+              activities (stored on tranchePlannedUse) as the description. */}
+          {rows.map((m, index) => {
+            const normalizedStatus = String(m.status || "pending").toLowerCase();
+            const waitingForApproval = ["pending", "draft"].includes(
+              normalizedStatus,
+            );
+
+            return (
+              <div
+                key={m.uuid || m.id}
+                className="rounded-xl border border-slate-100 bg-white p-4 shadow-sm"
+              >
+                <div className="flex gap-3">
+                  <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
+                    {m.status === "completed" ? "✓" : index + 1}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-black text-slate-950">{m.title}</p>
+
+                    {m.tranchePlannedUse ? (
+                      <p className="mt-2 text-sm leading-6 text-slate-600">
+                        {m.tranchePlannedUse}
+                      </p>
+                    ) : null}
+
+                    {waitingForApproval && (
+                      <p className="mt-2 text-sm font-semibold text-slate-700">
+                        Waiting for mentor approval before report submission.
+                      </p>
+                    )}
+                  </div>
+                </div>
               </div>
-              {m.linkedTranche && (
-                <p className="mt-1 text-xs text-slate-500">
-                  Tranche: {m.linkedTranche}
-                  {m.trancheAmount
-                    ? ` · TZS ${Number(m.trancheAmount).toLocaleString()}`
-                    : ""}
-                </p>
-              )}
-              {m.description && (
-                <p className="mt-2 text-sm leading-6 text-slate-600">
-                  {m.description}
-                </p>
-              )}
-              {m.dueDate && (
-                <p className="mt-2 text-xs text-slate-400">
-                  Due {new Date(m.dueDate).toLocaleDateString("en-GB")}
-                </p>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </section>
     </div>

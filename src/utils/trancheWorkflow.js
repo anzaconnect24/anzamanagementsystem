@@ -147,6 +147,16 @@ export const canReviewPlan = (planStatus) =>
     planStatus,
   );
 
+// The plan has cleared BDA review — the milestone is approved and can be
+// reported on. Approval only moves planStatus; the milestone's own status stays
+// where it was, so callers must not read approval off `status`.
+export const isPlanApproved = (planStatus) =>
+  [
+    PLAN_STATUS.APPROVED,
+    PLAN_STATUS.SENT_TO_FINANCE,
+    PLAN_STATUS.DISBURSED,
+  ].includes(planStatus);
+
 // A tranche can only be disbursed once the plan is approved (Phase 4 rule).
 export const canDisburse = (planStatus, disbursed) =>
   !disbursed &&
