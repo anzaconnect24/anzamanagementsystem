@@ -10,6 +10,7 @@ import {
   editProgram,
   getProgram,
 } from "../../../../controllers/program_controller";
+import { cleanProgramDescription } from "@/utils/programMeta";
 import { useRouter } from "../../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
 
@@ -162,7 +163,7 @@ const EditProgramPage = () => {
                   </label>
                   <textarea
                     name="description"
-                    defaultValue={program.description}
+                    defaultValue={cleanProgramDescription(program.description)}
                     required
                     className="w-full rounded border-stroke"
                     placeholder={t(

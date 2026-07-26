@@ -15,10 +15,24 @@ const authConfig = () => {
 // BDA/Staff logs a coaching session for any entrepreneur.
 // payload: { entreprenuer_uuid, sessionDate, facilitator, sessionType,
 //            issuesDiscussed, recommendationsGiven, actionsAgreed,
-//            nextSessionDate, flag }
+//            nextSessionDate, flag, status }
+// `status` is "scheduled" when a session is first set up, and "completed" once
+// the post-session report has been filed (see updateCoachingSession).
 export const createCoachingSession = async (data) => {
   const response = await axios.post(
     `${server_url}/coaching-sessions/`,
+    data,
+    authConfig(),
+  );
+  return response.data.body;
+};
+
+// Update an existing session — used to file the post-session report against a
+// scheduled session (issues, recommendations, actions, flag) and mark it
+// "completed".
+export const updateCoachingSession = async (uuid, data) => {
+  const response = await axios.patch(
+    `${server_url}/coaching-sessions/${uuid}`,
     data,
     authConfig(),
   );

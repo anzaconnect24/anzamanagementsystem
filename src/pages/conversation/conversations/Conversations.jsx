@@ -34,7 +34,37 @@ const Conversations = () => {
   return loading ? (
     <Loader />
   ) : (
-    <div>
+    <div className="min-h-screen px-6 py-4">
+      {/* HERO */}
+      <div className="relative mb-8 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/business-class-hero.svg')",
+          }}
+        />
+
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30" />
+
+        <div className="relative z-10 max-w-3xl p-8 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Messaging Center
+          </span>
+
+          <h1 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            {t("common.chats", "Chats")}
+          </h1>
+
+          <p className="max-w-2xl text-lg leading-relaxed text-white/85 drop-shadow-md">
+            {t(
+              "chat.chatsHeroSubtitle",
+              "Stay connected with mentors, investors, and entrepreneurs — all your conversations in one place.",
+            )}
+          </p>
+        </div>
+      </div>
+
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5">
           <h4 className="text-xl font-semibold text-black dark:text-white">

@@ -4,13 +4,10 @@ import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "@/layouts/DashboardLayout";
 import GrantReportButton from "@/components/reports/GrantReportButton";
-import SignedContractCard from "@/components/tracker/SignedContractCard";
-import GrantSummaryCards from "@/components/tracker/GrantSummaryCards";
 import {
   createTrackerMilestone,
   getEntrepreneurTrackerDashboard,
   submitTrackerMilestone,
-  updateEntrepreneurEnterpriseKyc,
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
@@ -24,11 +21,17 @@ import {
 } from "@/utils/trancheWorkflow";
 import {
   UploadCloud,
-  Building2,
   BarChart3,
   Flag,
   ClipboardList,
   FileText,
+  Wallet,
+  Users,
+  UserCheck,
+  TrendingUp,
+  Briefcase,
+  Layers,
+  CalendarDays,
 } from "lucide-react";
 
 const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
@@ -182,7 +185,9 @@ const EntrepreneurMilestones = () => {
       return { ...prev, [uuid]: arr };
     });
   };
-  const [showMilestoneForm, setShowMilestoneForm] = useState(false);
+  // Milestones section is tabbed: "create" (+ Milestone), "report" (Milestone
+  // Reporting) and "status" (Milestone Status).
+  const [milestoneTab, setMilestoneTab] = useState("create");
   const [showKpiForm, setShowKpiForm] = useState(false);
   const [kpiForm, setKpiForm] = useState({
     monthlyRevenue: "",
@@ -267,33 +272,6 @@ const EntrepreneurMilestones = () => {
       document.removeEventListener("visibilitychange", refresh);
     };
   }, [selectedEnterpriseUuid]);
-
-  const [signingContract, setSigningContract] = useState(false);
-
-  // The startup downloads the grant contract, signs it, and uploads the signed
-  // copy — which records the signature (contractAcknowledgedAt).
-  const onUploadSignedContract = async (file) => {
-    if (!file) return;
-    setSigningContract(true);
-    try {
-      const formData = new FormData();
-      formData.append("file", file);
-      const url = await uploadFile(formData);
-      if (!url || typeof url !== "string") throw new Error("Upload failed");
-      await updateEntrepreneurEnterpriseKyc({
-        startupSignedContractUrl: url,
-        contractAcknowledgedAt: new Date().toISOString(),
-      });
-      toast.success("Signed contract uploaded");
-      await loadDashboard(selectedEnterpriseUuid);
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Failed to upload the signed contract",
-      );
-    } finally {
-      setSigningContract(false);
-    }
-  };
 
   const onSubmitMilestone = async (uuid) => {
     const targetMilestone = milestones.find((item) => item.uuid === uuid);
@@ -402,8 +380,8 @@ const EntrepreneurMilestones = () => {
       setShowMilestoneForm(false);
       toast.success(
         created === 1
-          ? "Milestone submitted for BDA review"
-          : `${created} milestones submitted for BDA review`,
+          ? "Milestone submitted for review"
+          : `${created} milestones submitted for review`,
       );
       loadDashboard(selectedEnterpriseUuid);
     } catch (error) {
@@ -562,13 +540,13 @@ const EntrepreneurMilestones = () => {
     (stage) => stage.title === milestoneTranche,
   );
 
+  // KPI values shown as cards under the KPI Tracking panel — the same figures
+  // the Edit KPIs form updates.
   const activeCustomers = Number(kpiForm.activeCustomers || enterprise?.activeCustomers || 0);
   const employees = Number(kpiForm.employees || enterprise?.employees || 0);
   const monthlyRevenue = Number(kpiForm.monthlyRevenue || enterprise?.monthlyRevenue || 0);
-  const wasteDiverted = Number(kpiForm.wasteDiverted || enterprise?.wasteDiverted || 0);
-  const ceReadiness = kpiForm.ceReadinessScore === ""
-    ? (enterprise?.ceReadinessScore === null || enterprise?.ceReadinessScore === undefined ? "-" : Number(enterprise.ceReadinessScore))
-    : Number(kpiForm.ceReadinessScore);
+  const capitalMobilised = Number(kpiForm.capitalMobilised || enterprise?.capitalMobilised || 0);
+
 
   // Financial summary shown in the stat cards below the hero (mirrors the
   // finance officer's view). Disbursement is derived from tranche stages whose
@@ -671,7 +649,22 @@ const EntrepreneurMilestones = () => {
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
                   Analyze financial performance, monitor operational metrics, and align resources with business objectives to improve accountability and growth.
                 </p>
-                <div className="mt-5">
+                {/* Each opens its own page. */}
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <button
+                    type="button"
+                    onClick={() => navigate("/dashboard/myMilestones/kyc")}
+                    className="rounded-xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
+                  >
+                    Business Information
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/dashboard/myMilestones/contract")}
+                    className="rounded-xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
+                  >
+                    Grant Contract
+                  </button>
                   <GrantReportButton
                     label="Download Grant Report"
                     context={reportContext}
@@ -684,53 +677,59 @@ const EntrepreneurMilestones = () => {
           </div>
         </section>
 
-        <GrantSummaryCards
-          committed={grantStats.committed}
-          disbursed={grantStats.disbursed}
-          remaining={grantStats.remaining}
-          disbursedPct={grantStats.disbursedPct}
-          remainingPct={grantStats.remainingPct}
-          next={grantStats.next}
-          programName={program?.title}
-        />
-
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.45fr_0.75fr]">
-          <div className="space-y-8">
-            <PortalCard
-              icon={<Building2 className="h-5 w-5" />}
-              title="Business Information & KYC"
-              subtitle="Your business identity, ownership, and documents used for funding verification."
-              action={
-                <button
-                  type="button"
-                  onClick={() => navigate("/dashboard/myMilestones/kyc")}
-                  className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
+        <div className="space-y-8">
+            {/* KPI summary cards. */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+              {[
+                {
+                  icon: <Wallet className="h-5 w-5" />,
+                  tint: "bg-emerald-50 text-emerald-600",
+                  label: "Monthly Revenue",
+                  value: formatCurrency(monthlyRevenue),
+                },
+                {
+                  icon: <TrendingUp className="h-5 w-5" />,
+                  tint: "bg-amber-50 text-amber-600",
+                  label: "Capital Mobilised",
+                  value: formatCurrency(capitalMobilised),
+                },
+                {
+                  icon: <Users className="h-5 w-5" />,
+                  tint: "bg-blue-50 text-blue-600",
+                  label: "Employees",
+                  value: employees,
+                },
+                {
+                  icon: <UserCheck className="h-5 w-5" />,
+                  tint: "bg-violet-50 text-violet-600",
+                  label: "Active Customers",
+                  value: activeCustomers,
+                },
+              ].map((kpi) => (
+                <div
+                  key={kpi.label}
+                  className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm"
                 >
-                  Complete / Update KYC
-                </button>
-              }
-            >
-              <div className="rounded-2xl border border-dashed border-slate-200 p-6 text-sm leading-6 text-slate-600">
-                Complete your KYC to provide your verified business and identity details. This information is used for funding and compliance review by your mentor.
-              </div>
-            </PortalCard>
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${kpi.tint}`}
+                    >
+                      {kpi.icon}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-semibold text-[#64748b]">
+                        {kpi.label}
+                      </p>
+                      <p className="mt-1 text-sm font-black tracking-tight text-[#111827]">
+                        {kpi.value}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
 
-            <SignedContractCard
-              contractUrl={
-                enterprise?.signedContractUrl || financeMember?.signedContractUrl
-              }
-              uploadedAt={
-                enterprise?.signedContractUploadedAt ||
-                financeMember?.signedContractUploadedAt
-              }
-              acknowledgedAt={enterprise?.contractAcknowledgedAt}
-              signedUrl={enterprise?.startupSignedContractUrl}
-              contractName={enterprise?.name || undefined}
-              canSign
-              signing={signingContract}
-              onSignUpload={onUploadSignedContract}
-            />
-
+            {/* KPI Tracking panel, sitting below the KPI summary cards. */}
             <PortalCard
               icon={<BarChart3 className="h-5 w-5" />}
               title="KPI Tracking"
@@ -747,38 +746,128 @@ const EntrepreneurMilestones = () => {
             >
               {showKpiForm && (
                 <form onSubmit={onSaveKpis} className="mb-5 grid grid-cols-1 gap-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4 md:grid-cols-3">
-                  <input className={baseInputClass} type="number" min="0" placeholder="Monthly revenue" value={kpiForm.monthlyRevenue} onChange={(e) => setKpiForm((prev) => ({ ...prev, monthlyRevenue: e.target.value }))} />
-                  <input className={baseInputClass} type="number" min="0" placeholder="Employees" value={kpiForm.employees} onChange={(e) => setKpiForm((prev) => ({ ...prev, employees: e.target.value }))} />
-                  <input className={baseInputClass} type="number" min="0" placeholder="Active customers" value={kpiForm.activeCustomers} onChange={(e) => setKpiForm((prev) => ({ ...prev, activeCustomers: e.target.value }))} />
-                  <div className="flex justify-end md:col-span-3">
+                  <div>
+                    <label className={milestoneLabelClass} htmlFor="kpi-monthly-revenue">Monthly revenue</label>
+                    <input id="kpi-monthly-revenue" className={baseInputClass} type="number" min="0" placeholder="Monthly revenue" value={kpiForm.monthlyRevenue} onChange={(e) => setKpiForm((prev) => ({ ...prev, monthlyRevenue: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={milestoneLabelClass} htmlFor="kpi-capital-mobilised">Capital mobilised</label>
+                    <input id="kpi-capital-mobilised" className={baseInputClass} type="number" min="0" placeholder="Capital mobilised" value={kpiForm.capitalMobilised} onChange={(e) => setKpiForm((prev) => ({ ...prev, capitalMobilised: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={milestoneLabelClass} htmlFor="kpi-employees">Employees</label>
+                    <input id="kpi-employees" className={baseInputClass} type="number" min="0" placeholder="Employees" value={kpiForm.employees} onChange={(e) => setKpiForm((prev) => ({ ...prev, employees: e.target.value }))} />
+                  </div>
+                  <div>
+                    <label className={milestoneLabelClass} htmlFor="kpi-active-customers">Active customers</label>
+                    <input id="kpi-active-customers" className={baseInputClass} type="number" min="0" placeholder="Active customers" value={kpiForm.activeCustomers} onChange={(e) => setKpiForm((prev) => ({ ...prev, activeCustomers: e.target.value }))} />
+                  </div>
+                  <div className="flex items-end justify-end md:col-span-3">
                     <button type="submit" className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54]">
                       Save KPI Updates
                     </button>
                   </div>
                 </form>
               )}
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                <DataTile label="Monthly revenue" value={formatCurrency(monthlyRevenue)} />
-                <DataTile label="Employees" value={employees} />
-                <DataTile label="Active customers" value={activeCustomers} />
-              </div>
             </PortalCard>
 
-            <PortalCard
-              icon={<Flag className="h-5 w-5" />}
-              title="Milestones"
-              subtitle="Create milestones with their key activities, verification and timeline, then wait for mentor approval."
-              action={
+            {/* Grant financial summary. */}
+            <div>
+              <h2 className="mb-4 text-lg font-black tracking-tight text-[#172033]">
+                Grant Summary
+              </h2>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+                {[
+                  {
+                    icon: <Briefcase className="h-5 w-5" />,
+                    tint: "bg-emerald-50 text-emerald-600",
+                    label: "Total Grant Committed",
+                    value: formatCurrency(grantStats.committed),
+                  },
+                  {
+                    icon: <Layers className="h-5 w-5" />,
+                    tint: "bg-blue-50 text-blue-600",
+                    label: "Total Disbursed",
+                    value: formatCurrency(grantStats.disbursed),
+                  },
+                  {
+                    icon: <Wallet className="h-5 w-5" />,
+                    tint: "bg-amber-50 text-amber-600",
+                    label: "Remaining Balance",
+                    value: formatCurrency(grantStats.remaining),
+                  },
+                  {
+                    icon: <CalendarDays className="h-5 w-5" />,
+                    tint: "bg-violet-50 text-violet-600",
+                    label: "Next Disbursement",
+                    value: formatCurrency(grantStats.next?.amount || 0),
+                  },
+                ].map((kpi) => (
+                  <div
+                    key={kpi.label}
+                    className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${kpi.tint}`}
+                      >
+                        {kpi.icon}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-semibold text-[#64748b]">
+                          {kpi.label}
+                        </p>
+                        <p className="mt-1 text-sm font-black tracking-tight text-[#111827]">
+                          {kpi.value}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <h2 className="pt-2 text-lg font-black tracking-tight text-[#172033]">
+              Milestones
+            </h2>
+
+            {/* Milestones split into three tabs: create, report, status. */}
+            <div className="flex flex-wrap gap-2">
+              {[
+                { id: "create", label: "+ Milestone" },
+                { id: "report", label: "Milestone Reporting" },
+                { id: "status", label: "Milestone Status" },
+              ].map((tab) => (
                 <button
+                  key={tab.id}
                   type="button"
-                  onClick={() => setShowMilestoneForm((prev) => !prev)}
-                  className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
+                  onClick={() => {
+                    // Clicking the active tab returns to its tranche list
+                    // (Tranche 1, Tranche 2…) rather than closing the tab.
+                    if (milestoneTab === tab.id) {
+                      setOpenTranche("");
+                      setOpenReportTranche("");
+                    } else {
+                      setMilestoneTab(tab.id);
+                    }
+                  }}
+                  className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                    milestoneTab === tab.id
+                      ? "bg-[#16a34a] text-white"
+                      : "border border-green-600/30 bg-green-50 text-green-700 hover:bg-green-100"
+                  }`}
                 >
-                  + New Milestone
+                  {tab.label}
                 </button>
-              }
-            >
-              {showMilestoneForm && (
+              ))}
+            </div>
+
+            {milestoneTab === "create" && (
+              <PortalCard
+                icon={<Flag className="h-5 w-5" />}
+                title="Add Milestone"
+                subtitle="Create milestones with their key activities, verification and timeline, then wait for mentor approval."
+              >
                 <form onSubmit={onCreateMilestone} className="mb-5 space-y-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4">
                   {/* Step 1 — pick the tranche these milestones belong to. Its
                       date comes from the schedule the finance officer set, so it
@@ -916,12 +1005,19 @@ const EntrepreneurMilestones = () => {
                       disabled={isCreatingMilestone}
                       className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-70"
                     >
-                      {isCreatingMilestone ? "Submitting..." : "Submit plan for BDA review"}
+                      {isCreatingMilestone ? "Submitting..." : "Submit plan for review"}
                     </button>
                   </div>
                 </form>
-              )}
+              </PortalCard>
+            )}
 
+            {milestoneTab === "status" && (
+              <PortalCard
+                icon={<Flag className="h-5 w-5" />}
+                title="Milestone Status"
+                subtitle="Track where each of your milestones stands."
+              >
               <div className="space-y-4">
                 {milestones.length === 0 && (
                   <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
@@ -929,8 +1025,8 @@ const EntrepreneurMilestones = () => {
                   </div>
                 )}
 
-                {/* Tranche picker — drill into one tranche rather than listing
-                    every milestone at once. */}
+                {/* Same drill-down as reporting: pick a tranche, then see its
+                    milestones. */}
                 {milestones.length > 0 && !openTranche && (
                   <TrancheGroupList
                     title="Tranche Milestones"
@@ -958,9 +1054,14 @@ const EntrepreneurMilestones = () => {
                     !isPlanApproved(item.planStatus) &&
                     ["pending", "draft"].includes(normalizedStatus);
 
+                  // Completed when the work is done, otherwise pending.
+                  const statusLabel =
+                    normalizedStatus === "completed" ? "Completed" : "Pending";
+
                   return (
                     <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                      <div className="flex gap-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex min-w-0 flex-1 gap-3">
                         <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
                           {item.status === "completed" ? "✓" : index + 1}
                         </div>
@@ -983,13 +1084,26 @@ const EntrepreneurMilestones = () => {
                             </p>
                           )}
                         </div>
+                        </div>
+
+                        <span
+                          className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
+                            normalizedStatus === "completed"
+                              ? "bg-emerald-50 text-emerald-700"
+                              : "bg-amber-50 text-amber-700"
+                          }`}
+                        >
+                          {statusLabel}
+                        </span>
                       </div>
                     </div>
                   );
                 })}
               </div>
-            </PortalCard>
+              </PortalCard>
+            )}
 
+            {milestoneTab === "report" && (
             <PortalCard
               icon={<ClipboardList className="h-5 w-5" />}
               title="Milestone Reporting"
@@ -1036,9 +1150,25 @@ const EntrepreneurMilestones = () => {
                     const canSubmit = isPlanApproved(ps)
                       ? !["submitted", "completed"].includes(normalizedStatus)
                       : ["in_progress", "overdue", "rejected"].includes(normalizedStatus);
-                    // The mentor declined the report — it comes back for edits.
+                    // The report was declined — it comes back for edits. Finance
+                    // declines also set planStatus to rejected and leave finance
+                    // feedback, which is how we tell who sent it back.
                     const wasDeclined = normalizedStatus === "rejected";
+                    const declinedByFinance =
+                      wasDeclined &&
+                      ps === PLAN_STATUS.REJECTED &&
+                      Boolean(item.financeReviewNotes);
                     const disbursed = ps === PLAN_STATUS.DISBURSED || Boolean(item.disbursed);
+                    // Approval, attributed the same way as a decline: the finance
+                    // officer's approval disburses the tranche; before that, the
+                    // business coach approves the report and sends it to finance.
+                    const financeApproved = disbursed;
+                    const coachApproved =
+                      !disbursed &&
+                      !wasDeclined &&
+                      (ps === PLAN_STATUS.SENT_TO_FINANCE ||
+                        (normalizedStatus === "completed" &&
+                          ps !== PLAN_STATUS.REJECTED));
                     const kpiProgress = getKpiProgress(item);
 
                     return (
@@ -1066,13 +1196,10 @@ const EntrepreneurMilestones = () => {
                             gap) so the report and its form line up with the
                             milestone name. */}
                         <div className="sm:pl-[3.25rem]">
-                        {(item.submissionNotes || item.mentorReviewNotes || attachments.length > 0) && (
+                        {(item.submissionNotes || attachments.length > 0) && (
                           <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
                             {item.submissionNotes && (
                               <p><span className="font-bold text-slate-950">Submitted report:</span> {item.submissionNotes}</p>
-                            )}
-                            {item.mentorReviewNotes && (
-                              <p><span className="font-bold text-slate-950">Mentor feedback:</span> {item.mentorReviewNotes}</p>
                             )}
                             {attachments.length > 0 && (
                               <div className="mt-2 flex flex-wrap gap-2">
@@ -1088,6 +1215,40 @@ const EntrepreneurMilestones = () => {
                                   </a>
                                 ))}
                               </div>
+                            )}
+                          </div>
+                        )}
+
+                        {financeApproved && (
+                          <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
+                            <p className="font-semibold">
+                              The finance officer approved this report and
+                              disbursed the tranche.
+                            </p>
+                            {item.financeReviewNotes && (
+                              <p className="mt-1">
+                                <span className="font-bold">
+                                  Finance officer feedback:
+                                </span>{" "}
+                                {item.financeReviewNotes}
+                              </p>
+                            )}
+                          </div>
+                        )}
+
+                        {coachApproved && (
+                          <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
+                            <p className="font-semibold">
+                              The business coach approved this report and sent it
+                              to the finance officer for review.
+                            </p>
+                            {item.mentorReviewNotes && (
+                              <p className="mt-1">
+                                <span className="font-bold">
+                                  Business coach feedback:
+                                </span>{" "}
+                                {item.mentorReviewNotes}
+                              </p>
                             )}
                           </div>
                         )}
@@ -1139,10 +1300,32 @@ const EntrepreneurMilestones = () => {
                         )}
 
                         {wasDeclined && (
-                          <p className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm font-semibold leading-6 text-rose-700">
-                            Your mentor declined this report. Update it below and
-                            submit it again.
-                          </p>
+                          <div className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm leading-6 text-rose-700">
+                            <p className="font-semibold">
+                              {declinedByFinance
+                                ? "The finance officer declined this report. Update it below and submit it again."
+                                : "The business coach declined this report. Update it below and submit it again."}
+                            </p>
+                            {/* Show both reviews: a finance decline still carries
+                                the business coach's earlier feedback, so the
+                                startup sees the full picture. */}
+                            {item.mentorReviewNotes && (
+                              <p className="mt-1">
+                                <span className="font-bold">
+                                  Business coach feedback:
+                                </span>{" "}
+                                {item.mentorReviewNotes}
+                              </p>
+                            )}
+                            {item.financeReviewNotes && (
+                              <p className="mt-1">
+                                <span className="font-bold">
+                                  Finance officer feedback:
+                                </span>{" "}
+                                {item.financeReviewNotes}
+                              </p>
+                            )}
+                          </div>
                         )}
 
                         {canSubmit && (
@@ -1212,52 +1395,7 @@ const EntrepreneurMilestones = () => {
                   })}
               </div>
             </PortalCard>
-
-          </div>
-
-          <aside className="space-y-8">
-            <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Reporting documents submitted for mentor review.">
-              <div className="space-y-3">
-                {milestones.flatMap((item) =>
-                  parseSubmissionAttachments(item.submissionAttachments).map((url, idx) => ({
-                    id: `${item.uuid}-${idx}`,
-                    label: `${item.title} attachment ${idx + 1}`,
-                    url,
-                  })),
-                ).length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                    No documents submitted yet.
-                  </div>
-                )}
-
-                {milestones.flatMap((item) =>
-                  parseSubmissionAttachments(item.submissionAttachments).map((url, idx) => ({
-                    id: `${item.uuid}-${idx}`,
-                    label: `${item.title} attachment ${idx + 1}`,
-                    url,
-                  })),
-                ).map((document) => (
-                  // The row itself opens the document, so no separate View
-                  // button is needed.
-                  <a
-                    key={document.id}
-                    href={document.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition hover:border-slate-200 hover:shadow-md"
-                  >
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-green-50 text-green-600">
-                      <UploadCloud className="h-5 w-5" />
-                    </div>
-                    <p className="truncate text-sm font-bold text-slate-950">
-                      {document.label}
-                    </p>
-                  </a>
-                ))}
-              </div>
-            </PortalCard>
-
-          </aside>
+            )}
         </div>
       </main>
     </div>

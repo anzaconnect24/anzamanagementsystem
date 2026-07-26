@@ -5,6 +5,14 @@
 // learn-and-grow course experience.
 const TRACKER_MARKERS = ["__TRACKER_STARTUPS__:", "__TRACKER_CATEGORIES__:"];
 
+// Markers from a removed course-access feature. They are only cleaned out of
+// descriptions (never used to classify a program) so any rows that still carry
+// them don't show the raw marker in the course text.
+const LEGACY_MARKERS = ["__COURSE_CATEGORIES__:", "__COURSE_PROGRAMS__:"];
+
+// Every marker that should be stripped from the human-readable description.
+const CLEAN_MARKERS = [...TRACKER_MARKERS, ...LEGACY_MARKERS];
+
 // A program is a tracker/grant program (not a learn-and-grow course) when it
 // is explicitly typed "grant" (authoritative), or — for legacy rows created
 // before the `type` column existed — when its description carries the tracker
@@ -15,11 +23,11 @@ export const isTrackerProgram = (program) => {
   return TRACKER_MARKERS.some((marker) => text.includes(marker));
 };
 
-// Strip the tracker metadata markers from a description so only the
-// human-written text remains.
+// Strip the metadata markers from a description so only the human-written text
+// remains.
 export const cleanProgramDescription = (description) => {
   let text = String(description || "");
-  const markerIndexes = TRACKER_MARKERS.map((marker) =>
+  const markerIndexes = CLEAN_MARKERS.map((marker) =>
     text.indexOf(marker),
   ).filter((index) => index !== -1);
 

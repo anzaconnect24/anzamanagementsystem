@@ -111,7 +111,7 @@ const BusinessTools = () => {
               tools[0].fileName
             )
           }
-          className="relative mb-10 min-h-[320px] cursor-pointer overflow-hidden rounded-2xl bg-black shadow-sm"
+          className="relative mb-10 min-h-[200px] cursor-pointer overflow-hidden rounded-2xl bg-black shadow-sm"
         >
           <div
             className="absolute inset-0 bg-cover bg-center"
@@ -125,7 +125,7 @@ const BusinessTools = () => {
 
           <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
 
-          <div className="relative z-10 max-w-3xl p-10 text-white">
+          <div className="relative z-10 max-w-3xl p-7 text-white">
             <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
               <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
               Business Toolkit

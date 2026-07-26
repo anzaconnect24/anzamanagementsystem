@@ -3,11 +3,15 @@ import {
   CalendarDays,
   ChevronRight,
   ClipboardCheck,
+  Clock,
+  KeyRound,
   Lightbulb,
+  Link2,
   ListChecks,
   MessageSquare,
   Target,
   Users,
+  Video,
 } from "lucide-react";
 
 // Shared coaching-sessions view: header, summary tiles and the session history.
@@ -37,6 +41,21 @@ export const getFlagLabel = (flag) => {
   return "N/A";
 };
 
+// A session that has been set up but not yet reported on. Sessions created
+// before the two-phase flow carry no status and are treated as completed.
+export const isSessionScheduled = (session) =>
+  String(session?.status || "").toLowerCase() === "scheduled";
+
+// True once a post-session report has been filed (any of the report fields is
+// filled). Used to decide whether the "Add report" action still applies — this
+// works even if the backend never stored the `status` flag.
+export const hasSessionReport = (session) =>
+  Boolean(
+    String(session?.issuesDiscussed || "").trim() ||
+      String(session?.recommendationsGiven || "").trim() ||
+      String(session?.actionsAgreed || "").trim(),
+  );
+
 // Status pill colours follow the flag, so "at risk" and "critical" don't read as
 // calmly as "on track".
 const flagTone = (flag) => {
@@ -60,7 +79,7 @@ const daysUntil = (value) => {
 const StatCard = ({ label, value, sub, icon, tone = "text-[#0b2b5c]" }) => (
   <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
     <div className="flex items-start justify-between gap-3">
-      <p className="min-w-0 truncate text-3xl font-black tracking-tight text-slate-950">
+      <p className="min-w-0 truncate text-xl font-black tracking-tight text-slate-950">
         {value}
       </p>
       <span className={`shrink-0 ${tone}`}>{icon}</span>
@@ -90,6 +109,12 @@ const CoachingSessionsPanel = ({
   sessions = [],
   actions = null,
   emptyText = "No coaching sessions logged yet.",
+  // When provided (BDA view), a scheduled session offers a "Report on session"
+  // action that calls this with the session record.
+  onReport = null,
+  // Optional node rendered on the right of the "Session History" title row
+  // (e.g. the "Set up new session" action on the BDA page).
+  belowCards = null,
 }) => {
   // Newest first — the summary reads from the most recent session.
   const ordered = [...sessions].sort(
@@ -98,10 +123,14 @@ const CoachingSessionsPanel = ({
   const latest = ordered[0] || null;
 
   // Sessions are numbered in the order they actually happened, so "Session 1"
-  // is always the first one held even though the list shows the newest first.
+  // is always the first one held.
   const sessionNumber = new Map(
     [...ordered].reverse().map((s, i) => [s.uuid, i + 1]),
   );
+
+  // The history list reads oldest-first — Session 1 on top, then the next — even
+  // though the summary above keys off the most recent session.
+  const chronological = [...ordered].reverse();
 
   // The open session lives in the URL so it is its own view and the browser's
   // back button returns to the list.
@@ -130,7 +159,11 @@ const CoachingSessionsPanel = ({
       ? { date: latest.nextSessionDate, days: daysUntil(latest.nextSessionDate) }
       : null);
 
-  const status = latest ? getFlagLabel(latest.flag) : "N/A";
+  const status = latest
+    ? isSessionScheduled(latest)
+      ? "Scheduled"
+      : getFlagLabel(latest.flag)
+    : "N/A";
   const actionCount = ordered.filter((s) =>
     String(s.actionsAgreed || "").trim(),
   ).length;
@@ -204,13 +237,16 @@ const CoachingSessionsPanel = ({
       {/* Sessions — the heading names the list, and is dropped once a single
           session is open since that view carries its own title. */}
       {!openSession && (
-        <div>
-          <h2 className="text-lg font-black tracking-tight text-slate-950">
-            Session History
-          </h2>
-          <p className="mt-1 text-sm text-slate-500">
-            Select a session to see what was discussed and agreed.
-          </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-black tracking-tight text-slate-950">
+              Session History
+            </h2>
+            <p className="mt-1 text-sm text-slate-500">
+              Select a session to see what was discussed and agreed.
+            </p>
+          </div>
+          {belowCards}
         </div>
       )}
 
@@ -219,41 +255,83 @@ const CoachingSessionsPanel = ({
           {emptyText}
         </div>
       ) : !openSession ? (
-        /* Sessions list — "Session 1 - Milestone review". Opening one shows its
-           information. */
+        /* Sessions list — "Session 1 - Milestone review", oldest first. Opening
+           one shows its information. */
         <div className="space-y-3">
-          {ordered.map((item) => {
+          {chronological.map((item) => {
             const tone = flagTone(item.flag);
+            const scheduled = isSessionScheduled(item);
+            // BDA view: offer to add a report on sessions not yet reported on, or
+            // to edit the report on ones that already have one.
+            const reported = hasSessionReport(item);
             return (
-              <button
+              <div
                 key={item.uuid}
-                type="button"
-                onClick={() => setOpenSession(item.uuid)}
-                className="flex w-full items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-6 py-5 text-left shadow-sm transition hover:border-slate-300 hover:shadow-md"
+                className="flex w-full items-center gap-4 rounded-2xl border border-slate-200/80 bg-white px-6 py-5 shadow-sm transition hover:border-slate-300 hover:shadow-md"
               >
-                <CalendarDays className="h-6 w-6 shrink-0 text-[#0b2b5c]" />
+                <button
+                  type="button"
+                  onClick={() => setOpenSession(item.uuid)}
+                  className="flex min-w-0 flex-1 items-center gap-4 text-left"
+                >
+                  <CalendarDays className="h-6 w-6 shrink-0 text-[#0b2b5c]" />
 
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-base font-bold text-slate-950">
-                    Session {sessionNumber.get(item.uuid) ?? "—"}
-                    {item.sessionType ? ` - ${item.sessionType}` : ""}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-base font-bold text-slate-950">
+                      Session {sessionNumber.get(item.uuid) ?? "—"}
+                      {item.title || item.sessionType
+                        ? ` - ${item.title || item.sessionType}`
+                        : ""}
+                    </span>
+                    {scheduled ? (
+                      <span className="mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                        Scheduled
+                        {item.sessionDate
+                          ? ` for ${formatSessionDate(item.sessionDate)}`
+                          : ""}
+                        {onReport ? " — awaiting report" : ""}
+                      </span>
+                    ) : (
+                      <span
+                        className={`mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold ${
+                          item.flag === "red"
+                            ? "text-rose-600"
+                            : item.flag === "amber"
+                              ? "text-amber-600"
+                              : "text-emerald-600"
+                        }`}
+                      >
+                        <span
+                          className={`h-1.5 w-1.5 rounded-full ${tone.dot}`}
+                        />
+                        {getFlagLabel(item.flag)}
+                      </span>
+                    )}
                   </span>
-                  <span
-                    className={`mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold ${
-                      item.flag === "red"
-                        ? "text-rose-600"
-                        : item.flag === "amber"
-                          ? "text-amber-600"
-                          : "text-emerald-600"
-                    }`}
-                  >
-                    <span className={`h-1.5 w-1.5 rounded-full ${tone.dot}`} />
-                    {getFlagLabel(item.flag)}
-                  </span>
-                </span>
+                </button>
+
+                {onReport &&
+                  (reported ? (
+                    <button
+                      type="button"
+                      onClick={() => onReport(item)}
+                      className="shrink-0 rounded-xl bg-[#F59E0B] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#d97706]"
+                    >
+                      Edit report
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => onReport(item)}
+                      className="shrink-0 rounded-xl bg-[#16a34a] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#15803d]"
+                    >
+                      Add report
+                    </button>
+                  ))}
 
                 <ChevronRight className="h-5 w-5 shrink-0 text-slate-400" />
-              </button>
+              </div>
             );
           })}
         </div>
@@ -261,6 +339,7 @@ const CoachingSessionsPanel = ({
         <div className="space-y-6">
           {[activeSession].filter(Boolean).map((item) => {
             const tone = flagTone(item.flag);
+            const scheduled = isSessionScheduled(item);
             return (
               <div key={item.uuid}>
                 {/* Session heading sits above the card, not inside it. */}
@@ -268,7 +347,9 @@ const CoachingSessionsPanel = ({
                   <div>
                     <p className="text-xl font-black tracking-tight text-slate-950">
                       Session {sessionNumber.get(item.uuid) ?? "—"}
-                      {item.sessionType ? ` - ${item.sessionType}` : ""}
+                      {item.title || item.sessionType
+                        ? ` - ${item.title || item.sessionType}`
+                        : ""}
                     </p>
                     <button
                       type="button"
@@ -279,45 +360,164 @@ const CoachingSessionsPanel = ({
                     </button>
                   </div>
 
-                  <span
-                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${tone.pill}`}
-                  >
-                    <span className={`h-2 w-2 rounded-full ${tone.dot}`} />
-                    {getFlagLabel(item.flag)}
-                  </span>
+                  {scheduled ? (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-700">
+                      <span className="h-2 w-2 rounded-full bg-amber-500" />
+                      Scheduled
+                    </span>
+                  ) : (
+                    <span
+                      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${tone.pill}`}
+                    >
+                      <span className={`h-2 w-2 rounded-full ${tone.dot}`} />
+                      {getFlagLabel(item.flag)}
+                    </span>
+                  )}
                 </div>
 
-                <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
-                  <DetailRow
-                    icon={<MessageSquare className="h-5 w-5" />}
-                    label="Issues discussed"
-                  >
-                    {item.issuesDiscussed || "N/A"}
-                  </DetailRow>
+                {scheduled ? (
+                  /* Setup complete, report pending — show the full session plan
+                     and the CTA to file the post-session report. */
+                  <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
+                    <div className="divide-y divide-slate-100">
+                      {item.purpose && (
+                        <DetailRow
+                          icon={<Target className="h-5 w-5" />}
+                          label="Purpose"
+                        >
+                          {item.purpose}
+                        </DetailRow>
+                      )}
+                      <DetailRow
+                        icon={<CalendarDays className="h-5 w-5" />}
+                        label="Date"
+                      >
+                        {item.sessionDate
+                          ? formatSessionDate(item.sessionDate)
+                          : "N/A"}
+                        {item.sessionTime ? ` · ${item.sessionTime}` : ""}
+                      </DetailRow>
+                      {item.duration && (
+                        <DetailRow
+                          icon={<Clock className="h-5 w-5" />}
+                          label="Duration"
+                        >
+                          {item.duration}
+                        </DetailRow>
+                      )}
+                      {item.meetingPlatform && (
+                        <DetailRow
+                          icon={<Video className="h-5 w-5" />}
+                          label="Meeting platform"
+                        >
+                          {item.meetingPlatform}
+                        </DetailRow>
+                      )}
+                      {item.meetingLink && (
+                        <DetailRow
+                          icon={<Link2 className="h-5 w-5" />}
+                          label="Meeting link"
+                        >
+                          <a
+                            href={item.meetingLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-semibold text-[#0b2b5c] underline break-all"
+                          >
+                            {item.meetingLink}
+                          </a>
+                        </DetailRow>
+                      )}
+                      {item.meetingAccess && (
+                        <DetailRow
+                          icon={<KeyRound className="h-5 w-5" />}
+                          label="Meeting ID & passcode"
+                        >
+                          {item.meetingAccess}
+                        </DetailRow>
+                      )}
+                      {item.preparationRequired && (
+                        <DetailRow
+                          icon={<ClipboardCheck className="h-5 w-5" />}
+                          label="Preparation required"
+                        >
+                          {item.preparationRequired}
+                        </DetailRow>
+                      )}
+                      <DetailRow
+                        icon={<CalendarDays className="h-5 w-5" />}
+                        label="Next session"
+                      >
+                        {item.nextSessionDate
+                          ? formatSessionDate(item.nextSessionDate)
+                          : "N/A"}
+                      </DetailRow>
+                    </div>
 
-                  <DetailRow
-                    icon={<Lightbulb className="h-5 w-5" />}
-                    label="Recommendations"
-                  >
-                    {item.recommendationsGiven || "N/A"}
-                  </DetailRow>
+                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-amber-50/60 px-4 py-4">
+                      <p className="text-sm font-semibold leading-6 text-amber-800">
+                        {onReport
+                          ? "This session is set up but not yet reported on. Once it has taken place, file the report of what was discussed and agreed."
+                          : "This session is scheduled. The details are above — your advisor will add the session report here after it takes place."}
+                      </p>
+                      {onReport && (
+                        <button
+                          type="button"
+                          onClick={() => onReport(item)}
+                          className="shrink-0 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d]"
+                        >
+                          Add report
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="divide-y divide-slate-100 rounded-2xl border border-slate-200/80 bg-white shadow-sm shadow-slate-200/50">
+                      <DetailRow
+                        icon={<MessageSquare className="h-5 w-5" />}
+                        label="Issues discussed"
+                      >
+                        {item.issuesDiscussed || "N/A"}
+                      </DetailRow>
 
-                  <DetailRow
-                    icon={<ClipboardCheck className="h-5 w-5" />}
-                    label="Actions agreed"
-                  >
-                    {item.actionsAgreed || "N/A"}
-                  </DetailRow>
+                      <DetailRow
+                        icon={<Lightbulb className="h-5 w-5" />}
+                        label="Recommendations"
+                      >
+                        {item.recommendationsGiven || "N/A"}
+                      </DetailRow>
 
-                  <DetailRow
-                    icon={<CalendarDays className="h-5 w-5" />}
-                    label="Next session"
-                  >
-                    {item.nextSessionDate
-                      ? formatSessionDate(item.nextSessionDate)
-                      : "N/A"}
-                  </DetailRow>
-                </div>
+                      <DetailRow
+                        icon={<ClipboardCheck className="h-5 w-5" />}
+                        label="Actions agreed"
+                      >
+                        {item.actionsAgreed || "N/A"}
+                      </DetailRow>
+
+                      <DetailRow
+                        icon={<CalendarDays className="h-5 w-5" />}
+                        label="Next session"
+                      >
+                        {item.nextSessionDate
+                          ? formatSessionDate(item.nextSessionDate)
+                          : "N/A"}
+                      </DetailRow>
+                    </div>
+
+                    {onReport && (
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => onReport(item)}
+                          className="rounded-xl bg-[#F59E0B] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#d97706]"
+                        >
+                          Edit report
+                        </button>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
             );
           })}

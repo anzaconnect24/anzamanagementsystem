@@ -110,10 +110,10 @@ const DashboardHero = ({ userDetails, data }) => {
 
         {/* Staff users are stored as either "Staff" or "Reviewer" (see SignUp),
             so both are excluded here. */}
-        {["Investor", "Mentor"].includes(userDetails?.role) && (
+        {["Enterprenuer", "Investor", "Mentor"].includes(userDetails?.role) && (
           <Link
             href="/dashboard/entreprenuer-profile"
-            className="rounded-2xl bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f52]"
+            className="rounded-lg bg-[#16a34a] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#15803d]"
           >
             Edit Profile
           </Link>
