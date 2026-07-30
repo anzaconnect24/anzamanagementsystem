@@ -9,10 +9,12 @@ import {
   Link2,
   ListChecks,
   MessageSquare,
+  Paperclip,
   Target,
   Users,
   Video,
 } from "lucide-react";
+import { MaterialsList, parseMaterials } from "@/components/tracker/SessionMaterials";
 
 // Shared coaching-sessions view: header, summary tiles and the session history.
 // Used by the startup's own page and by the BDA's per-startup setup page, so the
@@ -45,6 +47,14 @@ export const getFlagLabel = (flag) => {
 // before the two-phase flow carry no status and are treated as completed.
 export const isSessionScheduled = (session) =>
   String(session?.status || "").toLowerCase() === "scheduled";
+
+// The startup asked for a session and the BDA has not answered yet.
+export const isSessionRequested = (session) =>
+  String(session?.status || "").toLowerCase() === "requested";
+
+// The BDA turned a request down — the reason lives on `declineReason`.
+export const isSessionDeclined = (session) =>
+  String(session?.status || "").toLowerCase() === "declined";
 
 // True once a post-session report has been filed (any of the report fields is
 // filled). Used to decide whether the "Add report" action still applies — this
@@ -112,6 +122,13 @@ const CoachingSessionsPanel = ({
   // When provided (BDA view), a scheduled session offers a "Report on session"
   // action that calls this with the session record.
   onReport = null,
+  // When provided (BDA view), the open session offers an action to upload or
+  // remove the learning materials shared with the startup.
+  onManageMaterials = null,
+  // BDA view: answer a session the startup asked for — schedule it, or turn it
+  // down with a reason.
+  onSchedule = null,
+  onDecline = null,
   // Optional node rendered on the right of the "Session History" title row
   // (e.g. the "Set up new session" action on the BDA page).
   belowCards = null,
@@ -160,13 +177,18 @@ const CoachingSessionsPanel = ({
       : null);
 
   const status = latest
-    ? isSessionScheduled(latest)
-      ? "Scheduled"
-      : getFlagLabel(latest.flag)
+    ? isSessionRequested(latest)
+      ? "Requested"
+      : isSessionDeclined(latest)
+        ? "Declined"
+        : isSessionScheduled(latest)
+          ? "Scheduled"
+          : getFlagLabel(latest.flag)
     : "N/A";
   const actionCount = ordered.filter((s) =>
     String(s.actionsAgreed || "").trim(),
   ).length;
+  const openRequests = ordered.filter(isSessionRequested).length;
 
   const nextLabel = next ? formatSessionDate(next.date) : "Not set";
   const nextSub =
@@ -202,7 +224,19 @@ const CoachingSessionsPanel = ({
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
           label="Total Sessions"
-          value={ordered.length}
+          value={
+            ordered.filter(
+              (s) => !isSessionRequested(s) && !isSessionDeclined(s),
+            ).length
+          }
+          sub={
+            openRequests > 0 ? (
+              <p className="mt-1 text-xs font-semibold text-indigo-600">
+                {openRequests} request{openRequests === 1 ? "" : "s"} awaiting a
+                date
+              </p>
+            ) : null
+          }
           icon={<Users className="h-6 w-6" />}
           tone="text-[#0b2b5c]"
         />
@@ -261,9 +295,12 @@ const CoachingSessionsPanel = ({
           {chronological.map((item) => {
             const tone = flagTone(item.flag);
             const scheduled = isSessionScheduled(item);
+            const requested = isSessionRequested(item);
+            const declined = isSessionDeclined(item);
             // BDA view: offer to add a report on sessions not yet reported on, or
             // to edit the report on ones that already have one.
             const reported = hasSessionReport(item);
+            const materials = parseMaterials(item.materials);
             return (
               <div
                 key={item.uuid}
@@ -283,7 +320,21 @@ const CoachingSessionsPanel = ({
                         ? ` - ${item.title || item.sessionType}`
                         : ""}
                     </span>
-                    {scheduled ? (
+                    {requested ? (
+                      <span className="mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                        Requested by the startup
+                        {item.sessionDate
+                          ? ` for ${formatSessionDate(item.sessionDate)}`
+                          : ""}
+                        {onSchedule ? " — needs your answer" : ""}
+                      </span>
+                    ) : declined ? (
+                      <span className="mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold text-rose-600">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                        Request declined
+                      </span>
+                    ) : scheduled ? (
                       <span className="mt-0.5 inline-flex items-center gap-1.5 text-sm font-semibold text-amber-600">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
                         Scheduled
@@ -311,7 +362,27 @@ const CoachingSessionsPanel = ({
                   </span>
                 </button>
 
+                {materials.length > 0 && (
+                  <span className="hidden shrink-0 items-center gap-1.5 rounded-full bg-[#0b2b5c]/5 px-3 py-1.5 text-xs font-bold text-[#0b2b5c] sm:inline-flex">
+                    <Paperclip className="h-3.5 w-3.5" />
+                    {materials.length} material
+                    {materials.length === 1 ? "" : "s"}
+                  </span>
+                )}
+
+                {requested && onSchedule && (
+                  <button
+                    type="button"
+                    onClick={() => onSchedule(item)}
+                    className="shrink-0 rounded-xl bg-[#082d77] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                  >
+                    Schedule
+                  </button>
+                )}
+
                 {onReport &&
+                  !requested &&
+                  !declined &&
                   (reported ? (
                     <button
                       type="button"
@@ -340,6 +411,12 @@ const CoachingSessionsPanel = ({
           {[activeSession].filter(Boolean).map((item) => {
             const tone = flagTone(item.flag);
             const scheduled = isSessionScheduled(item);
+            const requested = isSessionRequested(item);
+            const declined = isSessionDeclined(item);
+            // Anything that has not been reported on yet shows the session plan
+            // rather than the (still empty) report fields.
+            const pending = scheduled || requested || declined;
+            const materials = parseMaterials(item.materials);
             return (
               <div key={item.uuid}>
                 {/* Session heading sits above the card, not inside it. */}
@@ -360,7 +437,17 @@ const CoachingSessionsPanel = ({
                     </button>
                   </div>
 
-                  {scheduled ? (
+                  {requested ? (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-4 py-2 text-sm font-bold text-indigo-700">
+                      <span className="h-2 w-2 rounded-full bg-indigo-500" />
+                      Requested
+                    </span>
+                  ) : declined ? (
+                    <span className="inline-flex items-center gap-2 rounded-full bg-rose-50 px-4 py-2 text-sm font-bold text-rose-700">
+                      <span className="h-2 w-2 rounded-full bg-rose-500" />
+                      Declined
+                    </span>
+                  ) : scheduled ? (
                     <span className="inline-flex items-center gap-2 rounded-full bg-amber-50 px-4 py-2 text-sm font-bold text-amber-700">
                       <span className="h-2 w-2 rounded-full bg-amber-500" />
                       Scheduled
@@ -375,22 +462,22 @@ const CoachingSessionsPanel = ({
                   )}
                 </div>
 
-                {scheduled ? (
-                  /* Setup complete, report pending — show the full session plan
-                     and the CTA to file the post-session report. */
+                {pending ? (
+                  /* Requested, or set up and awaiting its report — show the
+                     session plan and whatever action applies next. */
                   <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
                     <div className="divide-y divide-slate-100">
                       {item.purpose && (
                         <DetailRow
                           icon={<Target className="h-5 w-5" />}
-                          label="Purpose"
+                          label={requested ? "What they need help with" : "Purpose"}
                         >
                           {item.purpose}
                         </DetailRow>
                       )}
                       <DetailRow
                         icon={<CalendarDays className="h-5 w-5" />}
-                        label="Date"
+                        label={requested ? "Preferred date" : "Date"}
                       >
                         {item.sessionDate
                           ? formatSessionDate(item.sessionDate)
@@ -444,32 +531,85 @@ const CoachingSessionsPanel = ({
                           {item.preparationRequired}
                         </DetailRow>
                       )}
-                      <DetailRow
-                        icon={<CalendarDays className="h-5 w-5" />}
-                        label="Next session"
-                      >
-                        {item.nextSessionDate
-                          ? formatSessionDate(item.nextSessionDate)
-                          : "N/A"}
-                      </DetailRow>
-                    </div>
-
-                    <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-amber-50/60 px-4 py-4">
-                      <p className="text-sm font-semibold leading-6 text-amber-800">
-                        {onReport
-                          ? "This session is set up but not yet reported on. Once it has taken place, file the report of what was discussed and agreed."
-                          : "This session is scheduled. The details are above — your advisor will add the session report here after it takes place."}
-                      </p>
-                      {onReport && (
-                        <button
-                          type="button"
-                          onClick={() => onReport(item)}
-                          className="shrink-0 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d]"
+                      {!requested && !declined && (
+                        <DetailRow
+                          icon={<CalendarDays className="h-5 w-5" />}
+                          label="Next session"
                         >
-                          Add report
-                        </button>
+                          {item.nextSessionDate
+                            ? formatSessionDate(item.nextSessionDate)
+                            : "N/A"}
+                        </DetailRow>
                       )}
                     </div>
+
+                    {/* What happens next depends on who is looking and where the
+                        session stands. */}
+                    {requested ? (
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-indigo-50/70 px-4 py-4">
+                        <p className="text-sm font-semibold leading-6 text-indigo-900">
+                          {onSchedule
+                            ? "This startup asked for a coaching session. Schedule it with the meeting details, or let them know why it cannot go ahead."
+                            : "Your request is with your advisor. You will see the date and joining details here once they schedule it."}
+                        </p>
+                        {onSchedule && (
+                          <div className="flex shrink-0 flex-wrap gap-2">
+                            {onDecline && (
+                              <button
+                                type="button"
+                                onClick={() => onDecline(item)}
+                                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+                              >
+                                Decline
+                              </button>
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => onSchedule(item)}
+                              className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                            >
+                              Schedule session
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    ) : declined ? (
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-rose-50/70 px-4 py-4">
+                        <p className="text-sm font-semibold leading-6 text-rose-800">
+                          {item.declineReason
+                            ? `This request was declined: ${item.declineReason}`
+                            : onSchedule
+                              ? "You declined this request. You can still schedule it if things change."
+                              : "Your advisor could not take this request. Request another session when you are ready."}
+                        </p>
+                        {onSchedule && (
+                          <button
+                            type="button"
+                            onClick={() => onSchedule(item)}
+                            className="shrink-0 rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                          >
+                            Schedule anyway
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="mt-5 flex flex-wrap items-center justify-between gap-3 rounded-xl bg-amber-50/60 px-4 py-4">
+                        <p className="text-sm font-semibold leading-6 text-amber-800">
+                          {onReport
+                            ? "This session is set up but not yet reported on. Once it has taken place, file the report of what was discussed and agreed."
+                            : "This session is scheduled. The details are above — your advisor will add the session report here after it takes place."}
+                        </p>
+                        {onReport && (
+                          <button
+                            type="button"
+                            onClick={() => onReport(item)}
+                            className="shrink-0 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d]"
+                          >
+                            Add report
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <>
@@ -518,6 +658,47 @@ const CoachingSessionsPanel = ({
                     )}
                   </>
                 )}
+
+                {/* Learning materials the mentor shared to support the startup —
+                    visible to both sides; only the BDA can change them. */}
+                <div className="mt-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
+                  <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#0b2b5c]/5 text-[#0b2b5c]">
+                        <Paperclip className="h-5 w-5" />
+                      </div>
+                      <div>
+                        <p className="text-base font-black tracking-tight text-slate-950">
+                          Learning materials
+                        </p>
+                        <p className="mt-0.5 text-sm text-slate-500">
+                          {onManageMaterials
+                            ? "Documents and links you share to support this startup."
+                            : "Documents and links your advisor shared for this session."}
+                        </p>
+                      </div>
+                    </div>
+
+                    {onManageMaterials && (
+                      <button
+                        type="button"
+                        onClick={() => onManageMaterials(item)}
+                        className="shrink-0 rounded-xl bg-[#082d77] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                      >
+                        {materials.length ? "Manage materials" : "Upload materials"}
+                      </button>
+                    )}
+                  </div>
+
+                  <MaterialsList
+                    materials={materials}
+                    emptyText={
+                      onManageMaterials
+                        ? "No materials shared yet. Upload documents or add links to support this startup."
+                        : "No learning materials shared for this session yet."
+                    }
+                  />
+                </div>
               </div>
             );
           })}

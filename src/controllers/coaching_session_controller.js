@@ -15,7 +15,11 @@ const authConfig = () => {
 // BDA/Staff logs a coaching session for any entrepreneur.
 // payload: { entreprenuer_uuid, sessionDate, facilitator, sessionType,
 //            issuesDiscussed, recommendationsGiven, actionsAgreed,
-//            nextSessionDate, flag, status }
+//            nextSessionDate, flag, status, materials }
+// `materials` is a JSON array of learning materials the BDA shares with the
+// startup — each `{ kind: "file" | "link", name, description, url, fileType,
+// size, addedAt }`. Files are uploaded first via `/upload-file/`, so only the
+// resulting URLs are stored here. Reads tolerate an array or a JSON string.
 // `status` is "scheduled" when a session is first set up, and "completed" once
 // the post-session report has been filed (see updateCoachingSession).
 export const createCoachingSession = async (data) => {

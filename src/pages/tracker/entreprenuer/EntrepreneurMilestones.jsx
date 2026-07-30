@@ -377,7 +377,6 @@ const EntrepreneurMilestones = () => {
 
       setMilestoneRows([emptyMilestoneRow()]);
       setMilestoneTranche("");
-      setShowMilestoneForm(false);
       toast.success(
         created === 1
           ? "Milestone submitted for review"

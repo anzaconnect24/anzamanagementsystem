@@ -12,6 +12,8 @@ import Loader from "@/components/common/Loader";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { getEnterprenuers } from "@/controllers/user_controller";
 import { getPrograms } from "@/controllers/program_controller";
+import { getEntrepreneurCoachingSessions } from "@/controllers/coaching_session_controller";
+import { isSessionRequested } from "@/components/tracker/CoachingSessionsPanel";
 import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
 
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
@@ -90,6 +92,9 @@ const BdaCoachingSessions = () => {
   const [programFilter, setProgramFilter] = useState("All Programs");
   const [sortKey, setSortKey] = useState("name");
   const [openDropdown, setOpenDropdown] = useState("");
+  // How many sessions each startup has asked for and not had an answer to —
+  // filled in after the list renders, so a slow lookup never holds the page up.
+  const [requestsByUuid, setRequestsByUuid] = useState({});
 
   useEffect(() => {
     // Only startups selected into a grant program and assigned to this BDA can
@@ -156,6 +161,33 @@ const BdaCoachingSessions = () => {
       .catch(() => toast.error("Failed to load your startups"))
       .finally(() => setLoading(false));
   }, [userDetails?.uuid]);
+
+  // Pending session requests per startup, so the BDA can see who is waiting
+  // without opening every startup in turn.
+  useEffect(() => {
+    if (!enterprises.length) {
+      setRequestsByUuid({});
+      return;
+    }
+    let cancelled = false;
+
+    Promise.all(
+      enterprises.map((item) =>
+        getEntrepreneurCoachingSessions(item.uuid).then((sessions) => [
+          item.uuid,
+          (Array.isArray(sessions) ? sessions : []).filter(isSessionRequested)
+            .length,
+        ]),
+      ),
+    ).then((entries) => {
+      if (cancelled) return;
+      setRequestsByUuid(Object.fromEntries(entries.filter(([, n]) => n > 0)));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [enterprises]);
 
   // Selecting a startup opens its own coaching-session setup page. The name
   // rides along so that page can title itself without another lookup.
@@ -348,6 +380,17 @@ const BdaCoachingSessions = () => {
                       <div className="mt-5 flex items-center justify-between border-t border-black/10 pt-4">
                         <span className="text-xs font-bold text-[#8a8f98]">
                           {rows.length} startup{rows.length === 1 ? "" : "s"}
+                          {(() => {
+                            const pending = rows.reduce(
+                              (sum, row) => sum + (requestsByUuid[row.uuid] || 0),
+                              0,
+                            );
+                            return pending > 0 ? (
+                              <span className="ml-2 rounded-full bg-amber-50 px-2 py-0.5 text-[11px] font-bold text-amber-700">
+                                {pending} request{pending === 1 ? "" : "s"}
+                              </span>
+                            ) : null;
+                          })()}
                         </span>
                         <button
                           type="button"
@@ -396,6 +439,12 @@ const BdaCoachingSessions = () => {
                             {item.sector || "No Sector"}
                           </span>
                         </div>
+                        {requestsByUuid[item.uuid] > 0 && (
+                          <span className="absolute right-4 top-4 rounded-full bg-[#F59E0B] px-3 py-1 text-xs font-bold text-white shadow-sm">
+                            {requestsByUuid[item.uuid]} session request
+                            {requestsByUuid[item.uuid] === 1 ? "" : "s"}
+                          </span>
+                        )}
                       </div>
 
                       <div className="flex min-h-[230px] flex-col p-5">

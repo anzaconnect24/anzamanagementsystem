@@ -1,11 +1,16 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, CalendarClock, Plus } from "lucide-react";
 import Loader from "@/components/common/Loader";
 import CoachingSessionsPanel, {
   formatSessionDate,
+  isSessionRequested,
 } from "@/components/tracker/CoachingSessionsPanel";
+import {
+  MaterialsInput,
+  parseMaterials,
+} from "@/components/tracker/SessionMaterials";
 
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 import {
@@ -33,6 +38,8 @@ const EMPTY_SETUP = {
   meetingAccess: "",
   preparationRequired: "",
   nextSessionDate: "",
+  // Documents and links shared with the startup for this session.
+  materials: [],
 };
 
 const MEETING_PLATFORMS = [
@@ -50,6 +57,7 @@ const EMPTY_REPORT = {
   recommendationsGiven: "",
   actionsAgreed: "",
   flag: "green",
+  materials: [],
 };
 
 const baseInputClass =
@@ -80,12 +88,20 @@ const BdaCoachingSessionSetup = () => {
   const [sessions, setSessions] = useState([]);
   const [isSaving, setIsSaving] = useState(false);
 
-  // The modal runs in one of two modes: "setup" (schedule a new session) or
-  // "report" (file the post-session report against a scheduled one).
+  // The modal runs in one of three modes: "setup" (schedule a new session),
+  // "report" (file the post-session report against a scheduled one) or
+  // "materials" (share learning materials on an existing session).
   const [modalMode, setModalMode] = useState(null);
   const [reportTarget, setReportTarget] = useState(null);
   const [setupForm, setSetupForm] = useState(EMPTY_SETUP);
   const [reportForm, setReportForm] = useState(EMPTY_REPORT);
+  const [materialsDraft, setMaterialsDraft] = useState([]);
+  // Set when the setup form is answering a request the startup sent, rather
+  // than creating a session from scratch.
+  const [setupTarget, setSetupTarget] = useState(null);
+  const [declineReason, setDeclineReason] = useState("");
+  // An upload in flight — saving is held back until the file has a URL.
+  const [isUploading, setIsUploading] = useState(false);
 
   const setSetupField = (key, value) =>
     setSetupForm((prev) => ({ ...prev, [key]: value }));
@@ -93,8 +109,31 @@ const BdaCoachingSessionSetup = () => {
     setReportForm((prev) => ({ ...prev, [key]: value }));
 
   const openSetup = () => {
+    setSetupTarget(null);
     setSetupForm(EMPTY_SETUP);
     setModalMode("setup");
+  };
+
+  // Answer a request: the setup form opens on what the startup asked for, and
+  // saving turns that same record into the scheduled session.
+  const openSchedule = (session) => {
+    setSetupTarget(session);
+    setSetupForm({
+      ...EMPTY_SETUP,
+      title: session?.title || "",
+      purpose: session?.purpose || "",
+      sessionType: session?.sessionType || EMPTY_SETUP.sessionType,
+      sessionDate: String(session?.sessionDate || "").slice(0, 10),
+      sessionTime: session?.sessionTime || "",
+      materials: parseMaterials(session?.materials),
+    });
+    setModalMode("setup");
+  };
+
+  const openDecline = (session) => {
+    setReportTarget(session);
+    setDeclineReason("");
+    setModalMode("decline");
   };
 
   const openReport = (session) => {
@@ -104,13 +143,26 @@ const BdaCoachingSessionSetup = () => {
       recommendationsGiven: session?.recommendationsGiven || "",
       actionsAgreed: session?.actionsAgreed || "",
       flag: session?.flag || "green",
+      materials: parseMaterials(session?.materials),
     });
     setModalMode("report");
+  };
+
+  // Share (or tidy up) the materials on a session that already exists, without
+  // having to open the report.
+  const openMaterials = (session) => {
+    setReportTarget(session);
+    setMaterialsDraft(parseMaterials(session?.materials));
+    setModalMode("materials");
   };
 
   const closeModal = () => {
     setModalMode(null);
     setReportTarget(null);
+    setSetupTarget(null);
+    setMaterialsDraft([]);
+    setDeclineReason("");
+    setIsUploading(false);
   };
 
   const loadSessions = async () => {
@@ -137,25 +189,61 @@ const BdaCoachingSessionSetup = () => {
     loadSessions();
   }, [entUuid]);
 
-  // Part 1 — create the session in a "scheduled" state (no report yet).
+  // Part 1 — create the session in a "scheduled" state (no report yet), or
+  // schedule the session the startup requested.
   const onSubmitSetup = async (e) => {
     e.preventDefault();
     if (!entUuid) return;
 
     setIsSaving(true);
     try {
-      await createCoachingSession({
-        ...setupForm,
-        status: "scheduled",
-        flag: "",
-        entreprenuer_uuid: entUuid,
-      });
-      toast.success("Session scheduled");
+      if (setupTarget?.uuid) {
+        await updateCoachingSession(setupTarget.uuid, {
+          ...setupForm,
+          status: "scheduled",
+          flag: "",
+          // A previously declined request that is being scheduled after all
+          // should not keep showing why it was turned down.
+          declineReason: "",
+        });
+        toast.success("Session scheduled — the startup can see the details");
+      } else {
+        await createCoachingSession({
+          ...setupForm,
+          status: "scheduled",
+          flag: "",
+          entreprenuer_uuid: entUuid,
+        });
+        toast.success("Session scheduled");
+      }
       closeModal();
       loadSessions();
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Failed to schedule the session",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Turn a request down, with a reason the startup sees on the session.
+  const onSubmitDecline = async (e) => {
+    e.preventDefault();
+    if (!reportTarget?.uuid) return;
+
+    setIsSaving(true);
+    try {
+      await updateCoachingSession(reportTarget.uuid, {
+        status: "declined",
+        declineReason: declineReason.trim(),
+      });
+      toast.success("Request declined");
+      closeModal();
+      loadSessions();
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to decline the request",
       );
     } finally {
       setIsSaving(false);
@@ -184,6 +272,31 @@ const BdaCoachingSessionSetup = () => {
       setIsSaving(false);
     }
   };
+
+  // Learning materials on an existing session — saved on their own so they can
+  // be shared before the session as easily as after it.
+  const onSubmitMaterials = async (e) => {
+    e.preventDefault();
+    if (!reportTarget?.uuid) return;
+
+    setIsSaving(true);
+    try {
+      await updateCoachingSession(reportTarget.uuid, {
+        materials: materialsDraft,
+      });
+      toast.success("Learning materials saved");
+      closeModal();
+      loadSessions();
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to save the learning materials",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const pendingRequests = sessions.filter(isSessionRequested);
 
   if (loading) return <Loader />;
 
@@ -224,9 +337,44 @@ const BdaCoachingSessionSetup = () => {
           </div>
         </section>
 
+        {/* Requests the startup sent that still need an answer. */}
+        {pendingRequests.length > 0 && (
+          <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-indigo-100 bg-indigo-50/70 px-6 py-5">
+            <div className="flex items-start gap-3">
+              <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-indigo-600">
+                <CalendarClock className="h-5 w-5" />
+              </div>
+              <div>
+                <p className="text-base font-black text-indigo-950">
+                  {pendingRequests.length} session request
+                  {pendingRequests.length === 1 ? "" : "s"} from {startupName}
+                </p>
+                <p className="mt-0.5 text-sm text-indigo-900/80">
+                  {pendingRequests[0].title ||
+                    pendingRequests[0].sessionType ||
+                    "Coaching session"}
+                  {pendingRequests[0].sessionDate
+                    ? ` · preferred ${formatSessionDate(pendingRequests[0].sessionDate)}`
+                    : ""}
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => openSchedule(pendingRequests[0])}
+              className="shrink-0 rounded-xl bg-[#082d77] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#061f54]"
+            >
+              Schedule it
+            </button>
+          </section>
+        )}
+
         <CoachingSessionsPanel
           sessions={sessions}
           onReport={openReport}
+          onManageMaterials={openMaterials}
+          onSchedule={openSchedule}
+          onDecline={openDecline}
           belowCards={
             <div className="flex justify-end">
               <button
@@ -250,11 +398,12 @@ const BdaCoachingSessionSetup = () => {
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
               <div>
                 <h3 className="text-2xl font-black text-slate-950">
-                  Set up a session
+                  {setupTarget ? "Schedule the requested session" : "Set up a session"}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  Schedule a coaching session for {startupName}. You will report
-                  on it after it has taken place.
+                  {setupTarget
+                    ? `${startupName} asked for this session — add the date and joining details to confirm it.`
+                    : `Schedule a coaching session for ${startupName}. You will report on it after it has taken place.`}
                 </p>
               </div>
               <button
@@ -267,6 +416,12 @@ const BdaCoachingSessionSetup = () => {
             </div>
 
             <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+              {setupTarget?.purpose && (
+                <div className="rounded-xl bg-indigo-50/70 px-4 py-3 text-sm leading-6 text-indigo-900 md:col-span-2">
+                  <span className="font-bold">What they asked for:</span>{" "}
+                  {setupTarget.purpose}
+                </div>
+              )}
               <div className="md:col-span-2">
                 <FieldLabel>Session title</FieldLabel>
                 <input
@@ -384,6 +539,21 @@ const BdaCoachingSessionSetup = () => {
                   }
                 />
               </div>
+
+              {/* Learning materials — anything the startup should read, use or
+                  fill in around this session. */}
+              <div className="md:col-span-2">
+                <FieldLabel>Learning materials (optional)</FieldLabel>
+                <p className="mb-2 text-xs text-slate-500">
+                  Share guides, templates or examples to support {startupName}.
+                  They can download them from their coaching sessions page.
+                </p>
+                <MaterialsInput
+                  materials={setupForm.materials}
+                  onChange={(next) => setSetupField("materials", next)}
+                  onUploadingChange={setIsUploading}
+                />
+              </div>
             </div>
 
             <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
@@ -397,10 +567,16 @@ const BdaCoachingSessionSetup = () => {
               </button>
               <button
                 type="submit"
-                disabled={isSaving}
+                disabled={isSaving || isUploading}
                 className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
               >
-                {isSaving ? "Scheduling..." : "Schedule session"}
+                {isUploading
+                  ? "Uploading materials..."
+                  : isSaving
+                    ? "Scheduling..."
+                    : setupTarget
+                      ? "Confirm session"
+                      : "Schedule session"}
               </button>
             </div>
           </form>
@@ -481,6 +657,76 @@ const BdaCoachingSessionSetup = () => {
                   }
                 />
               </div>
+              <div>
+                <FieldLabel>Learning materials</FieldLabel>
+                <p className="mb-2 text-xs text-slate-500">
+                  Upload the documents or links that back up your
+                  recommendations — templates, guides, worked examples.
+                </p>
+                <MaterialsInput
+                  materials={reportForm.materials}
+                  onChange={(next) => setReportField("materials", next)}
+                  onUploadingChange={setIsUploading}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={isSaving}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving || isUploading}
+                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+              >
+                {isUploading
+                  ? "Uploading materials..."
+                  : isSaving
+                    ? "Saving..."
+                    : "Save report"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Decline a session the startup requested. */}
+      {modalMode === "decline" && (
+        <div className={modalOverlayClass}>
+          <form onSubmit={onSubmitDecline} className={modalCardClass}>
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
+              <div>
+                <h3 className="text-2xl font-black text-slate-950">
+                  Decline this request
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  {startupName} will see your reason on the request, so they know
+                  what to do next.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6">
+              <FieldLabel>Reason (optional)</FieldLabel>
+              <textarea
+                className={`${baseInputClass} min-h-[110px]`}
+                placeholder="e.g. I am on leave this week — let us do it on the 14th instead."
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+              />
             </div>
 
             <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
@@ -495,9 +741,71 @@ const BdaCoachingSessionSetup = () => {
               <button
                 type="submit"
                 disabled={isSaving}
+                className="rounded-xl bg-[#e11d48] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#be123c] disabled:opacity-60"
+              >
+                {isSaving ? "Saving..." : "Decline request"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Learning materials on an existing session. */}
+      {modalMode === "materials" && (
+        <div className={modalOverlayClass}>
+          <form onSubmit={onSubmitMaterials} className={modalCardClass}>
+            <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
+              <div>
+                <h3 className="text-2xl font-black text-slate-950">
+                  Learning materials
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Share documents and links to support {startupName} on{" "}
+                  {reportTarget?.title ||
+                    reportTarget?.sessionType ||
+                    "this session"}
+                  {reportTarget?.sessionDate
+                    ? ` · ${formatSessionDate(reportTarget.sessionDate)}`
+                    : ""}
+                  .
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="grid h-10 w-10 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="p-6">
+              <MaterialsInput
+                materials={materialsDraft}
+                onChange={setMaterialsDraft}
+                onUploadingChange={setIsUploading}
+              />
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={isSaving}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSaving || isUploading}
                 className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
               >
-                {isSaving ? "Saving..." : "Save report"}
+                {isUploading
+                  ? "Uploading..."
+                  : isSaving
+                    ? "Saving..."
+                    : "Save materials"}
               </button>
             </div>
           </form>

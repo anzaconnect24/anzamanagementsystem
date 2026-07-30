@@ -309,3 +309,81 @@ ownership with Finance.
   enterprise upsert it performs server-side.
 - `Finance` reuses the admin tracker reads: `GET /tracker/admin/overview`,
   `GET /tracker/admin/businesses`, `GET /tracker/programs`.
+
+---
+
+## 11. Coaching session — learning materials (`materials`)
+
+The BDA can share supporting documents and links on a coaching session
+(templates, guides, worked examples). The frontend uploads each file to
+`POST /upload-file/` first and only stores the returned URLs on the session, so
+the coaching-session routes stay JSON.
+
+Add a **`materials`** column to the coaching-session model (JSON array, default
+`[]`), accept it on create/update and **return it on every session read**:
+
+| Method | Path | Notes |
+|---|---|---|
+| POST | `/coaching-sessions/` | Accept `materials` alongside the setup fields |
+| PATCH | `\coaching-sessions:uuid` | Accept `materials` on its own (the mentor can share materials without filing a report) and with the report fields |
+| GET | `/coaching-sessions/entreprenuer/:uuid` | Must return `materials` |
+
+Each item:
+
+```json
+{
+  "kind": "file",            // "file" (uploaded) or "link" (external resource)
+  "name": "Cashflow template.xlsx",
+  "description": "Fill in columns B–D before the next session",
+  "url": "https://…",
+  "fileType": "xlsx",
+  "size": 48213,              // bytes; 0 for links
+  "addedAt": "2026-07-30T09:12:00.000Z"
+}
+```
+
+Notes:
+
+- The frontend tolerates `materials` arriving as a JSON array **or** a JSON
+  string, so a TEXT column holding stringified JSON also works.
+- A PATCH carrying only `materials` must not change `status` or clear the report
+  fields.
+- The entrepreneur reads the same session records, so no separate endpoint is
+  needed — they download the materials from their Coaching Sessions page.
+
+---
+
+## 12. Startup-requested coaching sessions
+
+The startup can ask its BDA for a session from the entrepreneur Coaching
+Sessions page. A request is an ordinary coaching-session record in a new
+`requested` state, so the BDA answers it by turning that same record into the
+scheduled session — no second model.
+
+**Lifecycle:** `requested` → `scheduled` → `completed`, or `requested` →
+`declined` (the BDA can still schedule a declined request later).
+
+Backend work:
+
+1. **Authorize `Enterprenuer`** on `POST /coaching-sessions/` when
+   `entreprenuer_uuid` is their own uuid **and** `status` is `"requested"`.
+   They must not be able to create `scheduled`/`completed` sessions, edit the
+   report fields, or touch another startup's sessions.
+2. Accept and return these fields on the coaching-session model:
+
+| Field | Type | Notes |
+|---|---|---|
+| `status` | string | now also `"requested"` and `"declined"` |
+| `requestedBy` | uuid | the entrepreneur who asked |
+| `requestedAt` | ISO date | when they asked |
+| `declineReason` | text | shown to the startup when a request is turned down |
+
+3. On the BDA's `PATCH /coaching-sessions/:uuid`, allow `status` to move from
+   `requested` to `scheduled` (with the meeting fields) or to `declined` (with
+   `declineReason`), and allow `declineReason` to be cleared.
+4. `GET /coaching-sessions/entreprenuer/:uuid` must return requested and
+   declined sessions too — both sides read the same list.
+
+A notification to the assigned BDA when a request arrives (and to the startup
+when it is scheduled or declined) would be a useful follow-up; the UI works
+without one, since the BDA's startup list badges startups with open requests.
