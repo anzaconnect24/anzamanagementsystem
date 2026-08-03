@@ -299,7 +299,7 @@ export const MaterialsInput = ({
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
-            className="rounded-xl bg-[#082d77] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+            className="rounded-xl bg-[#16a34a] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60"
           >
             {uploading ? "Uploading..." : "Choose documents"}
           </button>

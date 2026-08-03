@@ -4,6 +4,9 @@
 // details list and the per-startup detail page so both stay in sync.
 export const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
 export const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
+// BDAs who run this program. A program a BDA sets up has no startups yet, so
+// without this it would be invisible to them until someone was added.
+export const TRACKER_BDAS_MARKER = "__TRACKER_BDAS__:";
 
 export const parseMarkerJson = (text, marker) => {
   const raw = String(text || "");
@@ -29,6 +32,29 @@ export const buildDescriptionWithMeta = (description, categories, startups) => {
     `${TRACKER_STARTUPS_MARKER}${JSON.stringify(safeStartups)}\n` +
     `${TRACKER_CATEGORIES_MARKER}${JSON.stringify(safeCats)}`
   );
+};
+
+export const parseProgramBdas = (program) =>
+  parseMarkerJson(program?.description, TRACKER_BDAS_MARKER)
+    .map((uuid) => String(uuid || "").trim())
+    .filter(Boolean);
+
+// Same as buildDescriptionWithMeta, keeping the BDA list on the program. Use
+// this wherever a BDA rewrites a program so their own programs do not vanish
+// from their list on the next save.
+export const buildDescriptionWithMetaAndBdas = (
+  description,
+  categories,
+  startups,
+  bdas,
+) => {
+  const base = buildDescriptionWithMeta(description, categories, startups);
+  const safeBdas = Array.from(
+    new Set((bdas || []).map((uuid) => String(uuid || "").trim()).filter(Boolean)),
+  );
+  return safeBdas.length
+    ? `${base}\n${TRACKER_BDAS_MARKER}${JSON.stringify(safeBdas)}`
+    : base;
 };
 
 export const parseTrackerProgramMeta = (program) => {

@@ -223,6 +223,7 @@ export const en = {
     trackerOverview: "Grant Management",
     tracking: "Portfolio Support",
     staffTracker: "Grant Management",
+    mentorshipTracker: "Mentorship Tracker",
 
     // Mentorship Application Form
     mentorshipApplication: {

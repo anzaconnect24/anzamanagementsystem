@@ -374,7 +374,7 @@ const CoachingSessionsPanel = ({
                   <button
                     type="button"
                     onClick={() => onSchedule(item)}
-                    className="shrink-0 rounded-xl bg-[#082d77] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                    className="shrink-0 rounded-xl bg-[#16a34a] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#15803d]"
                   >
                     Schedule
                   </button>
@@ -566,7 +566,7 @@ const CoachingSessionsPanel = ({
                             <button
                               type="button"
                               onClick={() => onSchedule(item)}
-                              className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                              className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d]"
                             >
                               Schedule session
                             </button>
@@ -586,7 +586,7 @@ const CoachingSessionsPanel = ({
                           <button
                             type="button"
                             onClick={() => onSchedule(item)}
-                            className="shrink-0 rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                            className="shrink-0 rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d]"
                           >
                             Schedule anyway
                           </button>
@@ -683,7 +683,7 @@ const CoachingSessionsPanel = ({
                       <button
                         type="button"
                         onClick={() => onManageMaterials(item)}
-                        className="shrink-0 rounded-xl bg-[#082d77] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#061f54]"
+                        className="shrink-0 rounded-xl bg-[#16a34a] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#15803d]"
                       >
                         {materials.length ? "Manage materials" : "Upload materials"}
                       </button>

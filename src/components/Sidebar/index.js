@@ -352,7 +352,7 @@ const Sidebar = ({
             icon: <BsCalendar3 className="text-xl" />,
           },
           {
-            name: t("navigation.coachingSessions", "Coaching Sessions"),
+            name: t("navigation.mentorshipTracker", "Mentorship Tracker"),
             path: "/dashboard/bdaCoachingSessions",
             icon: <BsCalendar3 className="text-xl" />,
           },

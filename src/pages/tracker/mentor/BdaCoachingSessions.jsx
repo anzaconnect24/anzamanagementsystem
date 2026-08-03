@@ -1,4 +1,4 @@
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
@@ -8,15 +8,141 @@ import {
   FaMapMarkerAlt,
   FaSearch,
 } from "react-icons/fa";
+import {
+  Building2,
+  CalendarCheck,
+  ChevronDown,
+  CircleCheck,
+  Flag,
+  OctagonAlert,
+  Pencil,
+  Plus,
+  Trash2,
+  TriangleAlert,
+} from "lucide-react";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { getEnterprenuers } from "@/controllers/user_controller";
-import { getPrograms } from "@/controllers/program_controller";
+import { getBusiness } from "@/controllers/business_controller";
+import {
+  addProgram,
+  deleteProgram,
+  editProgram,
+  getPrograms,
+} from "@/controllers/program_controller";
 import { getEntrepreneurCoachingSessions } from "@/controllers/coaching_session_controller";
-import { isSessionRequested } from "@/components/tracker/CoachingSessionsPanel";
-import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
+import {
+  listTrackerMilestones,
+  upsertMentorEnterprise,
+} from "@/controllers/trackerController";
+import {
+  hasSessionReport,
+  isSessionDeclined,
+  isSessionRequested,
+} from "@/components/tracker/CoachingSessionsPanel";
+import {
+  buildDescriptionWithMetaAndBdas,
+  parseProgramBdas,
+  parseTrackerProgramMeta,
+} from "@/utils/trackerProgramMarkers";
+import { isGrantProgram, isMentorshipProgram } from "@/utils/programMeta";
 
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
+
+// Portfolio status card: the number first, its label beneath, tinted icon on
+// the right — the same shape the coaching sessions panel uses.
+const StatCard = ({ label, value, icon, tone }) => (
+  <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm shadow-slate-200/50">
+    <div className="flex items-start justify-between gap-3">
+      <p className="min-w-0 truncate text-2xl font-black tracking-tight text-slate-950">
+        {value}
+      </p>
+      <span className={`shrink-0 ${tone}`}>{icon}</span>
+    </div>
+    <p className="mt-2 text-sm font-medium text-slate-500">{label}</p>
+  </div>
+);
+
+// Regions double as the district list, matching the enterprise KYC form.
+const DISTRICTS = [
+  "Arusha",
+  "Dar es Salaam",
+  "Dodoma",
+  "Geita",
+  "Iringa",
+  "Kagera",
+  "Katavi",
+  "Kigoma",
+  "Kilimanjaro",
+  "Lindi",
+  "Manyara",
+  "Mara",
+  "Mbeya",
+  "Morogoro",
+  "Mtwara",
+  "Mwanza",
+  "Njombe",
+  "Pemba North",
+  "Pemba South",
+  "Pwani",
+  "Rukwa",
+  "Ruvuma",
+  "Shinyanga",
+  "Simiyu",
+  "Singida",
+  "Songwe",
+  "Tabora",
+  "Tanga",
+  "Kaskazini Unguja",
+  "Kusini Unguja",
+  "Mjini Magharibi",
+];
+
+const CE_SECTORS = [
+  "Plastic aggregation",
+  "Metal scraps aggregation",
+  "Organic waste",
+  "E-waste",
+  "Agriculture",
+  "Retail",
+  "Manufacturing",
+  "Technology",
+  "Services",
+  "Education",
+  "Healthcare",
+];
+
+const DEFAULT_PROGRAM_IMAGE = "/images/ideation-classes.svg";
+
+const EMPTY_PROGRAM_FORM = {
+  title: "",
+  description: "",
+  categories: "",
+  startDate: "",
+  endDate: "",
+};
+
+const EMPTY_ADD_FORM = {
+  entreprenuerUuid: "",
+  businessUuid: "",
+  name: "",
+  category: "",
+  ceSector: "",
+  district: "",
+  leadContact: "",
+  grantUsd: "",
+  awardDate: "",
+  description: "",
+};
+
+const addInputClass =
+  "w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77] focus:ring-4 focus:ring-[#082d77]/20 disabled:bg-slate-50 disabled:text-slate-500";
+
+const AddFieldLabel = ({ children }) => (
+  <label className="mb-1.5 block text-xs font-bold tracking-wide text-slate-500">
+    {children}
+  </label>
+);
 
 const formatProgramDate = (value) => {
   if (!value) return "Not set";
@@ -92,33 +218,56 @@ const BdaCoachingSessions = () => {
   const [programFilter, setProgramFilter] = useState("All Programs");
   const [sortKey, setSortKey] = useState("name");
   const [openDropdown, setOpenDropdown] = useState("");
-  // How many sessions each startup has asked for and not had an answer to —
-  // filled in after the list renders, so a slow lookup never holds the page up.
-  const [requestsByUuid, setRequestsByUuid] = useState({});
+  const [sessionsByUuid, setSessionsByUuid] = useState({});
+  const [milestones, setMilestones] = useState([]);
+  const [statsReady, setStatsReady] = useState(false);
+  // Every startup on the platform, for the "add startup" picker, and every grant
+  // program, so the form can read what finance already recorded.
+  const [pool, setPool] = useState([]);
+  const [programs, setPrograms] = useState([]);
+  const [showAdd, setShowAdd] = useState(false);
+  const [poolSearch, setPoolSearch] = useState("");
+  const [poolOpen, setPoolOpen] = useState(false);
+  const [addForm, setAddForm] = useState(EMPTY_ADD_FORM);
+  const [isAdding, setIsAdding] = useState(false);
+  const [showProgram, setShowProgram] = useState(false);
+  const [programForm, setProgramForm] = useState(EMPTY_PROGRAM_FORM);
+  const [isSavingProgram, setIsSavingProgram] = useState(false);
+  // Set when the modal is editing an existing program rather than creating one.
+  const [editingProgram, setEditingProgram] = useState(null);
 
-  useEffect(() => {
-    // Only startups selected into a grant program and assigned to this BDA can
-    // be coached — the same list their tracker shows. The names come from the
-    // entrepreneur pool so they match the rest of the app.
+  const setProgramField = (key, value) =>
+    setProgramForm((prev) => ({ ...prev, [key]: value }));
+
+  const setAddField = (key, value) =>
+    setAddForm((prev) => ({ ...prev, [key]: value }));
+
+  // Only startups selected into a grant program and assigned to this BDA can be
+  // coached — the same list their tracker shows. The names come from the
+  // entrepreneur pool so they match the rest of the app.
+  const loadStartups = ({ silent = false } = {}) => {
     const bdaUuid = String(userDetails?.uuid || "").trim();
     if (!bdaUuid) {
       setEnterprises([]);
       setLoading(false);
-      return;
+      return Promise.resolve();
     }
 
-    setLoading(true);
-    Promise.all([getPrograms(1, 500), getEnterprenuers(1000, 1, " ")])
+    if (!silent) setLoading(true);
+    return Promise.all([getPrograms(1, 500), getEnterprenuers(1000, 1, " ")])
       .then(([programsResponse, poolBody]) => {
         const programs = Array.isArray(programsResponse?.data)
           ? programsResponse.data
           : [];
+        setPrograms(programs);
 
         const pool = Array.isArray(poolBody)
           ? poolBody
           : Array.isArray(poolBody?.data)
             ? poolBody.data
             : [];
+        // Every startup on the platform — what the "add startup" picker offers.
+        setPool(pool.filter((user) => user?.uuid));
         const poolByUuid = new Map(
           pool.filter((u) => u?.uuid).map((u) => [u.uuid, u]),
         );
@@ -138,6 +287,9 @@ const BdaCoachingSessions = () => {
 
             assigned.push({
               uuid,
+              // Carried so the sessions page can link to the business profile,
+              // which is keyed by the business — not the entrepreneur.
+              businessUuid: business?.uuid || member.businessUuid || "",
               name:
                 business?.name || poolUser?.name || member.name || "Unnamed startup",
               email: poolUser?.email || "",
@@ -160,28 +312,42 @@ const BdaCoachingSessions = () => {
       })
       .catch(() => toast.error("Failed to load your startups"))
       .finally(() => setLoading(false));
+  };
+
+  useEffect(() => {
+    loadStartups();
   }, [userDetails?.uuid]);
 
-  // Pending session requests per startup, so the BDA can see who is waiting
-  // without opening every startup in turn.
+  // Coaching data across the whole portfolio: each startup's sessions (for the
+  // status cards and the request badges) and their milestones. Loaded after the
+  // list renders, so a slow lookup never holds the page up.
   useEffect(() => {
     if (!enterprises.length) {
-      setRequestsByUuid({});
+      setSessionsByUuid({});
+      setMilestones([]);
+      setStatsReady(false);
       return;
     }
     let cancelled = false;
 
-    Promise.all(
-      enterprises.map((item) =>
-        getEntrepreneurCoachingSessions(item.uuid).then((sessions) => [
-          item.uuid,
-          (Array.isArray(sessions) ? sessions : []).filter(isSessionRequested)
-            .length,
-        ]),
+    Promise.all([
+      Promise.all(
+        enterprises.map((item) =>
+          getEntrepreneurCoachingSessions(item.uuid).then((sessions) => [
+            item.uuid,
+            Array.isArray(sessions) ? sessions : [],
+          ]),
+        ),
       ),
-    ).then((entries) => {
+      listTrackerMilestones().catch(() => []),
+    ]).then(([entries, milestoneBody]) => {
       if (cancelled) return;
-      setRequestsByUuid(Object.fromEntries(entries.filter(([, n]) => n > 0)));
+      setSessionsByUuid(Object.fromEntries(entries));
+      const list = Array.isArray(milestoneBody)
+        ? milestoneBody
+        : milestoneBody?.body || [];
+      setMilestones(Array.isArray(list) ? list : []);
+      setStatsReady(true);
     });
 
     return () => {
@@ -189,13 +355,332 @@ const BdaCoachingSessions = () => {
     };
   }, [enterprises]);
 
+  // Sessions each startup has asked for and not had an answer to.
+  const requestsByUuid = useMemo(() => {
+    const map = {};
+    Object.entries(sessionsByUuid).forEach(([uuid, list]) => {
+      const pending = list.filter(isSessionRequested).length;
+      if (pending > 0) map[uuid] = pending;
+    });
+    return map;
+  }, [sessionsByUuid]);
+
+  const openCreateProgram = () => {
+    setEditingProgram(null);
+    setProgramForm(EMPTY_PROGRAM_FORM);
+    setShowProgram(true);
+  };
+
+  const openEditProgram = (program) => {
+    const meta = parseTrackerProgramMeta(program);
+    setEditingProgram(program);
+    setProgramForm({
+      title: program?.title || "",
+      description: meta.cleanDescription,
+      categories: meta.categories.join(", "),
+      startDate: String(program?.startDate || "").slice(0, 10),
+      endDate: String(program?.endDate || "").slice(0, 10),
+    });
+    setShowProgram(true);
+  };
+
+  // Remove a program the BDA set up. The startups themselves are untouched —
+  // only the program record and its membership list go.
+  const onDeleteProgram = async (program) => {
+    const startupCount = parseTrackerProgramMeta(program).startups.length;
+    const shouldDelete = window.confirm(
+      startupCount > 0
+        ? `Delete "${program.title}"? Its ${startupCount} startup${startupCount === 1 ? "" : "s"} will no longer be listed under it.`
+        : `Delete "${program.title}"?`,
+    );
+    if (!shouldDelete) return;
+
+    try {
+      await deleteProgram(program.uuid);
+      toast.success(`${program.title} deleted`);
+      if (openProgram === program.title) setOpenProgram("");
+      await loadStartups({ silent: true });
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to delete the program",
+      );
+    }
+  };
+
+  // Set up (or update) a mentorship program. It is tagged with this BDA so it
+  // shows in their list before any startup has been added to it.
+  const onSubmitProgram = async (e) => {
+    e.preventDefault();
+
+    const title = programForm.title.trim();
+    const description = programForm.description.trim();
+    if (!title) {
+      toast.error("Program title is required");
+      return;
+    }
+    if (!description) {
+      toast.error("Program description is required");
+      return;
+    }
+    if (
+      programForm.startDate &&
+      programForm.endDate &&
+      programForm.startDate > programForm.endDate
+    ) {
+      toast.error("Start date cannot be after end date");
+      return;
+    }
+
+    const categories = programForm.categories
+      .split(",")
+      .map((category) => category.trim())
+      .filter(Boolean);
+
+    const bdaUuid = String(userDetails?.uuid || "");
+    // Editing keeps the startups already in the program, and whoever runs it.
+    const existingMeta = editingProgram
+      ? parseTrackerProgramMeta(editingProgram)
+      : null;
+    const bdas = editingProgram
+      ? Array.from(new Set([...parseProgramBdas(editingProgram), bdaUuid]))
+      : [bdaUuid];
+
+    const payload = {
+      title,
+      description: buildDescriptionWithMetaAndBdas(
+        description,
+        categories,
+        existingMeta?.startups || [],
+        bdas,
+      ),
+      programCategory: categories[0] || "Ideation",
+      // The BDA's own program — kept out of Grant Management, which lists
+      // only the finance officer's grant programs.
+      type: "mentorship",
+      startDate: programForm.startDate || null,
+      endDate: programForm.endDate || null,
+      image: editingProgram?.image || DEFAULT_PROGRAM_IMAGE,
+    };
+
+    setIsSavingProgram(true);
+    try {
+      const response = editingProgram?.uuid
+        ? await editProgram(editingProgram.uuid, payload)
+        : await addProgram(payload);
+
+      if (response?.status !== true && response?.data?.status !== true) {
+        toast.error(
+          response?.message ||
+            response?.data?.message ||
+            `Failed to ${editingProgram ? "update" : "create"} the program`,
+        );
+        return;
+      }
+
+      // The open program is tracked by title, so a rename must follow it.
+      if (editingProgram && openProgram === editingProgram.title) {
+        setOpenProgram(title);
+      }
+
+      toast.success(`${title} ${editingProgram ? "updated" : "created"}`);
+      setShowProgram(false);
+      setEditingProgram(null);
+      setProgramForm(EMPTY_PROGRAM_FORM);
+      await loadStartups({ silent: true });
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message ||
+          `Failed to ${editingProgram ? "update" : "create"} the program`,
+      );
+    } finally {
+      setIsSavingProgram(false);
+    }
+  };
+
+  // Add a startup to the open program and record what this BDA knows about
+  // them. The startup itself is picked from the platform-wide pool, so the
+  // record always points at a real account.
+  const openAdd = () => {
+    setAddForm(EMPTY_ADD_FORM);
+    setPoolSearch("");
+    setPoolOpen(false);
+    setShowAdd(true);
+  };
+
+  // Picking a startup fills the form from their business profile — the name and
+  // description come across as they are registered, and switching to a
+  // different startup replaces them rather than leaving the previous one's.
+  const pickPoolStartup = async (user) => {
+    const business = user?.Business || user?.business || null;
+    // Anything already on record for this startup — the grant finance set, the
+    // category, the rest — comes across so it is not keyed in a second time.
+    const onRecord = findMemberRecord(user.uuid)?.member || null;
+    const finance =
+      findMemberRecord(user.uuid, { onlyGrant: true })?.member || onRecord;
+
+    setAddForm((prev) => ({
+      ...prev,
+      entreprenuerUuid: user.uuid,
+      businessUuid: business?.uuid || "",
+      name: business?.name || finance?.name || user?.name || "Unnamed startup",
+      category: finance?.category || prev.category || "",
+      ceSector:
+        business?.BusinessSector?.name ||
+        business?.sector ||
+        finance?.sector ||
+        prev.ceSector ||
+        "",
+      district: business?.location || finance?.district || prev.district || "",
+      leadContact: user?.name || finance?.leadContact || prev.leadContact || "",
+      grantUsd:
+        finance?.grantUsd === undefined || finance?.grantUsd === null
+          ? ""
+          : String(finance.grantUsd),
+      awardDate: finance?.awardDate || "",
+      description: business?.description || finance?.description || "",
+    }));
+
+    // The list payload does not always carry the full business record, so fetch
+    // the profile when the description is missing rather than leaving the BDA
+    // to type what the startup already registered.
+    if (business?.uuid && !business?.description) {
+      try {
+        const detail = await getBusiness(business.uuid);
+        const full = detail?.uuid ? detail : detail?.Business || null;
+        if (!full?.description && !full?.name) return;
+        setAddForm((prev) =>
+          // Ignore a late reply for a startup the BDA has moved on from.
+          prev.entreprenuerUuid !== user.uuid
+            ? prev
+            : {
+                ...prev,
+                name: prev.name || full.name || "",
+                description: prev.description || full.description || "",
+                ceSector:
+                  prev.ceSector ||
+                  full.BusinessSector?.name ||
+                  full.sector ||
+                  "",
+                district: prev.district || full.location || "",
+              },
+        );
+      } catch {
+        // Nothing to fill in — the BDA can still type the details.
+      }
+    }
+  };
+
+  const onSubmitAdd = async (e) => {
+    e.preventDefault();
+
+    const program = openProgramRecord;
+    if (!program?.uuid) {
+      toast.error("Open a program first");
+      return;
+    }
+    if (!addForm.entreprenuerUuid) {
+      toast.error("Pick the startup from the list");
+      return;
+    }
+
+    setIsAdding(true);
+    try {
+      const meta = parseTrackerProgramMeta(program);
+      const member = {
+        entreprenuerUuid: addForm.entreprenuerUuid,
+        businessUuid: addForm.businessUuid,
+        name: addForm.name.trim() || "Unnamed startup",
+        sector: addForm.ceSector,
+        category: addForm.category,
+        district: addForm.district,
+        leadContact: addForm.leadContact.trim(),
+        grantUsd: addForm.grantUsd,
+        awardDate: addForm.awardDate,
+        description: addForm.description.trim(),
+        // The BDA adding the startup is the one who will coach them.
+        bdaUuid: String(userDetails?.uuid || ""),
+        bdaName: userDetails?.name || "",
+      };
+
+      const existing = meta.startups.find(
+        (s) => s?.entreprenuerUuid === member.entreprenuerUuid,
+      );
+      // Keep whatever finance already recorded (tranches, disbursements) and
+      // write this BDA's details on top.
+      const startups = existing
+        ? meta.startups.map((s) =>
+            s?.entreprenuerUuid === member.entreprenuerUuid
+              ? { ...s, ...member }
+              : s,
+          )
+        : [...meta.startups, member];
+
+      const response = await editProgram(program.uuid, {
+        title: program.title,
+        description: buildDescriptionWithMetaAndBdas(
+          meta.cleanDescription,
+          meta.categories,
+          startups,
+          // Keep whoever runs this program on the record — rewriting the
+          // description would otherwise drop them.
+          parseProgramBdas(program),
+        ),
+        programCategory: program.programCategory,
+        type: program.type || "grant",
+        startDate: program.startDate || null,
+        endDate: program.endDate || null,
+        image: program.image,
+      });
+
+      if (response?.status !== true && response?.data?.status !== true) {
+        toast.error(
+          response?.message ||
+            response?.data?.message ||
+            "Failed to add the startup to this program",
+        );
+        return;
+      }
+
+      // Give them a tracker workspace too, so their own dashboard has something
+      // to show. Best effort — the program record is what this page reads.
+      try {
+        await upsertMentorEnterprise({
+          entreprenuer_uuid: member.entreprenuerUuid,
+          program_uuid: program.uuid,
+          name: member.name,
+          ceSector: member.sector || undefined,
+          district: member.district || undefined,
+          grantUsd: Number(member.grantUsd || 0),
+          assignedBda: member.bdaName || undefined,
+        });
+      } catch {
+        toast(
+          "Added to the program. Their tracker workspace could not be created yet.",
+        );
+      }
+
+      toast.success(
+        existing ? "Startup details updated" : `${member.name} added to ${program.title}`,
+      );
+      setShowAdd(false);
+      setAddForm(EMPTY_ADD_FORM);
+      await loadStartups({ silent: true });
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to add the startup",
+      );
+    } finally {
+      setIsAdding(false);
+    }
+  };
+
   // Selecting a startup opens its own coaching-session setup page. The name
   // rides along so that page can title itself without another lookup.
   const onSelectEnterprise = (item) => {
     navigate(
       `/dashboard/bdaCoachingSessions/${item.uuid}?name=${encodeURIComponent(
         item.name || "",
-      )}`,
+      )}&business=${encodeURIComponent(item.businessUuid || "")}`,
     );
   };
 
@@ -242,18 +727,114 @@ const BdaCoachingSessions = () => {
       }
       map.get(key).rows.push(item);
     });
+
+    // Programs this BDA set up themselves show even before a startup has been
+    // added to them — otherwise a new program would vanish on save.
+    const bdaUuid = String(userDetails?.uuid || "").trim();
+    programs.forEach((program) => {
+      const key = String(program?.title || "").trim();
+      if (!key || map.has(key)) return;
+      if (!parseProgramBdas(program).includes(bdaUuid)) return;
+      map.set(key, { name: key, rows: [], program });
+    });
+
     return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
   })();
 
   const openProgram = searchParams.get("program") || "";
-  const openProgramRows =
-    programCards.find((p) => p.name === openProgram)?.rows || [];
+  const openProgramCard = programCards.find((p) => p.name === openProgram);
+  const openProgramRows = openProgramCard?.rows || [];
+  const openProgramRecord = openProgramCard?.program || null;
+  // Categories the finance officer defined on this program — what the "add
+  // startup" form offers.
+  const programCategories = openProgramRecord
+    ? parseTrackerProgramMeta(openProgramRecord).categories
+    : [];
+
+  // Whatever is already on record for a startup, in the open program first and
+  // then anywhere else they appear. `onlyGrant` restricts the search to the
+  // finance officer's grant programs — a mentorship program's figures are the
+  // BDA's own, not finance's.
+  const findMemberRecord = (entreprenuerUuid, { onlyGrant = false } = {}) => {
+    if (!entreprenuerUuid) return null;
+    const candidates = [
+      openProgramRecord,
+      ...programs.filter((p) => p?.uuid && p?.uuid !== openProgramRecord?.uuid),
+    ]
+      .filter(Boolean)
+      .filter((program) => !onlyGrant || isGrantProgram(program));
+
+    for (const program of candidates) {
+      const member = parseTrackerProgramMeta(program).startups.find(
+        (s) => s?.entreprenuerUuid === entreprenuerUuid,
+      );
+      if (member) return { member, program };
+    }
+    return null;
+  };
+
+  const financeRecord = findMemberRecord(addForm.entreprenuerUuid, {
+    onlyGrant: true,
+  });
+  // Only treat it as finance's figure when there is actually an amount on it.
+  const financeGrant = Number(financeRecord?.member?.grantUsd || 0) > 0
+    ? financeRecord
+    : null;
   const setOpenProgram = (name) => {
     const next = new URLSearchParams(searchParams);
     if (name) next.set("program", name);
     else next.delete("program");
     setSearchParams(next);
   };
+
+  // Status of the startups in the open program. A startup's standing is the
+  // flag on its most recent reported session, so startups yet to be coached
+  // count towards none of the three flags. Requested and declined sessions are
+  // not "logged".
+  const coachingStats = useMemo(() => {
+    const assigned = new Set(openProgramRows.map((item) => item.uuid));
+    let onTrack = 0;
+    let atRisk = 0;
+    let critical = 0;
+    let sessionsLogged = 0;
+
+    openProgramRows.forEach((item) => {
+      const list = sessionsByUuid[item.uuid] || [];
+      const logged = list.filter(
+        (session) => !isSessionRequested(session) && !isSessionDeclined(session),
+      );
+      sessionsLogged += logged.length;
+
+      const latestReported = logged
+        .filter((session) => hasSessionReport(session) && session.flag)
+        .sort(
+          (a, b) => new Date(b.sessionDate || 0) - new Date(a.sessionDate || 0),
+        )[0];
+
+      const flag = String(latestReported?.flag || "").toLowerCase();
+      if (flag === "green") onTrack += 1;
+      else if (flag === "amber") atRisk += 1;
+      else if (flag === "red") critical += 1;
+    });
+
+    const milestonesDone = milestones.filter((milestone) => {
+      const owner =
+        milestone?.Entreprenuer?.uuid || milestone?.entreprenuerUuid || "";
+      return (
+        assigned.has(owner) &&
+        String(milestone?.status || "").toLowerCase() === "completed"
+      );
+    }).length;
+
+    return {
+      total: openProgramRows.length,
+      onTrack,
+      atRisk,
+      critical,
+      sessionsLogged,
+      milestonesDone,
+    };
+  }, [openProgramRows, sessionsByUuid, milestones]);
 
   if (loading) return <Loader />;
 
@@ -271,29 +852,121 @@ const BdaCoachingSessions = () => {
           <div className="relative z-10 min-h-[160px]">
             <div className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur">
               <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
-              Coaching Sessions
+              Mentorship Tracker
             </div>
             <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
-              Coaching Sessions
+              Mentorship Tracker
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-              Log and review coaching sessions for the entrepreneurs assigned to you.
+              Track mentee progress, upcoming sessions, goals, and key milestones
+              in one place. Stay organized, monitor development, and provide
+              timely support throughout the mentorship journey.
             </p>
           </div>
         </section>
 
+        {/* Status of the open program's startups, directly under the hero. */}
+        {openProgram && (
+          <section className="grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
+            {[
+              {
+                label: "Total Enterprises",
+                value: coachingStats.total,
+                icon: <Building2 className="h-6 w-6" />,
+                tone: "text-[#0b2b5c]",
+                always: true,
+              },
+              {
+                label: "On Track",
+                value: coachingStats.onTrack,
+                icon: <CircleCheck className="h-6 w-6" />,
+                tone: "text-emerald-500",
+              },
+              {
+                label: "At Risk",
+                value: coachingStats.atRisk,
+                icon: <TriangleAlert className="h-6 w-6" />,
+                tone: "text-amber-500",
+              },
+              {
+                label: "Critical",
+                value: coachingStats.critical,
+                icon: <OctagonAlert className="h-6 w-6" />,
+                tone: "text-rose-500",
+              },
+              {
+                label: "Sessions Logged",
+                value: coachingStats.sessionsLogged,
+                icon: <CalendarCheck className="h-6 w-6" />,
+                tone: "text-[#0b2b5c]",
+              },
+              {
+                label: "Milestones Done",
+                value: coachingStats.milestonesDone,
+                icon: <Flag className="h-6 w-6" />,
+                tone: "text-emerald-500",
+              },
+            ].map((card) => (
+              <StatCard
+                key={card.label}
+                label={card.label}
+                // Everything but the startup count needs the coaching lookup, so
+                // show a placeholder rather than a wrong zero while it loads.
+                value={statsReady || card.always ? card.value : "—"}
+                icon={card.icon}
+                tone={card.tone}
+              />
+            ))}
+          </section>
+        )}
+
         <div>
-          {enterprises.length === 0 ? (
-            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-              No startups have been assigned to you in a grant program yet. Once a
-              finance officer selects a startup into a program and assigns you as
-              their BDA, they will appear here.
+          {enterprises.length === 0 && programCards.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center">
+              <p className="text-sm text-slate-500">
+                No startups have been assigned to you in a grant program yet.
+                Wait for a finance officer to select a startup into a program and
+                assign you as their BDA, or set up your own mentorship program.
+              </p>
+              <button
+                type="button"
+                onClick={openCreateProgram}
+                className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#16a34a] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#15803d]"
+              >
+                <Plus className="h-4 w-4" />
+                Add program
+              </button>
             </div>
           ) : (
             <>
-              <h2 className="mb-6 text-2xl font-bold text-[#172033]">
-                Available Programs
-              </h2>
+              {/* Title row — the program actions sit opposite it. */}
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                <h2 className="text-2xl font-bold text-[#172033]">
+                  {/* The list of programs, then the startups inside the one
+                      that is open. */}
+                  {openProgram ? "Available Startups" : "Mentorship Programs"}
+                </h2>
+
+                {openProgram ? (
+                  <button
+                    type="button"
+                    onClick={openAdd}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#16a34a] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#15803d]"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add startup
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={openCreateProgram}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#16a34a] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#15803d]"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Add program
+                  </button>
+                )}
+              </div>
 
               <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
                 <div className="flex flex-wrap items-center gap-3">
@@ -340,7 +1013,7 @@ const BdaCoachingSessions = () => {
                 </div>
               </div>
 
-              {visible.length === 0 ? (
+              {visible.length === 0 && programCards.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
                   No entrepreneurs match your filters.
                 </div>
@@ -392,33 +1065,44 @@ const BdaCoachingSessions = () => {
                             ) : null;
                           })()}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => setOpenProgram(name)}
-                          className="flex items-center gap-1 text-sm font-bold text-green-600 transition hover:text-green-700"
-                        >
-                          View Details
-                          <FaArrowRight />
-                        </button>
+                        <div className="flex items-center gap-4">
+                          {/* Only the BDA's own mentorship programs can be
+                              changed here — finance owns the grant ones. */}
+                          {isMentorshipProgram(program) && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openEditProgram(program)}
+                                className="inline-flex items-center gap-1.5 text-sm font-bold text-[#082d77] transition hover:text-[#061f54]"
+                              >
+                                <Pencil className="h-4 w-4" />
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onDeleteProgram(program)}
+                                className="inline-flex items-center gap-1.5 text-sm font-bold text-rose-600 transition hover:text-rose-700"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                                Delete
+                              </button>
+                            </>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => setOpenProgram(name)}
+                            className="flex items-center gap-1 text-sm font-bold text-green-600 transition hover:text-green-700"
+                          >
+                            View Details
+                            <FaArrowRight />
+                          </button>
+                        </div>
                       </div>
                     </article>
                   ))}
                 </div>
               ) : (
                 <div className="space-y-6">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <h3 className="text-lg font-black tracking-tight text-[#172033]">
-                      {openProgram}
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setOpenProgram("")}
-                      className="text-sm font-semibold text-[#082d77]"
-                    >
-                      All programs
-                    </button>
-                  </div>
-
                   <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
                   {openProgramRows.map((item) => (
                     <button
@@ -480,7 +1164,7 @@ const BdaCoachingSessions = () => {
                             Profile
                           </span>
                           <span className="flex items-center gap-1 font-medium text-green-600">
-                            Coaching Sessions
+                            Mentorship Sessions
                             <FaArrowRight />
                           </span>
                         </div>
@@ -494,6 +1178,409 @@ const BdaCoachingSessions = () => {
           )}
         </div>
       </main>
+
+      {/* Set up a mentorship program of your own. */}
+      {showProgram && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <form
+            onSubmit={onSubmitProgram}
+            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl bg-white shadow-2xl shadow-slate-950/20"
+          >
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white px-6 py-5">
+              <div className="flex items-start gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#082d77]/5 text-[#082d77]">
+                  <Flag className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-950">
+                    {editingProgram ? "Edit program" : "Add program"}
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    {editingProgram
+                      ? "Update the details of this mentorship program. The startups in it are unaffected."
+                      : "Set up a mentorship program, then add the startups you will be coaching in it."}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowProgram(false)}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
+              <div className="md:col-span-2">
+                <AddFieldLabel>Program title *</AddFieldLabel>
+                <input
+                  className={addInputClass}
+                  placeholder="e.g. Regenerative Economy Accelerator Tanzania"
+                  value={programForm.title}
+                  onChange={(e) => setProgramField("title", e.target.value)}
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <AddFieldLabel>Description *</AddFieldLabel>
+                <textarea
+                  className={`${addInputClass} min-h-[110px]`}
+                  placeholder="What the program is for and who it supports..."
+                  value={programForm.description}
+                  onChange={(e) =>
+                    setProgramField("description", e.target.value)
+                  }
+                  required
+                />
+              </div>
+              <div className="md:col-span-2">
+                <AddFieldLabel>Categories</AddFieldLabel>
+                <input
+                  className={addInputClass}
+                  placeholder="Separate with commas — e.g. Cat 1 – Early adopter, Cat 2 – Scaling"
+                  value={programForm.categories}
+                  onChange={(e) => setProgramField("categories", e.target.value)}
+                />
+                <p className="mt-1 text-xs text-slate-500">
+                  These are the categories you can place each startup in.
+                </p>
+              </div>
+              <div>
+                <AddFieldLabel>Start date</AddFieldLabel>
+                <input
+                  className={addInputClass}
+                  type="date"
+                  value={programForm.startDate}
+                  onChange={(e) => setProgramField("startDate", e.target.value)}
+                />
+              </div>
+              <div>
+                <AddFieldLabel>End date</AddFieldLabel>
+                <input
+                  className={addInputClass}
+                  type="date"
+                  value={programForm.endDate}
+                  onChange={(e) => setProgramField("endDate", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button
+                type="button"
+                onClick={() => setShowProgram(false)}
+                disabled={isSavingProgram}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSavingProgram}
+                className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60"
+              >
+                {isSavingProgram
+                  ? editingProgram
+                    ? "Saving..."
+                    : "Creating..."
+                  : editingProgram
+                    ? "Save changes"
+                    : "Create program"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Add a startup to this program and record what you know about them. */}
+      {showAdd && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 p-4 backdrop-blur-sm">
+          <form
+            onSubmit={onSubmitAdd}
+            className="max-h-[92vh] w-full max-w-3xl overflow-y-auto rounded-2xl bg-white shadow-2xl shadow-slate-950/20"
+          >
+            <div className="sticky top-0 z-10 flex items-start justify-between gap-4 border-b border-slate-100 bg-white px-6 py-5">
+              <div className="flex items-start gap-3">
+                <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-[#082d77]/5 text-[#082d77]">
+                  <Building2 className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-black text-slate-950">
+                    Add startup
+                  </h3>
+                  <p className="mt-1 text-sm text-slate-500">
+                    Pick a startup registered on the platform and add them to{" "}
+                    {openProgram} under your coaching.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAdd(false)}
+                className="grid h-10 w-10 shrink-0 place-items-center rounded-full border border-slate-200 text-slate-500 transition hover:bg-slate-50"
+              >
+                ×
+              </button>
+            </div>
+
+            <div className="space-y-4 p-6">
+              {/* Step 1 — who. Every startup on the platform is in this list. */}
+              <div className="relative">
+                <AddFieldLabel>Startup *</AddFieldLabel>
+                <button
+                  type="button"
+                  onClick={() => setPoolOpen((prev) => !prev)}
+                  className={`${addInputClass} flex items-center justify-between gap-3 text-left`}
+                >
+                  <span
+                    className={`min-w-0 truncate ${
+                      addForm.entreprenuerUuid
+                        ? "font-semibold text-slate-900"
+                        : "text-slate-400"
+                    }`}
+                  >
+                    {addForm.entreprenuerUuid
+                      ? addForm.name || "Selected startup"
+                      : "Select a startup"}
+                  </span>
+                  <ChevronDown
+                    className={`h-4 w-4 shrink-0 text-slate-400 transition ${
+                      poolOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {poolOpen && (
+                  <>
+                    {/* Click anywhere else to close. */}
+                    <div
+                      className="fixed inset-0 z-10"
+                      onClick={() => setPoolOpen(false)}
+                    />
+                    <div className="absolute left-0 right-0 z-20 mt-2 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl">
+                      <div className="relative border-b border-slate-100 p-2">
+                        <FaSearch className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8a8f98]" />
+                        <input
+                          autoFocus
+                          className="w-full rounded-lg border border-slate-200 bg-white py-2 pl-9 pr-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77]"
+                          placeholder="Search all startups by name..."
+                          value={poolSearch}
+                          onChange={(e) => setPoolSearch(e.target.value)}
+                        />
+                      </div>
+
+                      <div className="max-h-56 space-y-1 overflow-y-auto p-2">
+                        {(() => {
+                          const query = poolSearch.trim().toLowerCase();
+                          const inProgram = new Set(
+                            (openProgramRecord
+                              ? parseTrackerProgramMeta(openProgramRecord)
+                                  .startups
+                              : []
+                            ).map((s) => s?.entreprenuerUuid),
+                          );
+                          const rows = pool.filter((user) => {
+                            if (!query) return true;
+                            const business =
+                              user?.Business || user?.business || null;
+                            return [business?.name, user?.name, user?.email]
+                              .filter(Boolean)
+                              .some((field) =>
+                                String(field).toLowerCase().includes(query),
+                              );
+                          });
+
+                          if (rows.length === 0)
+                            return (
+                              <p className="px-2 py-6 text-center text-sm text-slate-500">
+                                No startups match that search.
+                              </p>
+                            );
+
+                          return rows.slice(0, 60).map((user) => {
+                            const business =
+                              user?.Business || user?.business || null;
+                            const label =
+                              business?.name || user?.name || "Unnamed startup";
+                            const picked =
+                              addForm.entreprenuerUuid === user.uuid;
+                            const already = inProgram.has(user.uuid) && !picked;
+                            return (
+                              <button
+                                key={user.uuid}
+                                type="button"
+                                onClick={() => {
+                                  pickPoolStartup(user);
+                                  setPoolOpen(false);
+                                  setPoolSearch("");
+                                }}
+                                className={`flex w-full items-center justify-between gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
+                                  picked
+                                    ? "bg-[#082d77]/10 font-bold text-[#082d77]"
+                                    : "hover:bg-slate-50"
+                                }`}
+                              >
+                                <span className="min-w-0 truncate font-semibold text-slate-900">
+                                  {label}
+                                </span>
+                                {already && (
+                                  <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-bold text-slate-500">
+                                    In this program
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          });
+                        })()}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+
+              {/* Step 2 — what the BDA knows about them. */}
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                <div>
+                  <AddFieldLabel>Enterprise name *</AddFieldLabel>
+                  <input
+                    className={addInputClass}
+                    placeholder="e.g. Libe Green Innovation Co. Ltd"
+                    value={addForm.name}
+                    onChange={(e) => setAddField("name", e.target.value)}
+                    required
+                  />
+                </div>
+                <div>
+                  <AddFieldLabel>Category</AddFieldLabel>
+                  <select
+                    className={addInputClass}
+                    value={addForm.category}
+                    onChange={(e) => setAddField("category", e.target.value)}
+                  >
+                    <option value="">Not set</option>
+                    {programCategories.map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <AddFieldLabel>CE sector</AddFieldLabel>
+                  <select
+                    className={addInputClass}
+                    value={addForm.ceSector}
+                    onChange={(e) => setAddField("ceSector", e.target.value)}
+                  >
+                    <option value="">Not set</option>
+                    {Array.from(
+                      new Set(
+                        [addForm.ceSector, ...CE_SECTORS].filter(Boolean),
+                      ),
+                    ).map((sector) => (
+                      <option key={sector} value={sector}>
+                        {sector}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <AddFieldLabel>Assigned BDA</AddFieldLabel>
+                  <input
+                    className={addInputClass}
+                    value={userDetails?.name || "You"}
+                    disabled
+                    readOnly
+                  />
+                </div>
+                <div>
+                  <AddFieldLabel>District</AddFieldLabel>
+                  <select
+                    className={addInputClass}
+                    value={addForm.district}
+                    onChange={(e) => setAddField("district", e.target.value)}
+                  >
+                    <option value="">Not set</option>
+                    {Array.from(
+                      new Set([addForm.district, ...DISTRICTS].filter(Boolean)),
+                    ).map((district) => (
+                      <option key={district} value={district}>
+                        {district}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <AddFieldLabel>Lead contact</AddFieldLabel>
+                  <input
+                    className={addInputClass}
+                    placeholder="Contact person"
+                    value={addForm.leadContact}
+                    onChange={(e) => setAddField("leadContact", e.target.value)}
+                  />
+                </div>
+                <div>
+                  <AddFieldLabel>Grant amount (USD)</AddFieldLabel>
+                  <input
+                    className={addInputClass}
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={addForm.grantUsd}
+                    onChange={(e) => setAddField("grantUsd", e.target.value)}
+                    // The grant is the finance officer's figure — shown, not
+                    // editable, once they have recorded one.
+                    disabled={Boolean(financeGrant)}
+                    readOnly={Boolean(financeGrant)}
+                  />
+                  <p className="mt-1 text-xs text-slate-500">
+                    {financeGrant
+                      ? `From the finance officer's record on ${financeGrant.program?.title || "this program"}.`
+                      : "Finance has not recorded a grant for this startup yet."}
+                  </p>
+                </div>
+                <div>
+                  <AddFieldLabel>Award date</AddFieldLabel>
+                  <input
+                    className={addInputClass}
+                    type="date"
+                    value={addForm.awardDate}
+                    onChange={(e) => setAddField("awardDate", e.target.value)}
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <AddFieldLabel>Business description</AddFieldLabel>
+                  <textarea
+                    className={`${addInputClass} min-h-[110px]`}
+                    placeholder="Brief description of the business model and CE contribution..."
+                    value={addForm.description}
+                    onChange={(e) => setAddField("description", e.target.value)}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
+              <button
+                type="button"
+                onClick={() => setShowAdd(false)}
+                disabled={isAdding}
+                className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isAdding}
+                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+              >
+                {isAdding ? "Saving..." : "Save startup"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 };

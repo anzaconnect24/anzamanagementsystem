@@ -5,23 +5,49 @@
 // learn-and-grow course experience.
 const TRACKER_MARKERS = ["__TRACKER_STARTUPS__:", "__TRACKER_CATEGORIES__:"];
 
+// Mentorship programs are set up by a BDA on the Mentorship Tracker. They use
+// the same table and markers as grant programs, but they are the BDA's own —
+// Grant Management does not list them and their startups do not roll into the
+// finance officer's grant figures.
+const MENTORSHIP_MARKER = "__TRACKER_BDAS__:";
+
 // Markers from a removed course-access feature. They are only cleaned out of
 // descriptions (never used to classify a program) so any rows that still carry
 // them don't show the raw marker in the course text.
 const LEGACY_MARKERS = ["__COURSE_CATEGORIES__:", "__COURSE_PROGRAMS__:"];
 
 // Every marker that should be stripped from the human-readable description.
-const CLEAN_MARKERS = [...TRACKER_MARKERS, ...LEGACY_MARKERS];
+const CLEAN_MARKERS = [
+  ...TRACKER_MARKERS,
+  MENTORSHIP_MARKER,
+  ...LEGACY_MARKERS,
+];
 
 // A program is a tracker/grant program (not a learn-and-grow course) when it
 // is explicitly typed "grant" (authoritative), or — for legacy rows created
 // before the `type` column existed — when its description carries the tracker
 // markers.
 export const isTrackerProgram = (program) => {
-  if (String(program?.type || "").toLowerCase() === "grant") return true;
+  const type = String(program?.type || "").toLowerCase();
+  if (type === "grant" || type === "mentorship") return true;
   const text = String(program?.description || "");
-  return TRACKER_MARKERS.some((marker) => text.includes(marker));
+  return (
+    text.includes(MENTORSHIP_MARKER) ||
+    TRACKER_MARKERS.some((marker) => text.includes(marker))
+  );
 };
+
+// A BDA's own mentorship program — typed "mentorship", or carrying the BDA
+// marker for backends that do not store the type.
+export const isMentorshipProgram = (program) => {
+  if (String(program?.type || "").toLowerCase() === "mentorship") return true;
+  return String(program?.description || "").includes(MENTORSHIP_MARKER);
+};
+
+// A finance-officer grant program: a tracker program that is not one of the
+// BDAs' mentorship programs. Grant Management lists these and only these.
+export const isGrantProgram = (program) =>
+  isTrackerProgram(program) && !isMentorshipProgram(program);
 
 // Strip the metadata markers from a description so only the human-written text
 // remains.

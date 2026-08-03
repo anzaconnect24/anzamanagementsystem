@@ -1,7 +1,13 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { ArrowLeft, CalendarClock, Plus } from "lucide-react";
+import {
+  ArrowLeft,
+  Building2,
+  CalendarClock,
+  IdCard,
+  Plus,
+} from "lucide-react";
 import Loader from "@/components/common/Loader";
 import CoachingSessionsPanel, {
   formatSessionDate,
@@ -83,6 +89,9 @@ const BdaCoachingSessionSetup = () => {
   const navigate = useNavigate();
 
   const startupName = searchParams.get("name") || "this startup";
+  // The business profile is keyed by the business, which the startups list
+  // passes through; without it there is nothing to link to.
+  const businessUuid = searchParams.get("business") || "";
 
   const [loading, setLoading] = useState(true);
   const [sessions, setSessions] = useState([]);
@@ -334,8 +343,44 @@ const BdaCoachingSessionSetup = () => {
                 after it has taken place.
               </p>
             </div>
+
           </div>
         </section>
+
+        {/* Who they are coaching: the KYC and the business profile, both
+            read-only and reachable without leaving the tracker. */}
+        <div className="flex flex-wrap gap-3">
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                `/dashboard/mentorTracker/enterprise-kyc?view=1&entreprenuer=${entUuid}&back=${encodeURIComponent(
+                  `/dashboard/bdaCoachingSessions/${entUuid}?name=${encodeURIComponent(
+                    startupName,
+                  )}&business=${encodeURIComponent(businessUuid)}`,
+                )}`,
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-[#082d77] shadow-sm transition hover:bg-slate-50"
+          >
+            <IdCard className="h-4 w-4" />
+            Personal KYC
+          </button>
+          {businessUuid && (
+            <button
+              type="button"
+              onClick={() =>
+                navigate(
+                  `/dashboard/enterprenuers/businessDetails/${businessUuid}`,
+                )
+              }
+              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-[#082d77] shadow-sm transition hover:bg-slate-50"
+            >
+              <Building2 className="h-4 w-4" />
+              Business Information
+            </button>
+          )}
+        </div>
 
         {/* Requests the startup sent that still need an answer. */}
         {pendingRequests.length > 0 && (
@@ -362,7 +407,7 @@ const BdaCoachingSessionSetup = () => {
             <button
               type="button"
               onClick={() => openSchedule(pendingRequests[0])}
-              className="shrink-0 rounded-xl bg-[#082d77] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#061f54]"
+              className="shrink-0 rounded-xl bg-[#16a34a] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#15803d]"
             >
               Schedule it
             </button>
@@ -568,7 +613,7 @@ const BdaCoachingSessionSetup = () => {
               <button
                 type="submit"
                 disabled={isSaving || isUploading}
-                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+                className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60"
               >
                 {isUploading
                   ? "Uploading materials..."
@@ -683,7 +728,7 @@ const BdaCoachingSessionSetup = () => {
               <button
                 type="submit"
                 disabled={isSaving || isUploading}
-                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+                className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60"
               >
                 {isUploading
                   ? "Uploading materials..."
@@ -799,7 +844,7 @@ const BdaCoachingSessionSetup = () => {
               <button
                 type="submit"
                 disabled={isSaving || isUploading}
-                className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+                className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60"
               >
                 {isUploading
                   ? "Uploading..."
