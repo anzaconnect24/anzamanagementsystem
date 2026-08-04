@@ -352,7 +352,7 @@ const Sidebar = ({
             icon: <BsCalendar3 className="text-xl" />,
           },
           {
-            name: t("navigation.coachingSessions", "Coaching Sessions"),
+            name: t("navigation.mentorshipTracker", "Mentorship Tracker"),
             path: "/dashboard/bdaCoachingSessions",
             icon: <BsCalendar3 className="text-xl" />,
           },
@@ -526,11 +526,16 @@ const Sidebar = ({
         },
       ];
 
+      // Friendlier labels for domain keys that don't title-case cleanly.
+      const DOMAIN_LABEL_OVERRIDES = {
+        commercial_marketing: "Commercial and Marketing",
+      };
+
       // Add domain items from available domains using dynamic route
       availableDomains.forEach((domain) => {
-        const label = domain
-          .replace(/_/g, " ")
-          .replace(/\b\w/g, (c) => c.toUpperCase());
+        const label =
+          DOMAIN_LABEL_OVERRIDES[domain] ||
+          domain.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
         const path = `/dashboard/crat-system/domain/${domain}`;
         domainSubmenu.push({
           name: label,

@@ -5,6 +5,7 @@ import Loader from "@/components/common/Loader";
 import {
   getTrackerProgramOverview,
   getMentorEnterpriseDetails,
+  listMentorEnterprises,
   listTrackerMilestones,
   reviewTrackerMilestone,
   updateMentorEnterprise,
@@ -13,15 +14,12 @@ import {
 } from "@/controllers/trackerController";
 import {
   PLAN_STATUS,
-  planStatusLabel,
-  planStatusPill,
   canDisburse,
   parseKpiPlan,
-  verificationLabel,
-  verificationPill,
 } from "@/utils/trancheWorkflow";
 import { editProgram, getProgram } from "@/controllers/program_controller";
 import { assignEntreprenuerToStaff } from "@/controllers/staffEntreprenuerController";
+import { createNotification } from "@/controllers/notification_controller";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import GrantReportButton from "@/components/reports/GrantReportButton";
 import SignedContractCard from "@/components/tracker/SignedContractCard";
@@ -83,6 +81,8 @@ const TrackerStartupDetails = () => {
   const [enterprise, setEnterprise] = useState(null);
   const [milestones, setMilestones] = useState([]);
   const [reviewingId, setReviewingId] = useState("");
+  // Finance feedback drafts, keyed by milestone uuid.
+  const [financeNotes, setFinanceNotes] = useState({});
   // The open tranche lives in the URL so it is its own page: the browser's back
   // button returns to the tranche list and the view can be linked to.
   // "" shows the list, "__all__" shows every milestone.
@@ -168,44 +168,74 @@ const TrackerStartupDetails = () => {
       const enterpriseRows = Array.isArray(overview?.enterprises)
         ? overview.enterprises
         : [];
+      const matchesEnt = (e) =>
+        (e?.Entreprenuer?.uuid || e?.entreprenuer_uuid) === entUuid;
+      let match = enterprises.find(matchesEnt);
 
-      // Backend may return either raw enterprise records or wrapped rows
-      // shaped like { enterprise, sessions, milestones, stats }.
-      const enterprises = enterpriseRows
-        .map((row) => row?.enterprise || row)
-        .filter(Boolean);
+      // The overview lookup is best-effort. If it didn't resolve the enterprise,
+      // fall back to the full enterprise list — the same records the BDA reads —
+      // so the milestone/contract data still loads.
+      if (!match?.uuid) {
+        try {
+          const all = await listMentorEnterprises();
+          const list = Array.isArray(all) ? all : all?.data || [];
+          match = list.find(matchesEnt) || match;
+        } catch {
+          // Fall through — milestone fallback below still runs.
+        }
+      }
 
-      const match = enterprises.find(
-        (item) =>
-          (item?.Entreprenuer?.uuid || item?.entreprenuer_uuid) === entUuid,
-      );
-
-      setEnterprise(match || null);
+      // An empty result means "could not tell", not "no enterprise". Keep what we
+      // already resolved rather than erasing it and losing the contract.
+      setEnterprise((prev) => match || prev || null);
 
       // Milestones (set/approved by the BDA) + the startup's reports, so the
-      // finance officer can approve or decline the next tranche. Fall back to an
-      // enterprise we already resolved: the overview is best-effort, and a miss
-      // must not blank the milestone list — that would hide every report the BDA
-      // has approved and sent here.
+      // finance officer can approve or decline the next tranche.
       const detailUuid = match?.uuid || enterprise?.uuid || "";
+      let loadedMilestones = [];
       if (detailUuid) {
         try {
-          const detail = await getMentorEnterpriseDetails(match.uuid);
-          const enterpriseMilestones = Array.isArray(detail?.milestones)
+          const detail = await getMentorEnterpriseDetails(detailUuid);
+          loadedMilestones = Array.isArray(detail?.milestones)
             ? detail.milestones
             : [];
-          setMilestones(
-            enterpriseMilestones.length
-              ? enterpriseMilestones
-              : scopedMilestones,
-          );
-          setEnterprise(detail?.enterprise || match);
+          // The overview list carries a summary of each enterprise, which omits
+          // fields like the grant contract. Prefer the full record the detail
+          // endpoint returns — it is the same one the BDA reads — so the
+          // contract shows here as well.
+          if (detail?.enterprise) {
+            setEnterprise((prev) => ({
+              ...(prev || {}),
+              ...(match || {}),
+              ...detail.enterprise,
+            }));
+          }
         } catch {
-          setMilestones(scopedMilestones);
+          loadedMilestones = [];
         }
-      } else {
-        setMilestones(scopedMilestones);
       }
+
+      // Last resort: pull every milestone and keep this startup's. Covers the
+      // case where the enterprise couldn't be resolved but the milestones the
+      // startup created still exist under their entrepreneur/business.
+      if (loadedMilestones.length === 0) {
+        try {
+          const all = await listTrackerMilestones();
+          const list = Array.isArray(all) ? all : all?.data || [];
+          loadedMilestones = list.filter((m) => {
+            const mEnt = m?.Entreprenuer?.uuid || m?.entreprenuerUuid;
+            const mBiz = m?.Business?.uuid || m?.businessUuid;
+            return (
+              (entUuid && mEnt === entUuid) ||
+              (member.businessUuid && mBiz === member.businessUuid)
+            );
+          });
+        } catch {
+          // Leave empty — the "No milestones" state shows.
+        }
+      }
+
+      setMilestones(loadedMilestones);
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Failed to load the startup",
@@ -319,26 +349,69 @@ const TrackerStartupDetails = () => {
     }
   };
 
-  const onApproveTranche = (milestone) =>
-    reviewMilestone(
+  // Finance officer's feedback on a milestone report, keyed by milestone uuid.
+  // Stored on financeReviewNotes so it is distinct from the BDA's mentor notes,
+  // and the startup can see both.
+  const financeNote = (milestone) => financeNotes[milestone.uuid] || "";
+
+  const onApproveTranche = async (milestone) => {
+    // Set status to "completed" as well: when finance approves a report the BDA
+    // had declined, the milestone is still "rejected", and leaving it there
+    // would keep the startup's report open for edits and showing a declined
+    // banner even though finance approved it. Completing it clears that.
+    await reviewMilestone(
       milestone,
-      { planStatus: PLAN_STATUS.DISBURSED, disbursed: true },
+      {
+        status: "completed",
+        planStatus: PLAN_STATUS.DISBURSED,
+        disbursed: true,
+        financeReviewNotes: financeNote(milestone),
+      },
       "Tranche approved and disbursed",
     );
 
-  const onDeclineMilestone = (milestone) =>
-    reviewMilestone(
+    // Let the startup know the finance officer approved it, mirroring the
+    // decline notification.
+    if (form.entreprenuerUuid) {
+      createNotification({
+        user_uuid: form.entreprenuerUuid,
+        to: "User",
+        message: `Your report for "${milestone.title}" was approved by the finance officer and the tranche has been disbursed.`,
+      });
+    }
+  };
+
+  const onDeclineMilestone = async (milestone) => {
+    const note = financeNote(milestone).trim();
+    if (!note) {
+      toast.error("Add feedback so the startup knows why it was declined");
+      return;
+    }
+    // The BDA had marked the report "completed" when sending it to finance, so a
+    // finance decline must reset the milestone's own status to "rejected" too —
+    // that is the flag the startup's report tab keys off to reopen the report
+    // for editing and resubmission. Setting only planStatus would leave the
+    // report locked as completed on their side.
+    await reviewMilestone(
       milestone,
-      { planStatus: PLAN_STATUS.REJECTED },
-      "Milestone declined",
+      {
+        status: "rejected",
+        planStatus: PLAN_STATUS.REJECTED,
+        financeReviewNotes: note,
+      },
+      "Milestone declined — the startup can edit and resubmit the report",
     );
 
-  const onRequestInfo = (milestone) =>
-    reviewMilestone(
-      milestone,
-      { planStatus: PLAN_STATUS.REVISION_REQUESTED },
-      "Requested more information from the startup",
-    );
+    // Notify the startup so the decline surfaces on their notification bell, not
+    // only as a status change they have to notice on the milestones page.
+    if (form.entreprenuerUuid) {
+      createNotification({
+        user_uuid: form.entreprenuerUuid,
+        to: "User",
+        message: `Your report for "${milestone.title}" was declined by finance. Review the feedback, edit the report and submit it again.`,
+      });
+    }
+  };
 
   const setTranche = (index, key, value) =>
     setForm((prev) => ({
@@ -942,9 +1015,8 @@ const TrackerStartupDetails = () => {
           </div>
         ) : !openTranche ? null : (
           <div className="space-y-3">
-            {visibleMilestones.map((milestone) => {
+            {visibleMilestones.map((milestone, index) => {
               const ps = milestone.planStatus || "";
-              const vs = milestone.verificationStatus || "";
               const disbursed =
                 ps === PLAN_STATUS.DISBURSED || Boolean(milestone.disbursed);
               const disbursable = canDisburse(ps, disbursed);
@@ -958,6 +1030,15 @@ const TrackerStartupDetails = () => {
               const reportAwaitingBda =
                 String(milestone.status || "").toLowerCase() === "submitted" &&
                 ps !== PLAN_STATUS.SENT_TO_FINANCE;
+              // The BDA declined the report, but the plan is still approved — so
+              // it lands with finance for the final call: approve to override and
+              // disburse, or decline to send it back to the startup. (A finance
+              // decline sets planStatus to rejected, which is how we tell the two
+              // apart.)
+              const bdaDeclined =
+                String(milestone.status || "").toLowerCase() === "rejected" &&
+                ps !== PLAN_STATUS.REJECTED &&
+                !disbursed;
 
               return (
                 <div
@@ -965,36 +1046,60 @@ const TrackerStartupDetails = () => {
                   className="rounded-xl border border-black/10 p-4"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="font-bold text-[#111827]">
-                        {milestone.title}
-                      </p>
-                      <p className="mt-1 text-xs text-[#64748b]">
-                        Due{" "}
-                        {milestone.dueDate ? fmtDate(milestone.dueDate) : "N/A"}
-                        {milestone.linkedTranche &&
-                        milestone.linkedTranche !== "None"
-                          ? ` • Linked tranche: ${milestone.linkedTranche}`
-                          : ""}
-                      </p>
+                    {/* Same shape as the staff view: numbered badge, title, then
+                        the key activity (stored on tranchePlannedUse). */}
+                    <div className="flex min-w-0 flex-1 gap-3">
+                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
+                        {milestone.status === "completed" ? "✓" : index + 1}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-[#111827]">{milestone.title}</p>
+                        {milestone.tranchePlannedUse ? (
+                          <p className="mt-2 text-sm leading-6 text-[#64748b]">
+                            {milestone.tranchePlannedUse}
+                          </p>
+                        ) : null}
+                      </div>
                     </div>
-                    <div className="flex flex-col items-end gap-1">
-                      {ps && (
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-xs font-bold ${planStatusPill(ps)}`}
-                        >
-                          {planStatusLabel(ps)}
-                        </span>
-                      )}
-                      {vs && (
-                        <span
-                          className={`rounded-full px-2.5 py-1 text-[11px] font-semibold ${verificationPill(vs)}`}
-                        >
-                          {verificationLabel(vs)}
-                        </span>
-                      )}
-                    </div>
+
+                    {/* Final finance decision, top-right. */}
+                    {disbursed ? (
+                      <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
+                        Approved
+                      </span>
+                    ) : ps === PLAN_STATUS.REJECTED ? (
+                      <span className="shrink-0 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
+                        Declined
+                      </span>
+                    ) : bdaDeclined ? (
+                      <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
+                        Business coach declined — needs your decision
+                      </span>
+                    ) : null}
                   </div>
+
+                  {/* Indented to clear the number badge (2.5rem + 0.75rem gap)
+                      so the report and actions line up with the milestone name. */}
+                  <div className="sm:pl-[3.25rem]">
+
+                  {/* The BDA approved the startup's report and sent it here, so
+                      the finance officer clearly sees it is ready to act on. */}
+                  {!disbursed && ps === PLAN_STATUS.SENT_TO_FINANCE && (
+                    <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#163b8f]/20 bg-[#163b8f]/5 px-3 py-2 text-sm font-semibold text-[#163b8f]">
+                      <CheckCircle2 className="h-4 w-4 shrink-0" />
+                      BDA approved — report submitted for your review.
+                    </div>
+                  )}
+
+                  {/* The BDA declined the report — finance makes the final call. */}
+                  {bdaDeclined && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+                      <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                      The business coach declined this report. Review it and make
+                      the final decision — approve to override and disburse, or
+                      decline to send it back to the startup with your feedback.
+                    </div>
+                  )}
 
                   {/* Report */}
                   <div className="mt-3 rounded-lg bg-[#f8fafc] p-3 text-sm">
@@ -1010,6 +1115,14 @@ const TrackerStartupDetails = () => {
                           BDA comment:
                         </span>{" "}
                         {milestone.mentorReviewNotes}
+                      </p>
+                    )}
+                    {milestone.financeReviewNotes && (
+                      <p className="mt-1 text-[#334155]">
+                        <span className="font-semibold text-[#111827]">
+                          Finance feedback:
+                        </span>{" "}
+                        {milestone.financeReviewNotes}
                       </p>
                     )}
                     {attachments.length > 0 && (
@@ -1068,30 +1181,24 @@ const TrackerStartupDetails = () => {
                     </div>
                   )}
 
-                  {/* Finance action */}
+                  {/* Finance action. The approved/declined outcome shows in the
+                      card's top-right, so here we only render the actions or the
+                      remaining waiting states. */}
                   <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-black/5 pt-3">
-                    {/* The BDA approved the startup's report and passed it here
-                        for the disbursement decision. */}
-                    {!disbursed && ps === PLAN_STATUS.SENT_TO_FINANCE && (
-                      <span className="mr-auto text-xs font-semibold text-[#163b8f]">
-                        Report approved by the BDA — awaiting your decision
-                      </span>
-                    )}
-                    {disbursed ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-[#e1f0d8] px-3 py-1 text-xs font-bold text-[#2d6e1f]">
-                        <CheckCircle2 className="h-3.5 w-3.5" />
-                        Tranche disbursed
-                      </span>
-                    ) : disbursable ? (
+                    {disbursed ? null : disbursable ? (
                       <>
-                        <button
-                          type="button"
-                          onClick={() => onRequestInfo(milestone)}
-                          disabled={busy}
-                          className="rounded-lg border border-[#e2b100] px-4 py-2 text-sm font-semibold text-[#8a6500] transition hover:bg-[#fdf1ce]/60 disabled:opacity-60"
-                        >
-                          Request information
-                        </button>
+                        <textarea
+                          className={`${inputClass} w-full`}
+                          rows={2}
+                          placeholder="Feedback for the startup (required to decline)"
+                          value={financeNote(milestone)}
+                          onChange={(e) =>
+                            setFinanceNotes((prev) => ({
+                              ...prev,
+                              [milestone.uuid]: e.target.value,
+                            }))
+                          }
+                        />
                         <button
                           type="button"
                           onClick={() => onDeclineMilestone(milestone)}
@@ -1106,14 +1213,11 @@ const TrackerStartupDetails = () => {
                           disabled={busy}
                           className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:opacity-60"
                         >
-                          {busy ? "Processing..." : "Accept & disburse tranche"}
+                          {busy ? "Processing..." : "Approve"}
                         </button>
                       </>
-                    ) : ps === PLAN_STATUS.REJECTED ? (
-                      <span className="text-xs font-semibold text-rose-600">
-                        Declined
-                      </span>
-                    ) : ps === PLAN_STATUS.REVISION_REQUESTED ? (
+                    ) : ps === PLAN_STATUS.REJECTED ? null : ps ===
+                      PLAN_STATUS.REVISION_REQUESTED ? (
                       <span className="text-xs font-semibold text-[#8a6500]">
                         Information requested from the startup
                       </span>
@@ -1122,6 +1226,7 @@ const TrackerStartupDetails = () => {
                         Awaiting BDA approval of the plan
                       </span>
                     )}
+                  </div>
                   </div>
                 </div>
               );

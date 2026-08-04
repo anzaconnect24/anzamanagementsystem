@@ -579,7 +579,7 @@ const MentorTracker = () => {
             backgroundSize: "cover",
           }}
         >
-          <div className="relative z-10 flex min-h-[220px] flex-col justify-between gap-6">
+          <div className="relative z-10 flex min-h-[120px] flex-col justify-between gap-6">
             <div className="flex flex-wrap items-start justify-between gap-5">
               <div className="max-w-3xl">
                 <div className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur">
@@ -593,27 +593,6 @@ const MentorTracker = () => {
                   Monitor startup progress, milestones, evidence, and grant
                   governance for the entrepreneurs assigned to you.
                 </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-6 text-sm font-bold text-white/90">
-              <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
-                  ◈
-                </span>
-                Startups
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
-                  □
-                </span>
-                Milestones
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-white/15 text-white backdrop-blur">
-                  $
-                </span>
-                Grant Governance
               </div>
             </div>
           </div>

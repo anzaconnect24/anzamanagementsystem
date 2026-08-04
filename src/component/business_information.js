@@ -127,10 +127,6 @@ const BusinessInformation = () => {
             email: e.target.businessEmail.value,
             phone: e.target.businessPhone.value,
             problem: e.target.problem.value,
-            facebook: e.target.facebook.value,
-            linkedin: e.target.linkedin.value,
-            twitter: e.target.twitter.value,
-            instagram: e.target.instagram.value,
             solution: e.target.solution.value,
             traction: e.target.traction.value,
             registration: e.target.registration.value,
@@ -226,50 +222,6 @@ const BusinessInformation = () => {
                       "business.companyPhone",
                       "Company phone number"
                     )}
-                    type="text"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    {t("business.facebookLink", "Facebook link")}
-                  </label>
-                  <input
-                    defaultValue={business.facebook}
-                    name="facebook"
-                    className="form-style"
-                    type="text"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    {t("business.instagramLink", "Instagram Link")}
-                  </label>
-                  <input
-                    defaultValue={business.instagram}
-                    name="instagram"
-                    className="form-style"
-                    type="text"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    {t("business.twitterLink", "Twitter link")}
-                  </label>
-                  <input
-                    defaultValue={business.twitter}
-                    name="twitter"
-                    className="form-style"
-                    type="text"
-                  />
-                </div>
-                <div>
-                  <label className="mb-2.5 block font-medium text-black dark:text-white">
-                    {t("business.linkedinLink", "LinkedIn link")}
-                  </label>
-                  <input
-                    defaultValue={business.linkedin}
-                    name="linkedin"
-                    className="form-style"
                     type="text"
                   />
                 </div>

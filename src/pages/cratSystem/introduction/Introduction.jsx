@@ -12,24 +12,28 @@ const domainCards = [
     title: "Commercial & Market Domain",
     weight: "25%",
     icon: FaFileAlt,
+    tint: "bg-emerald-50 text-emerald-600",
     note: "Market position, customer demand, growth evidence, and competitive advantage.",
   },
   {
     title: "Financial Domain",
     weight: "35%",
     icon: FaChartLine,
+    tint: "bg-blue-50 text-blue-600",
     note: "Revenue quality, financial controls, forecasts, and funding readiness.",
   },
   {
     title: "Operations Domain",
     weight: "15%",
     icon: FaCogs,
+    tint: "bg-amber-50 text-amber-600",
     note: "Systems, governance, operational resilience, and execution capability.",
   },
   {
     title: "Legal & Compliance Domain",
     weight: "25%",
     icon: FaBalanceScale,
+    tint: "bg-violet-50 text-violet-600",
     note: "Corporate records, contracts, regulatory exposure, and compliance posture.",
   },
 ];
@@ -76,13 +80,15 @@ const IntroductionPage = () => {
 
       {/* DOMAIN CARDS */}
       <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-4">
-        {domainCards.map(({ title, weight, icon: Icon, note }) => (
+        {domainCards.map(({ title, weight, icon: Icon, tint, note }) => (
           <div
             key={title}
             className="rounded-2xl border border-[#e8edf5] bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-md"
           >
             <div className="mb-4 flex items-center justify-between">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#082d77]/10 text-lg text-[#082d77]">
+              <div
+                className={`flex h-12 w-12 items-center justify-center rounded-2xl text-lg ${tint}`}
+              >
                 <Icon />
               </div>
 

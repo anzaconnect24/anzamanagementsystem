@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import toast from "react-hot-toast";
 
 import { UserContext } from "@/layouts/DashboardLayout";
@@ -13,8 +19,18 @@ import BusinessDomainScores from "@/components/Charts/BusinessDomainScores";
 import PerformanceDistribution from "@/components/Charts/PerformanceDistribution";
 
 import { generateCapitalReadinessPDF } from "@/services/capitalReadinessPDF";
+import {
+  INSIGHT_DOMAINS,
+  generateCratInsights,
+} from "@/services/cratInsights";
 
-import { FaDownload, FaChartLine } from "react-icons/fa";
+import {
+  FaDownload,
+  FaChartLine,
+  FaExclamationTriangle,
+  FaLightbulb,
+  FaSyncAlt,
+} from "react-icons/fa";
 
 const PRIMARY_COLOR = "#082d77";
 
@@ -44,8 +60,12 @@ const DOMAIN_CONFIG = [
   },
 ];
 
+// A startup is investment-ready at 70% and above — the same threshold the
+// generated PDF report uses.
+const READINESS_THRESHOLD = 70;
+
 const getStatusLabel = (percentage) => {
-  if (percentage >= 75) return "Ready";
+  if (percentage >= READINESS_THRESHOLD) return "Ready";
 
   if (percentage >= 60) return "Partially Ready";
 
@@ -53,7 +73,7 @@ const getStatusLabel = (percentage) => {
 };
 
 const getPercentageColor = (percentage) => {
-  if (percentage >= 75) return "text-green-600";
+  if (percentage >= READINESS_THRESHOLD) return "text-green-600";
 
   if (percentage >= 60) return "text-yellow-500";
 
@@ -220,8 +240,97 @@ const getPdfPayloadFromReport = (report, domainRows) => {
     scoreDataForPdf: hasScoreData
       ? report.scoreData
       : buildFallbackScoreDataForPdf(domainRows),
+
+    // The fallback above synthesises placeholder comments to keep the PDF
+    // rendering; they are not reviewer input and must not be mistaken for
+    // evidence when generating the thematic gaps.
+    hasReportData,
   };
 };
+
+const DOMAIN_LABEL_BY_KEY = INSIGHT_DOMAINS.reduce((acc, domain) => {
+  acc[domain.key] = domain.label;
+
+  return acc;
+}, {});
+
+const InsightColumn = ({
+  title,
+  icon,
+  accent,
+  items,
+  loading,
+  emptyLabel,
+}) => (
+  <div className="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 md:p-5">
+    <div className="flex items-center gap-2">
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white shadow-sm">
+        {icon}
+      </span>
+
+      <h3 className="text-sm font-bold tracking-wide text-slate-700">
+        {title}
+      </h3>
+    </div>
+
+    <div className="mt-4 space-y-3">
+      {loading &&
+        [0, 1, 2, 3].map((index) => (
+          <div
+            key={index}
+            className="h-24 animate-pulse rounded-xl bg-slate-200/70"
+          />
+        ))}
+
+      {!loading && !items?.length && (
+        <p className="text-sm leading-6 text-slate-500">{emptyLabel}</p>
+      )}
+
+      {!loading &&
+        (items || []).map((item, index) => (
+          <div
+            key={`${item.title}-${index}`}
+            className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm"
+          >
+            <div className="flex items-start gap-3">
+              <span
+                className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
+                style={{
+                  backgroundColor: accent,
+                }}
+              >
+                {index + 1}
+              </span>
+
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="text-sm font-bold text-slate-900">
+                    {item.title}
+                  </p>
+
+                  {DOMAIN_LABEL_BY_KEY[item.domain] && (
+                    <span
+                      className="rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide"
+                      style={{
+                        backgroundColor: "#082d770d",
+                        color: PRIMARY_COLOR,
+                      }}
+                    >
+                      {DOMAIN_LABEL_BY_KEY[item.domain]}
+                    </span>
+                  )}
+                </div>
+
+                <p className="mt-1.5 text-sm leading-6 text-slate-600">
+                  {item.body}
+                </p>
+              </div>
+            </div>
+          </div>
+        ))}
+    </div>
+  </div>
+);
 
 const Report = () => {
   const { userDetails } = useContext(UserContext);
@@ -233,6 +342,10 @@ const Report = () => {
   const [report, setReport] = useState(null);
 
   const [business, setBusiness] = useState(null);
+
+  const [insights, setInsights] = useState(null);
+
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   const isEntrepreneur = userDetails?.role === "Enterprenuer";
 
@@ -358,6 +471,67 @@ const Report = () => {
     return toSafePercent(report?.overallPercent, fallbackOverallPercent);
   }, [domainRows, report?.overallPercent]);
 
+  const pdfPayload = useMemo(
+    () => (report ? getPdfPayloadFromReport(report, domainRows) : null),
+    [domainRows, report],
+  );
+
+  const businessProfile = useMemo(
+    () => ({
+      businessName: business?.name,
+
+      name: business?.name,
+
+      sector: business?.BusinessSector?.name,
+
+      businessSector: business?.BusinessSector?.name,
+
+      location: business?.location,
+
+      businessLocation: business?.location,
+    }),
+    [business],
+  );
+
+  // The four thematic gaps and four recommendations are derived from this
+  // startup's own reviewer comments and the notes it entered, so they are
+  // regenerated whenever the report loads.
+  const buildInsights = useCallback(async () => {
+    if (!pdfPayload) return;
+
+    try {
+      setInsightsLoading(true);
+
+      const result = await generateCratInsights({
+        domainData: pdfPayload.hasReportData
+          ? pdfPayload.domainDataForPdf
+          : null,
+
+        scoreData: pdfPayload.scoreDataForPdf,
+
+        businessName: business?.name || "The business",
+
+        sector: business?.BusinessSector?.name,
+
+        location: business?.location,
+
+        reviewerFeedback: report?.reviewerFeedback,
+      });
+
+      setInsights(result);
+    } catch (error) {
+      console.error(error);
+
+      toast.error("Failed to generate thematic gaps and recommendations.");
+    } finally {
+      setInsightsLoading(false);
+    }
+  }, [business, pdfPayload, report?.reviewerFeedback]);
+
+  useEffect(() => {
+    buildInsights();
+  }, [buildInsights]);
+
   const handleDownloadPdf = async () => {
     if (pdfLoading || !report) return;
 
@@ -366,25 +540,11 @@ const Report = () => {
 
       const toastId = toast.loading("Generating PDF report...");
 
-      const { domainDataForPdf, scoreDataForPdf } = getPdfPayloadFromReport(
-        report,
-        domainRows,
-      );
+      const { domainDataForPdf, scoreDataForPdf } =
+        pdfPayload || getPdfPayloadFromReport(report, domainRows);
 
       const pdfUserContext = {
-        Business: {
-          businessName: business?.name,
-
-          name: business?.name,
-
-          sector: business?.BusinessSector?.name,
-
-          businessSector: business?.BusinessSector?.name,
-
-          location: business?.location,
-
-          businessLocation: business?.location,
-        },
+        Business: businessProfile,
 
         // Tailored reviewer comments (rendered as a Reviewer Feedback page).
         reviewerFeedback: Array.isArray(report?.reviewerFeedback)
@@ -401,6 +561,9 @@ const Report = () => {
             id: toastId,
           });
         },
+        // Reuse what is already on screen so the PDF matches it exactly and the
+        // model is not called twice.
+        { insights },
       );
 
       toast.success(`Report downloaded: ${filename}`, {
@@ -485,14 +648,14 @@ const Report = () => {
     </div>
 
     <p
-      className={`text-3xl font-black tracking-tight ${getPercentageColor(
+      className={`text-2xl font-black tracking-tight ${getPercentageColor(
         overallPercent,
       )}`}
     >
       {overallPercent}%
     </p>
 
-    <p className="mt-4 text-xl font-bold text-slate-500">
+    <p className="mt-4 text-sm font-bold text-slate-500">
       Overall Readiness
     </p>
   </div>
@@ -518,14 +681,14 @@ const Report = () => {
       </div>
 
       <p
-        className={`text-3xl font-black tracking-tight ${getPercentageColor(
+        className={`text-2xl font-black tracking-tight ${getPercentageColor(
           domain.percentage,
         )}`}
       >
         {domain.percentage}%
       </p>
 
-      <p className="mt-4 text-xl font-bold text-slate-500">
+      <p className="mt-4 text-sm font-bold text-slate-500">
         {domain.label} Domain
       </p>
     </div>
@@ -546,7 +709,7 @@ const Report = () => {
             </p>
 
             <h2 className="mt-1 text-xl font-semibold text-slate-900">
-              Domain readiness and performance distribution
+              Domain Readiness and Performance Distribution
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
@@ -572,6 +735,69 @@ const Report = () => {
           </div>
         </section>
 
+        {/* THEMATIC GAPS & RECOMMENDATIONS */}
+        <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+          <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p
+                className="text-xs font-semibold tracking-wide"
+                style={{
+                  color: PRIMARY_COLOR,
+                }}
+              >
+                Tailored Analysis
+              </p>
+
+              <h2 className="mt-1 text-xl font-semibold text-slate-900">
+                Key Thematic Gaps and Recommendations
+              </h2>
+
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+                Generated from the reviewer comments recorded against your
+                assessment and the notes you entered — the same four gaps and
+                four recommendations that appear on your downloadable report.
+              </p>
+            </div>
+
+            <button
+              onClick={buildInsights}
+              disabled={insightsLoading || !report}
+              className="inline-flex shrink-0 items-center justify-center gap-2 rounded-2xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <FaSyncAlt className={insightsLoading ? "animate-spin" : ""} />
+
+              {insightsLoading ? "Generating..." : "Regenerate"}
+            </button>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
+            <InsightColumn
+              title="Key Thematic Gaps"
+              icon={<FaExclamationTriangle className="text-sm text-amber-500" />}
+              accent="#F59E0B"
+              items={insights?.gaps}
+              loading={insightsLoading}
+              emptyLabel="No thematic gaps could be derived from this assessment yet."
+            />
+
+            <InsightColumn
+              title="Key Recommendations"
+              icon={<FaLightbulb className="text-sm" style={{ color: PRIMARY_COLOR }} />}
+              accent={PRIMARY_COLOR}
+              items={insights?.recommendations}
+              loading={insightsLoading}
+              emptyLabel="No recommendations could be derived from this assessment yet."
+            />
+          </div>
+
+          {insights?.source === "derived" && !insightsLoading && (
+            <p className="mt-4 text-xs leading-5 text-slate-500">
+              Derived directly from your domain scores and recorded reviewer
+              comments.
+            </p>
+          )}
+        </section>
+
         {/* TABLE */}
         <section className="rounded-[26px] border border-slate-200 bg-white p-5 shadow-sm md:p-6">
           <div>
@@ -586,7 +812,7 @@ const Report = () => {
             </p>
 
             <h2 className="mt-1 text-xl font-semibold text-slate-900">
-              Normalized domain performance
+              Normalized Domain Performance
             </h2>
 
             <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">

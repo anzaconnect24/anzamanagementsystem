@@ -14,7 +14,40 @@ import Loader from "@/components/common/Loader";
 import { useRouter } from "@/utils/navigation";
 import { useTranslation } from "@/locales";
 import { useParams } from "react-router-dom";
-import { FaUsers } from "react-icons/fa";
+import { FaUsers, FaStar } from "react-icons/fa";
+
+// Interactive 5-star course rating.
+const StarRating = ({ value = 0, onChange }) => {
+  const [hover, setHover] = useState(0);
+  const active = hover || value;
+
+  return (
+    <span className="inline-flex items-center gap-1">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <button
+          key={star}
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onChange(star);
+          }}
+          onMouseEnter={() => setHover(star)}
+          onMouseLeave={() => setHover(0)}
+          className="text-sm text-[#F59E0B] transition"
+          aria-label={`Rate ${star} star${star > 1 ? "s" : ""}`}
+        >
+          <FaStar className={active >= star ? "opacity-100" : "opacity-30"} />
+        </button>
+      ))}
+      <span className="ml-1 text-sm text-[#667085]">
+        {value ? Number(value).toFixed(1) : "0.0"}
+      </span>
+    </span>
+  );
+};
+
+const RATINGS_STORAGE_KEY = "courseRatings";
 
 const ProgramsPage = () => {
   const { course } = useParams();
@@ -27,6 +60,28 @@ const ProgramsPage = () => {
   const [limit] = useState(20);
   const [page] = useState(1);
   const { t } = useTranslation();
+
+  // The user's own course ratings, keyed by course uuid. Persisted locally until
+  // a backend rating endpoint exists.
+  const [ratings, setRatings] = useState(() => {
+    try {
+      return JSON.parse(localStorage.getItem(RATINGS_STORAGE_KEY) || "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  const onRate = (uuid, value) => {
+    setRatings((prev) => {
+      const next = { ...prev, [uuid]: value };
+      try {
+        localStorage.setItem(RATINGS_STORAGE_KEY, JSON.stringify(next));
+      } catch {
+        // Ignore storage failures — the rating still updates in-session.
+      }
+      return next;
+    });
+  };
 
   const isAdmin = ["Admin"].includes(userDetails?.role);
 
@@ -215,9 +270,16 @@ const ProgramsPage = () => {
                   {item.title}
                 </h3>
 
-                <p className="mb-6 min-h-[72px] text-sm leading-7 text-[#667085] line-clamp-3">
+                <p className="mb-4 min-h-[72px] text-sm leading-7 text-[#667085] line-clamp-3">
                   {item.description || "COMING SOON"}
                 </p>
+
+                <div className="mb-4">
+                  <StarRating
+                    value={ratings[item.uuid] || 0}
+                    onChange={(value) => onRate(item.uuid, value)}
+                  />
+                </div>
 
                 <div className="flex items-center justify-between border-t border-[#EAECF0] pt-5">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F9FAFB] px-3 py-1 text-sm text-[#667085]">

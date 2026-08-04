@@ -83,21 +83,19 @@ const WhatsAppSupport = ({ leading = null }) => {
       <div className="flex items-center gap-3">
         {leading}
 
+        {/* Icon only — the label lives on aria-label/title so the launcher stays
+            a circle at every screen size. */}
         <button
           type="button"
           onClick={() => setOpen((prev) => !prev)}
-          aria-label="WhatsApp support"
-          className="group flex items-center gap-2 rounded-full bg-[#25D366] py-3 pl-3 pr-3 text-white shadow-lg shadow-[#25D366]/40 transition hover:bg-[#1ebe5b] sm:pr-5"
+          aria-label={open ? "Close support chat" : "WhatsApp support"}
+          title={open ? "Close support chat" : "Chat with us on WhatsApp"}
+          className="grid h-14 w-14 place-items-center rounded-full bg-[#25D366] text-white shadow-lg shadow-[#25D366]/40 transition hover:bg-[#1ebe5b]"
         >
           {open ? (
             <FaTimes className="h-6 w-6" />
           ) : (
-            <FaWhatsapp className="h-6 w-6" />
-          )}
-          {!open && (
-            <span className="hidden text-sm font-bold sm:inline">
-              Chat with us
-            </span>
+            <FaWhatsapp className="h-7 w-7" />
           )}
         </button>
       </div>

@@ -431,9 +431,11 @@ const EnterpriseKyc = ({ audience = "staff" }) => {
     isEntrepreneur || Boolean(enterpriseUuid) || isEntrepreneurKycView;
   // BDA registering a brand-new startup (Set up tracking).
   const isRegisterFlow = !isEntrepreneur && !readOnly && !enterpriseUuid;
-  const returnTo = searchParams.get("returnTo");
+  // `back` lets whoever opened this page say where Back should return to — the
+  // Mentorship Tracker sends the BDA to the startup's sessions, not to Grant
+  // Management.
   const backTarget =
-    returnTo ||
+    searchParams.get("back") ||
     (isEntrepreneur ? "/dashboard/myMilestones" : "/dashboard/mentorTracker");
 
   const [loading, setLoading] = useState(true);

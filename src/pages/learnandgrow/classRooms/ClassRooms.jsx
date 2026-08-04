@@ -9,7 +9,6 @@ import {
   FaLayerGroup,
   FaClock,
   FaGraduationCap,
-  FaStar,
 } from "react-icons/fa";
 
 const Page = () => {
@@ -26,7 +25,6 @@ const Page = () => {
         "learnAndGrow.ideationDescription",
         "Learn how to validate business ideas, understand customer needs, and turn early concepts into practical opportunities."
       ),
-      rating: "0.0",
     },
     {
       icon: "/images/business_foundation_classes.svg",
@@ -39,7 +37,6 @@ const Page = () => {
         "learnAndGrow.businessFoundationDescription",
         "Build the core systems your business needs, including planning, operations, finance, sales, and customer management."
       ),
-      rating: "0.0",
     },
     {
       icon: "/images/investment_readiness_classes.svg",
@@ -52,7 +49,6 @@ const Page = () => {
         "learnAndGrow.investmentReadinessDescription",
         "Prepare your business for funding by strengthening your financials, pitch, growth strategy, and investor documentation."
       ),
-      rating: "0.0",
     },
   ];
 
@@ -61,7 +57,7 @@ const Page = () => {
   ) : (
     <div className="min-h-screen px-6 py-4">
       {/* HERO */}
-      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
+      <div className="relative mb-10 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
@@ -71,7 +67,7 @@ const Page = () => {
 
         <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
 
-        <div className="relative z-10 max-w-3xl p-10 text-white">
+        <div className="relative z-10 max-w-3xl p-7 text-white">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
             Learning Center
@@ -148,11 +144,6 @@ const Page = () => {
                 <span className="flex items-center gap-1">
                   <FaClock />
                   Flexible Learning
-                </span>
-
-                <span className="flex items-center gap-1 text-[#f6b800]">
-                  <FaStar />
-                  {item.rating}
                 </span>
               </div>
             </div>

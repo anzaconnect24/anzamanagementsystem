@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { editMentorProfile } from "../controllers/mentor_profile_controller";
 import { getSectors } from "../controllers/sector_controller";
 import toast from "react-hot-toast";
+import { expertiseList } from "@/utils/mentorProfile";
 
 const UpdateMentorProfile = ({ user, refresh, setRefresh }) => {
   const profile = user?.MentorProfile || {};
@@ -12,7 +13,7 @@ const UpdateMentorProfile = ({ user, refresh, setRefresh }) => {
     mentorLinkedIn: user.MentorProfile?.linkedinURL || "",
     mentorPosition: user.MentorProfile?.position || "",
     mentorOrganisation: user.MentorProfile?.organisation || "",
-    mentorExpertise: Object.values(user.MentorProfile?.areasOfExperties || {}),
+    mentorExpertise: expertiseList(user.MentorProfile?.areasOfExperties),
     mentorAvailability: user.MentorProfile?.mentorAvailability || "",
     mentorHours: user.MentorProfile?.mentorHours || "",
     mentorFormat: Object.values(user.MentorProfile?.mentoringFormat || {}),

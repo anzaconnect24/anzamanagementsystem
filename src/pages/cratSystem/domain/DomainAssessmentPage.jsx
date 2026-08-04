@@ -24,7 +24,7 @@ import {
 } from "react-icons/fa";
 
 const DOMAIN_LABELS = {
-  commercial_marketing: "Commercial & Market Domain",
+  commercial_marketing: "Commercial and Market Domain",
   financial: "Financial Domain",
   legal_compliance: "Legal & Compliance Domain",
   operations: "Operations Domain",

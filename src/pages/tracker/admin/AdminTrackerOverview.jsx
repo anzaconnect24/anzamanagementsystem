@@ -11,7 +11,7 @@ import {
   listMentorEnterprises,
 } from "@/controllers/trackerController";
 import { getPrograms } from "@/controllers/program_controller";
-import { isTrackerProgram } from "@/utils/programMeta";
+import { isGrantProgram } from "@/utils/programMeta";
 
 const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
 
@@ -145,7 +145,7 @@ const AdminTrackerOverview = () => {
     // Only grant programs count here — learn-and-grow courses (BFA, IR, etc.)
     // are excluded from the Grant Management dashboard.
     const all = Array.isArray(response?.data) ? response.data : [];
-    setPrograms(all.filter((program) => isTrackerProgram(program)));
+    setPrograms(all.filter((program) => isGrantProgram(program)));
   };
 
   // Grant metrics computed from the startups selected into each program.

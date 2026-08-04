@@ -238,6 +238,7 @@ export const sw = {
     enterpriseGrowth: "Ukuaji wa Biashara",
     grantManagement: "Usimamizi wa Ruzuku",
     coachingSessions: "Vipindi vya Ukocha",
+    mentorshipTracker: "Kifuatiliaji cha Ushauri",
     startups: "Biashara Changa",
     mentorshipApplications: "Maombi ya Ushauri",
     interestedStartups: "Biashara Zilizovutiwa",

@@ -235,6 +235,7 @@ import EnterpriseTrackerDetails from "./pages/tracker/mentor/EnterpriseTrackerDe
 import EnterpriseKyc from "./pages/tracker/mentor/EnterpriseKyc";
 import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
 import CoachingSessions from "./pages/tracker/entreprenuer/CoachingSessions";
+import GrantContract from "./pages/tracker/entreprenuer/GrantContract";
 import ProgramMemberRoute from "./components/guards/ProgramMemberRoute";
 import RoleRoute from "./components/guards/RoleRoute";
 import BdaCoachingSessions from "./pages/tracker/mentor/BdaCoachingSessions";
@@ -382,6 +383,14 @@ function App() {
               element={
                 <ProgramMemberRoute>
                   <EnterpriseKyc audience="entrepreneur" />
+                </ProgramMemberRoute>
+              }
+            />
+            <Route
+              path="myMilestones/contract"
+              element={
+                <ProgramMemberRoute>
+                  <GrantContract />
                 </ProgramMemberRoute>
               }
             />

@@ -14,11 +14,7 @@ import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
 import TrancheGroupList, {
   groupMilestonesByTranche,
 } from "@/components/tracker/TrancheGroupList";
-import {
-  UploadCloud,
-  Flag,
-  FileText,
-} from "lucide-react";
+import { Flag } from "lucide-react";
 import {
   PLAN_STATUS,
   canReviewPlan,
@@ -447,14 +443,6 @@ const EnterpriseTrackerDetails = () => {
   const milestoneProgress = milestones.length
     ? Math.round((completedMilestones / milestones.length) * 100)
     : 0;
-  const submittedDocuments = milestones.flatMap((milestone) =>
-    parseSubmissionAttachments(milestone.submissionAttachments).map((url, index) => ({
-      id: `${milestone.uuid || milestone.title}-${index}`,
-      title: `${milestone.title || "Milestone"} evidence ${index + 1}`,
-      url,
-    })),
-  );
-
   return (
     <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
       <main className="mx-auto max-w-[1480px] space-y-8">
@@ -512,16 +500,6 @@ const EnterpriseTrackerDetails = () => {
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-4 text-sm font-bold text-white/90">
-              <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/15 text-white backdrop-blur">&#9737;</span>
-                {enterprise?.district || "Region not set"}
-              </div>
-              <div className="flex items-center gap-2">
-                <span className="grid h-8 w-8 place-items-center rounded-full bg-white/15 text-white backdrop-blur">$</span>
-                {formatCurrency(enterprise?.grantUsd)} grant
-              </div>
-            </div>
           </div>
         </section>
 
@@ -535,8 +513,7 @@ const EnterpriseTrackerDetails = () => {
           programName={enterprise?.Program?.title}
         />
 
-        <div className="grid grid-cols-1 gap-8 xl:grid-cols-[1.45fr_0.75fr]">
-          <div className="space-y-8">
+        <div className="space-y-8">
             <SignedContractCard
               contractUrl={
                 enterprise?.signedContractUrl || financeMember?.signedContractUrl
@@ -643,6 +620,7 @@ const EnterpriseTrackerDetails = () => {
                               given on it. */}
                           {(item.submissionNotes ||
                             item.mentorReviewNotes ||
+                            item.financeReviewNotes ||
                             attachments.length > 0) && (
                             <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
                               {item.submissionNotes && (
@@ -659,6 +637,14 @@ const EnterpriseTrackerDetails = () => {
                                     Your feedback:
                                   </span>{" "}
                                   {item.mentorReviewNotes}
+                                </p>
+                              )}
+                              {item.financeReviewNotes && (
+                                <p>
+                                  <span className="font-bold text-slate-950">
+                                    Finance feedback:
+                                  </span>{" "}
+                                  {item.financeReviewNotes}
                                 </p>
                               )}
                               {attachments.length > 0 && (
@@ -803,39 +789,6 @@ const EnterpriseTrackerDetails = () => {
                 })}
               </div>
             </PortalCard>
-          </div>
-
-          <aside className="space-y-8">
-            <PortalCard icon={<FileText className="h-5 w-5" />} title="Documents" subtitle="Reporting documents submitted by the entrepreneur.">
-              <div className="space-y-3">
-                {submittedDocuments.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                    No entrepreneur documents have been submitted yet.
-                  </div>
-                )}
-
-                {/* The row itself opens the document, so no separate View
-                    button is needed. */}
-                {submittedDocuments.map((document) => (
-                  <a
-                    key={document.id}
-                    href={document.url}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-white px-4 py-3 shadow-sm transition hover:border-slate-200 hover:shadow-md"
-                  >
-                    <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-green-50 text-green-600">
-                      <UploadCloud className="h-5 w-5" />
-                    </div>
-                    <p className="truncate text-sm font-bold text-slate-950">
-                      {document.title}
-                    </p>
-                  </a>
-                ))}
-              </div>
-            </PortalCard>
-
-          </aside>
         </div>
       </main>
 

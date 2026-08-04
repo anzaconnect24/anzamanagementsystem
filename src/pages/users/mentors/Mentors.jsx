@@ -2,6 +2,7 @@
 
 import { useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { getMentors } from "@/controllers/user_controller";
+import { expertiseList } from "@/utils/mentorProfile";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
@@ -84,7 +85,7 @@ const Mentors = () => {
 
   const getMentorSector = (item) =>
     item?.MentorProfile?.BusinessSector?.name ||
-    Object.values(item?.MentorProfile?.areasOfExperties || {}).join(", ") ||
+    expertiseList(item?.MentorProfile?.areasOfExperties).join(", ") ||
     t("business.noSector", "No Sector");
 
   const makeFirstLetterLowercase = (str = "") => {
@@ -545,9 +546,7 @@ const Mentors = () => {
                     {item?.MentorProfile?.expertise ||
                       t(
                         `mentor.expertise.${makeFirstLetterLowercase(
-                          Object.values(
-                            item?.MentorProfile?.areasOfExperties || {}
-                          )
+                          expertiseList(item?.MentorProfile?.areasOfExperties)
                             .slice(0, 2)
                             .join(", ")
                             .replace("&", "And")

@@ -1,6 +1,7 @@
 import OpenAI from "openai";
 import jsPDF from "jspdf";
 import { POPPINS_REGULAR, POPPINS_BOLD } from "./poppinsFont";
+import { DOMAIN_FALLBACK, generateCratInsights } from "./cratInsights";
 
 // ─── OpenAI client ────────────────────────────────────────────────────────────
 const OPENAI_API_KEY = import.meta.env.VITE_OPENAI_API_KEY;
@@ -77,7 +78,7 @@ const DOMAINS = [
     key: "commercial",
     label: "Commercial",
     sub: "Market",
-    full: "Commercial / Market",
+    full: "Commercial & Market",
     weight: 0.25,
     basis: "Revenue predictability and market traction underpin the investment case.",
   },
@@ -107,14 +108,14 @@ const DOMAINS = [
   },
 ];
 
-// Per-domain narrative content: a short tailored gap description, the detailed
-// findings (observations) and the recommended capacity interventions.
+// Per-domain narrative content: the baseline gap description and recommended
+// interventions are shared with the insight generator (which tailors them per
+// startup from the recorded reviewer comments), plus the detailed findings
+// (observations) used by the long-form sections.
 const DOMAIN_CONTENT = {
   commercial: {
     // gapTitle is the bold lead-in on the one-page report; gap is the body.
-    gapTitle:
-      "Weak commercial systems limiting predictable and scalable revenue growth",
-    gap: "Revenue is being generated, but the commercial engine still runs on informal, undocumented routines. There is no defined sales pipeline, market positioning is held tacitly rather than written down, and acquisition and retention are not measured. For investors this translates directly into uncertainty about how repeatable and predictable future revenue really is.",
+    ...DOMAIN_FALLBACK.commercial,
     intro:
       "Commercial capability was assessed across the sales process, market positioning, and customer acquisition and retention.",
     findings: [
@@ -122,16 +123,9 @@ const DOMAIN_CONTENT = {
       "Market positioning and competitor intelligence are understood by the founder but are not documented or shared across the team.",
       "Customer acquisition and retention run without measurable targets, so channel performance and churn cannot be actively managed.",
     ],
-    recs: [
-      "Document the end-to-end sales process with defined stages, owners and conversion metrics, and review it monthly.",
-      "Maintain a living market-positioning and competitor-intelligence brief that informs pricing and messaging.",
-      "Adopt CRM-based pipeline tracking with explicit customer acquisition and retention KPIs.",
-    ],
   },
   financial: {
-    gapTitle:
-      "Limited financial planning and reporting reducing investment readiness",
-    gap: "Core financial management is operating, but reporting and forecasting fall short of the standard investors expect during due diligence. Cash-flow is not modelled forward, records are not yet investor-grade, and management reporting lacks a regular cadence — all of which limit confidence in the numbers.",
+    ...DOMAIN_FALLBACK.financial,
     intro:
       "Financial capability was assessed across record quality, management reporting, cash-flow forecasting and controls.",
     findings: [
@@ -139,16 +133,9 @@ const DOMAIN_CONTENT = {
       "Financial records are maintained but are not yet investor-grade and have not been independently reviewed.",
       "Accounting systems and management reporting lack the controls and monthly cadence investors expect.",
     ],
-    recs: [
-      "Implement accounting software and produce disciplined monthly management accounts.",
-      "Build and maintain a rolling 12-month cash-flow forecast tied to the operating plan.",
-      "Prepare investor-grade financial statements and arrange an independent review or audit.",
-    ],
   },
   operations: {
-    gapTitle:
-      "High operational dependency caused by undocumented processes and weak performance management",
-    gap: "Operational delivery works at the current scale, but it depends on undocumented, person-dependent routines. Processes live in people's heads, key functions rest on individuals, and performance is not tracked against targets — which caps resilience and makes scaling risky.",
+    ...DOMAIN_FALLBACK.operations,
     intro:
       "Operational capability was assessed across process documentation, key-person dependency and performance management.",
     findings: [
@@ -156,27 +143,15 @@ const DOMAIN_CONTENT = {
       "There is significant key-person dependency across critical functions, creating business-continuity risk.",
       "Performance is not consistently tracked against defined KPIs, which limits operational visibility.",
     ],
-    recs: [
-      "Document core processes and standard operating procedures for all critical functions.",
-      "Reduce key-person dependency through delegation, cross-training and succession planning.",
-      "Define operational KPIs and link them to a regular performance-management routine.",
-    ],
   },
   legal: {
-    gapTitle:
-      "Incomplete governance and compliance framework increasing due diligence risk",
-    gap: "Foundational legal structures are in place, but governance, contracts and compliance records are incomplete. Licences and agreements are not consolidated, compliance gaps remain open, and intellectual property and oversight are not fully established — the issues most likely to stall or derail investor due diligence.",
+    ...DOMAIN_FALLBACK.legal,
     intro:
       "Legal capability was assessed across registration, contracts, regulatory compliance, intellectual property and governance.",
     findings: [
       "Licences, permits, contracts and governance records require review and consolidation into a single verifiable set.",
       "Compliance gaps remain open that could delay or complicate investor due diligence.",
       "Intellectual property is unregistered and formal oversight and decision-rights structures are not established.",
-    ],
-    recs: [
-      "Review and consolidate licences, permits and key contracts into a diligence-ready pack.",
-      "Close outstanding compliance gaps and formalise governance and oversight structures.",
-      "Register intellectual property and document board composition and decision rights.",
     ],
   },
 };
@@ -815,24 +790,38 @@ function drawDetailedFindings(doc, ctx) {
 }
 
 function drawRecommendations(doc, ctx) {
-  const { name, scoreData } = ctx;
+  const { name, scoreData, insights } = ctx;
   const st = beginSection(
     doc,
     name,
     "Recommendations",
-    "Targeted capacity interventions to close the gap in each domain.",
+    "Targeted capacity interventions to close the gaps identified for this business.",
   );
   let y = st.y;
   const limit = PH - 16;
 
-  DOMAINS.forEach((d) => {
-    const p = pctOf(scoreData, d.key);
+  // One card per generated recommendation; otherwise the baseline set grouped
+  // by domain.
+  const entries = insights?.recommendations?.length
+    ? insights.recommendations.map((r) => ({
+        key: r.domain,
+        heading: r.title,
+        recs: [r.body],
+      }))
+    : DOMAINS.map((d) => ({
+        key: d.key,
+        heading: d.full,
+        recs: DOMAIN_CONTENT[d.key].recs,
+      }));
+
+  entries.forEach((entry) => {
+    const d = DOMAINS.find((item) => item.key === entry.key);
+    const p = d ? pctOf(scoreData, d.key) : ctx.overall;
     const ready = p >= 70;
-    const recLines = DOMAIN_CONTENT[d.key].recs.map((t) =>
-      doc.splitTextToSize(t, CW - 26),
-    );
+    const headingLines = doc.splitTextToSize(entry.heading, CW - 46);
+    const recLines = entry.recs.map((t) => doc.splitTextToSize(t, CW - 26));
     const recsH = recLines.reduce((s, l) => s + l.length * 4.3 + 4, 0);
-    const h = 24 + recsH + 4;
+    const h = 18 + headingLines.length * 5.2 + recsH + 4;
     if (y + h > limit) {
       doc.addPage();
       chrome(doc, name);
@@ -846,7 +835,7 @@ function drawRecommendations(doc, ctx) {
     doc.setFont(FONT, "bold");
     doc.setFontSize(11);
     doc.setTextColor(...C.ink);
-    doc.text(d.full, M + 8, y + 14);
+    headingLines.forEach((l, li) => doc.text(l, M + 8, y + 14 + li * 5.2));
     pillRight(
       doc,
       M + CW - 8,
@@ -856,7 +845,7 @@ function drawRecommendations(doc, ctx) {
       ready ? C.blue : C.red,
     );
 
-    let by = y + 25;
+    let by = y + 14 + headingLines.length * 5.2 + 6;
     recLines.forEach((l) => {
       doc.setFillColor(...C.blue);
       doc.circle(M + 9, by - 1.4, 1.5, "F");
@@ -872,21 +861,39 @@ function drawRecommendations(doc, ctx) {
 }
 
 function drawGaps(doc, ctx) {
-  const { name, scoreData } = ctx;
+  const { name, scoreData, insights } = ctx;
   const st = beginSection(
     doc,
     name,
     "Key Thematic Gaps",
-    "The defining capability gap in each domain, with a tailored read on what it means for investment readiness.",
+    "The defining capability gaps identified for this business, with a read on what each means for investment readiness.",
   );
   let y = st.y;
   const limit = PH - 16;
 
-  DOMAINS.forEach((d) => {
-    const p = pctOf(scoreData, d.key);
+  // Prefer the gaps generated from this startup's reviewer comments; fall back
+  // to one baseline gap per domain.
+  const entries = insights?.gaps?.length
+    ? insights.gaps.map((g) => ({
+        key: g.domain,
+        heading: g.title,
+        body: g.body,
+      }))
+    : DOMAINS.map((d) => ({
+        key: d.key,
+        heading: d.full,
+        body: DOMAIN_CONTENT[d.key].gap,
+      }));
+
+  entries.forEach((entry) => {
+    // A generated gap can be cross-cutting; where it names no single domain the
+    // pill shows the overall score instead.
+    const d = DOMAINS.find((item) => item.key === entry.key);
+    const p = d ? pctOf(scoreData, d.key) : ctx.overall;
     const ready = p >= 70;
-    const lines = doc.splitTextToSize(DOMAIN_CONTENT[d.key].gap, CW - 16);
-    const h = 22 + lines.length * 4.6 + 6;
+    const headingLines = doc.splitTextToSize(entry.heading, CW - 46);
+    const lines = doc.splitTextToSize(entry.body, CW - 16);
+    const h = 16 + headingLines.length * 5.4 + lines.length * 4.6 + 6;
     if (y + h > limit) {
       doc.addPage();
       chrome(doc, name);
@@ -900,7 +907,7 @@ function drawGaps(doc, ctx) {
     doc.setFont(FONT, "bold");
     doc.setFontSize(11.5);
     doc.setTextColor(...C.ink);
-    doc.text(d.full, M + 8, y + 13);
+    headingLines.forEach((l, li) => doc.text(l, M + 8, y + 13 + li * 5.4));
     const pillLeft = pillRight(
       doc,
       M + CW - 8,
@@ -914,10 +921,11 @@ function drawGaps(doc, ctx) {
     doc.setTextColor(...domainColor(p));
     doc.text(`${p}%`, pillLeft - 4, y + 13, { align: "right" });
 
+    const bodyY = y + 13 + headingLines.length * 5.4 + 4;
     doc.setFont(FONT, "normal");
     doc.setFontSize(8.5);
     doc.setTextColor(...C.slate);
-    lines.forEach((l, li) => doc.text(l, M + 8, y + 22 + li * 4.6));
+    lines.forEach((l, li) => doc.text(l, M + 8, bodyY + li * 4.6));
 
     y += h + 6;
   });
@@ -1433,7 +1441,13 @@ function drawRoadmap(doc, ctx) {
 
 // ─── PDF builder ─────────────────────────────────────────────────────────────
 
-async function buildPDF(domainData, scoreData, userDetails, logoDataUrl) {
+async function buildPDF(
+  domainData,
+  scoreData,
+  userDetails,
+  logoDataUrl,
+  insights,
+) {
   const doc = new jsPDF({ unit: "mm", format: "a5", orientation: "landscape" });
   registerFonts(doc);
 
@@ -1445,7 +1459,7 @@ async function buildPDF(domainData, scoreData, userDetails, logoDataUrl) {
     year: "numeric",
   });
   const profile = getBusinessProfile(userDetails);
-  const ctx = { name, overall, date, profile, scoreData, logoDataUrl };
+  const ctx = { name, overall, date, profile, scoreData, logoDataUrl, insights };
 
   // Section numbers are auto-assigned in this order (see beginSection).
   SECTION_NO = 0;
@@ -1826,7 +1840,7 @@ function p1Fit(doc, w, items, avail, extra = 0) {
   return { fs, lh, items: items.slice(0, 1) };
 }
 
-function buildOnePager(data, scoreData, userDetails) {
+function buildOnePager(data, scoreData, userDetails, insights) {
   const doc = new jsPDF({
     orientation: "landscape",
     unit: "mm",
@@ -1983,18 +1997,32 @@ function buildOnePager(data, scoreData, userDetails) {
   p1Bullets(doc, m, ly, leftW, str.items, str.fs, str.lh, false);
 
   // ── RIGHT: thematic gaps + recommendations.
-  const gaps = DOMAINS.map((d) => ({
-    lead: `${DOMAIN_CONTENT[d.key].gapTitle || d.full}:`,
-    body: DOMAIN_CONTENT[d.key].gap,
-  }));
-  // Recommendations are taken round-robin across the domains so every domain is
-  // represented rather than the first ones crowding the list out.
-  const byDomain = DOMAINS.map((d) => DOMAIN_CONTENT[d.key].recs || []);
-  const recs = [];
-  for (let i = 0; i < Math.max(...byDomain.map((r) => r.length)); i += 1) {
-    byDomain.forEach((list) => {
-      if (list[i]) recs.push(list[i]);
-    });
+  // Both lists are generated per startup from the reviewer comments and the
+  // notes the entrepreneur entered; the static domain copy below is only the
+  // shape of last resort when no insights were generated.
+  const gaps = insights?.gaps?.length
+    ? insights.gaps.map((g) => ({ lead: `${g.title}:`, body: g.body }))
+    : DOMAINS.map((d) => ({
+        lead: `${DOMAIN_CONTENT[d.key].gapTitle || d.full}:`,
+        body: DOMAIN_CONTENT[d.key].gap,
+      }));
+
+  let recs;
+  if (insights?.recommendations?.length) {
+    recs = insights.recommendations.map((r) => ({
+      lead: `${r.title}:`,
+      body: r.body,
+    }));
+  } else {
+    // Recommendations are taken round-robin across the domains so every domain
+    // is represented rather than the first ones crowding the list out.
+    const byDomain = DOMAINS.map((d) => DOMAIN_CONTENT[d.key].recs || []);
+    recs = [];
+    for (let i = 0; i < Math.max(...byDomain.map((r) => r.length)); i += 1) {
+      byDomain.forEach((list) => {
+        if (list[i]) recs.push(list[i]);
+      });
+    }
   }
 
   // Gaps and recommendations share the column, so they are fitted together at a
@@ -2042,6 +2070,7 @@ export async function generateCapitalReadinessPDF(
   scoreData,
   userDetails,
   onStatus,
+  options = {},
 ) {
   if (!scoreData || typeof scoreData !== "object") {
     throw new Error("Invalid scoreData: must be an object with domain scores");
@@ -2067,12 +2096,31 @@ export async function generateCapitalReadinessPDF(
     );
   }
 
+  // The four thematic gaps and four recommendations are tailored to this
+  // startup from the reviewer comments and the notes it entered. The caller may
+  // pass insights it has already generated (the report page does) to avoid
+  // regenerating them for the download.
+  const insights =
+    options.insights ||
+    (await generateCratInsights({
+      domainData: data,
+      scoreData,
+      businessName: getBusinessName(userDetails),
+      sector:
+        userDetails?.Business?.sector || userDetails?.Business?.businessSector,
+      location:
+        userDetails?.Business?.location ||
+        userDetails?.Business?.businessLocation,
+      reviewerFeedback: userDetails?.reviewerFeedback,
+      onStatus,
+    }));
+
   onStatus?.("Building report...");
 
   // The delivered report is the single-page summary. buildPDF below still holds
   // the long-form multi-page version if it is ever needed again.
-  const filename = buildOnePager(data, scoreData, userDetails);
+  const filename = buildOnePager(data, scoreData, userDetails, insights);
 
   onStatus?.("Done!");
-  return { success: true, filename };
+  return { success: true, filename, insights };
 }

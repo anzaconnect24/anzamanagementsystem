@@ -7,9 +7,8 @@ import {
   editProgram,
   getPrograms,
 } from "@/controllers/program_controller";
-import { assignEntreprenuerToStaff } from "@/controllers/staffEntreprenuerController";
-import { getEnterprenuers, getReviewers } from "@/controllers/user_controller";
-import { isTrackerProgram } from "@/utils/programMeta";
+import { getEnterprenuers } from "@/controllers/user_controller";
+import { isGrantProgram } from "@/utils/programMeta";
 
 const PROGRAM_CATEGORIES = [
   "Ideation",
@@ -216,9 +215,7 @@ const TrackerPrograms = () => {
       // carry the tracker metadata markers). Learn-and-grow courses such as
       // BFA and Investment Readiness are excluded — they live under Classes.
       if (Array.isArray(response?.data)) {
-        setPrograms(
-          response.data.filter((program) => isTrackerProgram(program)),
-        );
+        setPrograms(response.data.filter((program) => isGrantProgram(program)));
       } else {
         setPrograms([]);
       }
