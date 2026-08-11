@@ -19,6 +19,7 @@ import {
   getStaffWeeklyLogs,
   listTrackerMilestones,
 } from "@/controllers/trackerController";
+import { parseProgramBdas } from "@/utils/trackerProgramMarkers";
 
 const FLAG_LABEL_MAP = {
   green: "On track",
@@ -324,18 +325,29 @@ const MentorTracker = () => {
   // Startups this BDA was assigned to inside Finance grant programs, derived
   // directly from the program markers (so they appear as soon as the Finance
   // Officer saves the program — independent of the assignment table).
+  // Every startup on a program this BDA runs — not only the ones finance named
+  // them against. A startup's milestones must reach their BDA as soon as they
+  // are submitted, so review cannot wait on finance filling in an assignment.
+  //
+  // "Runs" means the program's BDA roster lists them, or (for programs saved
+  // before that roster existed) they are the named BDA for at least one startup
+  // on it.
   const programAssignedStartups = useMemo(() => {
     const bdaUuid = String(userDetails?.uuid || "").trim();
     if (!bdaUuid) return [];
+
     const result = [];
     programs.forEach((program) => {
-      parseProgramStartups(program).forEach((member) => {
-        if (
-          member?.entreprenuerUuid &&
-          String(member?.bdaUuid || "").trim() === bdaUuid
-        ) {
-          result.push(member);
-        }
+      const members = parseProgramStartups(program);
+      const runsProgram =
+        parseProgramBdas(program).includes(bdaUuid) ||
+        members.some(
+          (member) => String(member?.bdaUuid || "").trim() === bdaUuid,
+        );
+      if (!runsProgram) return;
+
+      members.forEach((member) => {
+        if (member?.entreprenuerUuid) result.push(member);
       });
     });
     return result;
