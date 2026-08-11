@@ -24,8 +24,6 @@ import {
   Trash2,
   TriangleAlert,
 } from "lucide-react";
-import Loader from "@/components/common/Loader";
-import { UserContext } from "@/layouts/DashboardLayout";
 import { getEnterprenuers } from "@/controllers/user_controller";
 import { getBusiness } from "@/controllers/business_controller";
 import {
