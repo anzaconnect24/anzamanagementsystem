@@ -316,6 +316,27 @@ export const submitTrackerMilestone = async (
   }
 };
 
+// Entrepreneur edits their own milestone plan after submitting it. Distinct
+// from /submit (which carries reports against a milestone) and from /review
+// (the BDA's verdict on one) — this changes the plan itself.
+//
+// NOTE: needs `PATCH /tracker/milestones/:uuid` server-side; see
+// docs/BDA_TRACKER_BACKEND_SPEC.md.
+export const reviseTrackerMilestone = async (uuid, data) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/tracker/milestones/${uuid}`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const reviewTrackerMilestone = async (uuid, data) => {
   try {
     const response = await axios.patch(

@@ -14,11 +14,16 @@ import {
 } from "@/controllers/trackerController";
 import {
   PLAN_STATUS,
+  REPORT_STATUS,
   canDisburse,
+  isPlanApproved,
   parseKpiPlan,
+  planStatusLabel,
+  planStatusPill,
 } from "@/utils/trancheWorkflow";
 import { editProgram, getProgram } from "@/controllers/program_controller";
 import { assignEntreprenuerToStaff } from "@/controllers/staffEntreprenuerController";
+import { getReviewers } from "@/controllers/user_controller";
 import { createNotification } from "@/controllers/notification_controller";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import GrantReportButton from "@/components/reports/GrantReportButton";
@@ -32,17 +37,55 @@ import {
   Trash2,
   ClipboardList,
   FileText,
+  Paperclip,
+  Download,
+  UserCheck,
 } from "lucide-react";
 import TrancheGroupList, {
   groupMilestonesByTranche,
 } from "@/components/tracker/TrancheGroupList";
+import MilestoneReportTable from "@/components/tracker/MilestoneReportTable";
+import MilestoneStatusTable from "@/components/tracker/MilestoneStatusTable";
+import { downloadMilestoneTemplatePDF } from "@/services/milestoneTemplatePDF";
+import {
+  formatReportAmount,
+  milestonePlannedAmount,
+  milestoneTimelineSpan,
+  reportFromMilestone,
+} from "@/utils/milestoneReport";
 import {
   buildDescriptionWithMeta,
   parseTrackerProgramMeta,
 } from "@/utils/trackerProgramMarkers";
 
+// The BDA's own comment on a report is hidden from the finance officer for
+// now — flip this to bring the line back.
+const SHOW_BDA_COMMENT = false;
+
 const labelClass = "mb-1 block text-xs font-semibold text-[#64748b]";
 const inputClass = "w-full rounded-lg border border-[#b7c5e5] px-3 py-2 text-sm";
+
+// Finance reads the plan through the same three sections as the BDA and the
+// startup, so the three roles talk about the same views.
+const SECTION_TABS = [
+  { id: "milestones", label: "Milestones" },
+  { id: "status", label: "Milestone Status" },
+  { id: "report", label: "Milestone Reporting" },
+];
+
+const SECTION_SUBTITLE = {
+  milestones:
+    "Milestones the business development advisor has approved. Read-only — plans still under review are not shown here.",
+  status:
+    "Where every milestone stands: whether the BDA has approved the plan, and what has happened to the report filed against it.",
+  report:
+    "The startup's reports, budgeted against actual spend, with their evidence. Approve the tranche once the plan is BDA-approved, or decline it.",
+};
+
+const planHeadClass =
+  "border border-black/10 bg-[#eaf0fb] px-3 py-2 text-left text-xs font-black text-[#111827]";
+const planCellClass =
+  "border border-black/10 px-3 py-2 align-top text-sm break-words text-[#334155]";
 
 const parseAttachments = (value) => {
   if (Array.isArray(value)) return value.filter(Boolean);
@@ -82,9 +125,12 @@ const TrackerStartupDetails = () => {
   const [reviewingId, setReviewingId] = useState("");
   // Finance feedback drafts, keyed by milestone uuid.
   const [financeNotes, setFinanceNotes] = useState({});
+  // Which of the three sections is open: the plan ("milestones"), where each
+  // one stands ("status"), or the reports filed against them ("report").
+  const [milestoneTab, setMilestoneTab] = useState("milestones");
   // The open tranche lives in the URL so it is its own page: the browser's back
-  // button returns to the tranche list and the view can be linked to.
-  // "" shows the list, "__all__" shows every milestone.
+  // button returns to it and the view can be linked to. "__all__" shows every
+  // milestone; empty falls back to the first tranche that has any.
   const [searchParams, setSearchParams] = useSearchParams();
   const openTranche = searchParams.get("tranche") || "";
   const setOpenTranche = (key) => {
@@ -236,6 +282,11 @@ const TrackerStartupDetails = () => {
 
   const [editingTranches, setEditingTranches] = useState(false);
   const [contractUploading, setContractUploading] = useState(false);
+  // Index of the tranche whose bank advise is uploading, or null.
+  const [adviseUploadingIndex, setAdviseUploadingIndex] = useState(null);
+  // BDAs this startup can be assigned to, and the pending assignment.
+  const [bdaList, setBdaList] = useState([]);
+  const [assigningBda, setAssigningBda] = useState(false);
 
   // Uploading the grant contract is the first step: the finance officer uploads
   // it and it is stored on the startup's tracker enterprise so it appears to the
@@ -402,6 +453,43 @@ const TrackerStartupDetails = () => {
     }
   };
 
+  // The report is not wrong, it is short of detail. It reopens for the startup
+  // exactly like a decline, but the plan stays approved — dropping it back to
+  // REJECTED would take the milestone out of their reporting tab, leaving them
+  // unable to answer — and it is not recorded as a rejection.
+  const onRequestMoreInfo = async (milestone) => {
+    const note = financeNote(milestone).trim();
+    if (!note) {
+      toast.error("Say what further information you need");
+      return;
+    }
+
+    await reviewMilestone(
+      milestone,
+      {
+        status: REPORT_STATUS.INFO_REQUESTED,
+        financeReviewNotes: note,
+      },
+      "Further information requested from the startup",
+    );
+
+    if (form.entreprenuerUuid) {
+      createNotification({
+        user_uuid: form.entreprenuerUuid,
+        to: "User",
+        message: `The finance officer needs more information on your report for "${milestone.title}". Read their comment, add what is missing and submit it again.`,
+      });
+    }
+  };
+
+  // One verdict per row, applied as soon as it is picked — the same shape as the
+  // BDA's report verdict.
+  const onFinanceVerdict = (milestone, verdict) => {
+    if (verdict === "approve") return onApproveTranche(milestone);
+    if (verdict === "decline") return onDeclineMilestone(milestone);
+    if (verdict === "info") return onRequestMoreInfo(milestone);
+  };
+
   const setTranche = (index, key, value) =>
     setForm((prev) => ({
       ...prev,
@@ -420,8 +508,9 @@ const TrackerStartupDetails = () => {
           {
             title: `Tranche ${list.length + 1}`,
             amount: "",
-            plannedDate: "",
-            actualDate: "",
+            disbursedDate: "",
+            reportingDate: "",
+            bankAdvise: "",
             status: "Pending",
           },
         ],
@@ -444,6 +533,33 @@ const TrackerStartupDetails = () => {
 
   const isDisbursed = (tranche) =>
     String(tranche?.status || "").toLowerCase() === "disbursed";
+
+  // The schedule used to record a planned and an actual date; it now records the
+  // date the money went out and the date the startup must report on it. Read the
+  // old `actualDate` key too so tranches saved before that change keep theirs.
+  const trancheDisbursedDate = (tranche) =>
+    tranche?.disbursedDate || tranche?.actualDate || "";
+
+  // Bank advise upload, one row at a time. The URL lands in form state and is
+  // written with the rest of the schedule on Save.
+  const onUploadBankAdvise = async (index, file) => {
+    if (!file) return;
+    setAdviseUploadingIndex(index);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const url = await uploadFile(formData);
+      if (!url || typeof url !== "string" || !url.trim()) {
+        throw new Error("Upload failed");
+      }
+      setTranche(index, "bankAdvise", url.trim());
+      toast.success("Bank advise attached — save to keep it");
+    } catch {
+      toast.error("Failed to upload the bank advise");
+    } finally {
+      setAdviseUploadingIndex(null);
+    }
+  };
 
   // Grant financial summary shown as stat cards below the hero. Disbursement is
   // derived from the configured tranches when present, else the grant field.
@@ -478,12 +594,111 @@ const TrackerStartupDetails = () => {
     [milestones, form.tranches],
   );
 
+  // Every section opens on its tranche list, so no tranche is open until one is
+  // picked: "" shows the list, "__all__" drops the filter.
   const visibleMilestones = useMemo(() => {
     if (openTranche === "__all__") return milestones;
-    return (
-      milestoneGroups.find((g) => g.key === openTranche)?.items || milestones
-    );
+    return milestoneGroups.find((g) => g.key === openTranche)?.items || [];
   }, [openTranche, milestoneGroups, milestones]);
+
+  // Only BDA-approved plans go in the downloadable template — a milestone still
+  // under review is not something the grant officer should be working from.
+  // Scoped to the open tranche, so the document matches what is on screen.
+  const approvedMilestones = useMemo(
+    () => visibleMilestones.filter((m) => isPlanApproved(m.planStatus)),
+    [visibleMilestones],
+  );
+
+  // BDAs are users stored under the Staff/Reviewer roles — the same list the
+  // dedicated assignments page uses.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const response = await getReviewers(1000, 1);
+        const all = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.data)
+            ? response.data
+            : [];
+        const staffOnly = all.filter((user) =>
+          ["Staff", "Reviewer"].includes(user.role),
+        );
+        if (!cancelled) setBdaList(staffOnly.length ? staffOnly : all);
+      } catch {
+        // Non-fatal: the picker just stays empty and says so.
+        if (!cancelled) setBdaList([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Assign right away rather than waiting for the page's Save: the assignment is
+  // what lets the BDA reach this startup at all, and burying it behind the
+  // disbursement form's save button hides that.
+  const onAssignBda = async (bdaUuid) => {
+    setForm((prev) => ({ ...prev, bdaUuid }));
+    if (!bdaUuid || !form.entreprenuerUuid) return;
+
+    setAssigningBda(true);
+    try {
+      await assignEntreprenuerToStaff({
+        staff_uuid: bdaUuid,
+        entreprenuer_uuid: form.entreprenuerUuid,
+      });
+      // The markers carry the same uuid, so the BDA's own startup list picks it
+      // up too. onSave writes them; say so rather than implying it is done.
+      toast.success("BDA assigned — save the page to record it on the programme");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to assign the BDA",
+      );
+    } finally {
+      setAssigningBda(false);
+    }
+  };
+
+  // Each section opens on its tranche list and drills into one, the same way the
+  // BDA's and the startup's do. `suffix` names the rows for the section they are
+  // in ("Tranche 1 Milestones", "Tranche 1 Reports").
+  const renderTrancheList = (title, suffix) => (
+    <TrancheGroupList
+      title={title}
+      groups={milestoneGroups
+        .filter((group) => group.items.length > 0)
+        .map((group) => ({
+          key: group.key,
+          title: `${group.title} ${suffix}`,
+        }))}
+      onSelect={setOpenTranche}
+      onViewAll={() => setOpenTranche("__all__")}
+      emptyText="No milestones have been set for this startup yet."
+    />
+  );
+
+  // Names the tranche that was drilled into, above its table.
+  const renderTrancheHeading = (allLabel) => (
+    <p className="mb-3 text-sm font-bold text-[#111827]">
+      {openTranche === "__all__" ? allLabel : openTranche}
+    </p>
+  );
+
+  const onDownloadTemplate = () => {
+    try {
+      downloadMilestoneTemplatePDF(approvedMilestones, {
+        startupName: form.name || "Startup",
+        programName: program?.title || "",
+        trancheLabel: openTranche === "__all__" ? "" : openTranche,
+        grantCommitted: stats.committed ? fmtTZS(stats.committed) : "",
+      });
+      toast.success("Milestone plan downloaded");
+    } catch (error) {
+      console.error("Milestone template error:", error);
+      toast.error("Failed to generate the milestone plan");
+    }
+  };
 
   const onSave = async () => {
     if (!program) return;
@@ -530,12 +745,18 @@ const TrackerStartupDetails = () => {
       // released tranche reaches the startup on its own, without depending on a
       // milestone being linked to it.
       const trancheStages = (Array.isArray(form.tranches) ? form.tranches : [])
-        .map((t) => ({
-          title: String(t.title || "").trim(),
-          date: t.plannedDate ? String(t.plannedDate).slice(0, 10) : "",
-          amount: Number(t.amount || 0),
-          status: isDisbursed(t) ? "Disbursed" : "Pending",
-        }))
+        .map((t) => {
+          // The startup counts their milestone timelines from this date, so it
+          // is the disbursement date — falling back to the planned date that
+          // older schedules recorded instead.
+          const date = trancheDisbursedDate(t) || t.plannedDate || "";
+          return {
+            title: String(t.title || "").trim(),
+            date: date ? String(date).slice(0, 10) : "",
+            amount: Number(t.amount || 0),
+            status: isDisbursed(t) ? "Disbursed" : "Pending",
+          };
+        })
         .filter((t) => t.title);
 
       let enterpriseUuid = enterprise?.uuid;
@@ -721,6 +942,51 @@ const TrackerStartupDetails = () => {
         onUpload={onUploadContract}
       />
 
+      {/* Who coaches this startup. The assignment is what puts their milestones
+          in front of a BDA for review, so it lives on the startup's own page
+          rather than only on the separate assignments screen. */}
+      <div className="rounded-2xl border border-black/10 bg-white p-6">
+        <div className="mb-1 flex items-center gap-2">
+          <UserCheck className="h-5 w-5 text-emerald-600" />
+          <h2 className="text-lg font-black tracking-tight text-[#111827]">
+            Business Development Advisor
+          </h2>
+        </div>
+        {/* The control sits on the description's line, the same way the other
+            cards put their action beside their heading. The description names
+            the field, so the select carries its label for screen readers only. */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="text-sm text-[#64748b]">
+            The BDA who reviews this startup's milestone plans and reports.
+          </p>
+
+          <div className="flex items-center gap-3">
+            {assigningBda && (
+              <span className="text-xs font-semibold text-[#64748b]">
+                Assigning...
+              </span>
+            )}
+
+            <select
+              aria-label="Assigned BDA"
+              className={`${inputClass} w-auto min-w-[16rem]`}
+              value={form.bdaUuid || ""}
+              disabled={assigningBda || !form.entreprenuerUuid}
+              onChange={(e) => onAssignBda(e.target.value)}
+            >
+              <option value="">
+                {bdaList.length === 0 ? "No BDAs available" : "Not assigned"}
+              </option>
+              {bdaList.map((bda) => (
+                <option key={bda.uuid} value={bda.uuid}>
+                  {bda.name || bda.email || "Unnamed BDA"}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
       <div className="rounded-2xl border border-black/10 bg-white p-6">
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
@@ -815,7 +1081,7 @@ const TrackerStartupDetails = () => {
               (form.tranches || []).map((tranche, index) => (
                 <div
                   key={index}
-                  className="grid grid-cols-1 gap-3 rounded-xl border border-black/10 p-3 md:grid-cols-[minmax(0,1.2fr)_repeat(4,minmax(0,1fr))_auto] md:items-end"
+                  className="grid grid-cols-1 gap-3 rounded-xl border border-black/10 p-3 md:grid-cols-[minmax(0,1.2fr)_repeat(5,minmax(0,1fr))_auto] md:items-end"
                 >
                   <div>
                     <label className={labelClass}>Tranche</label>
@@ -837,23 +1103,76 @@ const TrackerStartupDetails = () => {
                       onChange={(e) => setTranche(index, "amount", e.target.value)}
                     />
                   </div>
+                  {/* The date the money went out. The startup's milestone
+                      timelines are counted from it, so it is the date mirrored
+                      onto their tracker. */}
                   <div>
-                    <label className={labelClass}>Planned Date</label>
+                    <label className={labelClass}>Disbursed Date</label>
                     <input
                       type="date"
                       className={inputClass}
-                      value={tranche.plannedDate || ""}
-                      onChange={(e) => setTranche(index, "plannedDate", e.target.value)}
+                      value={trancheDisbursedDate(tranche)}
+                      onChange={(e) =>
+                        setTranche(index, "disbursedDate", e.target.value)
+                      }
                     />
                   </div>
                   <div>
-                    <label className={labelClass}>Actual Date</label>
+                    <label className={labelClass}>Reporting Date</label>
                     <input
                       type="date"
                       className={inputClass}
-                      value={tranche.actualDate || ""}
-                      onChange={(e) => setTranche(index, "actualDate", e.target.value)}
+                      value={tranche.reportingDate || ""}
+                      onChange={(e) =>
+                        setTranche(index, "reportingDate", e.target.value)
+                      }
                     />
+                  </div>
+                  {/* The bank's payment advice for this tranche. Uploaded on
+                      pick; the schedule still has to be saved to keep it. */}
+                  <div>
+                    <label className={labelClass}>Bank Advise</label>
+                    {tranche.bankAdvise ? (
+                      <div className="flex items-center gap-2">
+                        <a
+                          href={tranche.bankAdvise}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex min-w-0 items-center gap-1 text-sm font-semibold text-emerald-700 hover:underline"
+                        >
+                          <FileText className="h-4 w-4 shrink-0" />
+                          <span className="truncate">View advise</span>
+                        </a>
+                        <button
+                          type="button"
+                          onClick={() => setTranche(index, "bankAdvise", "")}
+                          className="shrink-0 text-xs font-semibold text-rose-600 hover:underline"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    ) : (
+                      <label
+                        className={`flex cursor-pointer items-center justify-center gap-1 rounded-lg border border-dashed border-[#b7c5e5] px-3 py-2 text-xs font-semibold text-[#082d77] transition hover:bg-[#082d77]/5 ${
+                          adviseUploadingIndex === index
+                            ? "pointer-events-none opacity-60"
+                            : ""
+                        }`}
+                      >
+                        <Paperclip className="h-3.5 w-3.5" />
+                        {adviseUploadingIndex === index
+                          ? "Uploading..."
+                          : "Attach advise"}
+                        <input
+                          type="file"
+                          className="hidden"
+                          onChange={(e) => {
+                            onUploadBankAdvise(index, e.target.files?.[0]);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                    )}
                   </div>
                   <div>
                     <label className={labelClass}>Status</label>
@@ -885,13 +1204,14 @@ const TrackerStartupDetails = () => {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[640px] text-left text-sm">
+            <table className="w-full min-w-[820px] text-left text-sm">
               <thead>
                 <tr className="border-b border-black/10 text-sm font-bold capitalize text-[#334155]">
                   <th className="py-2 pr-4">Tranche</th>
                   <th className="py-2 pr-4">Amount (TZS)</th>
-                  <th className="py-2 pr-4">Planned Date</th>
-                  <th className="py-2 pr-4">Actual Date</th>
+                  <th className="py-2 pr-4">Disbursed Date</th>
+                  <th className="py-2 pr-4">Reporting Date</th>
+                  <th className="py-2 pr-4">Bank Advise</th>
                   <th className="py-2 pr-4">Status</th>
                   <th className="py-2" />
                 </tr>
@@ -908,10 +1228,25 @@ const TrackerStartupDetails = () => {
                         {Number(tranche.amount || 0).toLocaleString()}
                       </td>
                       <td className="py-3 pr-4 text-[#334155]">
-                        {fmtDate(tranche.plannedDate) || "–"}
+                        {fmtDate(trancheDisbursedDate(tranche)) || "–"}
                       </td>
                       <td className="py-3 pr-4 text-[#334155]">
-                        {fmtDate(tranche.actualDate) || "–"}
+                        {fmtDate(tranche.reportingDate) || "–"}
+                      </td>
+                      <td className="py-3 pr-4">
+                        {tranche.bankAdvise ? (
+                          <a
+                            href={tranche.bankAdvise}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 font-semibold text-emerald-700 hover:underline"
+                          >
+                            <FileText className="h-4 w-4" />
+                            View advise
+                          </a>
+                        ) : (
+                          <span className="text-[#94a3b8]">–</span>
+                        )}
                       </td>
                       <td className="py-3 pr-4">
                         <span
@@ -940,251 +1275,340 @@ const TrackerStartupDetails = () => {
         )}
       </div>
 
+      {/* Outside the card, the same way the BDA's sit above their panels — the
+          tabs pick which card is shown, so they are not part of one. */}
+      <div className="flex flex-wrap gap-2">
+        {SECTION_TABS.map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => {
+              // A section always opens on its tranche list, so switching to one
+              // closes whichever tranche was drilled into.
+              setMilestoneTab(tab.id);
+              setOpenTranche("");
+            }}
+            className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+              milestoneTab === tab.id
+                ? "bg-[#082d77] text-white"
+                : "border border-[#082d77]/20 bg-[#082d77]/5 text-[#082d77] hover:bg-[#082d77]/10"
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
       <div className="rounded-2xl border border-black/10 bg-white p-6">
-        <div className="mb-1 flex items-center gap-2">
-          <ClipboardList className="h-5 w-5 text-emerald-600" />
-          <h2 className="text-lg font-black tracking-tight text-[#111827]">
-            Milestones and Reports
-          </h2>
+        <div className="mb-1 flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <ClipboardList className="h-5 w-5 text-emerald-600" />
+            <h2 className="text-lg font-black tracking-tight text-[#111827]">
+              {SECTION_TABS.find((tab) => tab.id === milestoneTab)?.label ||
+                "Milestones"}
+            </h2>
+          </div>
+
+          {/* The approved plan as a document to work from. Only offered once the
+              BDA has approved something — before that there is no plan to
+              print, so the button would produce an empty table. */}
+          {approvedMilestones.length > 0 && (
+            <button
+              type="button"
+              onClick={onDownloadTemplate}
+              className="inline-flex items-center gap-2 rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#15803d]"
+            >
+              <Download className="h-4 w-4" />
+              Download milestone plan
+            </button>
+          )}
         </div>
         <p className="mb-4 text-sm text-[#64748b]">
-          Milestones set and approved by the business development advisor, with the startup's
-          reports. Approve the next tranche once the plan is BDA-approved, or decline it.
+          {SECTION_SUBTITLE[milestoneTab]}
         </p>
 
-        {/* Tranche picker — opens a tranche as its own view. Replaced by that
-            tranche's milestones once one is selected. */}
-        {milestones.length > 0 && !openTranche && (
-          <TrancheGroupList
-            title="Tranche Milestones"
-            groups={milestoneGroups.map((g) => ({
-              key: g.key,
-              title: `${g.title} Milestones`,
-            }))}
-            onSelect={setOpenTranche}
-            onViewAll={() => setOpenTranche("__all__")}
-            emptyText="No milestones have been set for this startup yet."
-          />
-        )}
+        {/* One tab per tranche, inside every section. The open one stays in the
+            URL, so the view can still be linked to and the back button still
+            works. */}
+        {milestones.length > 0 &&
+          !openTranche &&
+          renderTrancheList(
+            milestoneTab === "report" ? "Tranche Reports" : "Tranche Milestones",
+            milestoneTab === "report" ? "Reports" : "Milestones",
+          )}
 
-        {openTranche && (
-          <p className="mb-4 text-sm font-bold text-[#111827]">
-            {openTranche === "__all__" ? "All milestones" : openTranche}
-          </p>
-        )}
+        {milestones.length > 0 &&
+          openTranche &&
+          renderTrancheHeading(
+            milestoneTab === "report" ? "All reports" : "All milestones",
+          )}
 
         {milestones.length === 0 ? (
           <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
             No milestones have been set for this startup yet.
           </div>
-        ) : !openTranche ? null : (
-          <div className="space-y-3">
-            {visibleMilestones.map((milestone, index) => {
-              const ps = milestone.planStatus || "";
-              const disbursed =
-                ps === PLAN_STATUS.DISBURSED || Boolean(milestone.disbursed);
-              const disbursable = canDisburse(ps, disbursed);
-              const attachments = parseAttachments(milestone.submissionAttachments);
-              const kpis = parseKpiPlan(milestone.kpiPlan);
-              const busy = reviewingId === milestone.uuid;
-              // The startup has sent a report the BDA has not ruled on yet. The
-              // BDA reviews first; it reaches finance as SENT_TO_FINANCE.
-              const reportAwaitingBda =
-                String(milestone.status || "").toLowerCase() === "submitted" &&
-                ps !== PLAN_STATUS.SENT_TO_FINANCE;
-              // The BDA declined the report, but the plan is still approved — so
-              // it lands with finance for the final call: approve to override and
-              // disburse, or decline to send it back to the startup. (A finance
-              // decline sets planStatus to rejected, which is how we tell the two
-              // apart.)
-              const bdaDeclined =
-                String(milestone.status || "").toLowerCase() === "rejected" &&
-                ps !== PLAN_STATUS.REJECTED &&
-                !disbursed;
+        ) : !openTranche ? null : milestoneTab === "milestones" &&
+          approvedMilestones.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
+            No approved milestones yet. Plans appear here once the business
+            development advisor approves them.
+          </div>
+        ) : milestoneTab === "milestones" ? (
+          // The approved plan only — finance acts on what the BDA has signed
+          // off, so a plan still under review would just be noise here. It is
+          // read-only: the BDA's comment is shown because it is the reasoning
+          // behind the approval finance is acting on.
+          <div className="-mx-6 overflow-x-auto px-1">
+            <table
+              className="w-full table-fixed border-collapse bg-white"
+              style={{ minWidth: "900px" }}
+            >
+              <thead>
+                <tr>
+                  <th className={`${planHeadClass} w-[24%]`}>Milestone</th>
+                  <th className={`${planHeadClass} w-[14%]`}>Budgeted amount</th>
+                  <th className={`${planHeadClass} w-[12%]`}>Timeline</th>
+                  <th className={`${planHeadClass} w-[18%]`}>Milestone status</th>
+                  <th className={`${planHeadClass} w-[32%]`}>BDA comment</th>
+                </tr>
+              </thead>
+              <tbody>
+                {approvedMilestones.map((milestone) => (
+                  <tr
+                    key={milestone.uuid}
+                    className="odd:bg-white even:bg-[#f8fafc]"
+                  >
+                    <td className={`${planCellClass} font-bold text-[#111827]`}>
+                      {milestone.title}
+                      {milestone.tranchePlannedUse ? (
+                        <span className="mt-1 block text-xs font-normal text-[#64748b]">
+                          {milestone.tranchePlannedUse}
+                        </span>
+                      ) : null}
+                    </td>
+                    <td className={planCellClass}>
+                      {formatReportAmount(milestonePlannedAmount(milestone))}
+                    </td>
+                    <td className={planCellClass}>
+                      {milestoneTimelineSpan(milestone) || (
+                        <span className="text-[#94a3b8]">—</span>
+                      )}
+                    </td>
+                    <td className={planCellClass}>
+                      <span
+                        className={`inline-block rounded-full px-2.5 py-1 text-xs font-bold ${planStatusPill(
+                          milestone.planStatus,
+                        )}`}
+                      >
+                        {planStatusLabel(milestone.planStatus)}
+                      </span>
+                    </td>
+                    <td className={planCellClass}>
+                      {milestone.mentorReviewNotes || (
+                        <span className="text-[#94a3b8]">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : milestoneTab === "status" ? (
+          <div className="-mx-6 px-1">
+            {/* The open tranche only. Its tab names it, so the tranche column is
+                dropped — except on "All tranches". */}
+            <MilestoneStatusTable
+              rows={visibleMilestones}
+              showTranche={openTranche === "__all__"}
+            />
+          </div>
+        ) : (
+          // The startup's reporting grid with the finance decision in it — the
+          // whole review happens in this one table.
+          <div className="-mx-6 px-1">
+            <MilestoneReportTable
+              showReview
+              rows={visibleMilestones.map((milestone) => {
+                const ps = milestone.planStatus || "";
+                const disbursed =
+                  ps === PLAN_STATUS.DISBURSED || Boolean(milestone.disbursed);
+                const disbursable = canDisburse(ps, disbursed);
+                const kpis = parseKpiPlan(milestone.kpiPlan);
+                const busy = reviewingId === milestone.uuid;
+                // The startup has sent a report the BDA has not ruled on yet.
+                // The BDA reviews first; it reaches finance as SENT_TO_FINANCE.
+                const reportAwaitingBda =
+                  String(milestone.status || "").toLowerCase() === "submitted" &&
+                  ps !== PLAN_STATUS.SENT_TO_FINANCE;
+                // The BDA declined the report, but the plan is still approved —
+                // so it lands with finance for the final call: approve to
+                // override and disburse, or decline to send it back to the
+                // startup. (A finance decline sets planStatus to rejected,
+                // which is how we tell the two apart.)
+                const bdaDeclined =
+                  String(milestone.status || "").toLowerCase() === "rejected" &&
+                  ps !== PLAN_STATUS.REJECTED &&
+                  !disbursed;
+                // The BDA asked the startup for more detail. That is between the
+                // two of them — finance has nothing to decide until it comes
+                // back, so this must not read as "awaiting BDA approval".
+                const reportInfoRequested =
+                  String(milestone.status || "").toLowerCase() ===
+                  REPORT_STATUS.INFO_REQUESTED;
+                const sentToFinance =
+                  !disbursed && ps === PLAN_STATUS.SENT_TO_FINANCE;
 
-              return (
-                <div
-                  key={milestone.uuid}
-                  className="rounded-xl border border-black/10 p-4"
-                >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    {/* Same shape as the staff view: numbered badge, title, then
-                        the key activity (stored on tranchePlannedUse). */}
-                    <div className="flex min-w-0 flex-1 gap-3">
-                      <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
-                        {milestone.status === "completed" ? "✓" : index + 1}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="font-bold text-[#111827]">{milestone.title}</p>
-                        {milestone.tranchePlannedUse ? (
-                          <p className="mt-2 text-sm leading-6 text-[#64748b]">
-                            {milestone.tranchePlannedUse}
+                return {
+                  uuid: milestone.uuid,
+                  title: milestone.title,
+                  activity: milestone.tranchePlannedUse,
+                  // Planned funds have their own column; the span does not.
+                  timeline: milestoneTimelineSpan(milestone),
+                  report: reportFromMilestone(milestone),
+                  attachments: parseAttachments(milestone.submissionAttachments),
+
+                  // Write the comment in the row being decided: an editable box
+                  // while the decision is open, the recorded verdict after.
+                  reviewComment: disbursable ? (
+                    <textarea
+                      className={`${inputClass} w-full`}
+                      rows={3}
+                      placeholder="Comment for the startup (required to decline or request more information)"
+                      value={financeNote(milestone)}
+                      onChange={(e) =>
+                        setFinanceNotes((prev) => ({
+                          ...prev,
+                          [milestone.uuid]: e.target.value,
+                        }))
+                      }
+                    />
+                  ) : disbursed || ps === PLAN_STATUS.REJECTED ? (
+                    <div className="space-y-1">
+                      <p
+                        className={`text-xs font-bold ${
+                          disbursed ? "text-emerald-700" : "text-rose-700"
+                        }`}
+                      >
+                        {disbursed ? "Approved" : "Declined"}
+                      </p>
+                      <p className="text-[#334155]">
+                        {milestone.financeReviewNotes || "No comment"}
+                      </p>
+                    </div>
+                  ) : null,
+
+                  action: disbursed ? (
+                    <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-center text-xs font-bold text-emerald-700">
+                      Approved
+                    </span>
+                  ) : ps === PLAN_STATUS.REJECTED ? (
+                    <span className="rounded-full bg-rose-50 px-2.5 py-1 text-center text-xs font-bold text-rose-700">
+                      Declined
+                    </span>
+                  ) : // Checked before `disbursable`: once information has been
+                  // asked for, the row waits on the startup rather than
+                  // offering the verdict again. Their resubmission moves the
+                  // status back and the dropdown returns.
+                  ps === PLAN_STATUS.REVISION_REQUESTED || reportInfoRequested ? (
+                    <span className="text-xs font-semibold text-[#8a6500]">
+                      Information requested from the startup
+                    </span>
+                  ) : disbursable ? (
+                    <select
+                      className={inputClass}
+                      value=""
+                      disabled={busy}
+                      onChange={(e) => {
+                        if (e.target.value)
+                          onFinanceVerdict(milestone, e.target.value);
+                      }}
+                    >
+                      <option value="">
+                        {busy ? "Processing..." : "Select verdict"}
+                      </option>
+                      <option value="approve">Approve</option>
+                      <option value="decline">Decline</option>
+                      <option value="info">Request further information</option>
+                    </select>
+                  ) : reportAwaitingBda ? (
+                    <span className="text-xs font-semibold text-[#8a6500]">
+                      Awaiting BDA review
+                    </span>
+                  ) : (
+                    <span className="text-xs font-semibold text-[#64748b]">
+                      Awaiting BDA approval of the plan
+                    </span>
+                  ),
+
+                  // What the decision rests on beyond the row itself: where the
+                  // report stands and the KPI plan. The comment is written in
+                  // the row's own column.
+                  detail:
+                    sentToFinance ||
+                    bdaDeclined ||
+                    kpis.length > 0 ||
+                    (SHOW_BDA_COMMENT && milestone.mentorReviewNotes) ? (
+                      <div className="space-y-3">
+                        {sentToFinance && (
+                          <div className="flex items-center gap-2 rounded-lg border border-[#163b8f]/20 bg-[#163b8f]/5 px-3 py-2 text-sm font-semibold text-[#163b8f]">
+                            <CheckCircle2 className="h-4 w-4 shrink-0" />
+                            BDA approved — report submitted for your review.
+                          </div>
+                        )}
+
+                        {bdaDeclined && (
+                          <div className="flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+                            <Clock className="mt-0.5 h-4 w-4 shrink-0" />
+                            The business coach declined this report. Review it and
+                            make the final decision — approve to override and
+                            disburse, or decline to send it back to the startup
+                            with your feedback.
+                          </div>
+                        )}
+
+                        {SHOW_BDA_COMMENT && milestone.mentorReviewNotes && (
+                          <p className="text-sm text-[#334155]">
+                            <span className="font-semibold text-[#111827]">
+                              BDA comment:
+                            </span>{" "}
+                            {milestone.mentorReviewNotes}
                           </p>
-                        ) : null}
+                        )}
+
+                        {kpis.length > 0 && (
+                          <div className="overflow-x-auto">
+                            <table className="w-full min-w-[420px] text-left text-xs">
+                              <thead>
+                                <tr className="text-[#64748b]">
+                                  <th className="py-1 pr-3 font-semibold">KPI</th>
+                                  <th className="py-1 pr-3 font-semibold">Target</th>
+                                  <th className="py-1 font-semibold">Actual</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {kpis.map((kpi, i) => (
+                                  <tr key={i} className="border-t border-black/5">
+                                    <td className="py-1 pr-3 text-[#334155]">
+                                      {kpi.name || "—"}
+                                    </td>
+                                    <td className="py-1 pr-3 text-[#334155]">
+                                      {kpi.target || "—"}
+                                    </td>
+                                    <td className="py-1 text-[#334155]">
+                                      {kpi.currentValue || "—"}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
                       </div>
-                    </div>
-
-                    {/* Final finance decision, top-right. */}
-                    {disbursed ? (
-                      <span className="shrink-0 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">
-                        Approved
-                      </span>
-                    ) : ps === PLAN_STATUS.REJECTED ? (
-                      <span className="shrink-0 rounded-full bg-rose-50 px-3 py-1 text-xs font-bold text-rose-700">
-                        Declined
-                      </span>
-                    ) : bdaDeclined ? (
-                      <span className="shrink-0 rounded-full bg-amber-50 px-3 py-1 text-xs font-bold text-amber-700">
-                        Business coach declined — needs your decision
-                      </span>
-                    ) : null}
-                  </div>
-
-                  {/* Indented to clear the number badge (2.5rem + 0.75rem gap)
-                      so the report and actions line up with the milestone name. */}
-                  <div className="sm:pl-[3.25rem]">
-
-                  {/* The BDA approved the startup's report and sent it here, so
-                      the finance officer clearly sees it is ready to act on. */}
-                  {!disbursed && ps === PLAN_STATUS.SENT_TO_FINANCE && (
-                    <div className="mt-3 flex items-center gap-2 rounded-lg border border-[#163b8f]/20 bg-[#163b8f]/5 px-3 py-2 text-sm font-semibold text-[#163b8f]">
-                      <CheckCircle2 className="h-4 w-4 shrink-0" />
-                      BDA approved — report submitted for your review.
-                    </div>
-                  )}
-
-                  {/* The BDA declined the report — finance makes the final call. */}
-                  {bdaDeclined && (
-                    <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-300/50 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
-                      <Clock className="mt-0.5 h-4 w-4 shrink-0" />
-                      The business coach declined this report. Review it and make
-                      the final decision — approve to override and disburse, or
-                      decline to send it back to the startup with your feedback.
-                    </div>
-                  )}
-
-                  {/* Report */}
-                  <div className="mt-3 rounded-lg bg-[#f8fafc] p-3 text-sm">
-                    <p className="text-[#334155]">
-                      <span className="font-semibold text-[#111827]">Report:</span>{" "}
-                      {milestone.submissionNotes || "No report submitted yet."}
-                    </p>
-                    {milestone.mentorReviewNotes && (
-                      <p className="mt-1 text-[#334155]">
-                        <span className="font-semibold text-[#111827]">
-                          BDA comment:
-                        </span>{" "}
-                        {milestone.mentorReviewNotes}
-                      </p>
-                    )}
-                    {milestone.financeReviewNotes && (
-                      <p className="mt-1 text-[#334155]">
-                        <span className="font-semibold text-[#111827]">
-                          Finance feedback:
-                        </span>{" "}
-                        {milestone.financeReviewNotes}
-                      </p>
-                    )}
-                    {attachments.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {attachments.map((url, i) => (
-                          <a
-                            key={i}
-                            href={url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="inline-flex items-center gap-1.5 text-xs font-bold text-green-600 transition hover:text-green-700"
-                          >
-                            <FileText className="h-3.5 w-3.5" />
-                            Evidence {i + 1}
-                          </a>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* A report the startup has sent but the BDA has not reviewed
-                      yet — finance waits for that verdict before acting. */}
-                  {reportAwaitingBda && (
-                    <p className="mt-3 text-xs font-semibold text-[#8a6500]">
-                      Report submitted — awaiting BDA review
-                    </p>
-                  )}
-
-                  {/* KPI plan */}
-                  {kpis.length > 0 && (
-                    <div className="mt-3 overflow-x-auto">
-                      <table className="w-full min-w-[420px] text-left text-xs">
-                        <thead>
-                          <tr className="text-[#64748b]">
-                            <th className="py-1 pr-3 font-semibold">KPI</th>
-                            <th className="py-1 pr-3 font-semibold">Target</th>
-                            <th className="py-1 font-semibold">Actual</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {kpis.map((kpi, i) => (
-                            <tr key={i} className="border-t border-black/5">
-                              <td className="py-1 pr-3 text-[#334155]">{kpi.name || "—"}</td>
-                              <td className="py-1 pr-3 text-[#334155]">{kpi.target || "—"}</td>
-                              <td className="py-1 text-[#334155]">{kpi.currentValue || "—"}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-
-                  {/* Finance action. The approved/declined outcome shows in the
-                      card's top-right, so here we only render the actions or the
-                      remaining waiting states. */}
-                  <div className="mt-3 flex flex-wrap items-center justify-end gap-2 border-t border-black/5 pt-3">
-                    {disbursed ? null : disbursable ? (
-                      <>
-                        <textarea
-                          className={`${inputClass} w-full`}
-                          rows={2}
-                          placeholder="Feedback for the startup (required to decline)"
-                          value={financeNote(milestone)}
-                          onChange={(e) =>
-                            setFinanceNotes((prev) => ({
-                              ...prev,
-                              [milestone.uuid]: e.target.value,
-                            }))
-                          }
-                        />
-                        <button
-                          type="button"
-                          onClick={() => onDeclineMilestone(milestone)}
-                          disabled={busy}
-                          className="rounded-lg border border-rose-200 px-4 py-2 text-sm font-semibold text-rose-600 transition hover:bg-rose-50 disabled:opacity-60"
-                        >
-                          Decline
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onApproveTranche(milestone)}
-                          disabled={busy}
-                          className="rounded-lg bg-[#16a34a] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#15803d] disabled:opacity-60"
-                        >
-                          {busy ? "Processing..." : "Approve"}
-                        </button>
-                      </>
-                    ) : ps === PLAN_STATUS.REJECTED ? null : ps ===
-                      PLAN_STATUS.REVISION_REQUESTED ? (
-                      <span className="text-xs font-semibold text-[#8a6500]">
-                        Information requested from the startup
-                      </span>
-                    ) : (
-                      <span className="text-xs font-semibold text-[#64748b]">
-                        Awaiting BDA approval of the plan
-                      </span>
-                    )}
-                  </div>
-                  </div>
-                </div>
-              );
-            })}
+                    ) : null,
+                };
+              })}
+            />
           </div>
         )}
       </div>

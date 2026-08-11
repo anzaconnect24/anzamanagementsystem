@@ -28,6 +28,8 @@ export const PLAN_STATUS = {
   DISBURSED: "disbursed",
 };
 
+// Labels describe the milestone, not the money: disbursement is a state of the
+// tranche, so the milestone whose report released it reads "Report approved".
 export const PLAN_STATUS_LABEL = {
   draft: "Draft",
   submitted: "Submitted by entrepreneur",
@@ -37,7 +39,7 @@ export const PLAN_STATUS_LABEL = {
   plan_approved: "BDA approved",
   rejected: "Rejected",
   sent_to_finance: "Sent to finance",
-  disbursed: "Disbursed",
+  disbursed: "Report approved",
 };
 
 // Tailwind pill classes (match the app's existing status pill palette).
@@ -52,6 +54,26 @@ export const PLAN_STATUS_PILL = {
   sent_to_finance: "bg-[#ede9fe] text-[#5b21b6]",
   disbursed: "bg-[#e1f0d8] text-[#2d6e1f]",
 };
+
+// ---- Report outcomes ----------------------------------------------------
+//
+// The milestone's own `status` field, as the report lifecycle uses it. Separate
+// from PLAN_STATUS: a plan can stay approved while its report goes back and
+// forth. `info_requested` is the BDA asking for more detail — it reopens the
+// row for the startup exactly like a decline, but it is not a rejection and
+// must not be shown as one.
+export const REPORT_STATUS = {
+  SUBMITTED: "submitted",
+  COMPLETED: "completed",
+  REJECTED: "rejected",
+  INFO_REQUESTED: "info_requested",
+};
+
+// Statuses the startup can submit or resubmit a report from.
+export const isReportOpen = (status) =>
+  ![REPORT_STATUS.SUBMITTED, REPORT_STATUS.COMPLETED].includes(
+    String(status || "").toLowerCase(),
+  );
 
 // ---- Verification outcomes (Phase 7) ------------------------------------
 export const VERIFICATION = {
@@ -156,6 +178,21 @@ export const isPlanApproved = (planStatus) =>
     PLAN_STATUS.SENT_TO_FINANCE,
     PLAN_STATUS.DISBURSED,
   ].includes(planStatus);
+
+// The entrepreneur can revise their own plan while it is still with the BDA,
+// after it comes back for changes, and after approval — an approved plan that
+// changes goes back for re-approval (see reviseTrackerMilestone), so what the
+// BDA signed off always matches what is on record. Revision closes once the
+// money is committed: sent to finance, disbursed, or rejected outright.
+export const canRevisePlan = (planStatus) =>
+  [
+    PLAN_STATUS.DRAFT,
+    PLAN_STATUS.SUBMITTED,
+    PLAN_STATUS.UNDER_REVIEW,
+    PLAN_STATUS.REVISION_REQUESTED,
+    PLAN_STATUS.RESUBMITTED,
+    PLAN_STATUS.APPROVED,
+  ].includes(planStatus || PLAN_STATUS.DRAFT);
 
 // A tranche can only be disbursed once the plan is approved (Phase 4 rule).
 export const canDisburse = (planStatus, disbursed) =>

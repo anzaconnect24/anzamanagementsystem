@@ -7,6 +7,7 @@ import GrantReportButton from "@/components/reports/GrantReportButton";
 import {
   createTrackerMilestone,
   getEntrepreneurTrackerDashboard,
+  reviseTrackerMilestone,
   submitTrackerMilestone,
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
@@ -16,15 +17,30 @@ import TrancheGroupList, {
 } from "@/components/tracker/TrancheGroupList";
 import {
   PLAN_STATUS,
+  REPORT_STATUS,
+  canRevisePlan,
   isPlanApproved,
+  isReportOpen,
   parseKpiPlan,
 } from "@/utils/trancheWorkflow";
+import MilestoneReportTable from "@/components/tracker/MilestoneReportTable";
+import MilestoneStatusTable from "@/components/tracker/MilestoneStatusTable";
 import {
-  UploadCloud,
+  TIMELINE_SPAN_OPTIONS,
+  buildMilestoneDescription,
+  buildSubmissionNotes,
+  computeVariance,
+  milestonePlannedAmount,
+  milestoneReportNotes,
+  milestoneTimelineSpan,
+  parseMilestonePlan,
+  reportFromMilestone,
+  timelineSpanDueDate,
+} from "@/utils/milestoneReport";
+import {
   BarChart3,
   Flag,
   ClipboardList,
-  FileText,
   Wallet,
   Users,
   UserCheck,
@@ -38,10 +54,9 @@ const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
 const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 const BRAND_BLUE = "#082d77";
 
-const formatStatusLabel = (value) =>
-  String(value || "pending")
-    .replaceAll("_", " ")
-    .replace(/\b\w/g, (char) => char.toUpperCase());
+// The business coach's verdict and comment are hidden from the startup's
+// reporting grid for now — flip this to bring the line back.
+const SHOW_COACH_COMMENT = false;
 
 const parseSubmissionAttachments = (value) => {
   if (Array.isArray(value)) return value;
@@ -93,15 +108,35 @@ const baseInputClass =
 const milestoneLabelClass =
   "mb-1 block text-xs font-black tracking-wide text-[#082d77]";
 
+// The tranche row and the milestone rows share one column template so their
+// inputs are the same width and line up. The tranche row fills the first two
+// tracks and leaves the rest empty. The trailing column holds each row's Remove
+// button and is a fixed width rather than `auto`: these are separate grids, so
+// an `auto` track would resolve against each row's own content and the two rows
+// would drift apart. The four `minmax(0,1fr)` tracks stay equal whatever sits in
+// them, so an item may safely span them.
+const milestoneGridClass =
+  "grid grid-cols-1 gap-3 md:grid-cols-[repeat(4,minmax(0,1fr))_5.5rem] md:items-end";
+
+const milestoneRemoveClass =
+  "rounded-xl bg-rose-50 px-3 py-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50";
+
 // How often the page quietly refetches so finance's changes (committed amount,
 // released tranches) appear without a manual reload.
 const DASHBOARD_REFRESH_MS = 60000;
 
+// The startup plans against their own tranches, not the finance officer's
+// schedule — milestones can be drafted before finance has configured one, and a
+// plan is not held up waiting for it. Add entries here to offer more.
+const MILESTONE_TRANCHE_OPTIONS = ["Tranche 1", "Tranche 2"];
+
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
 const emptyMilestoneRow = () => ({
   title: "",
-  dueDate: "",
   tranchePlannedUse: "",
-  description: "",
+  plannedAmount: "",
+  timelineSpan: "",
 });
 
 const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
@@ -134,20 +169,26 @@ const DataTile = ({ label, value, helper }) => (
   </div>
 );
 
-// Completed reads green and pending amber, so a milestone's state is legible at
-// a glance rather than uniform grey.
-const statusTone = (value) => {
-  const label = String(value || "").toLowerCase();
-  if (label.includes("complete")) return "text-green-600";
-  if (label.includes("pending")) return "text-amber-600";
-  return "text-slate-700";
-};
+// One reviewer's verdict on a milestone report: what they decided, then what
+// they wrote. Renders an em dash when they have not ruled on it yet.
+const ReviewCell = ({ outcome, tone, note }) => {
+  if (!outcome && !note) return null;
 
-const StatusText = ({ children }) => (
-  <span className={`text-sm font-semibold ${statusTone(children)}`}>
-    {children}
-  </span>
-);
+  return (
+    <div className="space-y-1">
+      {outcome && (
+        <p
+          className={`text-xs font-bold ${
+            tone === "approved" ? "text-emerald-700" : "text-rose-700"
+          }`}
+        >
+          {outcome}
+        </p>
+      )}
+      <p className="text-[#334155]">{note || "No comment"}</p>
+    </div>
+  );
+};
 
 const EntrepreneurMilestones = () => {
   const navigate = useNavigate();
@@ -160,7 +201,6 @@ const EntrepreneurMilestones = () => {
   const [weeklyLogs, setWeeklyLogs] = useState([]);
   const [sessions, setSessions] = useState([]);
   const [trancheStages, setTrancheStages] = useState([]);
-  const [notesById, setNotesById] = useState({});
   const [filesById, setFilesById] = useState({});
   const [submittingById, setSubmittingById] = useState({});
   const [kpiProgressById, setKpiProgressById] = useState({});
@@ -185,6 +225,47 @@ const EntrepreneurMilestones = () => {
       return { ...prev, [uuid]: arr };
     });
   };
+
+  // Revising a milestone already sent to the BDA. `revisingUuid` is the one
+  // open for editing; `reviseForm` holds its unsaved values.
+  const [revisingUuid, setRevisingUuid] = useState(null);
+  const [reviseForm, setReviseForm] = useState(null);
+  const [savingRevision, setSavingRevision] = useState(false);
+
+  const openRevision = (milestone) => {
+    const plan = parseMilestonePlan(milestone?.description);
+    setRevisingUuid(milestone.uuid);
+    setReviseForm({
+      title: milestone.title || "",
+      tranchePlannedUse: milestone.tranchePlannedUse || "",
+      plannedAmount: milestonePlannedAmount(milestone),
+      timelineSpan: plan.timelineSpan || "",
+      linkedTranche: milestone.linkedTranche || "",
+    });
+  };
+
+  const closeRevision = () => {
+    setRevisingUuid(null);
+    setReviseForm(null);
+  };
+
+  const setReviseField = (key, value) =>
+    setReviseForm((prev) => ({ ...(prev || {}), [key]: value }));
+
+  // Milestone reporting grid (planned vs actual, variance, evidence). Unsaved
+  // edits live here; anything not touched falls back to what was submitted.
+  const [reportById, setReportById] = useState({});
+
+  const getReportRow = (item) =>
+    reportById[item.uuid] || reportFromMilestone(item);
+
+  const setReportField = (uuid, key, value) =>
+    setReportById((prev) => {
+      const current =
+        prev[uuid] ||
+        reportFromMilestone(milestones.find((m) => m.uuid === uuid));
+      return { ...prev, [uuid]: { ...current, [key]: value } };
+    });
   // Milestones section is tabbed: "create" (+ Milestone), "report" (Milestone
   // Reporting) and "status" (Milestone Status).
   const [milestoneTab, setMilestoneTab] = useState("create");
@@ -197,13 +278,14 @@ const EntrepreneurMilestones = () => {
     capitalMobilised: "",
     activeCustomers: "",
   });
-  // The milestone form collects Milestone / Key activities / Verification /
+  // The milestone form collects Milestone / Key activities / Planned amount /
   // Timeline, and takes several rows so a whole plan can be entered before it
-  // goes to the BDA. Key activities and Verification reuse the
-  // tranchePlannedUse and description fields the API already stores.
-  // The tranche is chosen once for the whole form — every milestone entered
-  // below is linked to it.
+  // goes to the BDA. Key activities reuse the tranchePlannedUse field the API
+  // already stores. Each milestone runs for its own timeline; only the tranche
+  // and the date the plan was set are shared by every row.
   const [milestoneTranche, setMilestoneTranche] = useState("");
+  // The date the plan is being set. Milestone due dates are counted from it.
+  const [milestoneSetDate, setMilestoneSetDate] = useState(todayISO);
   const [milestoneRows, setMilestoneRows] = useState([emptyMilestoneRow()]);
 
   const addMilestoneRow = () =>
@@ -281,8 +363,21 @@ const EntrepreneurMilestones = () => {
       return;
     }
 
-    if (!String(notesById[uuid] || "").trim()) {
-      toast.error("Please add a report before submitting for mentor review");
+    // Everything is reported in the grid now, so validate the row: a status is
+    // always required, and a variance has to be explained.
+    const row = targetMilestone ? getReportRow(targetMilestone) : null;
+
+    if (!row?.completionStatus) {
+      toast.error("Select a status for this milestone");
+      return;
+    }
+
+    const variance = computeVariance(row.plannedAmount, row.actualAmount);
+
+    if (variance !== null && variance !== 0 && !String(row.narrative).trim()) {
+      toast.error(
+        "Planned and actual amounts differ — add a narrative explaining the variance",
+      );
       return;
     }
 
@@ -301,14 +396,20 @@ const EntrepreneurMilestones = () => {
         }
       }
 
+      // The row travels as structured data; its narrative doubles as the report
+      // text, so anything reading submissionNotes still gets readable prose.
       await submitTrackerMilestone(uuid, {
-        submissionNotes: notesById[uuid] || "",
+        submissionNotes: buildSubmissionNotes(row.narrative, row),
         submissionAttachments: uploadedAttachmentUrls,
       });
 
       toast.success("Report submitted for mentor review");
       setFilesById((prev) => ({ ...prev, [uuid]: [] }));
-      setNotesById((prev) => ({ ...prev, [uuid]: "" }));
+      setReportById((prev) => {
+        const next = { ...prev };
+        delete next[uuid];
+        return next;
+      });
       loadDashboard(selectedEnterpriseUuid);
     } catch (error) {
       toast.error(error?.response?.data?.message || "Failed to submit milestone");
@@ -324,7 +425,12 @@ const EntrepreneurMilestones = () => {
       const merged = getKpiProgress(item);
       await submitTrackerMilestone(item.uuid, {
         kpiPlan: merged,
-        submissionNotes: notesById[item.uuid] || item.submissionNotes || "",
+        // Rebuild rather than resend the raw value — the stored notes carry the
+        // reporting grid behind a marker that must survive this save.
+        submissionNotes: buildSubmissionNotes(
+          milestoneReportNotes(item.submissionNotes),
+          getReportRow(item),
+        ),
         requestVerification: Boolean(requestVerification),
       });
       toast.success(
@@ -347,8 +453,8 @@ const EntrepreneurMilestones = () => {
       (row) =>
         row.title.trim() ||
         row.tranchePlannedUse.trim() ||
-        row.description.trim() ||
-        row.dueDate,
+        String(row.plannedAmount).trim() ||
+        row.timelineSpan,
     );
 
     if (!filled.length) {
@@ -366,10 +472,22 @@ const EntrepreneurMilestones = () => {
       for (const row of filled) {
         await createTrackerMilestone({
           title: row.title.trim(),
-          dueDate: row.dueDate || null,
+          // Each milestone runs for its own span; the date the backend stores is
+          // that span counted from the date the plan was set.
+          dueDate:
+            timelineSpanDueDate(row.timelineSpan, milestoneSetDate) || null,
           linkedTranche: milestoneTranche || null,
           tranchePlannedUse: row.tranchePlannedUse.trim() || null,
-          description: row.description.trim() || null,
+          // The description carries only the plan marker — the planned amount
+          // and the span (see buildMilestoneDescription). trancheAmount is sent
+          // too so a backend that has the column gets a real number.
+          description: buildMilestoneDescription("", {
+            plannedAmount: row.plannedAmount,
+            timelineSpan: row.timelineSpan,
+          }),
+          trancheAmount: String(row.plannedAmount).trim()
+            ? Number(row.plannedAmount)
+            : null,
           planStatus: PLAN_STATUS.SUBMITTED,
         });
         created += 1;
@@ -377,6 +495,7 @@ const EntrepreneurMilestones = () => {
 
       setMilestoneRows([emptyMilestoneRow()]);
       setMilestoneTranche("");
+      setMilestoneSetDate(todayISO());
       toast.success(
         created === 1
           ? "Milestone submitted for review"
@@ -395,6 +514,179 @@ const EntrepreneurMilestones = () => {
       setIsCreatingMilestone(false);
     }
   };
+
+  // Save an edit to a milestone that is already with the BDA. An approved plan
+  // that changes has to be approved again — otherwise the record would no
+  // longer be the thing the BDA signed off — so every revision goes back as
+  // "resubmitted" and the milestone reappears in their review queue.
+  const onSaveRevision = async (milestone) => {
+    const form = reviseForm;
+    if (!form) return;
+
+    if (!form.title.trim()) {
+      toast.error("Every milestone needs a name");
+      return;
+    }
+
+    setSavingRevision(true);
+    try {
+      await reviseTrackerMilestone(milestone.uuid, {
+        title: form.title.trim(),
+        linkedTranche: form.linkedTranche || null,
+        tranchePlannedUse: form.tranchePlannedUse.trim() || null,
+        // The due date is re-derived from the span, counted from the date the
+        // milestone was originally set rather than today, so revising a plan
+        // does not quietly push its deadline out.
+        dueDate:
+          timelineSpanDueDate(
+            form.timelineSpan,
+            String(milestone.createdAt || "").slice(0, 10) || undefined,
+          ) || milestone.dueDate || null,
+        description: buildMilestoneDescription("", {
+          plannedAmount: form.plannedAmount,
+          timelineSpan: form.timelineSpan,
+        }),
+        trancheAmount: String(form.plannedAmount).trim()
+          ? Number(form.plannedAmount)
+          : null,
+        planStatus: PLAN_STATUS.RESUBMITTED,
+      });
+
+      toast.success("Milestone revised and sent back for approval");
+      closeRevision();
+      loadDashboard(selectedEnterpriseUuid);
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to revise this milestone",
+      );
+    } finally {
+      setSavingRevision(false);
+    }
+  };
+
+  // Passed to every per-tranche MilestoneStatusTable, so the Revise action
+  // behaves the same in each group.
+  const renderReviseAction = (milestone) =>
+    canRevisePlan(milestone.planStatus) ? (
+      <button
+        type="button"
+        onClick={() =>
+          revisingUuid === milestone.uuid
+            ? closeRevision()
+            : openRevision(milestone)
+        }
+        className="rounded-lg border border-[#082d77]/20 bg-white px-3 py-1.5 text-xs font-bold text-[#082d77] transition hover:bg-[#082d77]/5"
+      >
+        {revisingUuid === milestone.uuid ? "Cancel" : "Revise"}
+      </button>
+    ) : null;
+
+  const renderReviseForm = (milestone) =>
+    revisingUuid === milestone.uuid && reviseForm ? (
+      <div className="space-y-3">
+        <p className="text-xs font-semibold text-[#082d77]">
+          {isPlanApproved(milestone.planStatus)
+            ? "This milestone is already approved — saving your changes sends it back to your business coach for approval again."
+            : "Update your milestone and send it back to your business coach."}
+        </p>
+
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div>
+            <label className={milestoneLabelClass} htmlFor="revise-title">
+              Milestone
+            </label>
+            <input
+              id="revise-title"
+              className={baseInputClass}
+              value={reviseForm.title}
+              onChange={(e) => setReviseField("title", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={milestoneLabelClass} htmlFor="revise-activities">
+              Key activities
+            </label>
+            <input
+              id="revise-activities"
+              className={baseInputClass}
+              value={reviseForm.tranchePlannedUse}
+              onChange={(e) =>
+                setReviseField("tranchePlannedUse", e.target.value)
+              }
+            />
+          </div>
+          <div>
+            <label className={milestoneLabelClass} htmlFor="revise-tranche">
+              Tranche
+            </label>
+            <select
+              id="revise-tranche"
+              className={baseInputClass}
+              value={reviseForm.linkedTranche}
+              onChange={(e) => setReviseField("linkedTranche", e.target.value)}
+            >
+              <option value="">No tranche</option>
+              {MILESTONE_TRANCHE_OPTIONS.map((title) => (
+                <option key={title} value={title}>
+                  {title}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className={milestoneLabelClass} htmlFor="revise-amount">
+              Planned amount (TZS)
+            </label>
+            <input
+              id="revise-amount"
+              className={baseInputClass}
+              type="number"
+              min="0"
+              placeholder="0"
+              value={reviseForm.plannedAmount}
+              onChange={(e) => setReviseField("plannedAmount", e.target.value)}
+            />
+          </div>
+          <div>
+            <label className={milestoneLabelClass} htmlFor="revise-timeline">
+              Timeline
+            </label>
+            <select
+              id="revise-timeline"
+              className={baseInputClass}
+              value={reviseForm.timelineSpan}
+              onChange={(e) => setReviseField("timelineSpan", e.target.value)}
+            >
+              <option value="">Select duration</option>
+              {TIMELINE_SPAN_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            onClick={() => onSaveRevision(milestone)}
+            disabled={savingRevision}
+            className="rounded-lg bg-[#082d77] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+          >
+            {savingRevision ? "Saving..." : "Save and resubmit"}
+          </button>
+          <button
+            type="button"
+            onClick={closeRevision}
+            disabled={savingRevision}
+            className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-60"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    ) : null;
 
   const enterprise = dashboard?.enterprise || {};
   const program = dashboard?.program || enterprise?.Program || null;
@@ -463,12 +755,17 @@ const EntrepreneurMilestones = () => {
     const fromFinance = (
       Array.isArray(financeMember?.tranches) ? financeMember.tranches : []
     )
-      .map((t) => ({
-        title: String(t.title || "").trim(),
-        date: t.plannedDate ? String(t.plannedDate).slice(0, 10) : "",
-        amount: Number(t.amount || 0),
-        status: t.status || "",
-      }))
+      .map((t) => {
+        // Same precedence finance's own mirror uses: the disbursement date,
+        // then the keys older schedules recorded it under.
+        const date = t.disbursedDate || t.actualDate || t.plannedDate || "";
+        return {
+          title: String(t.title || "").trim(),
+          date: date ? String(date).slice(0, 10) : "",
+          amount: Number(t.amount || 0),
+          status: t.status || "",
+        };
+      })
       .filter((t) => t.title);
 
     const statusByTitle = new Map(fromFinance.map((t) => [t.title, t.status]));
@@ -498,6 +795,15 @@ const EntrepreneurMilestones = () => {
   };
   const setOpenTranche = (key) => setParam("tranche", key);
   const setOpenReportTranche = (key) => setParam("reportTranche", key);
+  // Both drill-downs close in one update. Two setParam calls in a row would each
+  // build from this render's `searchParams`, so the second would put back the
+  // param the first removed and the open tranche would survive the click.
+  const closeTranches = () => {
+    const next = new URLSearchParams(searchParams);
+    next.delete("tranche");
+    next.delete("reportTranche");
+    setSearchParams(next);
+  };
 
   const reportableMilestones = useMemo(
     () =>
@@ -533,11 +839,6 @@ const EntrepreneurMilestones = () => {
       reportableMilestones
     );
   }, [openReportTranche, reportGroups, reportableMilestones]);
-
-  // The tranche picked on the milestone form — its date is shown read-only.
-  const selectedMilestoneTranche = effectiveTrancheStages.find(
-    (stage) => stage.title === milestoneTranche,
-  );
 
   // KPI values shown as cards under the KPI Tracking panel — the same figures
   // the Edit KPIs form updates.
@@ -616,7 +917,8 @@ const EntrepreneurMilestones = () => {
         trancheAmount: m.trancheAmount,
         plannedUse: m.tranchePlannedUse,
         kpis: parseKpiPlan(m.kpiPlan),
-        notes: m.submissionNotes,
+        notes: milestoneReportNotes(m.submissionNotes),
+        report: reportFromMilestone(m),
       })),
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -625,8 +927,8 @@ const EntrepreneurMilestones = () => {
   if (loading) return <Loader />;
 
   return (
-    <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
-      <main className="mx-auto max-w-[1480px] space-y-8">
+    <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-6">
+      <main className="mx-auto w-full space-y-8">
         <section
           className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
           style={{
@@ -830,25 +1132,23 @@ const EntrepreneurMilestones = () => {
               Milestones
             </h2>
 
-            {/* Milestones split into three tabs: create, report, status. */}
+            {/* Milestones split into three tabs: create, status, report —
+                in the order the startup works through them. */}
             <div className="flex flex-wrap gap-2">
               {[
                 { id: "create", label: "+ Milestone" },
-                { id: "report", label: "Milestone Reporting" },
                 { id: "status", label: "Milestone Status" },
+                { id: "report", label: "Milestone Reporting" },
               ].map((tab) => (
                 <button
                   key={tab.id}
                   type="button"
                   onClick={() => {
-                    // Clicking the active tab returns to its tranche list
-                    // (Tranche 1, Tranche 2…) rather than closing the tab.
-                    if (milestoneTab === tab.id) {
-                      setOpenTranche("");
-                      setOpenReportTranche("");
-                    } else {
-                      setMilestoneTab(tab.id);
-                    }
+                    // A tab always opens on its tranche list (Tranche 1,
+                    // Tranche 2…) — clicking one closes whichever tranche was
+                    // open, whether or not the tab was already active.
+                    setMilestoneTab(tab.id);
+                    closeTranches();
                   }}
                   className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
                     milestoneTab === tab.id
@@ -865,13 +1165,15 @@ const EntrepreneurMilestones = () => {
               <PortalCard
                 icon={<Flag className="h-5 w-5" />}
                 title="Add Milestone"
-                subtitle="Create milestones with their key activities, verification and timeline, then wait for mentor approval."
+                subtitle="Create milestones with their key activities, planned amount and timeline, then wait for mentor approval."
               >
                 <form onSubmit={onCreateMilestone} className="mb-5 space-y-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4">
-                  {/* Step 1 — pick the tranche these milestones belong to. Its
-                      date comes from the schedule the finance officer set, so it
-                      is shown for reference only. */}
-                  <div className="grid grid-cols-1 gap-3 rounded-2xl border border-[#082d77]/10 bg-white p-4 md:grid-cols-2">
+                  {/* Step 1 — the tranche these milestones belong to and the
+                      date the plan is being set. Both are shared by every row
+                      below; the timeline is per milestone. The tranche list is
+                      the startup's own, so a plan can be drafted before finance
+                      has configured a schedule. */}
+                  <div className={milestoneGridClass}>
                     <div>
                       <label className={milestoneLabelClass} htmlFor="milestone-tranche">
                         Tranche
@@ -883,41 +1185,42 @@ const EntrepreneurMilestones = () => {
                         onChange={(e) => setMilestoneTranche(e.target.value)}
                       >
                         <option value="">No tranche</option>
-                        {effectiveTrancheStages.map((stage) => (
-                          <option key={stage.title} value={stage.title}>
-                            {stage.title}
+                        {MILESTONE_TRANCHE_OPTIONS.map((title) => (
+                          <option key={title} value={title}>
+                            {title}
                           </option>
                         ))}
                       </select>
                     </div>
                     <div>
-                      <label className={milestoneLabelClass} htmlFor="milestone-tranche-date">
-                        Tranche date
+                      <label className={milestoneLabelClass} htmlFor="milestone-set-date">
+                        Date Set
                       </label>
                       <input
-                        id="milestone-tranche-date"
+                        id="milestone-set-date"
                         className={baseInputClass}
                         type="date"
-                        value={String(selectedMilestoneTranche?.date || "").slice(0, 10)}
-                        disabled
-                        readOnly
+                        value={milestoneSetDate}
+                        onChange={(e) => setMilestoneSetDate(e.target.value)}
                       />
                     </div>
-                    <p className="text-xs text-slate-500 md:col-span-2">
-                      {effectiveTrancheStages.length === 0
-                        ? "No tranches have been configured for your grant yet, so the tranche list is empty."
-                        : "Every milestone below is linked to the tranche selected here."}
-                    </p>
                   </div>
 
-                  {/* Step 2 — the milestones themselves. Key activities and
-                      Verification are stored on the existing tranchePlannedUse /
-                      description fields. Labels repeat on mobile, where the row
-                      stacks. */}
+                  {/* Outside the grid — a full-width item inside it would widen
+                      the Remove column and pull these fields out of line with
+                      the milestone rows. */}
+                  <p className="border-b border-[#082d77]/10 pb-4 text-xs text-slate-500">
+                    Every milestone below is linked to the tranche selected here,
+                    and its timeline is counted from the date set here.
+                  </p>
+
+                  {/* Step 2 — the milestones themselves. Key activities are
+                      stored on the existing tranchePlannedUse field. Labels
+                      repeat on mobile, where the row stacks. */}
                   {milestoneRows.map((row, idx) => (
                     <div
                       key={idx}
-                      className="grid grid-cols-1 gap-3 md:grid-cols-[repeat(4,minmax(0,1fr))_auto] md:items-end"
+                      className={milestoneGridClass}
                     >
                       <div>
                         <label
@@ -949,21 +1252,30 @@ const EntrepreneurMilestones = () => {
                           onChange={(e) => updateMilestoneRow(idx, "tranchePlannedUse", e.target.value)}
                         />
                       </div>
+                      {/* Budgeted for this milestone. Carried into the reporting
+                          grid as its Budgeted amount. */}
                       <div>
                         <label
                           className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
-                          htmlFor={`milestone-verification-${idx}`}
+                          htmlFor={`milestone-planned-amount-${idx}`}
                         >
-                          Verification
+                          Planned amount (TZS)
                         </label>
                         <input
-                          id={`milestone-verification-${idx}`}
+                          id={`milestone-planned-amount-${idx}`}
                           className={baseInputClass}
-                          placeholder="How it is verified"
-                          value={row.description}
-                          onChange={(e) => updateMilestoneRow(idx, "description", e.target.value)}
+                          type="number"
+                          min="0"
+                          placeholder="0"
+                          value={row.plannedAmount}
+                          onChange={(e) =>
+                            updateMilestoneRow(idx, "plannedAmount", e.target.value)
+                          }
                         />
                       </div>
+                      {/* How long this milestone runs for, not a calendar date —
+                          its due date is that span counted from the date set
+                          above. Each milestone sets its own. */}
                       <div>
                         <label
                           className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
@@ -971,27 +1283,39 @@ const EntrepreneurMilestones = () => {
                         >
                           Timeline
                         </label>
-                        <input
+                        <select
                           id={`milestone-timeline-${idx}`}
                           className={baseInputClass}
-                          type="date"
-                          value={row.dueDate}
-                          onChange={(e) => updateMilestoneRow(idx, "dueDate", e.target.value)}
-                        />
+                          value={row.timelineSpan}
+                          onChange={(e) =>
+                            updateMilestoneRow(idx, "timelineSpan", e.target.value)
+                          }
+                        >
+                          <option value="">Select duration</option>
+                          {TIMELINE_SPAN_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
                       </div>
                       <button
                         type="button"
                         onClick={() => removeMilestoneRow(idx)}
                         disabled={milestoneRows.length <= 1}
                         title="Remove milestone"
-                        className="rounded-xl bg-rose-50 px-3 py-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
+                        className={milestoneRemoveClass}
                       >
                         Remove
                       </button>
                     </div>
                   ))}
 
-                  <div className="flex flex-wrap items-center justify-between gap-3">
+                  {/* Inset by the Remove column plus its gap (5.5rem + gap-3),
+                      so Submit ends level with the Timeline input above rather
+                      than with the Remove buttons. Mobile stacks, so no inset
+                      there. See milestoneGridClass. */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 md:pr-[6.25rem]">
                     <button
                       type="button"
                       onClick={addMilestoneRow}
@@ -1015,90 +1339,51 @@ const EntrepreneurMilestones = () => {
               <PortalCard
                 icon={<Flag className="h-5 w-5" />}
                 title="Milestone Status"
-                subtitle="Track where each of your milestones stands."
+                subtitle="Track where each of your milestones stands — whether the business coach has approved the plan, and what has happened to the report you filed."
               >
-              <div className="space-y-4">
-                {milestones.length === 0 && (
-                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                    No milestones yet.
-                  </div>
-                )}
-
-                {/* Same drill-down as reporting: pick a tranche, then see its
-                    milestones. */}
-                {milestones.length > 0 && !openTranche && (
-                  <TrancheGroupList
-                    title="Tranche Milestones"
-                    groups={milestoneGroups.map((g) => ({
-                      key: g.key,
-                      title: `${g.title} Milestones`,
-                    }))}
-                    onSelect={setOpenTranche}
-                    onViewAll={() => setOpenTranche("__all__")}
-                    emptyText="No milestones yet."
-                  />
-                )}
-
-                {openTranche && (
-                  <p className="text-sm font-bold text-slate-950">
-                    {openTranche === "__all__" ? "All milestones" : openTranche}
-                  </p>
-                )}
-
-                {(openTranche ? visibleMilestones : []).map((item, index) => {
-                  const normalizedStatus = String(item.status || "pending").toLowerCase();
-                  // Approval moves planStatus, not status — so a milestone the
-                  // BDA has approved must stop claiming it is still waiting.
-                  const waitingForApproval =
-                    !isPlanApproved(item.planStatus) &&
-                    ["pending", "draft"].includes(normalizedStatus);
-
-                  // Completed when the work is done, otherwise pending.
-                  const statusLabel =
-                    normalizedStatus === "completed" ? "Completed" : "Pending";
-
-                  return (
-                    <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex min-w-0 flex-1 gap-3">
-                        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
-                          {item.status === "completed" ? "✓" : index + 1}
-                        </div>
-                        {/* Activities and status sit in the title's column so
-                            they line up with the milestone name, not the badge. */}
-                        <div className="min-w-0 flex-1">
-                          <p className="font-black text-slate-950">{item.title}</p>
-
-                          {/* Key activities, which the milestone form stores on
-                              tranchePlannedUse — the milestone's description. */}
-                          {item.tranchePlannedUse ? (
-                            <p className="mt-2 text-sm leading-6 text-slate-600">
-                              {item.tranchePlannedUse}
-                            </p>
-                          ) : null}
-
-                          {waitingForApproval && (
-                            <p className="mt-2 text-sm font-semibold text-slate-700">
-                              Waiting for mentor approval before report submission.
-                            </p>
-                          )}
-                        </div>
-                        </div>
-
-                        <span
-                          className={`shrink-0 rounded-full px-3 py-1 text-xs font-bold ${
-                            normalizedStatus === "completed"
-                              ? "bg-emerald-50 text-emerald-700"
-                              : "bg-amber-50 text-amber-700"
-                          }`}
-                        >
-                          {statusLabel}
-                        </span>
-                      </div>
+                <div className="space-y-4">
+                  {milestones.length === 0 && (
+                    <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                      No milestones yet.
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+
+                  {/* Same drill-down as reporting: pick a tranche, then see the
+                      milestones in it. */}
+                  {milestones.length > 0 && !openTranche && (
+                    <TrancheGroupList
+                      title="Tranche Milestones"
+                      groups={milestoneGroups
+                        .filter((group) => group.items.length > 0)
+                        .map((group) => ({
+                          key: group.key,
+                          title: `${group.title} Milestones`,
+                        }))}
+                      onSelect={setOpenTranche}
+                      onViewAll={() => setOpenTranche("__all__")}
+                      emptyText="No milestones yet."
+                    />
+                  )}
+
+                  {openTranche && (
+                    <p className="text-sm font-bold text-slate-950">
+                      {openTranche === "__all__" ? "All milestones" : openTranche}
+                    </p>
+                  )}
+
+                  {/* The tranche column is dropped inside a group — the heading
+                      above already says which one. */}
+                  {milestones.length > 0 && openTranche && (
+                    <div className="-mx-6 px-1">
+                      <MilestoneStatusTable
+                        rows={visibleMilestones}
+                        showTranche={openTranche === "__all__"}
+                        renderAction={renderReviseAction}
+                        renderDetail={renderReviseForm}
+                      />
+                    </div>
+                  )}
+                </div>
               </PortalCard>
             )}
 
@@ -1138,260 +1423,252 @@ const EntrepreneurMilestones = () => {
                   </p>
                 )}
 
-                {(openReportTranche ? visibleReportables : [])
-                  .map((item, index) => {
-                    const attachments = parseSubmissionAttachments(item.submissionAttachments);
-                    const normalizedStatus = String(item.status || "pending").toLowerCase();
-                    const ps = item.planStatus || "";
-                    // An approved plan is the startup's cue to report, whatever
-                    // the work status still says — otherwise the milestone would
-                    // show up here with no way to submit anything.
-                    const canSubmit = isPlanApproved(ps)
-                      ? !["submitted", "completed"].includes(normalizedStatus)
-                      : ["in_progress", "overdue", "rejected"].includes(normalizedStatus);
-                    // The report was declined — it comes back for edits. Finance
-                    // declines also set planStatus to rejected and leave finance
-                    // feedback, which is how we tell who sent it back.
-                    const wasDeclined = normalizedStatus === "rejected";
-                    const declinedByFinance =
-                      wasDeclined &&
-                      ps === PLAN_STATUS.REJECTED &&
-                      Boolean(item.financeReviewNotes);
-                    const disbursed = ps === PLAN_STATUS.DISBURSED || Boolean(item.disbursed);
-                    // Approval, attributed the same way as a decline: the finance
-                    // officer's approval disburses the tranche; before that, the
-                    // business coach approves the report and sends it to finance.
-                    const financeApproved = disbursed;
-                    const coachApproved =
-                      !disbursed &&
-                      !wasDeclined &&
-                      (ps === PLAN_STATUS.SENT_TO_FINANCE ||
-                        (normalizedStatus === "completed" &&
-                          ps !== PLAN_STATUS.REJECTED));
-                    const kpiProgress = getKpiProgress(item);
+                {/* Reporting grid — the whole flow lives in this one table: fill
+                    the row, attach evidence and submit from the Action column.
+                    It is the same table the business coach and the finance
+                    officer review. */}
+                {openReportTranche && visibleReportables.length > 0 && (
+                  // Bleeds into the card's padding so the widest table in the
+                  // app gets every pixel before it starts scrolling.
+                  <div className="-mx-6 space-y-2 px-1">
+                    <MilestoneReportTable
+                      editable
+                      showReview
+                      onChange={setReportField}
+                      onAttach={(uuid, files) =>
+                        setFilesById((prev) => ({ ...prev, [uuid]: files }))
+                      }
+                      rows={visibleReportables.map((item) => {
+                        const attachments = parseSubmissionAttachments(
+                          item.submissionAttachments,
+                        );
+                        const normalizedStatus = String(
+                          item.status || "pending",
+                        ).toLowerCase();
+                        const ps = item.planStatus || "";
+                        // An approved plan is the startup's cue to report,
+                        // whatever the work status still says — otherwise the
+                        // milestone would show up here with no way to submit.
+                        const canSubmit = isPlanApproved(ps)
+                          ? isReportOpen(normalizedStatus)
+                          : [
+                              "in_progress",
+                              "overdue",
+                              REPORT_STATUS.REJECTED,
+                              REPORT_STATUS.INFO_REQUESTED,
+                            ].includes(normalizedStatus);
+                        // The coach asked for more detail rather than declining.
+                        // The row reopens either way, but this one must not be
+                        // presented to the startup as a rejection.
+                        const infoRequested =
+                          normalizedStatus === REPORT_STATUS.INFO_REQUESTED;
+                        // The report was declined — it comes back for edits.
+                        // Finance declines also set planStatus to rejected and
+                        // leave finance feedback, which is how we tell who sent
+                        // it back.
+                        const wasDeclined = normalizedStatus === "rejected";
+                        const declinedByFinance =
+                          wasDeclined &&
+                          ps === PLAN_STATUS.REJECTED &&
+                          Boolean(item.financeReviewNotes);
+                        const disbursed =
+                          ps === PLAN_STATUS.DISBURSED || Boolean(item.disbursed);
+                        // Approval, attributed the same way as a decline: the
+                        // finance officer's approval disburses the tranche;
+                        // before that, the business coach approves the report
+                        // and sends it to finance.
+                        const financeApproved = disbursed;
+                        const coachApproved =
+                          !disbursed &&
+                          !wasDeclined &&
+                          (ps === PLAN_STATUS.SENT_TO_FINANCE ||
+                            (normalizedStatus === "completed" &&
+                              ps !== PLAN_STATUS.REJECTED));
+                        const kpiProgress = getKpiProgress(item);
+                        const selectedFiles = Array.isArray(filesById[item.uuid])
+                          ? filesById[item.uuid]
+                          : [];
+                        const showKpiPanel = disbursed && kpiProgress.length > 0;
+                        // A decline belongs to whoever sent it back: finance
+                        // declines set planStatus to rejected and leave finance
+                        // feedback, otherwise it was the business coach.
+                        const coachDeclined = wasDeclined && !declinedByFinance;
+                        // The finance officer has a column; the coach's verdict
+                        // rides in the sub-row so a decline still explains
+                        // itself without widening the grid.
+                        const showCoachNote =
+                          SHOW_COACH_COMMENT &&
+                          (coachApproved ||
+                            coachDeclined ||
+                            infoRequested ||
+                            item.mentorReviewNotes);
+                        const showDetail = showKpiPanel || showCoachNote;
 
-                    return (
-                      <div key={item.uuid} className="rounded-2xl border border-slate-100 bg-white p-5 shadow-sm">
-                        {/* Numbered like the milestone list, with the key
-                            activity beneath the name. */}
-                        <div className="flex flex-wrap items-start justify-between gap-3">
-                          <div className="flex min-w-0 flex-1 gap-3">
-                            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-black text-slate-700">
-                              {normalizedStatus === "completed" ? "✓" : index + 1}
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <p className="font-black text-slate-950">{item.title}</p>
-                              {item.tranchePlannedUse ? (
-                                <p className="mt-2 text-sm leading-6 text-slate-600">
-                                  {item.tranchePlannedUse}
-                                </p>
-                              ) : null}
-                            </div>
-                          </div>
-                          <StatusText>{formatStatusLabel(item.status)}</StatusText>
-                        </div>
+                        return {
+                          uuid: item.uuid,
+                          title: item.title,
+                          activity: item.tranchePlannedUse,
+                          timeline: milestoneTimelineSpan(item),
+                          report: getReportRow(item),
+                          attachments,
+                          readOnly: !canSubmit,
 
-                        {/* Indented to clear the number badge (2.5rem + 0.75rem
-                            gap) so the report and its form line up with the
-                            milestone name. */}
-                        <div className="sm:pl-[3.25rem]">
-                        {(item.submissionNotes || attachments.length > 0) && (
-                          <div className="mt-4 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                            {item.submissionNotes && (
-                              <p><span className="font-bold text-slate-950">Submitted report:</span> {item.submissionNotes}</p>
-                            )}
-                            {attachments.length > 0 && (
-                              <div className="mt-2 flex flex-wrap gap-2">
-                                {attachments.map((url, idx) => (
-                                  <a
-                                    key={`${item.uuid}-attachment-${idx}`}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs font-bold text-green-600 transition hover:text-green-700"
+                          pendingFiles: selectedFiles,
+
+                          action: canSubmit ? (
+                            <button
+                              type="button"
+                              onClick={() => onSubmitMilestone(item.uuid)}
+                              disabled={submittingById[item.uuid]}
+                              className="rounded-xl bg-[#16a34a] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {submittingById[item.uuid] ? "Submitting..." : "Submit"}
+                            </button>
+                          ) : (
+                            <span className="text-xs font-semibold text-slate-600">
+                              {normalizedStatus === "submitted"
+                                ? "Submitted — awaiting review"
+                                : normalizedStatus === "completed"
+                                  ? "Completed"
+                                  : "Awaiting plan approval"}
+                            </span>
+                          ),
+
+                          // The finance officer's verdict and comment sit in
+                          // the row; the business coach's stays in the sub-row.
+                          reviewComment: (
+                            <ReviewCell
+                              outcome={
+                                financeApproved
+                                  ? "Approved"
+                                  : declinedByFinance
+                                    ? "Declined"
+                                    : ""
+                              }
+                              tone={financeApproved ? "approved" : "declined"}
+                              note={item.financeReviewNotes}
+                            />
+                          ),
+
+                          detail: showDetail ? (
+                            <div className="space-y-3 text-sm leading-6">
+                              {showCoachNote && (
+                                <p className="text-slate-600">
+                                  <span className="font-bold text-slate-950">
+                                    Business coach:
+                                  </span>{" "}
+                                  <span
+                                    className={`font-bold ${
+                                      coachApproved
+                                        ? "text-emerald-700"
+                                        : coachDeclined
+                                          ? "text-rose-700"
+                                          : infoRequested
+                                            ? "text-amber-700"
+                                            : "text-slate-700"
+                                    }`}
                                   >
-                                    Attachment {idx + 1}
-                                  </a>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        )}
+                                    {coachApproved
+                                      ? "Approved — sent to finance."
+                                      : coachDeclined
+                                        ? "Declined — update the row and submit again."
+                                        : infoRequested
+                                          ? "More information needed — add it and submit again."
+                                          : ""}
+                                  </span>{" "}
+                                  {item.mentorReviewNotes}
+                                </p>
+                              )}
 
-                        {financeApproved && (
-                          <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
-                            <p className="font-semibold">
-                              The finance officer approved this report and
-                              disbursed the tranche.
-                            </p>
-                            {item.financeReviewNotes && (
-                              <p className="mt-1">
-                                <span className="font-bold">
-                                  Finance officer feedback:
-                                </span>{" "}
-                                {item.financeReviewNotes}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {coachApproved && (
-                          <div className="mt-4 rounded-2xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-800">
-                            <p className="font-semibold">
-                              The business coach approved this report and sent it
-                              to the finance officer for review.
-                            </p>
-                            {item.mentorReviewNotes && (
-                              <p className="mt-1">
-                                <span className="font-bold">
-                                  Business coach feedback:
-                                </span>{" "}
-                                {item.mentorReviewNotes}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {disbursed && kpiProgress.length > 0 && (
-                          <div className="mt-4 rounded-2xl border border-slate-100 p-4">
-                            <p className="text-xs font-black uppercase tracking-wide text-[#082d77]">KPI progress</p>
-                            <div className="mt-3 space-y-3">
-                              {kpiProgress.map((kpi, idx) => (
-                                <div key={idx} className="rounded-xl bg-slate-50 p-3">
-                                  <p className="text-sm font-bold text-slate-950">{kpi.name}</p>
-                                  <p className="text-xs text-slate-500">Target: {kpi.target || "—"} • Evidence: {kpi.evidenceSource || "—"}</p>
-                                  <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
-                                    <input
-                                      className={baseInputClass}
-                                      placeholder="Current value"
-                                      value={kpi.currentValue}
-                                      onChange={(e) => setKpiProgress(item.uuid, idx, "currentValue", e.target.value)}
-                                    />
-                                    <input
-                                      className={baseInputClass}
-                                      placeholder="Comment"
-                                      value={kpi.comment}
-                                      onChange={(e) => setKpiProgress(item.uuid, idx, "comment", e.target.value)}
-                                    />
+                              {showKpiPanel && (
+                                <div className="rounded-xl border border-slate-200 bg-white p-3">
+                                  <p className="text-xs font-black uppercase tracking-wide text-[#082d77]">
+                                    KPI progress
+                                  </p>
+                                  <div className="mt-3 space-y-3">
+                                    {kpiProgress.map((kpi, idx) => (
+                                      <div key={idx} className="rounded-xl bg-slate-50 p-3">
+                                        <p className="text-sm font-bold text-slate-950">
+                                          {kpi.name}
+                                        </p>
+                                        <p className="text-xs text-slate-500">
+                                          Target: {kpi.target || "—"} • Evidence:{" "}
+                                          {kpi.evidenceSource || "—"}
+                                        </p>
+                                        <div className="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">
+                                          <input
+                                            className={baseInputClass}
+                                            placeholder="Current value"
+                                            value={kpi.currentValue}
+                                            onChange={(e) =>
+                                              setKpiProgress(
+                                                item.uuid,
+                                                idx,
+                                                "currentValue",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                          <input
+                                            className={baseInputClass}
+                                            placeholder="Comment"
+                                            value={kpi.comment}
+                                            onChange={(e) =>
+                                              setKpiProgress(
+                                                item.uuid,
+                                                idx,
+                                                "comment",
+                                                e.target.value,
+                                              )
+                                            }
+                                          />
+                                        </div>
+                                      </div>
+                                    ))}
+                                  </div>
+                                  <div className="mt-3 flex flex-wrap justify-end gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        persistKpiProgress(item, {
+                                          requestVerification: false,
+                                        })
+                                      }
+                                      disabled={savingProgressById[item.uuid]}
+                                      className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2 text-xs font-bold text-[#082d77] transition hover:bg-[#082d77]/10 disabled:opacity-60"
+                                    >
+                                      {savingProgressById[item.uuid]
+                                        ? "Saving..."
+                                        : "Save progress"}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        persistKpiProgress(item, {
+                                          requestVerification: true,
+                                        })
+                                      }
+                                      disabled={savingProgressById[item.uuid]}
+                                      className="rounded-xl bg-[#16a34a] px-4 py-2 text-xs font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60"
+                                    >
+                                      Submit tranche for verification
+                                    </button>
                                   </div>
                                 </div>
-                              ))}
+                              )}
                             </div>
-                            <div className="mt-3 flex flex-wrap justify-end gap-2">
-                              <button
-                                type="button"
-                                onClick={() => persistKpiProgress(item, { requestVerification: false })}
-                                disabled={savingProgressById[item.uuid]}
-                                className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10 disabled:opacity-60"
-                              >
-                                {savingProgressById[item.uuid] ? "Saving..." : "Save progress"}
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => persistKpiProgress(item, { requestVerification: true })}
-                                disabled={savingProgressById[item.uuid]}
-                                className="rounded-xl bg-[#16a34a] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:opacity-60"
-                              >
-                                Submit tranche for verification
-                              </button>
-                            </div>
-                          </div>
-                        )}
+                          ) : null,
+                        };
+                      })}
+                    />
+                    <p className="text-xs text-slate-500">
+                      Variance is calculated for you (planned − actual). The
+                      narrative you write is sent as the milestone report,
+                      together with the evidence you attach.
+                    </p>
+                  </div>
+                )}
 
-                        {wasDeclined && (
-                          <div className="mt-4 rounded-2xl bg-rose-50 p-4 text-sm leading-6 text-rose-700">
-                            <p className="font-semibold">
-                              {declinedByFinance
-                                ? "The finance officer declined this report. Update it below and submit it again."
-                                : "The business coach declined this report. Update it below and submit it again."}
-                            </p>
-                            {/* Show both reviews: a finance decline still carries
-                                the business coach's earlier feedback, so the
-                                startup sees the full picture. */}
-                            {item.mentorReviewNotes && (
-                              <p className="mt-1">
-                                <span className="font-bold">
-                                  Business coach feedback:
-                                </span>{" "}
-                                {item.mentorReviewNotes}
-                              </p>
-                            )}
-                            {item.financeReviewNotes && (
-                              <p className="mt-1">
-                                <span className="font-bold">
-                                  Finance officer feedback:
-                                </span>{" "}
-                                {item.financeReviewNotes}
-                              </p>
-                            )}
-                          </div>
-                        )}
-
-                        {canSubmit && (
-                          <div className="mt-4 space-y-3">
-                            {/* A declined report starts from what was sent, so the
-                                startup edits it rather than retyping. */}
-                            <textarea
-                              className={`${baseInputClass} min-h-[90px]`}
-                              placeholder="Submit tranche-stage report for mentor review"
-                              value={
-                                notesById[item.uuid] ??
-                                (wasDeclined ? item.submissionNotes || "" : "")
-                              }
-                              onChange={(e) =>
-                                setNotesById((prev) => ({
-                                  ...prev,
-                                  [item.uuid]: e.target.value,
-                                }))
-                              }
-                            />
-
-                            <div className="flex flex-wrap items-center justify-between gap-3">
-                              <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-green-600/40 bg-green-50 px-4 py-3 text-sm font-bold text-green-700 transition hover:bg-green-100">
-                                <UploadCloud className="h-5 w-5" />
-                                {Array.isArray(filesById[item.uuid]) && filesById[item.uuid].length > 0
-                                  ? `${filesById[item.uuid].length} file(s) selected`
-                                  : "Upload evidence"}
-                                <input
-                                  type="file"
-                                  multiple
-                                  className="hidden"
-                                  onChange={(e) =>
-                                    setFilesById((prev) => ({
-                                      ...prev,
-                                      [item.uuid]: Array.from(e.target.files || []),
-                                    }))
-                                  }
-                                />
-                              </label>
-
-                              <button
-                                type="button"
-                                onClick={() => onSubmitMilestone(item.uuid)}
-                                className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-70"
-                                disabled={submittingById[item.uuid]}
-                              >
-                                {submittingById[item.uuid] ? "Submitting..." : "Submit report"}
-                              </button>
-                            </div>
-                          </div>
-                        )}
-
-                        {item.status === "submitted" && (
-                          <p className="mt-4 text-sm font-semibold text-slate-700">
-                            Report already submitted. Waiting for mentor review.
-                          </p>
-                        )}
-
-                        {item.status === "completed" && (
-                          <p className="mt-4 text-sm font-semibold text-slate-700">
-                            Milestone completed. No further report submission needed.
-                          </p>
-                        )}
-                        </div>
-                      </div>
-                    );
-                  })}
               </div>
             </PortalCard>
             )}

@@ -98,7 +98,10 @@ export default function DashboardLayout() {
                   setSidebarExpanded={setSidebarExpanded}
                 />
                 <main>
-                  <div className="mx-auto max-w-screen-2xl p-4 md:p-6 2xl:p-10">
+                  {/* 90% of the available width, uncapped, so wide tables
+                      (milestone reporting) have room before they scroll. Full
+                      width on mobile, where 5% gutters would only cost space. */}
+                  <div className="mx-auto w-full p-4 md:w-[90%] md:p-6">
                     <Outlet />
                   </div>
                 </main>

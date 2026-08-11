@@ -43,12 +43,81 @@ the same access as `Mentor` (owner = logged-in user) on:
 | POST | `/tracker/milestones` | Create milestone (entrepreneur) |
 | PATCH | `/tracker/milestones/:uuid/submit` | Entrepreneur report / KPI progress |
 | PATCH | `/tracker/milestones/:uuid/review` | BDA review / plan approval / verification |
+| PATCH | `/tracker/milestones/:uuid` | **Not yet implemented.** Entrepreneur revises their own milestone plan (Phase 2b) |
 | GET | `/tracker/mentor/overview` | BDA overview (frontend already reuses this) |
 | GET | `/tracker/mentor/weekly-logs` | BDA weekly logs (frontend already reuses this) |
 
 > The frontend already points `getStaffOverview`/`getStaffWeeklyLogs` at the
 > `mentor` routes, so you do **not** need new `/tracker/staff/*` routes — just
 > let BDAs call the routes above.
+
+### 1b. Scope BDA reads by programme, not by assignment (NOT YET IMPLEMENTED)
+
+Today a BDA only reaches a startup once finance has linked the two — either
+through a `mentor-entreprenuers` record or by naming them as the startup's
+`bdaUuid` in the programme markers. Until that happens a submitted milestone
+reaches nobody, so review is blocked on an admin step that has nothing to do
+with the work.
+
+**Required:** a BDA may read any startup on a grant programme they run, whether
+or not they are individually assigned to it. Every BDA on the programme shares
+one review queue; startups on programmes they do not run stay invisible.
+
+A BDA "runs" a programme when the programme's `__TRACKER_BDAS__` marker lists
+their uuid, or they are the `bdaUuid` of at least one startup in its
+`__TRACKER_STARTUPS__` marker (the fallback for programmes saved before that
+roster existed). This is how the frontend decides it — see
+`programAssignedStartups` in `src/pages/tracker/mentor/MentorTracker.jsx`.
+
+Widen the scoping on these reads accordingly:
+
+| Method | Path | Change |
+|---|---|---|
+| GET | `/tracker/enterprises` | Return startups on the caller's programmes, not only assigned ones |
+| GET | `/tracker/enterprises/:uuid` | Allow when the caller runs the startup's programme |
+| GET | `/tracker/milestones` | Return milestones for those startups |
+| GET | `/tracker/mentor/overview` | Count against the same widened set |
+| PATCH | `/tracker/milestones/:uuid/review` | Allow any BDA on the programme to review |
+
+**Until this lands** the frontend change is only half-effective: the BDA's
+startup list is drawn from the programme markers and will show every startup on
+their programmes, but opening one, or reviewing its milestones, still goes
+through the scoped routes above and will fail for startups finance never
+assigned to them.
+
+Writes stay as they are — nothing here grants a BDA access to a programme they
+do not run.
+
+### 1c. A startup must not need a BDA to plan milestones (NOT YET IMPLEMENTED)
+
+A startup's milestones hang off a tracker enterprise record. That record is only
+created by `POST /tracker/enterprises`, which finance calls when they save the
+startup and a BDA calls when they set up tracking. The entrepreneur has no route
+that creates one — `PATCH /tracker/entrepreneur/enterprise` updates a record
+that must already exist.
+
+So a startup added to a programme, but never opened and saved by finance or a
+BDA, is blocked: `GET /tracker/entrepreneur/dashboard` fails, and
+`POST /tracker/milestones` has no enterprise to attach to. Planning is gated on
+an admin step that has nothing to do with planning.
+
+**Required:** an entrepreneur can plan without waiting on anyone. Either:
+
+1. **Auto-provision on demand (preferred).** When an entrepreneur calls
+   `POST /tracker/milestones` or `GET /tracker/entrepreneur/dashboard` and has
+   no enterprise on the programme they belong to, create one for them and carry
+   on. The programme comes from their `__TRACKER_STARTUPS__` entry.
+2. **Or** give the entrepreneur a create route for their own enterprise, and
+   have the frontend call it before the first milestone.
+
+Either way `GET /tracker/entrepreneur/dashboard` should return an empty
+dashboard rather than an error when there is nothing yet — the frontend cannot
+otherwise tell "no workspace" from "no milestones".
+
+**Until this lands** the startup gets no warning: the Add Milestone form looks
+normal and the submission fails with whatever the server returns. The
+workaround is for finance to open the startup and save it once, which creates
+the enterprise as a side effect.
 
 ---
 
@@ -96,6 +165,33 @@ The frontend sends these via the **existing** endpoints. Persist any new fields.
   "planStatus": "submitted"
 }
 ```
+
+### Phase 2b — entrepreneur revises a submitted milestone (NOT YET IMPLEMENTED)
+`PATCH /tracker/milestones/:uuid`
+```json
+{
+  "title": "Launch MVP and onboard first 30 pilot users",
+  "dueDate": "2026-10-31",
+  "linkedTranche": "Tranche 1",
+  "trancheAmount": 24000000,
+  "tranchePlannedUse": "MVP build + onboarding",
+  "description": "...",
+  "planStatus": "resubmitted"
+}
+```
+The frontend calls this from `reviseTrackerMilestone`. **This route does not
+exist yet** — until it is added, the Revise action on the entrepreneur's
+Milestone Status tab will fail.
+
+**Business rules to enforce server-side:**
+- Only the milestone's own entrepreneur may call it (the BDA edits nothing here;
+  they use `/review`).
+- Reject when the milestone's current `planStatus` is `sent_to_finance`,
+  `disbursed`, or `rejected` — the plan is settled by then. The frontend already
+  hides the action in those states (`canRevisePlan`), but the rule belongs on
+  the server too.
+- A revision of an already-approved plan must clear the approval, so it goes
+  back through review rather than staying `plan_approved` with changed content.
 
 ### Phase 3 — BDA reviews/approves plan
 `PATCH /tracker/milestones/:uuid/review`
