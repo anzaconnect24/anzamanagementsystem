@@ -7,7 +7,8 @@ import {
   editProgram,
   getPrograms,
 } from "@/controllers/program_controller";
-import { getEnterprenuers } from "@/controllers/user_controller";
+import { getEnterprenuers, getReviewers } from "@/controllers/user_controller";
+import { assignEntreprenuerToStaff } from "@/controllers/staffEntreprenuerController";
 import { isGrantProgram } from "@/utils/programMeta";
 
 const PROGRAM_CATEGORIES = [
