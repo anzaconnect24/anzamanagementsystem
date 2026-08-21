@@ -1,13 +1,19 @@
 import { analyzeCompleteReport, generateExecutiveSummary } from "./openAi";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import {
+  createAiReport,
+  getAiReports,
+  getAiReport,
+  deleteAiReport,
+} from "../controllers/aiReport_controller";
 
 /**
  * AI Report Service - Handles AI analysis reports, saving, downloading, and management
  */
 export class AIReportService {
   constructor() {
-    this.reports = new Map(); // In-memory storage for demo (replace with database in production)
+    this.reports = new Map(); // In-memory cache
   }
 
   /**
@@ -121,8 +127,8 @@ export class AIReportService {
         },
       };
 
-      // Save report
-      this.saveReport(reportId, completeReport);
+      // Save report to backend
+      await this.saveReport(reportId, completeReport);
 
       console.log("✅ AI analysis completed successfully");
       return completeReport;
@@ -137,36 +143,47 @@ export class AIReportService {
   }
 
   /**
-   * Save report to storage (in-memory for demo, database in production)
+   * Save report to backend storage
    */
-  saveReport(reportId, report) {
+  async saveReport(reportId, report) {
     this.reports.set(reportId, report);
 
-    // Also save to localStorage for persistence across sessions
     try {
-      const savedReports = JSON.parse(
-        localStorage.getItem("aiReports") || "{}",
-      );
-      savedReports[reportId] = report;
-      localStorage.setItem("aiReports", JSON.stringify(savedReports));
+      await createAiReport({
+        reportType: report.metadata?.analysisType || "crat_analysis",
+        businessInfo: report.businessInfo,
+        assessmentData: report.assessmentData,
+        aiAnalysis: report.aiAnalysis,
+        metadata: {
+          ...report.metadata,
+          originalId: reportId,
+          timestamp: report.timestamp,
+          userDetails: report.userDetails,
+        },
+      });
     } catch (error) {
-      console.warn("Could not save to localStorage:", error);
+      console.warn("Could not save to backend, keeping in memory:", error);
     }
   }
 
   /**
-   * Get saved reports
+   * Get saved reports from backend
    */
-  getSavedReports() {
+  async getSavedReports() {
     try {
-      const savedReports = JSON.parse(
-        localStorage.getItem("aiReports") || "{}",
-      );
-      return Object.values(savedReports).sort(
-        (a, b) => new Date(b.timestamp) - new Date(a.timestamp),
-      );
+      const response = await getAiReports(1, 100);
+      const reports = response?.reports || [];
+      return reports.map((r) => ({
+        id: r.metadata?.originalId || r.uuid,
+        timestamp: r.metadata?.timestamp || r.createdAt,
+        businessInfo: r.businessInfo,
+        userDetails: r.metadata?.userDetails,
+        assessmentData: r.assessmentData,
+        aiAnalysis: r.aiAnalysis,
+        metadata: r.metadata,
+      })).sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
     } catch (error) {
-      console.warn("Could not load from localStorage:", error);
+      console.warn("Could not load from backend, using memory:", error);
       return Array.from(this.reports.values());
     }
   }
@@ -174,31 +191,36 @@ export class AIReportService {
   /**
    * Get specific report by ID
    */
-  getReport(reportId) {
+  async getReport(reportId) {
     try {
-      const savedReports = JSON.parse(
-        localStorage.getItem("aiReports") || "{}",
-      );
-      return savedReports[reportId] || this.reports.get(reportId);
+      const response = await getAiReport(reportId);
+      if (response) {
+        return {
+          id: response.metadata?.originalId || response.uuid,
+          timestamp: response.metadata?.timestamp || response.createdAt,
+          businessInfo: response.businessInfo,
+          userDetails: response.metadata?.userDetails,
+          assessmentData: response.assessmentData,
+          aiAnalysis: response.aiAnalysis,
+          metadata: response.metadata,
+        };
+      }
     } catch (error) {
-      return this.reports.get(reportId);
+      console.warn("Could not load from backend:", error);
     }
+    return this.reports.get(reportId);
   }
 
   /**
    * Delete report
    */
-  deleteReport(reportId) {
+  async deleteReport(reportId) {
     this.reports.delete(reportId);
 
     try {
-      const savedReports = JSON.parse(
-        localStorage.getItem("aiReports") || "{}",
-      );
-      delete savedReports[reportId];
-      localStorage.setItem("aiReports", JSON.stringify(savedReports));
+      await deleteAiReport(reportId);
     } catch (error) {
-      console.warn("Could not delete from localStorage:", error);
+      console.warn("Could not delete from backend:", error);
     }
   }
 

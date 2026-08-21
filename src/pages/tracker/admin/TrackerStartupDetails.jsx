@@ -216,7 +216,7 @@ const TrackerStartupDetails = () => {
         : [];
       const matchesEnt = (e) =>
         (e?.Entreprenuer?.uuid || e?.entreprenuer_uuid) === entUuid;
-      let match = enterprises.find(matchesEnt);
+      let match = enterpriseRows.find(matchesEnt);
 
       // The overview lookup is best-effort. If it didn't resolve the enterprise,
       // fall back to the full enterprise list — the same records the BDA reads —
@@ -352,10 +352,11 @@ const TrackerStartupDetails = () => {
         signedContractUploadedAt: new Date().toISOString(),
       };
 
+      let saved;
       if (enterprise?.uuid) {
-        await updateMentorEnterprise(enterprise.uuid, contractFields);
+        saved = await updateMentorEnterprise(enterprise.uuid, contractFields);
       } else {
-        await upsertMentorEnterprise({
+        saved = await upsertMentorEnterprise({
           entreprenuer_uuid: form.entreprenuerUuid,
           mentor_uuid: form.bdaUuid || undefined,
           program_uuid: programUuid,
@@ -578,6 +579,10 @@ const TrackerStartupDetails = () => {
   const stats = useMemo(() => {
     const committed = Number(form.grantUsd || 0);
     const tranches = Array.isArray(form.tranches) ? form.tranches : [];
+    const allocated = tranches.reduce(
+      (sum, t) => sum + Number(t.amount || 0),
+      0,
+    );
     const disbursed = tranches.length
       ? tranches
           .filter(isDisbursed)
@@ -589,6 +594,7 @@ const TrackerStartupDetails = () => {
     const next = tranches.find((t) => !isDisbursed(t)) || null;
     return {
       committed,
+      allocated,
       disbursed,
       remaining,
       disbursedPct,

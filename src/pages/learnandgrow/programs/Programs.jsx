@@ -6,6 +6,10 @@ import {
   getEnrollmentCounts,
   getMyEnrolledCourseUuids,
 } from "@/controllers/enrollment_controller";
+import {
+  upsertCourseRating,
+  getMyCourseRatings,
+} from "@/controllers/courseRating_controller";
 import { onlyCourses } from "@/utils/programMeta";
 import Link from "@/utils/link";
 import { UserContext } from "../../../layouts/DashboardLayout";
@@ -47,8 +51,6 @@ const StarRating = ({ value = 0, onChange }) => {
   );
 };
 
-const RATINGS_STORAGE_KEY = "courseRatings";
-
 const ProgramsPage = () => {
   const { course } = useParams();
   const [programs, setPrograms] = useState([]);
@@ -61,26 +63,16 @@ const ProgramsPage = () => {
   const [page] = useState(1);
   const { t } = useTranslation();
 
-  // The user's own course ratings, keyed by course uuid. Persisted locally until
-  // a backend rating endpoint exists.
-  const [ratings, setRatings] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem(RATINGS_STORAGE_KEY) || "{}");
-    } catch {
-      return {};
-    }
-  });
+  const [ratings, setRatings] = useState({});
+  const [ratingsLoaded, setRatingsLoaded] = useState(false);
 
-  const onRate = (uuid, value) => {
-    setRatings((prev) => {
-      const next = { ...prev, [uuid]: value };
-      try {
-        localStorage.setItem(RATINGS_STORAGE_KEY, JSON.stringify(next));
-      } catch {
-        // Ignore storage failures — the rating still updates in-session.
-      }
-      return next;
-    });
+  const onRate = async (uuid, value) => {
+    setRatings((prev) => ({ ...prev, [uuid]: value }));
+    try {
+      await upsertCourseRating(uuid, value);
+    } catch (error) {
+      console.warn("Could not save rating to backend:", error);
+    }
   };
 
   const isAdmin = ["Admin"].includes(userDetails?.role);
@@ -145,6 +137,19 @@ const ProgramsPage = () => {
       ]);
       setEnrollCounts(counts);
       setMyEnrolled(mine);
+
+      // Load user's ratings from backend
+      if (userDetails?.uuid && uuids.length > 0) {
+        try {
+          const userRatings = await getMyCourseRatings(uuids);
+          if (userRatings && typeof userRatings === "object") {
+            setRatings(userRatings);
+          }
+        } catch (error) {
+          console.warn("Could not load ratings from backend:", error);
+        }
+      }
+      setRatingsLoaded(true);
     } catch (error) {
       setPrograms([]);
     } finally {

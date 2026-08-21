@@ -7,8 +7,11 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint src --ext js,jsx,ts,tsx",
-    "push-test": "npm run build && ssh anza 'mkdir -p /var/www/anzatestweb' && scp -C -r dist/* anza:/var/www/anzatestweb/",
-    "push-live": "npm run build && ssh anza 'mkdir -p /var/www/anzaweb' && scp -C -r dist/* anza:/var/www/anzaweb/"
+    "push-test": "./scripts/deploy.sh test",
+    "push-live": "./scripts/deploy.sh live",
+    "push-test-fast": "./scripts/deploy.sh test --skip-build",
+    "push-live-fast": "./scripts/deploy.sh live --skip-build",
+    "optimize-images": "./scripts/optimize-images.sh"
   },
   "dependencies": {
     "@google/genai": "^1.30.0",

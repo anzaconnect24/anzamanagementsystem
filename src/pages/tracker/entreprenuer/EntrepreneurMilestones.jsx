@@ -9,6 +9,7 @@ import {
   getEntrepreneurTrackerDashboard,
   reviseTrackerMilestone,
   submitTrackerMilestone,
+  updateMentorEnterpriseKpis,
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
@@ -205,6 +206,7 @@ const EntrepreneurMilestones = () => {
   const [submittingById, setSubmittingById] = useState({});
   const [kpiProgressById, setKpiProgressById] = useState({});
   const [savingProgressById, setSavingProgressById] = useState({});
+  const [savingKpis, setSavingKpis] = useState(false);
 
   // Phase 5: the entrepreneur's KPI actuals for a milestone (falls back to the
   // stored plan values until edited).
@@ -701,22 +703,41 @@ const EntrepreneurMilestones = () => {
     });
   }, [enterprise?.uuid]);
 
-  const onSaveKpis = (e) => {
+  const onSaveKpis = async (e) => {
     e.preventDefault();
-    setDashboard((prev) => ({
-      ...prev,
-      enterprise: {
-        ...(prev?.enterprise || {}),
+    const enterpriseUuid = dashboard?.enterprise?.uuid || dashboard?.selectedEnterpriseUuid;
+    if (!enterpriseUuid) {
+      toast.error("No enterprise found to save KPIs for");
+      return;
+    }
+
+    setSavingKpis(true);
+    try {
+      const kpiData = {
         monthlyRevenue: Number(kpiForm.monthlyRevenue || 0),
         employees: Number(kpiForm.employees || 0),
         wasteDiverted: Number(kpiForm.wasteDiverted || 0),
         ceReadinessScore: kpiForm.ceReadinessScore === "" ? null : Number(kpiForm.ceReadinessScore),
         capitalMobilised: Number(kpiForm.capitalMobilised || 0),
         activeCustomers: Number(kpiForm.activeCustomers || 0),
-      },
-    }));
-    setShowKpiForm(false);
-    toast.success("KPI values updated");
+      };
+
+      await updateMentorEnterpriseKpis(enterpriseUuid, kpiData);
+
+      setDashboard((prev) => ({
+        ...prev,
+        enterprise: {
+          ...(prev?.enterprise || {}),
+          ...kpiData,
+        },
+      }));
+      setShowKpiForm(false);
+      toast.success("KPI values saved successfully");
+    } catch (error) {
+      toast.error(error?.response?.data?.message || "Failed to save KPI values");
+    } finally {
+      setSavingKpis(false);
+    }
   };
 
   const programName = getEnterpriseProgramName(program, enterprise);
@@ -1064,8 +1085,8 @@ const EntrepreneurMilestones = () => {
                     <input id="kpi-active-customers" className={baseInputClass} type="number" min="0" placeholder="Active customers" value={kpiForm.activeCustomers} onChange={(e) => setKpiForm((prev) => ({ ...prev, activeCustomers: e.target.value }))} />
                   </div>
                   <div className="flex items-end justify-end md:col-span-3">
-                    <button type="submit" className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54]">
-                      Save KPI Updates
+                    <button type="submit" disabled={savingKpis} className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:opacity-60">
+                      {savingKpis ? "Saving..." : "Save KPI Updates"}
                     </button>
                   </div>
                 </form>
