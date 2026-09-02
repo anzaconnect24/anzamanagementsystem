@@ -49,6 +49,7 @@ import MilestoneStatusTable from "@/components/tracker/MilestoneStatusTable";
 import { downloadMilestoneTemplatePDF } from "@/services/milestoneTemplatePDF";
 import {
   formatReportAmount,
+  milestoneKpiImpact,
   milestonePlannedAmount,
   milestoneTimelineSpan,
   reportFromMilestone,
@@ -98,6 +99,22 @@ const parseAttachments = (value) => {
     }
   }
   return [];
+};
+
+// The enterprise's `documents` field is a flat { key: value } object (same
+// one the KYC screen reads/writes) — the startup's uploaded budget document
+// lives under `budgetDocumentUrl`/`budgetDocumentDescription`.
+const parseDocuments = (value) => {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
 };
 
 const fmtTZS = (value) => `TZS ${Number(value || 0).toLocaleString()}`;
@@ -637,9 +654,21 @@ const TrackerStartupDetails = () => {
 
   // Assign right away rather than waiting for the page's Save: the assignment is
   // what lets the BDA reach this startup at all, and burying it behind the
-  // disbursement form's save button hides that.
+  // disbursement form's save button hides that. This does everything onSave
+  // would do for the assignment itself — writes the program markers and
+  // creates the tracker enterprise — so a bare assignment is immediately
+  // visible on the BDA's own Grant Management view, not just recorded server
+  // side. (The BDA's view groups by the tracker enterprise's linked program;
+  // without one being created here, the assignment would silently show
+  // nowhere until someone separately opened "Configure disbursement" and hit
+  // "Save changes".)
   const onAssignBda = async (bdaUuid) => {
-    setForm((prev) => ({ ...prev, bdaUuid }));
+    const bdaName =
+      bdaList.find((bda) => bda.uuid === bdaUuid)?.name ||
+      bdaList.find((bda) => bda.uuid === bdaUuid)?.email ||
+      "";
+
+    setForm((prev) => ({ ...prev, bdaUuid, bdaName }));
     if (!bdaUuid || !form.entreprenuerUuid) return;
 
     setAssigningBda(true);
@@ -648,9 +677,48 @@ const TrackerStartupDetails = () => {
         staff_uuid: bdaUuid,
         entreprenuer_uuid: form.entreprenuerUuid,
       });
-      // The markers carry the same uuid, so the BDA's own startup list picks it
-      // up too. onSave writes them; say so rather than implying it is done.
-      toast.success("BDA assigned — save the page to record it on the programme");
+
+      if (program?.uuid) {
+        const fresh = (await getProgram(program.uuid)) || program;
+        const meta = parseTrackerProgramMeta(fresh);
+        const startups = Array.isArray(meta.startups) ? [...meta.startups] : [];
+        const idx = startups.findIndex((s) => s.entreprenuerUuid === entUuid);
+        if (idx !== -1) {
+          startups[idx] = { ...startups[idx], bdaUuid, bdaName };
+          await editProgram(program.uuid, {
+            title: fresh.title,
+            description: buildDescriptionWithMeta(
+              meta.cleanDescription,
+              meta.categories,
+              startups,
+            ),
+            programCategory: fresh.programCategory,
+            type: "grant",
+            startDate: fresh.startDate || null,
+            endDate: fresh.endDate || null,
+            image: fresh.image,
+          });
+        }
+      }
+
+      if (!enterprise?.uuid) {
+        try {
+          const created = await upsertMentorEnterprise({
+            entreprenuer_uuid: form.entreprenuerUuid,
+            program_uuid: programUuid,
+            name: form.name || undefined,
+          });
+          if (created?.uuid) {
+            setEnterprise((prev) => ({ ...(prev || {}), ...created }));
+          }
+        } catch {
+          toast.error(
+            "BDA assigned, but the startup's tracker workspace could not be created — they may not see it on Grant Management yet.",
+          );
+        }
+      }
+
+      toast.success("BDA assigned");
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Failed to assign the BDA",
@@ -941,6 +1009,39 @@ const TrackerStartupDetails = () => {
         uploading={contractUploading}
         onUpload={onUploadContract}
       />
+
+      {/* The startup's own budget document, uploaded from their Attachments
+          tab — read-only here, finance just views/downloads it. */}
+      {(() => {
+        const documents = parseDocuments(enterprise?.documents);
+        const budgetDocumentUrl = documents.budgetDocumentUrl;
+        if (!budgetDocumentUrl) return null;
+
+        return (
+          <div className="rounded-2xl border border-black/10 bg-white p-6">
+            <div className="mb-1 flex items-center gap-2">
+              <FileText className="h-5 w-5 text-emerald-600" />
+              <h2 className="text-lg font-black tracking-tight text-[#111827]">
+                Budget Document
+              </h2>
+            </div>
+            {documents.budgetDocumentDescription && (
+              <p className="mb-3 text-sm text-[#64748b]">
+                {documents.budgetDocumentDescription}
+              </p>
+            )}
+            <a
+              href={budgetDocumentUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex items-center gap-2 text-sm font-bold text-[#163b8f] hover:underline"
+            >
+              <Download className="h-4 w-4" />
+              View / download budget document
+            </a>
+          </div>
+        );
+      })()}
 
       {/* Who coaches this startup. The assignment is what puts their milestones
           in front of a BDA for review, so it lives on the startup's own page
@@ -1385,6 +1486,11 @@ const TrackerStartupDetails = () => {
                           {milestone.tranchePlannedUse}
                         </span>
                       ) : null}
+                      {milestoneKpiImpact(milestone) ? (
+                        <span className="mt-1 block text-xs font-normal text-emerald-700">
+                          KPI/Impact: {milestoneKpiImpact(milestone)}
+                        </span>
+                      ) : null}
                     </td>
                     <td className={planCellClass}>
                       {formatReportAmount(milestonePlannedAmount(milestone))}
@@ -1462,6 +1568,7 @@ const TrackerStartupDetails = () => {
                   uuid: milestone.uuid,
                   title: milestone.title,
                   activity: milestone.tranchePlannedUse,
+                  kpiImpact: milestoneKpiImpact(milestone),
                   // Planned funds have their own column; the span does not.
                   timeline: milestoneTimelineSpan(milestone),
                   report: reportFromMilestone(milestone),

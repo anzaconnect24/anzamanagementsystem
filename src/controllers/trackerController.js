@@ -212,6 +212,21 @@ export const updateMentorEnterpriseKpis = async (uuid, data) => {
   }
 };
 
+export const updateEnterpriseBudgetDocument = async (uuid, data) => {
+  try {
+    const response = await axios.patch(
+      `${server_url}/tracker/enterprises/${uuid}/budget-document`,
+      data,
+      {
+        headers: authHeaders(),
+      },
+    );
+    return response.data.body;
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const updateMentorEnterpriseTrancheStages = async (uuid, data) => {
   try {
     const response = await axios.patch(

@@ -1,4 +1,4 @@
-import { useContext, useMemo, useEffect, useState } from "react";
+import { Fragment, useContext, useMemo, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
@@ -9,6 +9,8 @@ import {
   getEntrepreneurTrackerDashboard,
   reviseTrackerMilestone,
   submitTrackerMilestone,
+  updateEnterpriseBudgetDocument,
+  updateMentorEnterpriseKpis,
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
@@ -30,12 +32,13 @@ import {
   buildMilestoneDescription,
   buildSubmissionNotes,
   computeVariance,
-  milestonePlannedAmount,
+  emptyMilestoneActivity,
+  milestoneActivitiesDueDate,
+  milestoneKpiImpact,
   milestoneReportNotes,
   milestoneTimelineSpan,
   parseMilestonePlan,
   reportFromMilestone,
-  timelineSpanDueDate,
 } from "@/utils/milestoneReport";
 import {
   BarChart3,
@@ -108,18 +111,16 @@ const baseInputClass =
 const milestoneLabelClass =
   "mb-1 block text-xs font-black tracking-wide text-[#082d77]";
 
-// The tranche row and the milestone rows share one column template so their
-// inputs are the same width and line up. The tranche row fills the first two
-// tracks and leaves the rest empty. The trailing column holds each row's Remove
-// button and is a fixed width rather than `auto`: these are separate grids, so
-// an `auto` track would resolve against each row's own content and the two rows
-// would drift apart. The four `minmax(0,1fr)` tracks stay equal whatever sits in
-// them, so an item may safely span them.
-const milestoneGridClass =
-  "grid grid-cols-1 gap-3 md:grid-cols-[repeat(4,minmax(0,1fr))_5.5rem] md:items-end";
-
 const milestoneRemoveClass =
   "rounded-xl bg-rose-50 px-3 py-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50";
+
+// The Add Milestone table: Tranche and Date Set apply to the whole plan, so
+// they're rendered once and rowSpan the full table; Milestone rowSpans just
+// its own activities; every other column is one row per activity.
+const tableHeadClass =
+  "border border-black/10 bg-[#eaf0fb] px-3 py-2 text-left text-xs font-black text-[#111827]";
+const tableCellClass =
+  "border border-black/10 px-3 py-2 align-top text-sm text-[#334155]";
 
 // How often the page quietly refetches so finance's changes (committed amount,
 // released tranches) appear without a manual reload.
@@ -132,12 +133,51 @@ const MILESTONE_TRANCHE_OPTIONS = ["Tranche 1", "Tranche 2"];
 
 const todayISO = () => new Date().toISOString().slice(0, 10);
 
+// The enterprise's `documents` field is a flat { key: value } object (the
+// same one the BDA's KYC screen reads/writes) — parsed defensively since it
+// may arrive as a JSON string, an object, or be empty.
+const parseDocuments = (value) => {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
 const emptyMilestoneRow = () => ({
   title: "",
-  tranchePlannedUse: "",
-  plannedAmount: "",
-  timelineSpan: "",
+  linkedTranche: "",
+  activities: [emptyMilestoneActivity()],
 });
+
+// Each activity's own text is still mirrored into the existing
+// tranchePlannedUse string field (bullet-separated) so every other view that
+// reads it — the BDA's plan table, the PDF export, report tables — keeps
+// working unchanged; the amount and timeline per activity live only in the
+// milestone's description marker (see milestoneReport.js).
+const ACTIVITY_SEPARATOR = " • ";
+
+const joinActivities = (activities) =>
+  (activities || [])
+    .map((a) => a.text.trim())
+    .filter(Boolean)
+    .join(ACTIVITY_SEPARATOR) || "";
+
+// Splits a stored tranchePlannedUse string back into activity text only —
+// used to recover a milestone's activity texts (they aren't in the plan
+// marker) when reopening it for revision.
+const splitActivityTexts = (value) => {
+  const parts = String(value || "")
+    .split(ACTIVITY_SEPARATOR)
+    .map((a) => a.trim())
+    .filter(Boolean);
+  return parts.length ? parts : [""];
+};
 
 const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
   <section className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}>
@@ -233,13 +273,28 @@ const EntrepreneurMilestones = () => {
   const [savingRevision, setSavingRevision] = useState(false);
 
   const openRevision = (milestone) => {
-    const plan = parseMilestonePlan(milestone?.description);
+    const { activities: planActivities } = parseMilestonePlan(milestone?.description);
+    // Activity text lives in tranchePlannedUse, amount/timeline live in the
+    // plan marker — pair them back up by position. A milestone predating
+    // per-activity planning has one plan entry (its old shared amount and
+    // timeline) and possibly several texts; every activity starts out with
+    // that same shared amount/timeline, which can then be adjusted per row.
+    const texts = splitActivityTexts(milestone.tranchePlannedUse);
+    const count = Math.max(texts.length, planActivities.length, 1);
+    const activities = Array.from({ length: count }, (_, i) => ({
+      text: texts[i] ?? "",
+      plannedAmount:
+        planActivities[i]?.plannedAmount ?? planActivities[0]?.plannedAmount ?? "",
+      timelineSpan:
+        planActivities[i]?.timelineSpan ?? planActivities[0]?.timelineSpan ?? "",
+      kpiImpact: planActivities[i]?.kpiImpact ?? "",
+      setDate: planActivities[i]?.setDate || todayISO(),
+    }));
+
     setRevisingUuid(milestone.uuid);
     setReviseForm({
       title: milestone.title || "",
-      tranchePlannedUse: milestone.tranchePlannedUse || "",
-      plannedAmount: milestonePlannedAmount(milestone),
-      timelineSpan: plan.timelineSpan || "",
+      activities,
       linkedTranche: milestone.linkedTranche || "",
     });
   };
@@ -251,6 +306,32 @@ const EntrepreneurMilestones = () => {
 
   const setReviseField = (key, value) =>
     setReviseForm((prev) => ({ ...(prev || {}), [key]: value }));
+
+  const addReviseActivity = () =>
+    setReviseForm((prev) => ({
+      ...(prev || {}),
+      activities: [...(prev?.activities || [emptyMilestoneActivity()]), emptyMilestoneActivity()],
+    }));
+
+  const removeReviseActivity = (activityIndex) =>
+    setReviseForm((prev) => {
+      const activities = prev?.activities || [emptyMilestoneActivity()];
+      return {
+        ...(prev || {}),
+        activities:
+          activities.length > 1
+            ? activities.filter((_, i) => i !== activityIndex)
+            : activities,
+      };
+    });
+
+  const updateReviseActivity = (activityIndex, field, value) =>
+    setReviseForm((prev) => ({
+      ...(prev || {}),
+      activities: (prev?.activities || [emptyMilestoneActivity()]).map((a, i) =>
+        i === activityIndex ? { ...a, [field]: value } : a,
+      ),
+    }));
 
   // Milestone reporting grid (planned vs actual, variance, evidence). Unsaved
   // edits live here; anything not touched falls back to what was submitted.
@@ -267,9 +348,15 @@ const EntrepreneurMilestones = () => {
       return { ...prev, [uuid]: { ...current, [key]: value } };
     });
   // Milestones section is tabbed: "create" (+ Milestone), "report" (Milestone
-  // Reporting) and "status" (Milestone Status).
+  // Reporting), "status" (Milestone Status) and "attachments" (Attachments).
   const [milestoneTab, setMilestoneTab] = useState("create");
+  // Attachments tab: the startup's budget document + its description. Held
+  // as a pending edit until Save, same as the KPI form below.
+  const [budgetDocForm, setBudgetDocForm] = useState({ description: "" });
+  const [budgetDocFile, setBudgetDocFile] = useState(null);
+  const [savingBudgetDoc, setSavingBudgetDoc] = useState(false);
   const [showKpiForm, setShowKpiForm] = useState(false);
+  const [savingKpis, setSavingKpis] = useState(false);
   const [kpiForm, setKpiForm] = useState({
     monthlyRevenue: "",
     employees: "",
@@ -279,13 +366,10 @@ const EntrepreneurMilestones = () => {
     activeCustomers: "",
   });
   // The milestone form collects Milestone / Key activities / Planned amount /
-  // Timeline, and takes several rows so a whole plan can be entered before it
-  // goes to the BDA. Key activities reuse the tranchePlannedUse field the API
-  // already stores. Each milestone runs for its own timeline; only the tranche
-  // and the date the plan was set are shared by every row.
-  const [milestoneTranche, setMilestoneTranche] = useState("");
-  // The date the plan is being set. Milestone due dates are counted from it.
-  const [milestoneSetDate, setMilestoneSetDate] = useState(todayISO);
+  // KPI-Impact / Timeline, and takes several rows so a whole plan can be
+  // entered before it goes to the BDA. Key activities reuse the
+  // tranchePlannedUse field the API already stores. Each milestone sets its
+  // own tranche and date-set — a plan can cover several tranches at once.
   const [milestoneRows, setMilestoneRows] = useState([emptyMilestoneRow()]);
 
   const addMilestoneRow = () =>
@@ -297,6 +381,42 @@ const EntrepreneurMilestones = () => {
   const updateMilestoneRow = (index, key, value) =>
     setMilestoneRows((prev) =>
       prev.map((row, i) => (i === index ? { ...row, [key]: value } : row)),
+    );
+
+  const addActivity = (rowIndex) =>
+    setMilestoneRows((prev) =>
+      prev.map((row, i) =>
+        i === rowIndex
+          ? { ...row, activities: [...row.activities, emptyMilestoneActivity()] }
+          : row,
+      ),
+    );
+  const removeActivity = (rowIndex, activityIndex) =>
+    setMilestoneRows((prev) =>
+      prev.map((row, i) =>
+        i === rowIndex
+          ? {
+              ...row,
+              activities:
+                row.activities.length > 1
+                  ? row.activities.filter((_, ai) => ai !== activityIndex)
+                  : row.activities,
+            }
+          : row,
+      ),
+    );
+  const updateActivity = (rowIndex, activityIndex, field, value) =>
+    setMilestoneRows((prev) =>
+      prev.map((row, i) =>
+        i === rowIndex
+          ? {
+              ...row,
+              activities: row.activities.map((a, ai) =>
+                ai === activityIndex ? { ...a, [field]: value } : a,
+              ),
+            }
+          : row,
+      ),
     );
 
   // `silent` refreshes in the background: no full-page loader, and a failed
@@ -452,9 +572,9 @@ const EntrepreneurMilestones = () => {
     const filled = milestoneRows.filter(
       (row) =>
         row.title.trim() ||
-        row.tranchePlannedUse.trim() ||
-        String(row.plannedAmount).trim() ||
-        row.timelineSpan,
+        row.activities.some(
+          (a) => a.text.trim() || String(a.plannedAmount).trim() || a.timelineSpan,
+        ),
     );
 
     if (!filled.length) {
@@ -470,32 +590,34 @@ const EntrepreneurMilestones = () => {
     let created = 0;
     try {
       for (const row of filled) {
+        // Each activity plans its own amount and timeline; the milestone's
+        // own due date is the latest of them (it isn't done until its last
+        // activity is), and its trancheAmount is their sum.
+        const totalAmount = row.activities.reduce((sum, a) => {
+          const n = Number(String(a.plannedAmount || "").trim());
+          return sum + (Number.isFinite(n) ? n : 0);
+        }, 0);
+
         await createTrackerMilestone({
           title: row.title.trim(),
-          // Each milestone runs for its own span; the date the backend stores is
-          // that span counted from the date the plan was set.
           dueDate:
-            timelineSpanDueDate(row.timelineSpan, milestoneSetDate) || null,
-          linkedTranche: milestoneTranche || null,
-          tranchePlannedUse: row.tranchePlannedUse.trim() || null,
-          // The description carries only the plan marker — the planned amount
-          // and the span (see buildMilestoneDescription). trancheAmount is sent
-          // too so a backend that has the column gets a real number.
+            milestoneActivitiesDueDate(row.activities, todayISO()) || null,
+          linkedTranche: row.linkedTranche || null,
+          tranchePlannedUse: joinActivities(row.activities) || null,
+          // The description carries only the plan marker — each activity's
+          // planned amount, KPI/impact and timeline (see
+          // buildMilestoneDescription). trancheAmount is sent too, as their
+          // sum, so a backend that has the column gets a real number.
           description: buildMilestoneDescription("", {
-            plannedAmount: row.plannedAmount,
-            timelineSpan: row.timelineSpan,
+            activities: row.activities,
           }),
-          trancheAmount: String(row.plannedAmount).trim()
-            ? Number(row.plannedAmount)
-            : null,
+          trancheAmount: totalAmount > 0 ? totalAmount : null,
           planStatus: PLAN_STATUS.SUBMITTED,
         });
         created += 1;
       }
 
       setMilestoneRows([emptyMilestoneRow()]);
-      setMilestoneTranche("");
-      setMilestoneSetDate(todayISO());
       toast.success(
         created === 1
           ? "Milestone submitted for review"
@@ -530,25 +652,27 @@ const EntrepreneurMilestones = () => {
 
     setSavingRevision(true);
     try {
+      const totalAmount = form.activities.reduce((sum, a) => {
+        const n = Number(String(a.plannedAmount || "").trim());
+        return sum + (Number.isFinite(n) ? n : 0);
+      }, 0);
+
       await reviseTrackerMilestone(milestone.uuid, {
         title: form.title.trim(),
         linkedTranche: form.linkedTranche || null,
-        tranchePlannedUse: form.tranchePlannedUse.trim() || null,
-        // The due date is re-derived from the span, counted from the date the
-        // milestone was originally set rather than today, so revising a plan
-        // does not quietly push its deadline out.
+        tranchePlannedUse: joinActivities(form.activities) || null,
+        // The due date is re-derived from each activity's span, counted from
+        // the date the milestone was originally set rather than today, so
+        // revising a plan does not quietly push its deadline out.
         dueDate:
-          timelineSpanDueDate(
-            form.timelineSpan,
+          milestoneActivitiesDueDate(
+            form.activities,
             String(milestone.createdAt || "").slice(0, 10) || undefined,
           ) || milestone.dueDate || null,
         description: buildMilestoneDescription("", {
-          plannedAmount: form.plannedAmount,
-          timelineSpan: form.timelineSpan,
+          activities: form.activities,
         }),
-        trancheAmount: String(form.plannedAmount).trim()
-          ? Number(form.plannedAmount)
-          : null,
+        trancheAmount: totalAmount > 0 ? totalAmount : null,
         planStatus: PLAN_STATUS.RESUBMITTED,
       });
 
@@ -603,19 +727,6 @@ const EntrepreneurMilestones = () => {
             />
           </div>
           <div>
-            <label className={milestoneLabelClass} htmlFor="revise-activities">
-              Key activities
-            </label>
-            <input
-              id="revise-activities"
-              className={baseInputClass}
-              value={reviseForm.tranchePlannedUse}
-              onChange={(e) =>
-                setReviseField("tranchePlannedUse", e.target.value)
-              }
-            />
-          </div>
-          <div>
             <label className={milestoneLabelClass} htmlFor="revise-tranche">
               Tranche
             </label>
@@ -633,37 +744,129 @@ const EntrepreneurMilestones = () => {
               ))}
             </select>
           </div>
-          <div>
-            <label className={milestoneLabelClass} htmlFor="revise-amount">
-              Planned amount (TZS)
-            </label>
-            <input
-              id="revise-amount"
-              className={baseInputClass}
-              type="number"
-              min="0"
-              placeholder="0"
-              value={reviseForm.plannedAmount}
-              onChange={(e) => setReviseField("plannedAmount", e.target.value)}
-            />
-          </div>
-          <div>
-            <label className={milestoneLabelClass} htmlFor="revise-timeline">
-              Timeline
-            </label>
-            <select
-              id="revise-timeline"
-              className={baseInputClass}
-              value={reviseForm.timelineSpan}
-              onChange={(e) => setReviseField("timelineSpan", e.target.value)}
+        </div>
+
+        <div>
+          <label className={milestoneLabelClass} htmlFor="revise-activities-0">
+            Key activities — each with its own planned amount, KPI / impact, timeline and Date Set
+          </label>
+          <div className="space-y-2">
+            {reviseForm.activities.map((activity, activityIndex) => (
+              <div
+                key={activityIndex}
+                className="grid grid-cols-1 gap-2 rounded-xl border border-slate-200 p-3 md:grid-cols-[minmax(0,1.4fr)_minmax(0,0.9fr)_minmax(0,1.2fr)_minmax(0,0.9fr)_minmax(0,1fr)_auto] md:items-end"
+              >
+                <div>
+                  <label
+                    className={`${milestoneLabelClass} ${activityIndex > 0 ? "md:hidden" : ""}`}
+                    htmlFor={`revise-activities-${activityIndex}`}
+                  >
+                    Activity
+                  </label>
+                  <input
+                    id={`revise-activities-${activityIndex}`}
+                    className={baseInputClass}
+                    placeholder="Activity"
+                    value={activity.text}
+                    onChange={(e) =>
+                      updateReviseActivity(activityIndex, "text", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`${milestoneLabelClass} ${activityIndex > 0 ? "md:hidden" : ""}`}
+                    htmlFor={`revise-activity-amount-${activityIndex}`}
+                  >
+                    Planned amount (TZS)
+                  </label>
+                  <input
+                    id={`revise-activity-amount-${activityIndex}`}
+                    className={baseInputClass}
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={activity.plannedAmount}
+                    onChange={(e) =>
+                      updateReviseActivity(activityIndex, "plannedAmount", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`${milestoneLabelClass} ${activityIndex > 0 ? "md:hidden" : ""}`}
+                    htmlFor={`revise-activity-kpi-${activityIndex}`}
+                  >
+                    KPI / Impact
+                  </label>
+                  <input
+                    id={`revise-activity-kpi-${activityIndex}`}
+                    className={baseInputClass}
+                    placeholder="Expected KPI or impact"
+                    value={activity.kpiImpact}
+                    onChange={(e) =>
+                      updateReviseActivity(activityIndex, "kpiImpact", e.target.value)
+                    }
+                  />
+                </div>
+                <div>
+                  <label
+                    className={`${milestoneLabelClass} ${activityIndex > 0 ? "md:hidden" : ""}`}
+                    htmlFor={`revise-activity-timeline-${activityIndex}`}
+                  >
+                    Timeline
+                  </label>
+                  <select
+                    id={`revise-activity-timeline-${activityIndex}`}
+                    className={baseInputClass}
+                    value={activity.timelineSpan}
+                    onChange={(e) =>
+                      updateReviseActivity(activityIndex, "timelineSpan", e.target.value)
+                    }
+                  >
+                    <option value="">Select duration</option>
+                    {TIMELINE_SPAN_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label
+                    className={`${milestoneLabelClass} ${activityIndex > 0 ? "md:hidden" : ""}`}
+                    htmlFor={`revise-activity-date-set-${activityIndex}`}
+                  >
+                    Date Set
+                  </label>
+                  <input
+                    id={`revise-activity-date-set-${activityIndex}`}
+                    className={baseInputClass}
+                    type="date"
+                    value={activity.setDate}
+                    onChange={(e) =>
+                      updateReviseActivity(activityIndex, "setDate", e.target.value)
+                    }
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeReviseActivity(activityIndex)}
+                  disabled={reviseForm.activities.length <= 1}
+                  title="Remove activity"
+                  className="rounded-xl bg-rose-50 px-3 py-3 text-xs font-bold text-rose-700 transition hover:bg-rose-100 disabled:opacity-50"
+                >
+                  Remove
+                </button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={addReviseActivity}
+              className="text-xs font-bold text-[#082d77] hover:underline"
             >
-              <option value="">Select duration</option>
-              {TIMELINE_SPAN_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+              + Add activity
+            </button>
           </div>
         </div>
 
@@ -701,22 +904,101 @@ const EntrepreneurMilestones = () => {
     });
   }, [enterprise?.uuid]);
 
-  const onSaveKpis = (e) => {
+  // Was previously a local-only optimistic update with no backend call at
+  // all — it showed "KPI values updated" and reset silently on next reload.
+  // Now actually persists via the existing, already Enterprenuer-authorized
+  // PATCH /tracker/enterprises/:uuid/kpis.
+  const onSaveKpis = async (e) => {
     e.preventDefault();
-    setDashboard((prev) => ({
-      ...prev,
-      enterprise: {
-        ...(prev?.enterprise || {}),
+    if (savingKpis) return;
+
+    if (!enterprise?.uuid) {
+      toast.error("No tracker workspace yet — nothing to save KPIs to.");
+      return;
+    }
+
+    setSavingKpis(true);
+    try {
+      const payload = {
         monthlyRevenue: Number(kpiForm.monthlyRevenue || 0),
         employees: Number(kpiForm.employees || 0),
         wasteDiverted: Number(kpiForm.wasteDiverted || 0),
-        ceReadinessScore: kpiForm.ceReadinessScore === "" ? null : Number(kpiForm.ceReadinessScore),
+        ceReadinessScore:
+          kpiForm.ceReadinessScore === "" ? null : Number(kpiForm.ceReadinessScore),
         capitalMobilised: Number(kpiForm.capitalMobilised || 0),
         activeCustomers: Number(kpiForm.activeCustomers || 0),
-      },
-    }));
-    setShowKpiForm(false);
-    toast.success("KPI values updated");
+      };
+
+      const updated = await updateMentorEnterpriseKpis(enterprise.uuid, payload);
+
+      setDashboard((prev) => ({
+        ...prev,
+        enterprise: { ...(prev?.enterprise || {}), ...(updated || payload) },
+      }));
+      setShowKpiForm(false);
+      toast.success("KPI values updated");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to save KPI values"
+      );
+    } finally {
+      setSavingKpis(false);
+    }
+  };
+
+  const enterpriseDocuments = parseDocuments(enterprise?.documents);
+  const budgetDocumentUrl = enterpriseDocuments.budgetDocumentUrl || "";
+
+  useEffect(() => {
+    setBudgetDocForm({
+      description: parseDocuments(enterprise?.documents).budgetDocumentDescription || "",
+    });
+    setBudgetDocFile(null);
+  }, [enterprise?.uuid]);
+
+  // Saves the description on its own, and the file too when a new one was
+  // picked — matches the KYC/contract uploads elsewhere: the file goes up via
+  // uploadFile first, then the URL (and description) is persisted on the
+  // enterprise's budget-document endpoint, which merges into the existing
+  // `documents` JSON rather than replacing it (so KYC documents stored there
+  // survive).
+  const onSaveBudgetDocument = async (e) => {
+    e.preventDefault();
+    if (!enterprise?.uuid) {
+      toast.error("No tracker workspace yet — nothing to attach this to.");
+      return;
+    }
+
+    setSavingBudgetDoc(true);
+    try {
+      let uploadedUrl = budgetDocumentUrl;
+      if (budgetDocFile) {
+        const formData = new FormData();
+        formData.append("file", budgetDocFile);
+        uploadedUrl = await uploadFile(formData);
+        if (!uploadedUrl || typeof uploadedUrl !== "string") {
+          throw new Error("Upload failed");
+        }
+      }
+
+      const updated = await updateEnterpriseBudgetDocument(enterprise.uuid, {
+        budgetDocumentUrl: uploadedUrl,
+        budgetDocumentDescription: budgetDocForm.description.trim(),
+      });
+
+      setDashboard((prev) => ({
+        ...prev,
+        enterprise: { ...(prev?.enterprise || {}), documents: updated?.documents },
+      }));
+      setBudgetDocFile(null);
+      toast.success("Attachment saved");
+    } catch (error) {
+      toast.error(
+        error?.response?.data?.message || "Failed to save the attachment",
+      );
+    } finally {
+      setSavingBudgetDoc(false);
+    }
   };
 
   const programName = getEnterpriseProgramName(program, enterprise);
@@ -1064,8 +1346,12 @@ const EntrepreneurMilestones = () => {
                     <input id="kpi-active-customers" className={baseInputClass} type="number" min="0" placeholder="Active customers" value={kpiForm.activeCustomers} onChange={(e) => setKpiForm((prev) => ({ ...prev, activeCustomers: e.target.value }))} />
                   </div>
                   <div className="flex items-end justify-end md:col-span-3">
-                    <button type="submit" className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54]">
-                      Save KPI Updates
+                    <button
+                      type="submit"
+                      disabled={savingKpis}
+                      className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      {savingKpis ? "Saving..." : "Save KPI Updates"}
                     </button>
                   </div>
                 </form>
@@ -1139,6 +1425,7 @@ const EntrepreneurMilestones = () => {
                 { id: "create", label: "+ Milestone" },
                 { id: "status", label: "Milestone Status" },
                 { id: "report", label: "Milestone Reporting" },
+                { id: "attachments", label: "Attachments" },
               ].map((tab) => (
                 <button
                   key={tab.id}
@@ -1168,154 +1455,208 @@ const EntrepreneurMilestones = () => {
                 subtitle="Create milestones with their key activities, planned amount and timeline, then wait for mentor approval."
               >
                 <form onSubmit={onCreateMilestone} className="mb-5 space-y-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4">
-                  {/* Step 1 — the tranche these milestones belong to and the
-                      date the plan is being set. Both are shared by every row
-                      below; the timeline is per milestone. The tranche list is
-                      the startup's own, so a plan can be drafted before finance
-                      has configured a schedule. */}
-                  <div className={milestoneGridClass}>
-                    <div>
-                      <label className={milestoneLabelClass} htmlFor="milestone-tranche">
-                        Tranche
-                      </label>
-                      <select
-                        id="milestone-tranche"
-                        className={baseInputClass}
-                        value={milestoneTranche}
-                        onChange={(e) => setMilestoneTranche(e.target.value)}
-                      >
-                        <option value="">No tranche</option>
-                        {MILESTONE_TRANCHE_OPTIONS.map((title) => (
-                          <option key={title} value={title}>
-                            {title}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                    <div>
-                      <label className={milestoneLabelClass} htmlFor="milestone-set-date">
-                        Date Set
-                      </label>
-                      <input
-                        id="milestone-set-date"
-                        className={baseInputClass}
-                        type="date"
-                        value={milestoneSetDate}
-                        onChange={(e) => setMilestoneSetDate(e.target.value)}
-                      />
-                    </div>
-                  </div>
+                  {/* One table: Tranche and Milestone rowSpan down one
+                      milestone's activities (each milestone sets its own
+                      tranche, independent of the others); every other column
+                      is one row per activity — each activity plans its own
+                      amount, KPI/impact, timeline and Date Set (the date its
+                      own timeline is counted from). The milestone's own due
+                      date is the latest of its activities' and its budget
+                      their sum (see onCreateMilestone). Key activities are
+                      still mirrored into the existing tranchePlannedUse
+                      field. */}
+                  <div className="overflow-x-auto rounded-xl border border-black/10">
+                    <table className="w-full min-w-[960px] border-collapse bg-white text-left">
+                      <thead>
+                        <tr>
+                          <th className={tableHeadClass}>Tranche</th>
+                          <th className={tableHeadClass}>Milestone</th>
+                          <th className={tableHeadClass}>Key Activities</th>
+                          <th className={tableHeadClass}>Planned amount (TZS)</th>
+                          <th className={tableHeadClass}>KPI / Impact</th>
+                          <th className={tableHeadClass}>Timeline</th>
+                          <th className={tableHeadClass}>Date Set</th>
+                          <th className={tableHeadClass} />
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {milestoneRows.map((row, idx) => (
+                          <Fragment key={idx}>
+                            {row.activities.map((activity, activityIndex) => {
+                              const isFirstOfMilestone = activityIndex === 0;
 
-                  {/* Outside the grid — a full-width item inside it would widen
-                      the Remove column and pull these fields out of line with
-                      the milestone rows. */}
-                  <p className="border-b border-[#082d77]/10 pb-4 text-xs text-slate-500">
-                    Every milestone below is linked to the tranche selected here,
-                    and its timeline is counted from the date set here.
+                              return (
+                                <tr key={activityIndex}>
+                                  {isFirstOfMilestone && (
+                                    <td
+                                      rowSpan={row.activities.length}
+                                      className={tableCellClass}
+                                    >
+                                      <select
+                                        aria-label="Tranche"
+                                        className={baseInputClass}
+                                        value={row.linkedTranche}
+                                        onChange={(e) =>
+                                          updateMilestoneRow(idx, "linkedTranche", e.target.value)
+                                        }
+                                      >
+                                        <option value="">No tranche</option>
+                                        {MILESTONE_TRANCHE_OPTIONS.map((title) => (
+                                          <option key={title} value={title}>
+                                            {title}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                  )}
+                                  {isFirstOfMilestone && (
+                                    <td
+                                      rowSpan={row.activities.length}
+                                      className={tableCellClass}
+                                    >
+                                      <div className="space-y-2">
+                                        <input
+                                          aria-label="Milestone"
+                                          className={baseInputClass}
+                                          placeholder="Milestone"
+                                          value={row.title}
+                                          onChange={(e) =>
+                                            updateMilestoneRow(idx, "title", e.target.value)
+                                          }
+                                        />
+                                        <button
+                                          type="button"
+                                          onClick={() => removeMilestoneRow(idx)}
+                                          disabled={milestoneRows.length <= 1}
+                                          className={milestoneRemoveClass}
+                                        >
+                                          Remove milestone
+                                        </button>
+                                      </div>
+                                    </td>
+                                  )}
+                                  <td className={tableCellClass}>
+                                      <input
+                                        aria-label="Activity"
+                                        className={baseInputClass}
+                                        placeholder="Activity"
+                                        value={activity.text}
+                                        onChange={(e) =>
+                                          updateActivity(idx, activityIndex, "text", e.target.value)
+                                        }
+                                      />
+                                    </td>
+                                    <td className={tableCellClass}>
+                                      <input
+                                        aria-label="Planned amount (TZS)"
+                                        className={baseInputClass}
+                                        type="number"
+                                        min="0"
+                                        placeholder="0"
+                                        value={activity.plannedAmount}
+                                        onChange={(e) =>
+                                          updateActivity(
+                                            idx,
+                                            activityIndex,
+                                            "plannedAmount",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className={tableCellClass}>
+                                      <input
+                                        aria-label="KPI / Impact"
+                                        className={baseInputClass}
+                                        placeholder="Expected KPI or impact"
+                                        value={activity.kpiImpact}
+                                        onChange={(e) =>
+                                          updateActivity(
+                                            idx,
+                                            activityIndex,
+                                            "kpiImpact",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className={tableCellClass}>
+                                      <select
+                                        aria-label="Timeline"
+                                        className={baseInputClass}
+                                        value={activity.timelineSpan}
+                                        onChange={(e) =>
+                                          updateActivity(
+                                            idx,
+                                            activityIndex,
+                                            "timelineSpan",
+                                            e.target.value,
+                                          )
+                                        }
+                                      >
+                                        <option value="">Select duration</option>
+                                        {TIMELINE_SPAN_OPTIONS.map((option) => (
+                                          <option key={option.value} value={option.value}>
+                                            {option.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                    <td className={tableCellClass}>
+                                      <input
+                                        aria-label="Date Set"
+                                        className={baseInputClass}
+                                        type="date"
+                                        value={activity.setDate}
+                                        onChange={(e) =>
+                                          updateActivity(
+                                            idx,
+                                            activityIndex,
+                                            "setDate",
+                                            e.target.value,
+                                          )
+                                        }
+                                      />
+                                    </td>
+                                    <td className={tableCellClass}>
+                                      <button
+                                        type="button"
+                                        onClick={() => removeActivity(idx, activityIndex)}
+                                        disabled={row.activities.length <= 1}
+                                        title="Remove activity"
+                                        className={milestoneRemoveClass}
+                                      >
+                                        Remove
+                                      </button>
+                                    </td>
+                                  </tr>
+                                );
+                              })}
+                              <tr>
+                                <td colSpan={8} className={`${tableCellClass} bg-[#f8fafc]`}>
+                                  <button
+                                    type="button"
+                                    onClick={() => addActivity(idx)}
+                                    className="text-xs font-bold text-[#082d77] hover:underline"
+                                  >
+                                    + Add activity to “{row.title || `Milestone ${idx + 1}`}”
+                                  </button>
+                                </td>
+                              </tr>
+                          </Fragment>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <p className="text-xs text-slate-500">
+                    Each milestone sets its own Tranche. Each activity within
+                    it plans its own amount, expected KPI/impact, timeline and
+                    Date Set (the date its timeline is counted from) — the
+                    milestone's own timeline is the latest of its activities,
+                    and its budget their sum.
                   </p>
 
-                  {/* Step 2 — the milestones themselves. Key activities are
-                      stored on the existing tranchePlannedUse field. Labels
-                      repeat on mobile, where the row stacks. */}
-                  {milestoneRows.map((row, idx) => (
-                    <div
-                      key={idx}
-                      className={milestoneGridClass}
-                    >
-                      <div>
-                        <label
-                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
-                          htmlFor={`milestone-title-${idx}`}
-                        >
-                          Milestone
-                        </label>
-                        <input
-                          id={`milestone-title-${idx}`}
-                          className={baseInputClass}
-                          placeholder="Milestone"
-                          value={row.title}
-                          onChange={(e) => updateMilestoneRow(idx, "title", e.target.value)}
-                        />
-                      </div>
-                      <div>
-                        <label
-                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
-                          htmlFor={`milestone-activities-${idx}`}
-                        >
-                          Key activities
-                        </label>
-                        <input
-                          id={`milestone-activities-${idx}`}
-                          className={baseInputClass}
-                          placeholder="Key activities"
-                          value={row.tranchePlannedUse}
-                          onChange={(e) => updateMilestoneRow(idx, "tranchePlannedUse", e.target.value)}
-                        />
-                      </div>
-                      {/* Budgeted for this milestone. Carried into the reporting
-                          grid as its Budgeted amount. */}
-                      <div>
-                        <label
-                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
-                          htmlFor={`milestone-planned-amount-${idx}`}
-                        >
-                          Planned amount (TZS)
-                        </label>
-                        <input
-                          id={`milestone-planned-amount-${idx}`}
-                          className={baseInputClass}
-                          type="number"
-                          min="0"
-                          placeholder="0"
-                          value={row.plannedAmount}
-                          onChange={(e) =>
-                            updateMilestoneRow(idx, "plannedAmount", e.target.value)
-                          }
-                        />
-                      </div>
-                      {/* How long this milestone runs for, not a calendar date —
-                          its due date is that span counted from the date set
-                          above. Each milestone sets its own. */}
-                      <div>
-                        <label
-                          className={`${milestoneLabelClass} ${idx > 0 ? "md:hidden" : ""}`}
-                          htmlFor={`milestone-timeline-${idx}`}
-                        >
-                          Timeline
-                        </label>
-                        <select
-                          id={`milestone-timeline-${idx}`}
-                          className={baseInputClass}
-                          value={row.timelineSpan}
-                          onChange={(e) =>
-                            updateMilestoneRow(idx, "timelineSpan", e.target.value)
-                          }
-                        >
-                          <option value="">Select duration</option>
-                          {TIMELINE_SPAN_OPTIONS.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeMilestoneRow(idx)}
-                        disabled={milestoneRows.length <= 1}
-                        title="Remove milestone"
-                        className={milestoneRemoveClass}
-                      >
-                        Remove
-                      </button>
-                    </div>
-                  ))}
-
-                  {/* Inset by the Remove column plus its gap (5.5rem + gap-3),
-                      so Submit ends level with the Timeline input above rather
-                      than with the Remove buttons. Mobile stacks, so no inset
-                      there. See milestoneGridClass. */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 md:pr-[6.25rem]">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
                     <button
                       type="button"
                       onClick={addMilestoneRow}
@@ -1508,6 +1849,7 @@ const EntrepreneurMilestones = () => {
                           uuid: item.uuid,
                           title: item.title,
                           activity: item.tranchePlannedUse,
+                          kpiImpact: milestoneKpiImpact(item),
                           timeline: milestoneTimelineSpan(item),
                           report: getReportRow(item),
                           attachments,
@@ -1671,6 +2013,83 @@ const EntrepreneurMilestones = () => {
 
               </div>
             </PortalCard>
+            )}
+
+            {milestoneTab === "attachments" && (
+              <PortalCard
+                icon={<ClipboardList className="h-5 w-5" />}
+                title="Attachments"
+                subtitle="Upload your budget document and describe it — your business coach and finance officer can see it here."
+              >
+                {!enterprise?.uuid ? (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    No tracker workspace yet — attachments will be available once one exists.
+                  </div>
+                ) : (
+                  <form onSubmit={onSaveBudgetDocument} className="space-y-4">
+                    <div>
+                      <label className={milestoneLabelClass} htmlFor="budget-document-file">
+                        Budget Document
+                      </label>
+                      <input
+                        id="budget-document-file"
+                        className={baseInputClass}
+                        type="file"
+                        accept="application/pdf,image/*,.doc,.docx,.xls,.xlsx"
+                        onChange={(e) => setBudgetDocFile(e.target.files?.[0] || null)}
+                      />
+                      {budgetDocumentUrl ? (
+                        <p className="mt-2 text-sm">
+                          <a
+                            href={budgetDocumentUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-bold text-[#082d77] hover:underline"
+                          >
+                            View current budget document
+                          </a>
+                          {budgetDocFile ? (
+                            <span className="ml-2 text-xs text-slate-500">
+                              — replacing with "{budgetDocFile.name}" on save
+                            </span>
+                          ) : (
+                            <span className="ml-2 text-xs text-slate-500">
+                              — choose a file above to replace it
+                            </span>
+                          )}
+                        </p>
+                      ) : (
+                        <p className="mt-2 text-xs text-slate-500">
+                          No budget document uploaded yet.
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className={milestoneLabelClass} htmlFor="budget-document-description">
+                        Description
+                      </label>
+                      <textarea
+                        id="budget-document-description"
+                        className={`${baseInputClass} min-h-[100px]`}
+                        placeholder="Describe this budget document"
+                        value={budgetDocForm.description}
+                        onChange={(e) =>
+                          setBudgetDocForm({ description: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={savingBudgetDoc}
+                      className="rounded-xl bg-[#16a34a] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#15803d] disabled:cursor-not-allowed disabled:opacity-70"
+                    >
+                      {savingBudgetDoc ? "Saving..." : "Save attachment"}
+                    </button>
+                  </form>
+                )}
+              </PortalCard>
             )}
         </div>
       </main>

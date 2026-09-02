@@ -75,6 +75,8 @@ import GeneralResources from "./pages/learnandgrow/generalResources/GeneralResou
 import BusinessTools from "./pages/learnandgrow/businessTools/BusinessTools";
 import UploadBusinessTool from "./pages/learnandgrow/businessTools/UploadBusinessTool";
 import EditBusinessTool from "./pages/learnandgrow/businessTools/EditBusinessTool";
+import BusinessToolCategory from "./pages/learnandgrow/businessTools/BusinessToolCategory";
+import GenerateBusinessTool from "./pages/learnandgrow/businessTools/GenerateBusinessTool";
 
 // CRAT System Pages
 import Introduction from "./pages/cratSystem/Introduction";
@@ -724,6 +726,14 @@ function App() {
             <Route path="classRooms" element={<ClassRooms />} />
             <Route path="generalResources" element={<GeneralResources />} />
             <Route path="businessTools" element={<BusinessTools />} />
+            <Route
+              path="businessTools/category/:category"
+              element={<BusinessToolCategory />}
+            />
+            <Route
+              path="businessTools/generate/:uuid"
+              element={<GenerateBusinessTool />}
+            />
             <Route path="uploadBusinessTool" element={<UploadBusinessTool />} />
             <Route
               path="editBusinessTool/:uuid"

@@ -15,6 +15,7 @@ import MilestoneReportTable from "@/components/tracker/MilestoneReportTable";
 import MilestoneStatusTable from "@/components/tracker/MilestoneStatusTable";
 import {
   formatReportAmount,
+  milestoneKpiImpact,
   milestonePlannedAmount,
   milestoneTimelineSpan,
   reportFromMilestone,
@@ -22,7 +23,7 @@ import {
 import TrancheGroupList, {
   groupMilestonesByTranche,
 } from "@/components/tracker/TrancheGroupList";
-import { ClipboardList, Flag } from "lucide-react";
+import { ClipboardList, Download, FileText, Flag } from "lucide-react";
 import {
   PLAN_STATUS,
   REPORT_STATUS,
@@ -44,6 +45,22 @@ const tableHeadClass =
   "border border-black/10 bg-[#eaf0fb] px-3 py-2 text-left text-xs font-black text-[#111827]";
 const tableSelectClass =
   "w-full rounded-lg border border-black/10 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-[#082d77] disabled:opacity-60";
+
+// The enterprise's `documents` field is a flat { key: value } object (same
+// one the KYC screen reads/writes) — the startup's uploaded budget document
+// lives under `budgetDocumentUrl`/`budgetDocumentDescription`.
+const parseDocuments = (value) => {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
 
 const formatCurrency = (value, currency = "TZS") => {
   const amount = Number(value || 0);
@@ -582,6 +599,39 @@ const EnterpriseTrackerDetails = () => {
               contractName={enterprise?.name || undefined}
             />
 
+            {/* The startup's own budget document, uploaded from their
+                Attachments tab — read-only here, the BDA just views it. */}
+            {(() => {
+              const documents = parseDocuments(enterprise?.documents);
+              const budgetDocumentUrl = documents.budgetDocumentUrl;
+              if (!budgetDocumentUrl) return null;
+
+              return (
+                <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70">
+                  <div className="mb-1 flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-emerald-600" />
+                    <h2 className="text-lg font-black tracking-tight text-slate-950">
+                      Budget Document
+                    </h2>
+                  </div>
+                  {documents.budgetDocumentDescription && (
+                    <p className="mb-3 text-sm text-slate-500">
+                      {documents.budgetDocumentDescription}
+                    </p>
+                  )}
+                  <a
+                    href={budgetDocumentUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 text-sm font-bold text-[#163b8f] hover:underline"
+                  >
+                    <Download className="h-4 w-4" />
+                    View / download budget document
+                  </a>
+                </div>
+              );
+            })()}
+
             {/* The plan and the reports filed against it, split the same way
                 the startup sees them. */}
             <div className="flex flex-wrap gap-2">
@@ -682,6 +732,7 @@ const EnterpriseTrackerDetails = () => {
                             uuid: item.uuid,
                             title: item.title,
                             activity: item.tranchePlannedUse,
+                            kpiImpact: milestoneKpiImpact(item),
                             timeline: milestoneTimelineSpan(item),
                             report: reportFromMilestone(item),
                             attachments: parseSubmissionAttachments(
@@ -834,6 +885,11 @@ const EnterpriseTrackerDetails = () => {
                                 {item.tranchePlannedUse ? (
                                   <span className="mt-1 block text-xs font-normal text-[#64748b]">
                                     {item.tranchePlannedUse}
+                                  </span>
+                                ) : null}
+                                {milestoneKpiImpact(item) ? (
+                                  <span className="mt-1 block text-xs font-normal text-emerald-700">
+                                    KPI/Impact: {milestoneKpiImpact(item)}
                                   </span>
                                 ) : null}
                               </td>

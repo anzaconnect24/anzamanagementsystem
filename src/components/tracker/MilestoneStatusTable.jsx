@@ -7,6 +7,7 @@ import {
 } from "@/utils/trancheWorkflow";
 import {
   formatReportAmount,
+  milestoneKpiImpact,
   milestonePlannedAmount,
   milestoneTimelineSpan,
 } from "@/utils/milestoneReport";
@@ -114,6 +115,11 @@ const MilestoneStatusTable = ({
                   {milestone.tranchePlannedUse ? (
                     <span className="mt-1 block text-xs font-normal text-[#64748b]">
                       {milestone.tranchePlannedUse}
+                    </span>
+                  ) : null}
+                  {milestoneKpiImpact(milestone) ? (
+                    <span className="mt-1 block text-xs font-normal text-emerald-700">
+                      KPI/Impact: {milestoneKpiImpact(milestone)}
                     </span>
                   ) : null}
                 </td>

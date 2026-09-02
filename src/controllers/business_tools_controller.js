@@ -75,3 +75,39 @@ export const deleteBusinessTool = async (uuid) => {
     throw error.response?.data || error;
   }
 };
+
+export const generateBusinessTool = async (uuid, data) => {
+  try {
+    const user = getUser();
+    const response = await axios.post(
+      `${server_url}/business_tools/${uuid}/generate`,
+      data,
+      {
+        headers: {
+          Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+        },
+      },
+    );
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};
+
+// Not a business-tools endpoint — reuses the existing GET /business/user
+// (derived from the authenticated user, no client-supplied business id),
+// which had no frontend wrapper yet. Kept here since the AI generation page
+// is currently its only caller.
+export const getMyBusiness = async () => {
+  try {
+    const user = getUser();
+    const response = await axios.get(`${server_url}/business/user`, {
+      headers: {
+        Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    throw error.response?.data || error;
+  }
+};

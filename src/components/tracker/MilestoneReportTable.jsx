@@ -19,8 +19,9 @@ import {
 //   Actual amount | Variance | Receipt/evidence | Attach evidence | Narrative
 //
 // Props:
-//   rows        - [{ uuid, title, activity, timeline, report, attachments,
-//                    pendingFiles, readOnly, action, detail, reviewComment }]
+//   rows        - [{ uuid, title, activity, kpiImpact, timeline, report,
+//                    attachments, pendingFiles, readOnly, action, detail,
+//                    reviewComment }]
 //   editable    - render inputs instead of text (startup side)
 //   onChange    - (uuid, key, value) for edited cells
 //   onAttach    - (uuid, files) when documents are picked in Attach evidence
@@ -121,6 +122,11 @@ const MilestoneReportTable = ({
                   {row.activity ? (
                     <span className="mt-1 block text-xs font-normal text-[#64748b]">
                       {row.activity}
+                    </span>
+                  ) : null}
+                  {row.kpiImpact ? (
+                    <span className="mt-1 block text-xs font-normal text-emerald-700">
+                      KPI/Impact: {row.kpiImpact}
                     </span>
                   ) : null}
                 </td>

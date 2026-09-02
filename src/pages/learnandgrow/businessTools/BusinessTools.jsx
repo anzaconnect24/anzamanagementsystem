@@ -4,20 +4,14 @@ import { useContext, useEffect, useState } from "react";
 import { useRouter } from "@/utils/navigation";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
-import {
-  deleteBusinessTool,
-  getAllBusinessTools,
-} from "@/controllers/business_tools_controller";
+import { getAllBusinessTools } from "@/controllers/business_tools_controller";
 import toast from "react-hot-toast";
 import { UserContext } from "../../../layouts/DashboardLayout";
+import { BUSINESS_TOOL_CATEGORIES } from "../../../constants/learnAndGrowCategories";
 
-import {
-  FaEdit,
-  FaTrash,
-  FaDownload,
-  FaLayerGroup,
-  FaClock,
-} from "react-icons/fa";
+import { FaFolderOpen, FaLayerGroup, FaDownload, FaClock } from "react-icons/fa";
+
+const UNCATEGORIZED = "Uncategorized";
 
 const BusinessTools = () => {
   const { userDetails } = useContext(UserContext);
@@ -44,128 +38,81 @@ const BusinessTools = () => {
       .finally(() => setLoading(false));
   };
 
-  const formatFileSize = (bytes) => {
-    if (!bytes) return "N/A";
+  const knownCategoryNames = BUSINESS_TOOL_CATEGORIES.map((category) => category.name);
 
-    if (bytes < 1024) return `${bytes} B`;
+  const uncategorizedCount = tools.filter(
+    (tool) => !tool.category || !knownCategoryNames.includes(tool.category)
+  ).length;
 
-    if (bytes < 1024 * 1024) {
-      return `${(bytes / 1024).toFixed(2)} KB`;
-    }
-
-    return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  };
-
-  const formatFileType = (type) => {
-    if (!type) return "File";
-
-    return (
-      type.charAt(0).toUpperCase() +
-      type.slice(1).toLowerCase()
-    );
-  };
-
-  const handleDelete = async (tool) => {
-    const confirmed = confirm(
-      `Are you sure you want to delete "${tool.fileName}"?`
-    );
-
-    if (!confirmed) return;
-
-    try {
-      await deleteBusinessTool(tool.uuid);
-
-      toast.success("Deleted successfully");
-
-      setTools((prev) =>
-        prev.filter((item) => item.uuid !== tool.uuid)
-      );
-    } catch (error) {
-      console.error(error);
-      toast.error("Delete failed");
-    }
-  };
-
-  const handleDownload = (fileUrl, fileName) => {
-    const link = document.createElement("a");
-
-    link.href = fileUrl;
-    link.download = fileName;
-    link.target = "_blank";
-
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  const categoryTiles = [
+    ...BUSINESS_TOOL_CATEGORIES.map((category) => ({
+      ...category,
+      count: tools.filter((tool) => tool.category === category.name).length,
+    })),
+    ...(uncategorizedCount > 0
+      ? [
+          {
+            name: UNCATEGORIZED,
+            description: "Templates that haven't been assigned a category yet",
+            image: "/images/business-tool-card.jpg",
+            count: uncategorizedCount,
+          },
+        ]
+      : []),
+  ];
 
   if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen px-6 py-4">
       {/* HERO */}
-      {tools[0] && (
+      <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div
-          onClick={() =>
-            handleDownload(
-              tools[0].fileUrl,
-              tools[0].fileName
-            )
-          }
-          className="relative mb-10 min-h-[200px] cursor-pointer overflow-hidden rounded-2xl bg-black shadow-sm"
-        >
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: `url('${
-                tools[0].thumbnailUrl ||
-                "/images/business_tools_hero.svg"
-              }')`,
-            }}
-          />
+          className="absolute inset-0 bg-cover bg-center"
+          style={{
+            backgroundImage: "url('/images/business_tools_hero.svg')",
+          }}
+        />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
 
-          <div className="relative z-10 max-w-3xl p-7 text-white">
-            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
-              <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
-              Business Toolkit
+        <div className="relative z-10 max-w-3xl p-10 text-white">
+          <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+            <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+            Business Toolkit
+          </span>
+
+          <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+            Business Tools
+          </h2>
+
+          <p className="mb-6 text-lg text-white/85 drop-shadow-md">
+            Browse practical business templates organized by category.
+          </p>
+
+          <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+            <span className="flex items-center gap-2">
+              <FaLayerGroup />
+              {BUSINESS_TOOL_CATEGORIES.length} Categories
             </span>
 
-            <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
-              Business Tools
-            </h2>
+            <span className="flex items-center gap-2">
+              <FaDownload />
+              {tools.length} Templates
+            </span>
 
-            <p className="mb-6 text-lg text-white/85 drop-shadow-md">
-              Download ready-to-use templates,
-              documents, and tools to help you
-              manage, structure, and grow your
-              business more effectively.
-            </p>
-
-            <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
-              <span className="flex items-center gap-2">
-                <FaLayerGroup />
-                {tools.length} Tools
-              </span>
-
-              <span className="flex items-center gap-2">
-                <FaDownload />
-                Downloadable Resources
-              </span>
-
-              <span className="flex items-center gap-2">
-                <FaClock />
-                Practical Support
-              </span>
-            </div>
+            <span className="flex items-center gap-2">
+              <FaClock />
+              Practical Support
+            </span>
           </div>
         </div>
-      )}
+      </div>
 
       {/* HEADER */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-[#172033]">
-          Available Tools
+          Browse by Category
         </h2>
 
         {["Admin"].includes(userDetails.role) && (
@@ -179,114 +126,59 @@ const BusinessTools = () => {
         )}
       </div>
 
-      {/* CARDS */}
+      {/* CATEGORY TILES */}
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {tools.map((tool) => (
-          <div
-            key={tool.uuid}
-            onClick={() =>
-              handleDownload(
-                tool.fileUrl,
-                tool.fileName
-              )
-            }
-            className="group cursor-pointer overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:scale-[1.02] hover:shadow-lg"
-          >
-            <div className="relative h-40 overflow-hidden bg-black">
-              <div
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
-                style={{
-                  backgroundImage: `url('${
-                    tool.thumbnailUrl ||
-                    "/images/business-tool-card.jpg"
-                  }')`,
-                }}
-              />
+        {categoryTiles.map((category) => {
+          const hasTemplates = category.count > 0;
 
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-            </div>
+          return (
+            <div
+              key={category.name}
+              onClick={() => {
+                if (!hasTemplates) return;
 
-            <div className="p-4">
-              <h3
-                className="mb-2 line-clamp-1 text-base font-bold text-[#111827]"
-                title={tool.fileName}
-              >
-                {tool.fileName}
-              </h3>
+                router.push(
+                  `/dashboard/businessTools/category/${encodeURIComponent(
+                    category.name
+                  )}`
+                );
+              }}
+              className={`group overflow-hidden rounded-xl bg-white shadow-md transition duration-200 ${
+                hasTemplates
+                  ? "cursor-pointer hover:scale-[1.02] hover:shadow-lg"
+                  : "cursor-not-allowed opacity-70"
+              }`}
+            >
+              <div className="relative h-48 overflow-hidden bg-black">
+                <div
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-300 group-hover:scale-105"
+                  style={{ backgroundImage: `url('${category.image}')` }}
+                />
 
-              <p className="mb-6 line-clamp-2 text-sm text-[#6f6f72]">
-                {tool.description ||
-                  "No description available"}
-              </p>
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-              <div className="mb-3 flex items-center justify-between text-xs text-[#8a8f98]">
-                <span>
-                  {formatFileSize(tool.fileSize)}
-                </span>
-
-                <span>
-                  {formatFileType(tool.fileType)}
-                </span>
+                <div className="relative z-10 flex h-full items-end p-4 text-white">
+                  <h3 className="line-clamp-2 text-base font-semibold leading-tight drop-shadow-md">
+                    {category.name}
+                  </h3>
+                </div>
               </div>
 
-              <div className="flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
-                <span className="flex items-center gap-2">
-                  <FaDownload />
-                  Downloadable
-                </span>
+              <div className="p-4">
+                <p className="text-sm text-[#6f6f72]">
+                  {category.description}
+                </p>
 
-                {["Admin"].includes(
-                  userDetails.role
-                ) ? (
-                  <div className="flex items-center gap-4">
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-
-                        router.push(
-                          `/dashboard/editBusinessTool/${tool.uuid}`
-                        );
-                      }}
-                      className="flex items-center gap-1 text-green-600 hover:text-green-700"
-                    >
-                      <FaEdit />
-                      Edit
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDelete(tool);
-                      }}
-                      className="flex items-center gap-1 text-red-600 hover:text-red-700"
-                    >
-                      <FaTrash />
-                      Delete
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-
-                      handleDownload(
-                        tool.fileUrl,
-                        tool.fileName
-                      );
-                    }}
-                    className="flex items-center gap-2 font-medium text-[#f08a3c] transition hover:text-[#d97706]"
-                  >
-                    <FaDownload />
-                    Download
-                  </button>
-                )}
+                <div className="mt-4 flex items-center justify-between border-t border-black/10 pt-4 text-xs text-[#8a8f98]">
+                  <span className="flex items-center gap-1">
+                    <FaFolderOpen />
+                    {category.count} Templates
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

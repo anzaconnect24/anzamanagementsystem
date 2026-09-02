@@ -41,9 +41,9 @@ export default defineConfig({
     },
     proxy: {
       "/api": {
-        target: "https://api.anzaconnect.co.tz",
+        target: "http://localhost:5000",
         changeOrigin: true,
-        secure: true,
+        secure: false,
         ws: true,
         rewrite: (requestPath) => requestPath.replace(/^\/api/, ""),
       },

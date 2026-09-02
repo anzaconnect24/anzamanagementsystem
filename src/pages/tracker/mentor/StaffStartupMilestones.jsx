@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Loader from "@/components/common/Loader";
 import GrantSummaryCards from "@/components/tracker/GrantSummaryCards";
 import { listTrackerMilestones } from "@/controllers/trackerController";
+import { milestoneKpiImpact } from "@/utils/milestoneReport";
 import { PLAN_STATUS } from "@/utils/trancheWorkflow";
 import { ArrowLeft, ClipboardList } from "lucide-react";
 
@@ -176,6 +177,12 @@ const StaffStartupMilestones = () => {
                     {m.tranchePlannedUse ? (
                       <p className="mt-2 text-sm leading-6 text-slate-600">
                         {m.tranchePlannedUse}
+                      </p>
+                    ) : null}
+
+                    {milestoneKpiImpact(m) ? (
+                      <p className="mt-1 text-sm leading-6 text-emerald-700">
+                        KPI/Impact: {milestoneKpiImpact(m)}
                       </p>
                     ) : null}
 
