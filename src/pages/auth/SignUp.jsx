@@ -48,6 +48,7 @@ const SignUp = () => {
     completedProgram: "",
     stage: "",
     business_sector_uuid: "",
+    program_uuid: "",
     businessLocation: "",
     traction: "",
 
@@ -204,6 +205,9 @@ const SignUp = () => {
                 businessData = {
                   name: formValues.businessName,
                   business_sector_uuid: formValues.business_sector_uuid,
+                  // Optional — empty leaves the startup "Unassigned" until
+                  // Admin/Staff place it in a cohort.
+                  program_uuid: formValues.program_uuid || "",
                   location: formValues.businessLocation,
                   description: formValues.businessBio,
                   email: formValues.userEmail || "",

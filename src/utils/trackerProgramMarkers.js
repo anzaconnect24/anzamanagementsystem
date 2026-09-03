@@ -7,6 +7,9 @@ export const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
 // BDAs who run this program. A program a BDA sets up has no startups yet, so
 // without this it would be invisible to them until someone was added.
 export const TRACKER_BDAS_MARKER = "__TRACKER_BDAS__:";
+// The platform program a grant program was set up against, so the startup
+// picker can be re-scoped when it is edited. Preserved on every rewrite.
+export const TRACKER_COHORT_MARKER = "__TRACKER_COHORT__:";
 
 export const parseMarkerJson = (text, marker) => {
   const raw = String(text || "");
@@ -21,17 +24,28 @@ export const parseMarkerJson = (text, marker) => {
   }
 };
 
-export const buildDescriptionWithMeta = (description, categories, startups) => {
+export const buildDescriptionWithMeta = (
+  description,
+  categories,
+  startups,
+  cohortUuid,
+) => {
   const clean = String(description || "").trim();
   const safeCats = Array.from(
     new Set((categories || []).map((c) => String(c || "").trim()).filter(Boolean)),
   );
   const safeStartups = Array.isArray(startups) ? startups.filter(Boolean) : [];
-  return (
+
+  const base =
     `${clean}\n\n` +
     `${TRACKER_STARTUPS_MARKER}${JSON.stringify(safeStartups)}\n` +
-    `${TRACKER_CATEGORIES_MARKER}${JSON.stringify(safeCats)}`
-  );
+    `${TRACKER_CATEGORIES_MARKER}${JSON.stringify(safeCats)}`;
+
+  // Dropping this on a rewrite would orphan the grant program from the
+  // platform program it tracks, so it is re-emitted whenever it is known.
+  return cohortUuid
+    ? `${base}\n${TRACKER_COHORT_MARKER}${JSON.stringify([cohortUuid])}`
+    : base;
 };
 
 export const parseProgramBdas = (program) =>
@@ -47,8 +61,14 @@ export const buildDescriptionWithMetaAndBdas = (
   categories,
   startups,
   bdas,
+  cohortUuid,
 ) => {
-  const base = buildDescriptionWithMeta(description, categories, startups);
+  const base = buildDescriptionWithMeta(
+    description,
+    categories,
+    startups,
+    cohortUuid,
+  );
   const safeBdas = Array.from(
     new Set((bdas || []).map((uuid) => String(uuid || "").trim()).filter(Boolean)),
   );
@@ -77,5 +97,8 @@ export const parseTrackerProgramMeta = (program) => {
       ),
     ),
     startups: parseMarkerJson(rawDescription, TRACKER_STARTUPS_MARKER),
+    // One-element array so it reuses parseMarkerJson.
+    cohortUuid:
+      parseMarkerJson(rawDescription, TRACKER_COHORT_MARKER)[0] || "",
   };
 };

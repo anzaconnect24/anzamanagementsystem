@@ -7,8 +7,15 @@ import {
   editProgram,
   getPrograms,
 } from "@/controllers/program_controller";
-import { getEnterprenuers } from "@/controllers/user_controller";
+import {
+  getCohortPrograms,
+  getCohortStartups,
+} from "@/controllers/cohort_controller";
 import { isGrantProgram } from "@/utils/programMeta";
+import {
+  buildDescriptionWithMeta,
+  parseTrackerProgramMeta,
+} from "@/utils/trackerProgramMarkers";
 
 const PROGRAM_CATEGORIES = [
   "Ideation",
@@ -17,10 +24,10 @@ const PROGRAM_CATEGORIES = [
 ];
 
 const DEFAULT_PROGRAM_IMAGE = "/images/ideation-classes.svg";
-const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
-const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
 
 const emptyForm = {
+  // The platform program this grant tracking is for.
+  cohortUuid: "",
   title: "",
   description: "",
   programCategory: "Ideation",
@@ -62,53 +69,6 @@ const normalizeCategories = (categories = []) => {
   );
 };
 
-// Read a marker's single-line JSON value out of a program description.
-const parseMarkerJson = (text, marker) => {
-  const idx = text.lastIndexOf(marker);
-  if (idx === -1) return [];
-  const line = text.slice(idx + marker.length).split("\n")[0].trim();
-  try {
-    const value = JSON.parse(line);
-    return Array.isArray(value) ? value : [];
-  } catch {
-    return [];
-  }
-};
-
-const parseTrackerProgramMeta = (program) => {
-  const rawDescription = String(program?.description || "");
-  const indices = [
-    rawDescription.indexOf(TRACKER_CATEGORIES_MARKER),
-    rawDescription.indexOf(TRACKER_STARTUPS_MARKER),
-  ].filter((i) => i >= 0);
-  const firstMarker = indices.length ? Math.min(...indices) : -1;
-  const cleanDescription =
-    firstMarker === -1 ? rawDescription : rawDescription.slice(0, firstMarker).trim();
-
-  const categories = normalizeCategories([
-    ...parseMarkerJson(rawDescription, TRACKER_CATEGORIES_MARKER),
-    program?.programCategory,
-  ]);
-  const startups = parseMarkerJson(rawDescription, TRACKER_STARTUPS_MARKER);
-
-  return { cleanDescription, categories, startups };
-};
-
-// Encode categories + selected startups into the description. STARTUPS is
-// written before CATEGORIES so the legacy categories parser (lastIndexOf) is
-// unaffected.
-const buildDescriptionWithMeta = (description, categories, startups) => {
-  const cleanDescription = String(description || "").trim();
-  const safeCategories = normalizeCategories(categories);
-  const safeStartups = Array.isArray(startups) ? startups.filter(Boolean) : [];
-
-  return (
-    `${cleanDescription}\n\n` +
-    `${TRACKER_STARTUPS_MARKER}${JSON.stringify(safeStartups)}\n` +
-    `${TRACKER_CATEGORIES_MARKER}${JSON.stringify(safeCategories)}`
-  );
-};
-
 const TrackerPrograms = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -120,22 +80,60 @@ const TrackerPrograms = () => {
   const [categoryInput, setCategoryInput] = useState("");
   const [pool, setPool] = useState([]);
   const [poolSearch, setPoolSearch] = useState("");
+  const [poolLoading, setPoolLoading] = useState(false);
+
+  // The programs that exist on the platform. Grant tracking is attached to one
+  // of these rather than to a free-text title, so the startups offered below
+  // are exactly that program's cohort.
+  const [cohorts, setCohorts] = useState([]);
+  const [cohortsLoading, setCohortsLoading] = useState(true);
 
   useEffect(() => {
-    getEnterprenuers(1000, 1, " ")
-      .then((body) => {
-        const list = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
-        setPool(list);
-      })
-      .catch(() => setPool([]));
+    getCohortPrograms()
+      .then(({ programs: list }) => setCohorts(list))
+      .catch(() => setCohorts([]))
+      .finally(() => setCohortsLoading(false));
   }, []);
 
+  // Load the chosen program's startups. Changing the program clears any
+  // startups picked from the previous one — they are not in this cohort.
+  const loadCohortStartups = (cohortUuid) => {
+    if (!cohortUuid) {
+      setPool([]);
+      return;
+    }
+
+    setPoolLoading(true);
+    getCohortStartups(cohortUuid)
+      .then((body) => setPool(Array.isArray(body?.data) ? body.data : []))
+      .catch(() => {
+        toast.error("Failed to load this program's startups");
+        setPool([]);
+      })
+      .finally(() => setPoolLoading(false));
+  };
+
+  const selectCohort = (cohortUuid) => {
+    const cohort = cohorts.find((item) => item.uuid === cohortUuid);
+
+    setForm((prev) => ({
+      ...prev,
+      cohortUuid,
+      // The grant program takes its name from the platform program.
+      title: cohort?.title || "",
+      startups: [],
+    }));
+
+    setPoolSearch("");
+    loadCohortStartups(cohortUuid);
+  };
+
+  // Pool rows are Businesses (from the cohort roster), not Users.
   const toStartupMember = (item) => ({
-    entreprenuerUuid: item?.uuid,
-    businessUuid: item?.Business?.uuid || "",
-    name: item?.Business?.name || item?.name || "Unnamed startup",
-    sector:
-      item?.Business?.BusinessSector?.name || item?.Business?.sector || "",
+    entreprenuerUuid: item?.User?.uuid || "",
+    businessUuid: item?.uuid || "",
+    name: item?.name || "Unnamed startup",
+    sector: item?.BusinessSector?.name || "",
     grantUsd: "",
     disbursedAmount: "",
     grantPurpose: "",
@@ -147,16 +145,19 @@ const TrackerPrograms = () => {
     overdueReports: 0,
   });
 
-  const isStartupSelected = (uuid) =>
-    (form.startups || []).some((s) => s.entreprenuerUuid === uuid);
+  // Keyed on the business, which is what the cohort roster identifies.
+  const isStartupSelected = (businessUuid) =>
+    (form.startups || []).some((s) => s.businessUuid === businessUuid);
 
   const toggleStartup = (item) =>
     setForm((prev) => {
-      const exists = (prev.startups || []).some((s) => s.entreprenuerUuid === item.uuid);
+      const exists = (prev.startups || []).some(
+        (s) => s.businessUuid === item.uuid,
+      );
       return {
         ...prev,
         startups: exists
-          ? prev.startups.filter((s) => s.entreprenuerUuid !== item.uuid)
+          ? prev.startups.filter((s) => s.businessUuid !== item.uuid)
           : [...(prev.startups || []), toStartupMember(item)],
       };
     });
@@ -196,7 +197,20 @@ const TrackerPrograms = () => {
   const openEditModal = (program) => {
     const parsedMeta = parseTrackerProgramMeta(program);
     setEditingProgram(program);
+
+    // Re-scope the picker to the program this grant tracking was set up
+    // against. Rows created before the cohort marker existed fall back to
+    // matching the platform program by title.
+    const cohortUuid =
+      parsedMeta.cohortUuid ||
+      cohorts.find((item) => item.title === program?.title)?.uuid ||
+      "";
+
+    setPoolSearch("");
+    loadCohortStartups(cohortUuid);
+
     setForm({
+      cohortUuid,
       title: program?.title || "",
       description: parsedMeta.cleanDescription,
       programCategory: program?.programCategory || "Ideation",
@@ -240,8 +254,8 @@ const TrackerPrograms = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.title.trim()) {
-      toast.error("Program title is required");
+    if (!form.cohortUuid || !form.title.trim()) {
+      toast.error("Select the program this grant tracking is for");
       return;
     }
 
@@ -268,6 +282,7 @@ const TrackerPrograms = () => {
         form.description,
         form.categories,
         form.startups,
+        form.cohortUuid,
       ),
       programCategory: form.programCategory,
       // Explicitly mark this as a grant-management program (kept separate
@@ -468,17 +483,34 @@ const TrackerPrograms = () => {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="md:col-span-2">
                 <label className="mb-1 block text-sm font-medium text-[#475569]">
-                  Title *
+                  Program *
                 </label>
-                <input
-                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"
-                  value={form.title}
-                  onChange={(e) =>
-                    setForm((prev) => ({ ...prev, title: e.target.value }))
-                  }
-                  placeholder="Program title"
+                <select
+                  className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2 pr-10"
+                  value={form.cohortUuid}
+                  onChange={(e) => selectCohort(e.target.value)}
                   required
-                />
+                >
+                  <option value="">
+                    {cohortsLoading
+                      ? "Loading programs..."
+                      : "Select a program on the platform"}
+                  </option>
+
+                  {cohorts.map((cohort) => (
+                    <option key={cohort.uuid} value={cohort.uuid}>
+                      {cohort.title}
+                      {cohort.startupCount
+                        ? ` (${cohort.startupCount} startup${cohort.startupCount === 1 ? "" : "s"})`
+                        : " (no startups yet)"}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-[#64748b]">
+                  Grant tracking is set up against a program that already
+                  exists on the platform. Only that program&apos;s startups can
+                  be added below.
+                </p>
               </div>
 
               <div>
@@ -594,30 +626,54 @@ const TrackerPrograms = () => {
                   onChange={(e) => setPoolSearch(e.target.value)}
                 />
                 <div className="max-h-56 space-y-1 overflow-auto rounded-lg border border-[#b7c5e5] p-2">
-                  {pool.length === 0 && (
-                    <p className="p-2 text-sm text-[#64748b]">No startups available in the pool.</p>
+                  {!form.cohortUuid && (
+                    <p className="p-2 text-sm text-[#64748b]">
+                      Select a program above to see its startups.
+                    </p>
                   )}
-                  {pool
-                    .filter((item) => {
-                      const name = (item?.Business?.name || item?.name || "").toLowerCase();
-                      return !poolSearch || name.includes(poolSearch.toLowerCase());
-                    })
-                    .map((item) => (
-                      <label
-                        key={item.uuid}
-                        className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[#f1f5f9]"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={isStartupSelected(item.uuid)}
-                          onChange={() => toggleStartup(item)}
-                        />
-                        <span className="font-medium text-[#111827]">
-                          {item?.Business?.name || item?.name || "Unnamed startup"}
-                        </span>
-                        {item?.email && <span className="text-xs text-[#64748b]">{item.email}</span>}
-                      </label>
-                    ))}
+
+                  {form.cohortUuid && poolLoading && (
+                    <p className="p-2 text-sm text-[#64748b]">
+                      Loading startups...
+                    </p>
+                  )}
+
+                  {form.cohortUuid && !poolLoading && pool.length === 0 && (
+                    <p className="p-2 text-sm text-[#64748b]">
+                      No startups are in this program yet. Add them from
+                      Startups &rarr; Programs first.
+                    </p>
+                  )}
+
+                  {!poolLoading &&
+                    pool
+                      .filter((item) => {
+                        const name = String(item?.name || "").toLowerCase();
+                        return (
+                          !poolSearch ||
+                          name.includes(poolSearch.toLowerCase())
+                        );
+                      })
+                      .map((item) => (
+                        <label
+                          key={item.uuid}
+                          className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-[#f1f5f9]"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isStartupSelected(item.uuid)}
+                            onChange={() => toggleStartup(item)}
+                          />
+                          <span className="font-medium text-[#111827]">
+                            {item?.name || "Unnamed startup"}
+                          </span>
+                          {item?.email && (
+                            <span className="text-xs text-[#64748b]">
+                              {item.email}
+                            </span>
+                          )}
+                        </label>
+                      ))}
                 </div>
               </div>
             </div>

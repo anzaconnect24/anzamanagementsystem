@@ -4,17 +4,13 @@ import Breadcrumb from "../../../../component/Breadcrumb";
 import toast from "react-hot-toast";
 import Spinner from "../../../../components/spinner";
 import { useTranslation } from "../../../../locales";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { uploadFile } from "../../../../controllers/file_upload_controller";
 import { addProgram } from "../../../../controllers/program_controller";
 import { useRouter } from "../../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
-
-const PROGRAM_CATEGORIES = [
-  "Ideation",
-  "Business Foundation",
-  "Investment Readiness",
-];
+import { PROGRAM_CATEGORIES } from "@/constants/programCategories";
+import { getCohortProgramOptions } from "@/controllers/cohort_controller";
 
 const AddProgramPage = () => {
   const { t } = useTranslation();
@@ -22,6 +18,15 @@ const AddProgramPage = () => {
   const [loading, setloading] = useState(false);
   const [searchParams] = useSearchParams();
   const course = searchParams.get("course");
+
+  // Which programme cohorts may open this class. None ticked = open to every
+  // startup, which is how classes behaved before access control existed.
+  const [cohorts, setCohorts] = useState([]);
+  const [allowedCohorts, setAllowedCohorts] = useState([]);
+
+  useEffect(() => {
+    getCohortProgramOptions().then(setCohorts);
+  }, []);
 
   return (
     <div>
@@ -44,6 +49,17 @@ const AddProgramPage = () => {
               const formData = new FormData();
               formData.append("file", e.target.image.files[0]);
               uploadFile(formData).then((url) => {
+                if (typeof url !== "string" || !url) {
+                  toast.error(
+                    t(
+                      "programs.imageUploadFailed",
+                      "Cover image upload failed",
+                    ),
+                  );
+                  setloading(false);
+                  return;
+                }
+
                 const payload = {
                   image: url,
                   title: e.target.title.value,
@@ -51,9 +67,23 @@ const AddProgramPage = () => {
                   programCategory: e.target.programCategory.value,
                   startDate: e.target.startDate.value || null,
                   endDate: e.target.endDate.value || null,
+                  // Empty = open to every startup.
+                  cohortProgramUuids: allowedCohorts,
                 };
                 console.log("payload", payload);
                 addProgram(payload).then((res) => {
+                  // addProgram resolves to the axios error response on
+                  // failure, so a truthy result is not success on its own.
+                  if (res?.status !== true) {
+                    toast.error(
+                      res?.data?.message ||
+                        res?.message ||
+                        t("programs.addFailed", "Failed to add program"),
+                    );
+                    setloading(false);
+                    return;
+                  }
+
                   toast.success(
                     t("programs.programAdded", "Program added successfully"),
                   );
@@ -143,6 +173,30 @@ const AddProgramPage = () => {
                   className="w-full rounded border-stroke"
                 />
               </div>
+            </div>
+            <div className="mt-4">
+              <label className="mb-2.5 block font-medium text-black dark:text-white">
+                Program that can access this class
+              </label>
+              <select
+                value={allowedCohorts[0] || ""}
+                onChange={(e) =>
+                  setAllowedCohorts(e.target.value ? [e.target.value] : [])
+                }
+                className="w-full rounded border-stroke"
+              >
+                <option value="">All programs (no restriction)</option>
+                {cohorts.map((cohort) => (
+                  <option key={cohort.uuid} value={cohort.uuid}>
+                    {cohort.title}
+                  </option>
+                ))}
+              </select>
+              <p className="mt-1 text-sm text-[#64748b]">
+                {allowedCohorts.length === 0
+                  ? "Every startup will be able to open this class."
+                  : "Only startups in the selected program will see it."}
+              </p>
             </div>
 
             <button

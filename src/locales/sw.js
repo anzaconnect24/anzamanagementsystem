@@ -2576,7 +2576,7 @@ export const sw = {
     openResource: "Fungua Rasilimali",
     classRoomsWelcome:
       "Fuatilia maendeleo yako, pata kozi maalum, na kukuza biashara yako hatua kwa hatua. Iwe unaanza tu na wazo au unakuza biashara yako kwa uongozi, jukwaa hili limeundwa kukuongoza kupitia kila hatua ya safari yako ya ujasiriamali. Fuatilia alama za kujifunza, jiandikishe kwenye madarasa yanayolingana na hatua ya biashara yako, na fungua zana za vitendo, maarifa ya wataalamu, na fursa za ulezi. Kwa kila moduli unayomaliza, utajenga misingi imara zaidi kuimarisha mkakati wako, na kusonga karibu na kufikia malengo yako ya biashara. Hebu tukue—hatua moja kwa wakati.",
-    availableClasses: "Mafunzo Maalum yanayopatikana",
+    availableCourses: "Kozi Zinazopatikana",
     ideation: "Wazo la Biashara",
     businessFoundation: "Misingi ya Biashara",
     investmentReadiness: "Utayari wa Uwekezaji",

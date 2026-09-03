@@ -339,6 +339,23 @@ const Sidebar = ({
       });
     }
 
+    // Program Management: programme categories -> programmes -> the startups
+    // enrolled in each. Admin and Staff only. "Staff" users are stored with
+    // role "Reviewer" (see SignUp), so both values must be accepted.
+    if (["Admin", "Staff", "Reviewer"].includes(role)) {
+      categories.push({
+        id: "programManagement",
+        title: t("navigation.programManagement", "Program Management"),
+        items: [
+          {
+            name: t("navigation.programCategories", "Program Categories"),
+            path: "/dashboard/programManagement",
+            icon: <MdBusinessCenter className="text-xl" />,
+          },
+        ],
+      });
+    }
+
     // Displayed "Staff" users are stored with role "Reviewer" (see SignUp),
     // so the BDA tracker must be available to both role values.
     if (["Staff", "Reviewer"].includes(role)) {
@@ -349,11 +366,6 @@ const Sidebar = ({
           {
             name: t("navigation.staffTracker", "Grant Management"),
             path: "/dashboard/mentorTracker",
-            icon: <BsCalendar3 className="text-xl" />,
-          },
-          {
-            name: t("navigation.mentorshipTracker", "Mentorship Tracker"),
-            path: "/dashboard/bdaCoachingSessions",
             icon: <BsCalendar3 className="text-xl" />,
           },
         ],

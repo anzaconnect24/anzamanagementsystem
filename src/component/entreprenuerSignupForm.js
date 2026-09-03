@@ -1,6 +1,7 @@
 import { useTranslation } from "../locales";
 import { useState, useEffect } from "react";
 import { getPrograms } from "../controllers/program_controller";
+import { getCohortProgramOptions } from "../controllers/cohort_controller";
 
 const EntrepreneurSignupForm = ({
   sectors = [],
@@ -14,6 +15,13 @@ const EntrepreneurSignupForm = ({
   const [selectedCategory, setSelectedCategory] = useState("");
   const [programs, setPrograms] = useState([]);
   const [loadingPrograms, setLoadingPrograms] = useState(false);
+  // The programme cohort the startup is joining. Drives which group it shows
+  // up under for Admin and Staff.
+  const [cohorts, setCohorts] = useState([]);
+
+  useEffect(() => {
+    getCohortProgramOptions().then(setCohorts);
+  }, []);
 
   const inputClass =
     "h-12 w-full rounded-md border border-gray-200 bg-gray-50 px-4 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20";
@@ -88,6 +96,28 @@ const EntrepreneurSignupForm = ({
               {sectors.map((item) => (
                 <option key={item.id || item.uuid} value={item.uuid}>
                   {item.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={labelClass}>
+              {t("business.programYouAreIn", "Which program are you in?")}
+            </label>
+            <select
+              name="program_uuid"
+              value={formValues.program_uuid || ""}
+              onChange={(e) => updateFormValue("program_uuid", e.target.value)}
+              className={inputClass}
+            >
+              <option value="">
+                {t("business.notInAProgram", "Not part of a program yet")}
+              </option>
+
+              {cohorts.map((program) => (
+                <option key={program.uuid} value={program.uuid}>
+                  {program.title}
                 </option>
               ))}
             </select>

@@ -19,7 +19,6 @@ import {
   getStaffWeeklyLogs,
   listTrackerMilestones,
 } from "@/controllers/trackerController";
-import { parseProgramBdas } from "@/utils/trackerProgramMarkers";
 
 const FLAG_LABEL_MAP = {
   green: "On track",
@@ -300,36 +299,44 @@ const MentorTracker = () => {
     return map;
   }, [entrepreneurs]);
 
-  // Startups this BDA was assigned to inside Finance grant programs, derived
-  // directly from the program markers (so they appear as soon as the Finance
-  // Officer saves the program — independent of the assignment table).
-  // Every startup on a program this BDA runs — not only the ones finance named
-  // them against. A startup's milestones must reach their BDA as soon as they
-  // are submitted, so review cannot wait on finance filling in an assignment.
+  // Startups selected into Finance grant programs, read straight from the
+  // program markers so they appear as soon as the Finance Officer saves the
+  // program — independent of the assignment table.
   //
-  // "Runs" means the program's BDA roster lists them, or (for programs saved
-  // before that roster existed) they are the named BDA for at least one startup
-  // on it.
+  // Every startup on every program is included, matching the program list
+  // itself: staff/BDA see the whole grant portfolio. Gating this on the
+  // program's BDA roster (__TRACKER_BDAS__) or on each startup's named bdaUuid
+  // hid them entirely, because the Finance program form writes neither.
+  //
+  // Each member carries the program it was selected into, which is what groups
+  // it onto the right card below.
   const programAssignedStartups = useMemo(() => {
-    const bdaUuid = String(userDetails?.uuid || "").trim();
-    if (!bdaUuid) return [];
-
     const result = [];
     programs.forEach((program) => {
-      const members = parseProgramStartups(program);
-      const runsProgram =
-        parseProgramBdas(program).includes(bdaUuid) ||
-        members.some(
-          (member) => String(member?.bdaUuid || "").trim() === bdaUuid,
-        );
-      if (!runsProgram) return;
+      const programName = getProgramDisplayName(program);
+      if (!programName || isExcludedProgramStageLabel(programName)) return;
 
-      members.forEach((member) => {
-        if (member?.entreprenuerUuid) result.push(member);
+      parseProgramStartups(program).forEach((member) => {
+        if (member?.entreprenuerUuid) result.push({ ...member, programName });
       });
     });
     return result;
-  }, [programs, userDetails?.uuid]);
+  }, [programs]);
+
+  // Program name per entrepreneur, taken from the markers. A startup only has
+  // a tracker enterprise once one has been registered, so without this a
+  // marker-selected startup would carry no program and be dropped from every
+  // card by the grouping below.
+  const programNameByEntrepreneur = useMemo(() => {
+    const map = new Map();
+    programAssignedStartups.forEach((member) => {
+      const uuid = String(member?.entreprenuerUuid || "").trim();
+      if (uuid && member.programName && !map.has(uuid)) {
+        map.set(uuid, member.programName);
+      }
+    });
+    return map;
+  }, [programAssignedStartups]);
 
   // The people shown are the entrepreneurs assigned to this BDA. Each is paired
   // with their tracker enterprise once one has been set up (registered).
@@ -413,13 +420,19 @@ const MentorTracker = () => {
           email: entrepreneur?.email || business?.email || "",
           sector: enterprise?.ceSector || business?.BusinessSector?.name || "",
           region: enterprise?.district || business?.location || "",
-          program: enterprise ? getEnterpriseProgramName(enterprise) : "",
+          // The registered enterprise is the source of truth once it exists;
+          // before that, fall back to the program the Finance Officer selected
+          // the startup into, so it still groups under the right card.
+          program:
+            (enterprise ? getEnterpriseProgramName(enterprise) : "") ||
+            programNameByEntrepreneur.get(entrepreneur?.uuid) ||
+            "",
           coverImage:
             entrepreneur?.image || enterprise?.image || business?.image || HERO_IMAGE_URL,
           joinedYear: Number.isNaN(joined.getTime()) ? null : joined.getFullYear(),
         };
       }),
-    [trackedList],
+    [trackedList, programNameByEntrepreneur],
   );
 
   const sectorOptions = useMemo(
@@ -467,17 +480,42 @@ const MentorTracker = () => {
   }, [filteredTracked]);
 
   // Program cards, carrying the full record so the card can show its blurb,
-  // category and dates. Only programs this BDA actually has startups in.
+  // category and dates. Every program in the system is listed: one a Finance
+  // officer has just created has no startups yet, and it must still be visible
+  // here rather than appearing only once someone is assigned into it. Programs
+  // this BDA has startups in carry those rows; the rest render an empty roster.
+  //
+  // Narrowing filters still apply — picking a program shows only that card,
+  // and a sector filter or search keeps only cards with matching startups, so
+  // an active search is not drowned out by every empty program.
   const programCards = useMemo(() => {
-    const byName = new Map(
-      programs.map((program) => [getProgramDisplayName(program), program]),
-    );
-    return groupedByProgram.map(([name, rows]) => ({
-      name,
-      rows,
-      program: byName.get(name) || null,
-    }));
-  }, [groupedByProgram, programs]);
+    const rowsByName = new Map(groupedByProgram);
+    const narrowedBySearch = sectorFilter !== "All Sectors" || keyword.trim() !== "";
+    const cards = [];
+    const seen = new Set();
+
+    programs.forEach((program) => {
+      const name = getProgramDisplayName(program);
+      if (!name || isExcludedProgramStageLabel(name) || seen.has(name)) return;
+      if (enterpriseFilter !== "all" && name !== enterpriseFilter) return;
+
+      const rows = rowsByName.get(name) || [];
+      if (narrowedBySearch && rows.length === 0) return;
+
+      seen.add(name);
+      cards.push({ name, rows, program });
+    });
+
+    // A group whose program record is missing (renamed or deleted since the
+    // startup was selected in) still has startups, so it must not vanish.
+    groupedByProgram.forEach(([name, rows]) => {
+      if (seen.has(name)) return;
+      seen.add(name);
+      cards.push({ name, rows, program: null });
+    });
+
+    return cards.sort((a, b) => a.name.localeCompare(b.name));
+  }, [groupedByProgram, programs, enterpriseFilter, sectorFilter, keyword]);
 
   const openProgram = searchParams.get("program") || "";
   const openProgramRows =
@@ -631,11 +669,12 @@ const MentorTracker = () => {
             </div>
           </div>
 
-          {filteredTracked.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
-              No entrepreneurs assigned to you yet.
-            </div>
-          ) : !openProgram ? (
+          {!openProgram ? (
+            programCards.length === 0 ? (
+              <div className="rounded-xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
+                No programs available yet.
+              </div>
+            ) : (
             /* Programs first — opening one shows the startups inside it. */
             <div className="space-y-6">
               {programCards.map(({ name, rows, program }) => {
@@ -694,6 +733,7 @@ const MentorTracker = () => {
                 );
               })}
             </div>
+            )
           ) : (
             <div className="space-y-6">
               <div className="flex flex-wrap items-center justify-between gap-3">
@@ -709,15 +749,45 @@ const MentorTracker = () => {
                 </button>
               </div>
 
+              {openProgramRows.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 p-10 text-center text-sm text-slate-500">
+                  No startups have been selected into this program for you yet.
+                </div>
+              ) : (
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
               {openProgramRows.map((row) => {
                 const { entrepreneur, enterprise } = row;
                 const entUuid = entrepreneur?.uuid || getEnterpriseEntrepreneurUuid(enterprise || {});
 
+                // The whole card opens the grant details page, but only once
+                // the startup has a tracker enterprise — that page loads by
+                // enterprise uuid. A startup selected into a program but not
+                // yet registered has none, so its card stays inert and its KYC
+                // action below remains the way in.
+                const openGrantDetails = enterprise
+                  ? () => navigate(`/dashboard/mentorTracker/enterprise/${enterprise.uuid}`)
+                  : null;
+
                 return (
                   <article
                     key={row.key}
-                    className="group flex flex-col overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:shadow-lg"
+                    role={openGrantDetails ? "button" : undefined}
+                    tabIndex={openGrantDetails ? 0 : undefined}
+                    onClick={openGrantDetails || undefined}
+                    onKeyDown={
+                      openGrantDetails
+                        ? (event) => {
+                            if (event.key !== "Enter" && event.key !== " ") return;
+                            event.preventDefault();
+                            openGrantDetails();
+                          }
+                        : undefined
+                    }
+                    className={`group flex flex-col overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:shadow-lg${
+                      openGrantDetails
+                        ? " cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
+                        : ""
+                    }`}
                   >
                     <div className="relative h-56 w-full overflow-hidden bg-black">
                       <div
@@ -761,7 +831,13 @@ const MentorTracker = () => {
                     </div>
 
                     {enterprise ? (
-                      <div className="mx-5 flex items-center justify-between border-t border-black/10 py-4 text-xs text-[#8a8f98]">
+                      // The card itself navigates to the grant details page, so
+                      // the row's own actions must not bubble into it — a click
+                      // on Delete or Edit has to do only that.
+                      <div
+                        onClick={(event) => event.stopPropagation()}
+                        className="mx-5 flex items-center justify-between border-t border-black/10 py-4 text-xs text-[#8a8f98]"
+                      >
                         {/* The management actions live where the reference shows
                             a static "Profile" label — dropping them would remove
                             the only way to open KYC or delete a startup. */}
@@ -835,6 +911,7 @@ const MentorTracker = () => {
                 );
               })}
               </div>
+              )}
             </div>
           )}
         </div>

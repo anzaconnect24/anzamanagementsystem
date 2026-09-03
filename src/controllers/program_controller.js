@@ -20,7 +20,7 @@ export const getBFAPrograms = async (page, limit) => {
       `${server_url}/programs/bfa/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -37,7 +37,7 @@ export const getPrograms = async (page, limit, programCategory) => {
       `${server_url}/programs/?page=${page}&limit=${limit}${categoryParam}`,
       {
         headers,
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -51,7 +51,7 @@ export const getConsultancePrograms = async (page, limit) => {
       `${server_url}/programs/consultance/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -67,7 +67,7 @@ export const getIRAPrograms = async (page, limit) => {
       `${server_url}/programs/ira/?page=${page}&limit=${limit}`,
       {
         headers,
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -119,7 +119,7 @@ export const deleteProgramRequirement = async (uuid) => {
       `${server_url}/programs/program_requirement/${uuid}`,
       {
         headers,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -135,7 +135,7 @@ export const addProgramRequirements = async (uuid, data) => {
       data,
       {
         headers,
-      }
+      },
     );
     return response.data;
   } catch (error) {
@@ -149,11 +149,44 @@ export const deleteBusinessReview = async (uuid) => {
       `${server_url}/business_review/${uuid}`,
       {
         headers,
-      }
+      },
     );
     return response.data;
   } catch (error) {
     console.log(error.response);
     return error.response;
+  }
+};
+
+// A startup marking a class finished. Enrolment lives in Firestore and only
+// records that a class was started; completion is a backend record.
+export const getCourseCompletion = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${server_url}/programs/${encodeURIComponent(uuid)}/completion`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    return { completed: false };
+  }
+};
+
+export const setCourseCompleted = async (uuid, completed) => {
+  try {
+    const url = `${server_url}/programs/${encodeURIComponent(uuid)}/completion`;
+    const response = completed
+      ? await axios.post(url, {}, { headers })
+      : await axios.delete(url, { headers });
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to update the class",
+      }
+    );
   }
 };

@@ -452,6 +452,7 @@ const BdaCoachingSessions = () => {
         categories,
         existingMeta?.startups || [],
         bdas,
+        existingMeta?.cohortUuid,
       ),
       programCategory: categories[0] || "Ideation",
       // The BDA's own program — kept out of Grant Management, which lists
@@ -624,6 +625,7 @@ const BdaCoachingSessions = () => {
           // Keep whoever runs this program on the record — rewriting the
           // description would otherwise drop them.
           parseProgramBdas(program),
+          meta.cohortUuid,
         ),
         programCategory: program.programCategory,
         type: program.type || "grant",

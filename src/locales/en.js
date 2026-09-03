@@ -2734,7 +2734,7 @@ export const en = {
     failedToDelete: "Failed to delete resource",
     classRoomsWelcome:
       "Track your progress, access curated courses, and grow your business step by step. Whether you're just starting out with an idea or actively scaling your venture, this platform is designed to guide you through every stage of your startupial journey. Monitor your learning milestones, enroll in tailored classes that match your business stage, and unlock practical tools, expert insights, and mentorship opportunities. With each completed module, you'll build stronger foundations sharpen your strategy, and move closer to achieving your business goals. Let's grow—one step at a time.",
-    availableClasses: "Available classes",
+    availableCourses: "Available courses",
     ideation: "Ideation",
     businessFoundation: "Business Foundation",
     investmentReadiness: "Investment readiness",

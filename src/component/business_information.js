@@ -4,6 +4,10 @@ import {
   getBusiness,
   updateBusiness,
 } from "../controllers/business_controller";
+import {
+  getCohortProgramOptions,
+  cohortOf,
+} from "../controllers/cohort_controller";
 import { UserContext } from "@/layouts/DashboardLayout";
 import Loader from "@/components/common/Loader";
 import Spinner from "../components/spinner";
@@ -49,6 +53,8 @@ const BusinessInformation = () => {
     useState(false);
   const [selectedOption, setselectedOption] = useState(0);
   const [coords, setCoords] = useState({ lat: "", lng: "" });
+  // Programme cohorts the startup can say it belongs to.
+  const [cohorts, setCohorts] = useState([]);
 
   useEffect(() => {
     getSectors().then((data) => {
@@ -56,6 +62,8 @@ const BusinessInformation = () => {
         setSectors(data);
       }
     });
+
+    getCohortProgramOptions().then(setCohorts);
   }, []);
 
   useEffect(() => {
@@ -72,7 +80,10 @@ const BusinessInformation = () => {
   const lat = Number(coords.lat);
   const lng = Number(coords.lng);
   const hasCoords =
-    coords.lat !== "" && coords.lng !== "" && Number.isFinite(lat) && Number.isFinite(lng);
+    coords.lat !== "" &&
+    coords.lng !== "" &&
+    Number.isFinite(lat) &&
+    Number.isFinite(lng);
   return loadingData ? (
     <Loader />
   ) : (
@@ -109,7 +120,9 @@ const BusinessInformation = () => {
                 key={tile.label}
                 className="rounded-2xl border border-white/10 bg-white/5 px-5 py-4 backdrop-blur"
               >
-                <p className="text-xs font-medium text-white/60">{tile.label}</p>
+                <p className="text-xs font-medium text-white/60">
+                  {tile.label}
+                </p>
                 <p className="mt-1 truncate text-lg font-black text-white">
                   {tile.value || "N/A"}
                 </p>
@@ -132,6 +145,10 @@ const BusinessInformation = () => {
             registration: e.target.registration.value,
             stage: e.target.stage.value,
             business_sector_uuid: e.target.business_sector_uuid.value,
+            // Empty string clears the cohort back to "Unassigned".
+            program_uuid: e.target.program_uuid
+              ? e.target.program_uuid.value
+              : "",
             team: e.target.team.value,
             sdg: e.target.sdg.value,
             isAlumni: e.target.isAlumni.value === "true",
@@ -153,6 +170,11 @@ const BusinessInformation = () => {
             fundraisingNeeds: e.target.fundraisingNeeds.value,
             industry: e.target.industry ? e.target.industry.value : "",
             revenue: e.target.revenue.value,
+            // Blank means "not recorded", not zero.
+            previousQuarterRevenue:
+              e.target.previousQuarterRevenue?.value || null,
+            jobsCreated: e.target.jobsCreated?.value || null,
+            capitalRaised: e.target.capitalRaised?.value || null,
           };
 
           try {
@@ -162,14 +184,14 @@ const BusinessInformation = () => {
             toast.success(
               t(
                 "business.updateSuccess",
-                "Business details are updated successfully!"
-              )
+                "Business details are updated successfully!",
+              ),
             );
           } catch (error) {
             console.error("Error updating business details:", error);
             toast.error(
               t("errors.updateFailed", "Failed to update details: ") +
-                (error?.message || t("errors.unknown", "Unknown error"))
+                (error?.message || t("errors.unknown", "Unknown error")),
             );
           } finally {
             setloading(false);
@@ -205,7 +227,7 @@ const BusinessInformation = () => {
                     className="form-style"
                     placeholder={t(
                       "business.companyEmail",
-                      "Company email address"
+                      "Company email address",
                     )}
                     type="text"
                   />
@@ -220,7 +242,7 @@ const BusinessInformation = () => {
                     className="form-style"
                     placeholder={t(
                       "business.companyPhone",
-                      "Company phone number"
+                      "Company phone number",
                     )}
                     type="text"
                   />
@@ -229,7 +251,7 @@ const BusinessInformation = () => {
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     {t(
                       "business.numberOfTeamMembers",
-                      "Number of people in your team"
+                      "Number of people in your team",
                     )}
                   </label>
                   <input
@@ -238,7 +260,7 @@ const BusinessInformation = () => {
                     className="form-style"
                     placeholder={t(
                       "business.enterNumberOfTeamMembers",
-                      "Enter number of team members"
+                      "Enter number of team members",
                     )}
                     type="text"
                   />
@@ -255,19 +277,19 @@ const BusinessInformation = () => {
                     <option>
                       {t(
                         "business.selectRegistrationStatus",
-                        "Registration status"
+                        "Registration status",
                       )}
                     </option>
                     <option value="Registered with BRELA">
                       {t(
                         "business.registeredWithBRELA",
-                        "Registered with BRELA"
+                        "Registered with BRELA",
                       )}
                     </option>
                     <option value="Registered with TIN only">
                       {t(
                         "business.registeredWithTINOnly",
-                        "Registered with TIN only"
+                        "Registered with TIN only",
                       )}
                     </option>
                     <option value="Have BRELA and TIN">
@@ -287,12 +309,31 @@ const BusinessInformation = () => {
                     <option>
                       {t(
                         "business.selectBusinessSector",
-                        "Select business sector"
+                        "Select business sector",
                       )}
                     </option>
                     {sectors.map((item) => (
                       <option key={item.id} value={item.uuid}>
                         {item.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t("business.programYouAreIn", "Which program are you in?")}
+                  </label>
+                  <select
+                    defaultValue={cohortOf(business)?.uuid || ""}
+                    name="program_uuid"
+                    className="form-style"
+                  >
+                    <option value="">
+                      {t("business.notInAProgram", "Not part of a program yet")}
+                    </option>
+                    {cohorts.map((program) => (
+                      <option key={program.uuid} value={program.uuid}>
+                        {program.title}
                       </option>
                     ))}
                   </select>
@@ -309,7 +350,7 @@ const BusinessInformation = () => {
                     <option>
                       {t(
                         "business.selectBusinessStage",
-                        "Select business stage"
+                        "Select business stage",
                       )}
                     </option>
                     <option value="Startup">
@@ -330,7 +371,7 @@ const BusinessInformation = () => {
                   <label className="mb-2.5 block font-medium text-black dark:text-white">
                     {t(
                       "business.sustainableDevelopmentGoals",
-                      "Select Sustainable Development Goals"
+                      "Select Sustainable Development Goals",
                     )}
                   </label>
                   <select
@@ -382,7 +423,7 @@ const BusinessInformation = () => {
                     <label className="mb-2.5 block font-medium text-black dark:text-white">
                       {t(
                         "business.whatProgramDidYouComplete",
-                        "What program did you complete?"
+                        "What program did you complete?",
                       )}
                     </label>
                     <select
@@ -443,7 +484,7 @@ const BusinessInformation = () => {
                     className="form-style"
                     placeholder={t(
                       "business.enterNumberOfCustomers",
-                      "Enter number of customers"
+                      "Enter number of customers",
                     )}
                     type="number"
                   />
@@ -458,7 +499,60 @@ const BusinessInformation = () => {
                     className="form-style"
                     placeholder={t(
                       "business.enterAnnualRevenue",
-                      "Enter annual revenue"
+                      "Enter annual revenue",
+                    )}
+                    type="number"
+                  />
+                </div>
+
+                {/* Portfolio metrics — these feed the Startup Portfolio table
+                    on the programme pages. */}
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t(
+                      "business.previousQuarterRevenue",
+                      "Previous Quarter Revenue",
+                    )}
+                  </label>
+                  <input
+                    defaultValue={business.previousQuarterRevenue ?? ""}
+                    name="previousQuarterRevenue"
+                    className="form-style"
+                    placeholder={t(
+                      "business.enterPreviousQuarterRevenue",
+                      "Used to work out revenue growth",
+                    )}
+                    type="number"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t("business.jobsCreated", "Jobs Created")}
+                  </label>
+                  <input
+                    defaultValue={business.jobsCreated ?? ""}
+                    name="jobsCreated"
+                    className="form-style"
+                    placeholder={t(
+                      "business.enterJobsCreated",
+                      "People employed by the business",
+                    )}
+                    type="number"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2.5 block font-medium text-black dark:text-white">
+                    {t("business.capitalRaised", "Capital Raised (USD)")}
+                  </label>
+                  <input
+                    defaultValue={business.capitalRaised ?? ""}
+                    name="capitalRaised"
+                    className="form-style"
+                    placeholder={t(
+                      "business.enterCapitalRaised",
+                      "Total raised to date",
                     )}
                     type="number"
                   />
@@ -528,10 +622,17 @@ const BusinessInformation = () => {
                 </label>
                 <input
                   className="form-style"
-                  value={coords.lat && coords.lng ? `${coords.lat}, ${coords.lng}` : ""}
+                  value={
+                    coords.lat && coords.lng
+                      ? `${coords.lat}, ${coords.lng}`
+                      : ""
+                  }
                   onChange={(e) => {
                     const [la, ln] = e.target.value.split(",");
-                    setCoords({ lat: (la || "").trim(), lng: (ln || "").trim() });
+                    setCoords({
+                      lat: (la || "").trim(),
+                      lng: (ln || "").trim(),
+                    });
                   }}
                   placeholder="-6.369, 34.8888"
                 />
@@ -557,8 +658,12 @@ const BusinessInformation = () => {
                         draggable
                         eventHandlers={{
                           dragend: (ev) => {
-                            const { lat: dla, lng: dln } = ev.target.getLatLng();
-                            setCoords({ lat: dla.toFixed(6), lng: dln.toFixed(6) });
+                            const { lat: dla, lng: dln } =
+                              ev.target.getLatLng();
+                            setCoords({
+                              lat: dla.toFixed(6),
+                              lng: dln.toFixed(6),
+                            });
                           },
                         }}
                       />
@@ -577,7 +682,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.briefDescription",
-                    "Brief description of your business"
+                    "Brief description of your business",
                   )}
                   rows="3"
                 />
@@ -586,7 +691,7 @@ const BusinessInformation = () => {
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   {t(
                     "business.whatProblemsDoesYourBusinessSolve",
-                    "What problems does your business solve?"
+                    "What problems does your business solve?",
                   )}
                 </label>
                 <textarea
@@ -595,7 +700,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.whatProblemsDoesYourBusinessSolve",
-                    "What problems does your business solve?"
+                    "What problems does your business solve?",
                   )}
                 />
               </div>
@@ -603,7 +708,7 @@ const BusinessInformation = () => {
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   {t(
                     "business.whatSolutionDoesYourBusinessProvide",
-                    "What solution does your business provide?"
+                    "What solution does your business provide?",
                   )}
                 </label>
                 <textarea
@@ -612,7 +717,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.whatSolutionDoesYourBusinessProvide",
-                    "What solution does your business provide?"
+                    "What solution does your business provide?",
                   )}
                 />
               </div>
@@ -626,7 +731,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.tractionPlaceholder",
-                    "What is your commercial traction?"
+                    "What is your commercial traction?",
                   )}
                 />
               </div>
@@ -640,7 +745,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.describeYourTargetMarket",
-                    "Describe your target market and audience"
+                    "Describe your target market and audience",
                   )}
                   rows="3"
                 />
@@ -655,7 +760,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.describeYourCurrentBusinessImpact",
-                    "Describe your current business impact"
+                    "Describe your current business impact",
                   )}
                   rows="3"
                 />
@@ -664,7 +769,7 @@ const BusinessInformation = () => {
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   {t(
                     "business.futureMilestonesAndGrowthPlans",
-                    "Future Milestones & Growth Plans"
+                    "Future Milestones & Growth Plans",
                   )}
                 </label>
                 <textarea
@@ -673,7 +778,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.describeYourFutureMilestones",
-                    "Describe your future milestones and growth plans"
+                    "Describe your future milestones and growth plans",
                   )}
                   rows="3"
                 />
@@ -682,7 +787,7 @@ const BusinessInformation = () => {
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
                   {t(
                     "business.currentFundraisingNeeds",
-                    "Current Fundraising Needs"
+                    "Current Fundraising Needs",
                   )}
                 </label>
                 <textarea
@@ -691,7 +796,7 @@ const BusinessInformation = () => {
                   className="form-style"
                   placeholder={t(
                     "business.describeYourCurrentFundraisingNeeds",
-                    "Describe your current fundraising needs"
+                    "Describe your current fundraising needs",
                   )}
                   rows="3"
                 />
@@ -732,7 +837,7 @@ const BusinessInformation = () => {
                 setRefresh(refresh + 1);
                 setupdatingInvestmentDetails(false);
                 toast.success(
-                  t("common.updateSuccess", "Updated successfully!")
+                  t("common.updateSuccess", "Updated successfully!"),
                 );
               });
             }}
@@ -742,7 +847,7 @@ const BusinessInformation = () => {
               <label className="mb-2.5 block font-medium text-black dark:text-white">
                 {t(
                   "business.lookingForInvestment",
-                  "Are you looking for an investment?"
+                  "Are you looking for an investment?",
                 )}
               </label>
               <input

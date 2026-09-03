@@ -2,6 +2,10 @@
 
 import { useContext, useEffect, useState } from "react";
 import { getEnterprenuers } from "@/controllers/user_controller";
+import {
+  getCohortProgramOptions,
+  cohortOf,
+} from "@/controllers/cohort_controller";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
@@ -40,6 +44,17 @@ const Enterprenuers = () => {
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
+  // Program filter options come from the Programs table rather than a
+  // hardcoded list, so a newly created cohort is filterable straight away.
+  const [programTitles, setProgramTitles] = useState([]);
+
+  useEffect(() => {
+    getCohortProgramOptions()
+      .then((list) =>
+        setProgramTitles(list.map((program) => program.title).filter(Boolean)),
+      )
+      .catch(() => setProgramTitles([]));
+  }, []);
 
   const filterOptions = {
     sector: {
@@ -61,22 +76,7 @@ const Enterprenuers = () => {
     },
     program: {
       label: "Program",
-      options: [
-        "All Programs",
-        "Climate Launchpad",
-        "Generation Food",
-        "Capacity Building to Kilwa Entrepreneurs",
-        "Female Entrepreneurs Growing Greener Economies",
-        "Rapid Banana",
-        "Restoration Factory Tanzania",
-        "Capacity Building to Entrepreneurs Focusing on Clean and Renewable Energy in Arusha",
-        "Capacity Building for Entrepreneurship and Aquaculture Practices",
-        "Youth Entrepreneurship & Innovation Program",
-        "Regenerative Economy Accelerator Tanzania",
-        "Pesatech Accelerator Two",
-        "Funguo Investment Accelerator",
-        "AWCE Investment Accelerator",
-      ],
+      options: ["All Programs", ...programTitles],
     },
     revenue: {
       label: "Revenue",
@@ -189,7 +189,7 @@ const Enterprenuers = () => {
 
       if (filters.program !== "All Programs") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.program === filters.program,
+          (item) => cohortOf(item.Business)?.title === filters.program,
         );
       }
     }
@@ -217,7 +217,9 @@ const Enterprenuers = () => {
         case "program":
           return (
             direction *
-            (a.Business?.program?.localeCompare(b.Business?.program) || 0)
+            (cohortOf(a.Business)?.title?.localeCompare(
+              cohortOf(b.Business)?.title,
+            ) || 0)
           );
         default:
           return 0;
@@ -432,11 +434,11 @@ const Enterprenuers = () => {
                 </p>
 
                 <div className="space-y-3 text-sm text-[#6f6f72]">
-                  {item?.Business?.program && (
+                  {cohortOf(item?.Business)?.title && (
                     <div className="flex items-center gap-2">
                       <FaBuilding className="shrink-0" />
                       <span className="line-clamp-1">
-                        {item.Business.program}
+                        {cohortOf(item.Business).title}
                       </span>
                     </div>
                   )}

@@ -333,6 +333,7 @@ const TrackerStartupDetails = () => {
           meta.cleanDescription,
           meta.categories,
           startups,
+          meta.cohortUuid,
         ),
         programCategory: fresh.programCategory,
         type: "grant",
@@ -691,6 +692,7 @@ const TrackerStartupDetails = () => {
               meta.cleanDescription,
               meta.categories,
               startups,
+              meta.cohortUuid,
             ),
             programCategory: fresh.programCategory,
             type: "grant",
@@ -795,6 +797,7 @@ const TrackerStartupDetails = () => {
         meta.cleanDescription,
         meta.categories,
         startups,
+        meta.cohortUuid,
       );
       await editProgram(program.uuid, {
         title: fresh.title,

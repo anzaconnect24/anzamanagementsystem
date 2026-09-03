@@ -37,6 +37,9 @@ import "./data-tables-css.css";
 // User Management Pages
 import Users from "./pages/users/users/Users";
 import Enterprenuers from "./pages/users/enterprenuers/Enterprenuers";
+import ProgramCategories from "./pages/users/enterprenuers/ProgramCategories";
+import StartupPrograms from "./pages/users/enterprenuers/StartupPrograms";
+import ProgramStartups from "./pages/users/enterprenuers/ProgramStartups";
 import Investors from "./pages/users/investors/Investors";
 import Mentors from "./pages/users/mentors/Mentors";
 import Reviewers from "./pages/users/reviewers/Reviewers";
@@ -315,7 +318,20 @@ function App() {
 
             {/* User Management Routes */}
             <Route path="users" element={<Users />} />
+            {/* Startups is the flat directory for every role. */}
             <Route path="enterprenuers" element={<Enterprenuers />} />
+            <Route path="enterprenuers/all" element={<Enterprenuers />} />
+
+            {/* Program Management (Admin/Staff): category -> program -> startups. */}
+            <Route path="programManagement" element={<ProgramCategories />} />
+            <Route
+              path="programManagement/category/:category"
+              element={<StartupPrograms />}
+            />
+            <Route
+              path="programManagement/program/:uuid"
+              element={<ProgramStartups />}
+            />
             <Route path="investors" element={<Investors />} />
             <Route path="mentors" element={<Mentors />} />
             <Route path="reviewers" element={<Reviewers />} />
