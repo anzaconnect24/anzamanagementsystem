@@ -47,7 +47,9 @@ export const enrollInCourse = async ({ courseUuid, courseTitle, user }) => {
 export const unenrollFromCourse = async (courseUuid, userUuid) => {
   if (!courseUuid || !userUuid) return false;
   try {
-    await deleteDoc(doc(firestore, COLLECTION, enrollmentId(courseUuid, userUuid)));
+    await deleteDoc(
+      doc(firestore, COLLECTION, enrollmentId(courseUuid, userUuid)),
+    );
     return true;
   } catch (error) {
     console.log("unenrollFromCourse error", error);
@@ -114,5 +116,37 @@ export const getMyEnrolledCourseUuids = async (userUuid) => {
   } catch (error) {
     console.log("getMyEnrolledCourseUuids error", error);
     return new Set();
+  }
+};
+
+// Everyone enrolled in one course, newest first. Used by the staff view of a
+// course to list who has signed up.
+export const getCourseEnrollments = async (courseUuid) => {
+  if (!courseUuid) return [];
+  try {
+    const q = query(
+      collection(firestore, COLLECTION),
+      where("courseUuid", "==", courseUuid),
+    );
+    const snap = await getDocs(q);
+    const rows = [];
+    snap.forEach((d) => {
+      const data = d.data() || {};
+      rows.push({
+        id: d.id,
+        userUuid: data.userUuid || "",
+        userName: data.userName || "",
+        businessName: data.businessName || "",
+        role: data.role || "",
+        // Firestore timestamps only become a Date once the write lands.
+        enrolledAt: data.enrolledAt?.toDate ? data.enrolledAt.toDate() : null,
+      });
+    });
+    return rows.sort(
+      (a, b) => (b.enrolledAt?.getTime() || 0) - (a.enrolledAt?.getTime() || 0),
+    );
+  } catch (error) {
+    console.log("getCourseEnrollments error", error);
+    return [];
   }
 };

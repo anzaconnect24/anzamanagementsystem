@@ -449,7 +449,7 @@ const StartupPrograms = () => {
                     )}
 
                     <span className="flex items-center gap-1 font-semibold text-green-700">
-                      View startups <FaArrowRight />
+                      Manage Program <FaArrowRight />
                     </span>
                   </div>
                 </div>

@@ -29,6 +29,8 @@ import {
   FaCalendarAlt,
   FaSearch,
   FaUsers,
+  FaBookOpen,
+  FaClipboardList,
   FaUserEdit,
   FaPlus,
   FaUserSlash,
@@ -36,6 +38,7 @@ import {
   FaBriefcase,
   FaHandHoldingUsd,
   FaChartLine,
+  FaFileAlt,
 } from "react-icons/fa";
 
 // Roles allowed to change a program's roster. "Staff" users are stored as
@@ -459,6 +462,41 @@ const ProgramStartups = () => {
           />
         </div>
 
+        {!isUnassigned && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}/modules`)
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaBookOpen className="text-lg" />
+            Program modules
+          </button>
+        )}
+        {!isUnassigned && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}/surveys`)
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaClipboardList className="text-lg" />
+            Surveys
+          </button>
+        )}
+        {!isUnassigned && (
+          <button
+            type="button"
+            disabled
+            title="Program reports are not available yet"
+            className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-400 shadow-sm ring-1 ring-slate-200"
+          >
+            <FaFileAlt className="text-lg" />
+            Reports
+          </button>
+        )}
         {canManage && (
           <button
             type="button"
@@ -487,7 +525,7 @@ const ProgramStartups = () => {
                   <th className="px-5 py-4">Region</th>
                   <th className="px-5 py-4">Progress</th>
                   <th className="px-5 py-4">Milestones</th>
-                  <th className="px-5 py-4">Courses</th>
+                  <th className="px-5 py-4">Modules</th>
                   <th className="px-5 py-4">Revenue Growth</th>
                   <th className="px-5 py-4">Jobs</th>
                   <th className="px-5 py-4">Capital Raised</th>
@@ -565,23 +603,23 @@ const ProgramStartups = () => {
                       </td>
 
                       <td className="px-5 py-4">
-                        {item.coursesTotal ? (
+                        {item.modulesTotal ? (
                           <span
                             className={`rounded-md px-2.5 py-1 text-xs font-bold ${
-                              item.coursesCompleted >= item.coursesTotal
+                              item.modulesCompleted >= item.modulesTotal
                                 ? "bg-emerald-50 text-emerald-700"
-                                : item.coursesCompleted > 0
+                                : item.modulesCompleted > 0
                                   ? "bg-amber-50 text-amber-700"
                                   : "bg-slate-100 text-slate-600"
                             }`}
-                            title="Classes created for this program that the startup has finished"
+                            title="Modules created for this program that the startup has finished"
                           >
-                            {item.coursesCompleted} / {item.coursesTotal}
+                            {item.modulesCompleted} / {item.modulesTotal}
                           </span>
                         ) : (
                           <span
                             className="text-slate-400"
-                            title="No classes have been given access to this program yet"
+                            title="No modules have been added to this program yet"
                           >
                             —
                           </span>

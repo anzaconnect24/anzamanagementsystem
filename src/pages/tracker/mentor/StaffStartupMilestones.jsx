@@ -5,7 +5,7 @@ import GrantSummaryCards from "@/components/tracker/GrantSummaryCards";
 import { listTrackerMilestones } from "@/controllers/trackerController";
 import { milestoneKpiImpact } from "@/utils/milestoneReport";
 import { PLAN_STATUS } from "@/utils/trancheWorkflow";
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
 const isMilestoneDisbursed = (m) =>
   String(m?.planStatus) === PLAN_STATUS.DISBURSED || Boolean(m?.disbursed);
@@ -75,22 +75,20 @@ const StaffStartupMilestones = () => {
     const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
     const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
     const next = tranches.find((t) => !t.disbursed) || null;
-    return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
+    return {
+      committed,
+      disbursed,
+      remaining,
+      disbursedPct,
+      remainingPct,
+      next,
+    };
   }, [rows]);
 
   if (loading) return <Loader />;
 
   return (
     <div className="space-y-6 bg-[#eef2f8] px-6 py-6">
-      <button
-        type="button"
-        onClick={() => navigate("/dashboard/mentorTracker")}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#163b8f]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to startups
-      </button>
-
       <section
         className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
         style={{
@@ -157,7 +155,9 @@ const StaffStartupMilestones = () => {
           {/* Same shape as the startup's own milestone list: the name, with key
               activities (stored on tranchePlannedUse) as the description. */}
           {rows.map((m, index) => {
-            const normalizedStatus = String(m.status || "pending").toLowerCase();
+            const normalizedStatus = String(
+              m.status || "pending",
+            ).toLowerCase();
             const waitingForApproval = ["pending", "draft"].includes(
               normalizedStatus,
             );

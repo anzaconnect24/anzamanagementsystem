@@ -277,6 +277,7 @@ export const en = {
     generalResources: "General Resources",
     businessTools: "Business Tools",
     classRooms: "Class Rooms",
+    surveys: "Surveys",
     successStories: "Success Stories",
     chats: "Chats",
     conversations: "Conversations",
@@ -861,6 +862,14 @@ export const en = {
   programs: {
     programs: "Programs",
     newProgram: "New Program",
+    // Course authoring uses its own keys so the shared program wording on
+    // other screens is not relabelled.
+    addNewCourse: "Add New Course",
+    addNewCourseFor: "Add new course for {{course}}",
+    enterCourseTitle: "Enter course title",
+    courseType: "Course Type",
+    courseCoverImage: "Course Cover Image",
+    addCourse: "Add Course",
     editProgram: "Edit Program",
     addNewProgram: "Add New Program",
     createNewProgram: "Create a new program to share with participants",
@@ -2735,6 +2744,7 @@ export const en = {
     classRoomsWelcome:
       "Track your progress, access curated courses, and grow your business step by step. Whether you're just starting out with an idea or actively scaling your venture, this platform is designed to guide you through every stage of your startupial journey. Monitor your learning milestones, enroll in tailored classes that match your business stage, and unlock practical tools, expert insights, and mentorship opportunities. With each completed module, you'll build stronger foundations sharpen your strategy, and move closer to achieving your business goals. Let's grow—one step at a time.",
     availableCourses: "Available courses",
+    availableModules: "Available Modules",
     ideation: "Ideation",
     businessFoundation: "Business Foundation",
     investmentReadiness: "Investment readiness",

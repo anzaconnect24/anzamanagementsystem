@@ -181,6 +181,21 @@ export const setReportingStatus = async (
   }
 };
 
+// The modules a programme runs. Modules are created and deleted through the
+// modules resource; this only lists the ones belonging to a programme.
+export const getCohortModules = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/modules`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
 // Coaching sessions run under a programme.
 export const getCohortSessions = async (uuid) => {
   try {
@@ -228,3 +243,17 @@ export const deleteCohortSession = async (uuid, sessionUuid) => {
 // Membership is its own table, so it arrives nested.
 export const cohortOf = (business) =>
   business?.CohortMembership?.CohortProgram || null;
+
+// Programme analytics: summary figures plus a row per course.
+export const getCohortAnalytics = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/analytics`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};

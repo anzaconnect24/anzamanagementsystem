@@ -15,9 +15,13 @@ import { useParams } from "react-router-dom";
 import { toast } from "react-hot-toast";
 import { useTranslation } from "@/locales";
 
-const ModuleQuizzesPage = () => {
+// Rendered as its own page (module uuid from the route) and embedded in the
+// Quizzes tab of a module, where the uuid comes in as a prop and the hero is
+// left off because the module record already carries a header.
+const ModuleQuizzesPage = ({ moduleId: moduleIdProp, embedded = false }) => {
   const { t } = useTranslation();
-  const { moduleId } = useParams();
+  const params = useParams();
+  const moduleId = moduleIdProp || params.moduleId;
 
   const [quizzes, setQuizzes] = useState([]);
   const [module, setModule] = useState(null);
@@ -27,7 +31,8 @@ const ModuleQuizzesPage = () => {
   const [userAttempts, setUserAttempts] = useState([]);
 
   const router = useRouter();
-  const isAdmin = ["Admin", "Staff"].includes(userDetails?.role);
+  // "Staff" is stored as either "Staff" or "Reviewer" (see SignUp).
+  const isAdmin = ["Admin", "Staff", "Reviewer"].includes(userDetails?.role);
 
   useEffect(() => {
     loadData();
@@ -97,13 +102,13 @@ const ModuleQuizzesPage = () => {
 
   const getUserLastAttempt = (quizUuid) => {
     const attempts = userAttempts.filter(
-      (attempt) => attempt.quiz?.uuid === quizUuid && attempt.submittedAt
+      (attempt) => attempt.quiz?.uuid === quizUuid && attempt.submittedAt,
     );
 
     if (attempts.length === 0) return null;
 
     return attempts.sort(
-      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt)
+      (a, b) => new Date(b.submittedAt) - new Date(a.submittedAt),
     )[0];
   };
 
@@ -124,56 +129,88 @@ const ModuleQuizzesPage = () => {
   const publishedCount = quizzes.filter((quiz) => quiz.isPublished).length;
   const draftCount = quizzes.filter((quiz) => !quiz.isPublished).length;
   const attemptedCount = quizzes.filter(
-    (quiz) => quiz.isPublished && getUserLastAttempt(quiz.uuid) !== null
+    (quiz) => quiz.isPublished && getUserLastAttempt(quiz.uuid) !== null,
   ).length;
 
-  if (loading) return <Loader />;
+  if (loading) {
+    return embedded ? (
+      <div className="rounded-2xl border border-[#EAECF0] bg-white p-10 text-center text-sm text-[#667085]">
+        Loading quizzes...
+      </div>
+    ) : (
+      <Loader />
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA] px-6 py-6">
-      <div className="mx-auto max-w-7xl">
-        <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
-          <div
-            className="absolute inset-0 bg-cover bg-center"
-            style={{
-              backgroundImage: "url('/images/business_tools_hero.svg')",
-            }}
-          />
+    <div className={embedded ? "" : "min-h-screen bg-[#F5F7FA] px-6 py-6"}>
+      <div className={embedded ? "" : "mx-auto max-w-7xl"}>
+        {!embedded && (
+          <section className="relative mb-8 overflow-hidden rounded-3xl border border-[#EAECF0] bg-black shadow-sm">
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: "url('/images/business_tools_hero.svg')",
+              }}
+            />
 
-          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-black/20" />
 
-          <div className="relative z-10 flex min-h-[300px] flex-col justify-end gap-6 p-8 text-white md:flex-row md:items-end md:justify-between lg:p-12">
-            <div className="max-w-3xl">
-              <span className="mb-5 inline-flex items-center rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
-                Learning Assessment
-              </span>
+            <div className="relative z-10 flex min-h-[300px] flex-col justify-end gap-6 p-8 text-white md:flex-row md:items-end md:justify-between lg:p-12">
+              <div className="max-w-3xl">
+                <span className="mb-5 inline-flex items-center rounded-full bg-white/15 px-4 py-2 text-sm font-semibold text-white backdrop-blur-sm">
+                  Learning Assessment
+                </span>
 
-              <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight md:text-5xl">
-                {module?.title || t("quizzes.moduleQuizzes")}
-              </h1>
+                <h1 className="mb-4 text-4xl font-bold leading-tight tracking-tight md:text-5xl">
+                  {module?.title || t("quizzes.moduleQuizzes")}
+                </h1>
 
-              <p className="max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-                Review available quizzes, track attempts, manage published
-                assessments, and continue measuring learning progress.
-              </p>
+                <p className="max-w-2xl text-sm leading-7 text-white/85 md:text-base">
+                  Review available quizzes, track attempts, manage published
+                  assessments, and continue measuring learning progress.
+                </p>
+              </div>
+
+              {isAdmin && (
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() =>
+                      router.push(
+                        `/dashboard/learn-and-grow/quizzes/${moduleId}/new`,
+                      )
+                    }
+                    className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
+                  >
+                    Create Quiz
+                  </button>
+                </div>
+              )}
             </div>
+          </section>
+        )}
+
+        {embedded && (
+          <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-2xl font-black tracking-tight text-[#101828]">
+              Quizzes
+            </h2>
 
             {isAdmin && (
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() =>
-                    router.push(
-                      `/dashboard/learn-and-grow/quizzes/${moduleId}/new`
-                    )
-                  }
-                  className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition hover:bg-slate-100"
-                >
-                  Create Quiz
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={() =>
+                  router.push(
+                    `/dashboard/learn-and-grow/quizzes/${moduleId}/new`,
+                  )
+                }
+                className="inline-flex items-center gap-2 rounded-lg bg-[#16a34a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#15803d]"
+              >
+                Add Quiz
+              </button>
             )}
           </div>
-        </section>
+        )}
 
         <section className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border border-[#EAECF0] bg-white p-5 shadow-sm">
@@ -292,7 +329,7 @@ const ModuleQuizzesPage = () => {
               <button
                 onClick={() =>
                   router.push(
-                    `/dashboard/learn-and-grow/quizzes/${moduleId}/new`
+                    `/dashboard/learn-and-grow/quizzes/${moduleId}/new`,
                   )
                 }
                 className="inline-flex items-center rounded-2xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
@@ -302,7 +339,7 @@ const ModuleQuizzesPage = () => {
             )}
           </section>
         ) : (
-          <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
+          <section className="space-y-4">
             {filteredQuizzes.map((quiz) => {
               const lastAttempt = !isAdmin
                 ? getUserLastAttempt(quiz.uuid)
@@ -311,61 +348,63 @@ const ModuleQuizzesPage = () => {
               return (
                 <article
                   key={quiz.uuid}
-                  className="rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-lg"
+                  className="rounded-3xl border border-[#EAECF0] bg-white p-6 shadow-sm transition duration-300 hover:shadow-md"
                 >
-                  <div className="mb-5">
-                    {isAdmin && (
-                      <span
-                        className={`mb-4 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
-                          quiz.isPublished
-                            ? "bg-[#ECFDF3] text-[#027A48]"
-                            : "bg-[#FFFAEB] text-[#B54708]"
-                        }`}
-                      >
-                        {quiz.isPublished
-                          ? t("quizzes.published")
-                          : t("quizzes.draft")}
-                      </span>
-                    )}
+                  <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                    <div className="min-w-0 flex-1">
+                      {isAdmin && (
+                        <span
+                          className={`mb-3 inline-flex rounded-full px-3 py-1 text-xs font-semibold ${
+                            quiz.isPublished
+                              ? "bg-[#ECFDF3] text-[#027A48]"
+                              : "bg-[#FFFAEB] text-[#B54708]"
+                          }`}
+                        >
+                          {quiz.isPublished
+                            ? t("quizzes.published")
+                            : t("quizzes.draft")}
+                        </span>
+                      )}
 
-                    <h3 className="line-clamp-2 text-xl font-bold text-[#101828]">
-                      {quiz.title}
-                    </h3>
-                  </div>
+                      <h3 className="text-xl font-bold text-[#101828]">
+                        {quiz.title}
+                      </h3>
 
-                  <p className="mb-6 line-clamp-3 text-sm leading-7 text-[#667085]">
-                    {quiz.description || "No description"}
-                  </p>
-
-                  <div className="mb-6 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl bg-[#F9FAFB] p-4">
-                      <p className="text-xs text-[#98A2B3]">
-                        {t("quizzes.questions")}
-                      </p>
-
-                      <p className="mt-1 text-lg font-bold text-[#101828]">
-                        {quiz.questions?.length || 0}
+                      <p className="mt-2 line-clamp-2 text-sm leading-7 text-[#667085]">
+                        {quiz.description || "No description"}
                       </p>
                     </div>
 
-                    <div className="rounded-2xl bg-[#F9FAFB] p-4">
-                      <p className="text-xs text-[#98A2B3]">
-                        {t("quizzes.passingScore")}
-                      </p>
+                    <div className="flex shrink-0 gap-3">
+                      <div className="min-w-[120px] rounded-2xl bg-[#F9FAFB] p-4">
+                        <p className="text-xs text-[#98A2B3]">
+                          {t("quizzes.questions")}
+                        </p>
 
-                      <p className="mt-1 text-lg font-bold text-[#101828]">
-                        {quiz.passingScore}%
-                      </p>
+                        <p className="mt-1 text-lg font-bold text-[#101828]">
+                          {quiz.questions?.length || 0}
+                        </p>
+                      </div>
+
+                      <div className="min-w-[120px] rounded-2xl bg-[#F9FAFB] p-4">
+                        <p className="text-xs text-[#98A2B3]">
+                          {t("quizzes.passingScore")}
+                        </p>
+
+                        <p className="mt-1 text-lg font-bold text-[#101828]">
+                          {quiz.passingScore}%
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <div className="border-t border-[#EAECF0] pt-5">
+                  <div className="mt-6 border-t border-[#EAECF0] pt-5">
                     {isAdmin ? (
                       <div className="flex flex-wrap items-center gap-3">
                         <button
                           onClick={() =>
                             router.push(
-                              `/dashboard/learn-and-grow/quizzes/${moduleId}/edit/${quiz.uuid}`
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/edit/${quiz.uuid}`,
                             )
                           }
                           className="inline-flex items-center rounded-xl bg-[#EEF4FF] px-4 py-2 text-sm font-semibold text-[#2563EB] transition hover:bg-[#DCE7FF]"
@@ -376,7 +415,7 @@ const ModuleQuizzesPage = () => {
                         <button
                           onClick={() =>
                             router.push(
-                              `/dashboard/learn-and-grow/quizzes/${moduleId}/attempts/${quiz.uuid}`
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/attempts/${quiz.uuid}`,
                             )
                           }
                           className="inline-flex items-center rounded-xl bg-[#ECFDF3] px-4 py-2 text-sm font-semibold text-[#027A48] transition hover:bg-[#D1FADF]"
@@ -412,7 +451,7 @@ const ModuleQuizzesPage = () => {
                             <button
                               onClick={() =>
                                 router.push(
-                                  `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${lastAttempt.uuid}`
+                                  `/dashboard/learn-and-grow/quizzes/${moduleId}/result/${lastAttempt.uuid}`,
                                 )
                               }
                               className="inline-flex items-center rounded-xl bg-[#ECFDF3] px-4 py-2 text-sm font-semibold text-[#027A48] transition hover:bg-[#D1FADF]"
@@ -424,7 +463,7 @@ const ModuleQuizzesPage = () => {
                           <button
                             onClick={() =>
                               router.push(
-                                `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`
+                                `/dashboard/learn-and-grow/quizzes/${moduleId}/take/${quiz.uuid}`,
                               )
                             }
                             className="inline-flex items-center rounded-xl bg-[#082d77] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#082d77]"
@@ -436,7 +475,7 @@ const ModuleQuizzesPage = () => {
                         <button
                           onClick={() =>
                             router.push(
-                              `/dashboard/learn-and-grow/quizzes/${moduleId}/my-attempts/${quiz.uuid}`
+                              `/dashboard/learn-and-grow/quizzes/${moduleId}/my-attempts/${quiz.uuid}`,
                             )
                           }
                           className="inline-flex items-center rounded-xl bg-[#EEF4FF] px-4 py-2 text-sm font-semibold text-[#2563EB] transition hover:bg-[#DCE7FF]"

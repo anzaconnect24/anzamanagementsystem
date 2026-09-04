@@ -16,7 +16,10 @@ const parseProgramStartups = (program) => {
   const text = String(program?.description || "");
   const idx = text.lastIndexOf(TRACKER_STARTUPS_MARKER);
   if (idx === -1) return [];
-  const line = text.slice(idx + TRACKER_STARTUPS_MARKER.length).split("\n")[0].trim();
+  const line = text
+    .slice(idx + TRACKER_STARTUPS_MARKER.length)
+    .split("\n")[0]
+    .trim();
   try {
     const value = JSON.parse(line);
     return Array.isArray(value) ? value : [];
@@ -39,6 +42,7 @@ import {
   FaQuestion,
   FaWpforms,
   FaRegLightbulb,
+  FaClipboardList,
 } from "react-icons/fa";
 import {
   RiTeamLine,
@@ -281,7 +285,11 @@ const Sidebar = ({
       });
     }
 
-    if (["Investor", "Enterprenuer", "Staff", "Reviewer", "Finance"].includes(role)) {
+    if (
+      ["Investor", "Enterprenuer", "Staff", "Reviewer", "Finance"].includes(
+        role,
+      )
+    ) {
       peopleItems.push({
         name: t("navigation.startups", "Startups"),
         path: "/dashboard/enterprenuers",
@@ -603,7 +611,9 @@ const Sidebar = ({
       });
     }
 
-    if (["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)) {
+    if (
+      ["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)
+    ) {
       programsItems.push({
         name: t("navigation.learnAndGrow", "Learn & Grow"),
         icon: <IoDocumentTextOutline className="text-xl" />,
@@ -624,7 +634,18 @@ const Sidebar = ({
       });
     }
 
-    if (["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)) {
+    // Surveys a startup has been asked to answer, on its own programme.
+    if (role === "Enterprenuer") {
+      programsItems.push({
+        name: t("navigation.surveys", "Surveys"),
+        path: "/dashboard/surveys",
+        icon: <FaClipboardList className="text-xl" />,
+      });
+    }
+
+    if (
+      ["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)
+    ) {
       programsItems.push({
         name: t("navigation.successStories", "Success Stories"),
         path: "/dashboard/successStories",
@@ -641,7 +662,15 @@ const Sidebar = ({
     }
 
     if (
-      ["Enterprenuer", "Investor", "Staff", "Mentor", "Admin", "Reviewer", "Finance"].includes(role)
+      [
+        "Enterprenuer",
+        "Investor",
+        "Staff",
+        "Mentor",
+        "Admin",
+        "Reviewer",
+        "Finance",
+      ].includes(role)
     ) {
       categories.push({
         id: "communication",

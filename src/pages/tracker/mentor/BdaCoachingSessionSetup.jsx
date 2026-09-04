@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import {
-  ArrowLeft,
-  Building2,
-  CalendarClock,
-  IdCard,
-  Plus,
-} from "lucide-react";
+import { Building2, CalendarClock, IdCard, Plus } from "lucide-react";
 import Loader from "@/components/common/Loader";
 import CoachingSessionsPanel, {
   formatSessionDate,
@@ -298,7 +292,8 @@ const BdaCoachingSessionSetup = () => {
       loadSessions();
     } catch (error) {
       toast.error(
-        error?.response?.data?.message || "Failed to save the learning materials",
+        error?.response?.data?.message ||
+          "Failed to save the learning materials",
       );
     } finally {
       setIsSaving(false);
@@ -312,15 +307,6 @@ const BdaCoachingSessionSetup = () => {
   return (
     <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
       <main className="mx-auto max-w-[1480px] space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate("/dashboard/bdaCoachingSessions")}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#082d77]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to startups
-        </button>
-
         <section
           className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
           style={{
@@ -339,11 +325,10 @@ const BdaCoachingSessionSetup = () => {
                 {startupName}
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-                Set up coaching sessions for this startup, then report on each one
-                after it has taken place.
+                Set up coaching sessions for this startup, then report on each
+                one after it has taken place.
               </p>
             </div>
-
           </div>
         </section>
 
@@ -443,7 +428,9 @@ const BdaCoachingSessionSetup = () => {
             <div className="sticky top-0 z-10 flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
               <div>
                 <h3 className="text-2xl font-black text-slate-950">
-                  {setupTarget ? "Schedule the requested session" : "Set up a session"}
+                  {setupTarget
+                    ? "Schedule the requested session"
+                    : "Set up a session"}
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
                   {setupTarget
@@ -751,8 +738,8 @@ const BdaCoachingSessionSetup = () => {
                   Decline this request
                 </h3>
                 <p className="mt-1 text-sm text-slate-500">
-                  {startupName} will see your reason on the request, so they know
-                  what to do next.
+                  {startupName} will see your reason on the request, so they
+                  know what to do next.
                 </p>
               </div>
               <button

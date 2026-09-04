@@ -18,6 +18,9 @@ const AddProgramPage = () => {
   const [loading, setloading] = useState(false);
   const [searchParams] = useSearchParams();
   const course = searchParams.get("course");
+  // Set when arriving from a program's course page: the new course is
+  // pre-attached to that program and we return there after saving.
+  const fromProgram = searchParams.get("program");
 
   // Which programme cohorts may open this class. None ticked = open to every
   // startup, which is how classes behaved before access control existed.
@@ -28,17 +31,21 @@ const AddProgramPage = () => {
     getCohortProgramOptions().then(setCohorts);
   }, []);
 
+  useEffect(() => {
+    if (fromProgram) setAllowedCohorts([fromProgram]);
+  }, [fromProgram]);
+
   return (
     <div>
       <Breadcrumb
         prevLink={`/dashboard/programs/${course}`}
         prevPage={t("common.back", "Back")}
-        pageName={t("programs.newProgram", "New Program")}
+        pageName={t("programs.addNewCourse", "Add New Course")}
       />
       <div className="rounded-lg border border-stroke bg-white shadow-default dark:border-strokedark dark:bg-boxdark">
         <div className="py-6 px-4 md:px-6 xl:px-7.5 space-y-4">
           <h4 className="text-xl font-semibold text-black dark:text-white">
-            {t("programs.addNewProgram", "Add new program for {{course}}", {
+            {t("programs.addNewCourseFor", "Add new course for {{course}}", {
               course: decodeURIComponent(course),
             })}
           </h4>
@@ -87,7 +94,11 @@ const AddProgramPage = () => {
                   toast.success(
                     t("programs.programAdded", "Program added successfully"),
                   );
-                  router.push(`/dashboard/programs/${course}`);
+                  router.push(
+                    fromProgram
+                      ? `/dashboard/programManagement/program/${fromProgram}/modules`
+                      : `/dashboard/programs/${course}`,
+                  );
                   setloading(false);
                 });
               });
@@ -103,14 +114,14 @@ const AddProgramPage = () => {
                   required
                   className="w-full rounded border-stroke"
                   placeholder={t(
-                    "programs.enterProgramTitle",
-                    "Enter program title",
+                    "programs.enterCourseTitle",
+                    "Enter course title",
                   )}
                 />
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  {t("programs.programType", "Program category")}
+                  {t("programs.courseType", "Course Type")}
                 </label>
                 <select
                   name="programCategory"
@@ -130,7 +141,7 @@ const AddProgramPage = () => {
               </div>
               <div>
                 <label className="mb-2.5 block font-medium text-black dark:text-white">
-                  {t("programs.programCoverImage", "Program Cover Image")}
+                  {t("programs.courseCoverImage", "Course Cover Image")}
                 </label>
                 <input
                   name="image"
@@ -204,11 +215,7 @@ const AddProgramPage = () => {
               className="py-3 px-4 mt-4 hover:opacity-95 rounded flex justify-center bg-primary text-white"
             >
               <div>
-                {loading ? (
-                  <Spinner />
-                ) : (
-                  t("programs.addProgram", "Add Program")
-                )}
+                {loading ? <Spinner /> : t("programs.addCourse", "Add Course")}
               </div>
             </button>
           </form>

@@ -190,3 +190,21 @@ export const setCourseCompleted = async (uuid, completed) => {
     );
   }
 };
+
+// Average star rating for one course, from the course_ratings table.
+// Returns { average, count } — zeros when nobody has rated it.
+export const getCourseRating = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${server_url}/course-ratings/average?programUuids=${encodeURIComponent(uuid)}`,
+    );
+    const entry = response.data.body?.[uuid];
+    return {
+      average: Number(entry?.average ?? entry?.avgRating ?? 0),
+      count: Number(entry?.count ?? entry?.ratingCount ?? 0),
+    };
+  } catch (error) {
+    console.log(error.response);
+    return { average: 0, count: 0 };
+  }
+};

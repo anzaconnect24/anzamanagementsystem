@@ -40,6 +40,7 @@ import Enterprenuers from "./pages/users/enterprenuers/Enterprenuers";
 import ProgramCategories from "./pages/users/enterprenuers/ProgramCategories";
 import StartupPrograms from "./pages/users/enterprenuers/StartupPrograms";
 import ProgramStartups from "./pages/users/enterprenuers/ProgramStartups";
+import ProgramCourses from "./pages/users/enterprenuers/ProgramCourses";
 import Investors from "./pages/users/investors/Investors";
 import Mentors from "./pages/users/mentors/Mentors";
 import Reviewers from "./pages/users/reviewers/Reviewers";
@@ -115,6 +116,12 @@ import InvestorDetailsWithUuid from "./pages/users/investors/details/InvestorDet
 import BusinessDetailsWithUuid from "./pages/business/businessDetails/BusinessDetailsWithUuid";
 import CategoryWithParam from "./pages/learnandgrow/generalResources/category/CategoryWithParam";
 import ModuleWithCourse from "./pages/learnandgrow/modules/ModuleWithCourse";
+import ModuleDetails from "./pages/learnandgrow/modules/ModuleDetails";
+import SurveyBuilder from "./pages/users/enterprenuers/SurveyBuilder";
+import ProgramSurveys from "./pages/users/enterprenuers/ProgramSurveys";
+import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
+import MySurveys from "./pages/learnandgrow/surveys/MySurveys";
+import TakeSurvey from "./pages/learnandgrow/surveys/TakeSurvey";
 import MessagesWithUuid from "./pages/chat/messages/MessagesWithUuid";
 
 // Additional Missing Imports - Account Components
@@ -332,6 +339,23 @@ function App() {
               path="programManagement/program/:uuid"
               element={<ProgramStartups />}
             />
+            <Route
+              path="programManagement/program/:uuid/modules"
+              element={<ProgramCourses />}
+            />
+            <Route
+              path="programManagement/module/:uuid"
+              element={<ModuleDetails />}
+            />
+            <Route
+              path="programManagement/program/:uuid/surveys"
+              element={<ProgramSurveys />}
+            />
+            <Route path="surveys" element={<MySurveys />} />
+            <Route path="surveys/new" element={<SurveyBuilder />} />
+            <Route path="surveys/:uuid/take" element={<TakeSurvey />} />
+            <Route path="surveys/:uuid/edit" element={<SurveyBuilder />} />
+            <Route path="surveys/:uuid/results" element={<SurveyResults />} />
             <Route path="investors" element={<Investors />} />
             <Route path="mentors" element={<Mentors />} />
             <Route path="reviewers" element={<Reviewers />} />
@@ -359,7 +383,10 @@ function App() {
             />
             <Route path="mentorReports" element={<MentorReports />} />
             <Route path="mentorTracker" element={<MentorTracker />} />
-            <Route path="bdaCoachingSessions" element={<BdaCoachingSessions />} />
+            <Route
+              path="bdaCoachingSessions"
+              element={<BdaCoachingSessions />}
+            />
             <Route
               path="bdaCoachingSessions/:entUuid"
               element={<BdaCoachingSessionSetup />}

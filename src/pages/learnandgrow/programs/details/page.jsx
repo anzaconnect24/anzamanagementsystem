@@ -19,6 +19,11 @@ import { useRouter } from "@/utils/navigation";
 import Link from "@/utils/link";
 import Image from "@/utils/image";
 import Loader from "@/components/common/Loader";
+import StaffCourseView from "./StaffCourseView";
+
+// Admin and staff open a course to review it, not to take it, so they get the
+// tabbed course record instead of the learner's enrol-and-continue page.
+const STAFF_ROLES = ["Admin", "Staff", "Reviewer"];
 
 const fallbackImage = "/images/ideation-classes.svg";
 
@@ -76,6 +81,7 @@ const CourseDetailsPage = () => {
 
   // Finishing a class is recorded on the backend (enrolment lives in
   // Firestore and only says the class was started).
+
   const [completed, setCompleted] = useState(false);
   const [savingCompletion, setSavingCompletion] = useState(false);
 
@@ -207,6 +213,10 @@ const CourseDetailsPage = () => {
         </div>
       </div>
     );
+  }
+
+  if (STAFF_ROLES.includes(userDetails?.role)) {
+    return <StaffCourseView uuid={uuid} program={program} />;
   }
 
   return (
