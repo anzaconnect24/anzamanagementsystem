@@ -7,6 +7,7 @@ import {
 import {
   getCohortProgramOptions,
   cohortOf,
+  cohortsOf,
 } from "../controllers/cohort_controller";
 import { UserContext } from "@/layouts/DashboardLayout";
 import Loader from "@/components/common/Loader";
@@ -337,6 +338,19 @@ const BusinessInformation = () => {
                       </option>
                     ))}
                   </select>
+                  {/* A startup can be on several programmes, but this control
+                      only holds one. Naming the others makes it clear that
+                      picking a different programme adds to this list rather
+                      than moving the startup, and that they are not lost. */}
+                  {cohortsOf(business).length > 1 && (
+                    <p className="mt-2 text-sm text-black dark:text-white">
+                      {t("business.alsoInPrograms", "Also in")}:{" "}
+                      {cohortsOf(business)
+                        .slice(1)
+                        .map((program) => program.title)
+                        .join(", ")}
+                    </p>
+                  )}
                 </div>
                 <div>
                   <label className="mb-2.5 block font-medium text-black dark:text-white">

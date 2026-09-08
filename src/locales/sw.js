@@ -234,6 +234,7 @@ export const sw = {
     myMilestones: "Ukuaji wa Biashara",
     trackerOverview: "Usimamizi wa Ruzuku",
     tracking: "Usaidizi wa Biashara",
+    programManagement: "Usimamizi wa Programu",
     staffTracker: "Usimamizi wa Ruzuku",
     enterpriseGrowth: "Ukuaji wa Biashara",
     grantManagement: "Usimamizi wa Ruzuku",
@@ -765,7 +766,8 @@ export const sw = {
     describeTheInvestmentOpportunity: "Eleza fursa ya uwekezaji",
     detailsURL: "Kiungo cha Maelezo",
     detailsURLOptional: "Kiungo cha Maelezo (Hiari)",
-    linkToExternalPage: "Kiungo cha ukurasa wa nje wenye maelezo zaidi kuhusu fursa hii",
+    linkToExternalPage:
+      "Kiungo cha ukurasa wa nje wenye maelezo zaidi kuhusu fursa hii",
     expireDate: "Tarehe ya Kumalizika",
     expireDateOptional: "Tarehe ya kumalizika (Hiari)",
     whenThisOpportunityExpires: "Wakati fursa hii itaisha na isiwepo tena",
@@ -2153,7 +2155,8 @@ export const sw = {
     interestedStartups: "Biashara Zilizovutiwa",
     startup: "Biashara Changa",
     startupDistribution: "Mgawanyo wa Biashara Changa",
-    regionalStartupDistribution: "Mgawanyo wa kimkoa wa biashara changa nchini Tanzania",
+    regionalStartupDistribution:
+      "Mgawanyo wa kimkoa wa biashara changa nchini Tanzania",
     loadingStartupData: "Inapakia data ya biashara changa...",
     noStartupDataFound: "Hakuna Data ya Biashara Changa Iliyopatikana",
     noStartupsRegistered:
@@ -2367,8 +2370,6 @@ export const sw = {
     enterMessage: "Andika ujumbe hapa...",
     send: "Tuma",
   },
-
-
 
   // CRAT System
   cratSystem: {
@@ -2584,6 +2585,9 @@ export const sw = {
     classRoomsWelcome:
       "Fuatilia maendeleo yako, pata kozi maalum, na kukuza biashara yako hatua kwa hatua. Iwe unaanza tu na wazo au unakuza biashara yako kwa uongozi, jukwaa hili limeundwa kukuongoza kupitia kila hatua ya safari yako ya ujasiriamali. Fuatilia alama za kujifunza, jiandikishe kwenye madarasa yanayolingana na hatua ya biashara yako, na fungua zana za vitendo, maarifa ya wataalamu, na fursa za ulezi. Kwa kila moduli unayomaliza, utajenga misingi imara zaidi kuimarisha mkakati wako, na kusonga karibu na kufikia malengo yako ya biashara. Hebu tukue—hatua moja kwa wakati.",
     availableCourses: "Kozi Zinazopatikana",
+    recommendedCourses: "Kozi Zinazopendekezwa Kwako",
+    recommendedCoursesIntro:
+      "Chunguza kozi zinazopendekezwa kwako kulingana na programu uliyochagua na ugundue chaguo za kujifunza zinazounga mkono safari yako ya kitaaluma.",
     availableModules: "Moduli Zinazopatikana",
     ideation: "Wazo la Biashara",
     businessFoundation: "Misingi ya Biashara",

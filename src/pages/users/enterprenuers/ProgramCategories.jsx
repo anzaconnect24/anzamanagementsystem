@@ -15,7 +15,6 @@ import {
   FaLayerGroup,
   FaUsers,
   FaArrowRight,
-  FaRegFolderOpen,
 } from "react-icons/fa";
 
 // First level of Startups: category -> program -> startups.
@@ -24,13 +23,11 @@ const ProgramCategories = () => {
 
   const [loading, setLoading] = useState(true);
   const [programs, setPrograms] = useState([]);
-  const [unassignedCount, setUnassignedCount] = useState(0);
 
   useEffect(() => {
     getCohortPrograms()
-      .then(({ programs: list, unassignedCount: unassigned }) => {
+      .then(({ programs: list }) => {
         setPrograms(list);
-        setUnassignedCount(unassigned);
       })
       .catch(() => {
         toast.error("Failed to load programs");
@@ -109,10 +106,6 @@ const ProgramCategories = () => {
               {startupsIn(programs)} Startups enrolled
             </span>
 
-            <span className="flex items-center gap-2">
-              <FaRegFolderOpen />
-              {unassignedCount} Unassigned
-            </span>
           </div>
         </div>
       </div>

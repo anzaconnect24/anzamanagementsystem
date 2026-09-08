@@ -9,7 +9,6 @@ import {
   createCohortProgram,
   updateCohortProgram,
   deleteCohortProgram,
-  UNASSIGNED_PROGRAM_KEY,
 } from "@/controllers/cohort_controller";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import { UserContext } from "../../../layouts/DashboardLayout";
@@ -22,7 +21,6 @@ import {
   FaUsers,
   FaSearch,
   FaArrowRight,
-  FaRegFolderOpen,
   FaPlus,
   FaExclamationTriangle,
   FaArrowLeft,
@@ -64,7 +62,6 @@ const StartupPrograms = () => {
 
   const [loading, setLoading] = useState(true);
   const [programs, setPrograms] = useState([]);
-  const [unassignedCount, setUnassignedCount] = useState(0);
   const [keyword, setKeyword] = useState("");
 
   // Programme details editor
@@ -81,9 +78,8 @@ const StartupPrograms = () => {
     if (!quiet) setLoading(true);
 
     return getCohortPrograms()
-      .then(({ programs: list, unassignedCount: unassigned }) => {
+      .then(({ programs: list }) => {
         setPrograms(list);
-        setUnassignedCount(unassigned);
       })
       .catch(() => {
         toast.error("Failed to load programs");
@@ -311,10 +307,6 @@ const StartupPrograms = () => {
               {totalInPrograms} Startups enrolled
             </span>
 
-            <span className="flex items-center gap-2">
-              <FaRegFolderOpen />
-              {unassignedCount} Unassigned
-            </span>
           </div>
         </div>
       </div>
@@ -356,7 +348,7 @@ const StartupPrograms = () => {
       </div>
 
       {/* PROGRAM TILES */}
-      {visiblePrograms.length === 0 && unassignedCount === 0 ? (
+      {visiblePrograms.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-8 text-center text-sm text-slate-500">
           {search
             ? "No programs match that search."
@@ -457,39 +449,6 @@ const StartupPrograms = () => {
             );
           })}
 
-          {/* Startups not yet placed in any program. */}
-          {unassignedCount > 0 && (
-            <div
-              onClick={() => openProgram(UNASSIGNED_PROGRAM_KEY)}
-              className="group flex cursor-pointer flex-col overflow-hidden rounded-xl border-2 border-dashed border-slate-300 bg-white p-5 shadow-sm transition duration-200 hover:scale-[1.02] hover:border-slate-400 hover:shadow-lg"
-            >
-              <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-slate-500">
-                <FaRegFolderOpen className="text-xl" />
-              </div>
-
-              <h3 className="mb-2 text-lg font-bold text-[#111827]">
-                Unassigned
-              </h3>
-
-              <p className="mb-4 text-sm text-[#6f6f72]">
-                Startups that are not part of any program yet.
-              </p>
-
-              <div className="mb-4 flex items-center gap-2 text-sm text-[#6f6f72]">
-                <FaUsers className="shrink-0" />
-                <span>
-                  {unassignedCount}{" "}
-                  {unassignedCount === 1 ? "startup" : "startups"}
-                </span>
-              </div>
-
-              <div className="mt-auto flex items-center justify-end border-t border-black/10 pt-4 text-xs font-semibold text-green-700">
-                <span className="flex items-center gap-1">
-                  View startups <FaArrowRight />
-                </span>
-              </div>
-            </div>
-          )}
         </div>
       )}
 
@@ -516,8 +475,9 @@ const StartupPrograms = () => {
               <p className="mb-5 rounded-lg bg-amber-50 px-4 py-3 text-sm text-amber-800">
                 {deleting.startupCount}{" "}
                 {deleting.startupCount === 1 ? "startup is" : "startups are"} in
-                this program. They will move to <strong>Unassigned</strong> —
-                the startups themselves are not deleted.
+                this program. They will be released from it — the startups
+                themselves are not deleted, and any other program they are on
+                is unaffected.
               </p>
             ) : (
               <p className="mb-5 rounded-lg bg-slate-50 px-4 py-3 text-sm text-slate-600">

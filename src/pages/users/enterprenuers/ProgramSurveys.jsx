@@ -3,7 +3,15 @@
 import { useContext, useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FaClipboardList, FaUsers } from "react-icons/fa";
+import {
+  FaCalendarAlt,
+  FaCheckCircle,
+  FaClipboardList,
+  FaInbox,
+  FaPencilAlt,
+  FaPercent,
+  FaUsers,
+} from "react-icons/fa";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import {
@@ -15,6 +23,13 @@ import {
 // Staff write the surveys a programme runs. "Staff" is stored as either
 // "Staff" or "Reviewer" (see SignUp).
 const CAN_MANAGE_ROLES = ["Admin", "Staff", "Reviewer"];
+
+const formatDate = (value) => {
+  if (!value) return "N/A";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "N/A";
+  return date.toLocaleDateString("en-GB");
+};
 
 const statusStyle = (status) =>
   status === "published"
@@ -94,26 +109,162 @@ const ProgramSurveys = () => {
     load();
   };
 
+  // A response rate needs a denominator: every startup on the programme times
+  // every survey actually sent to them. Null while nothing is published.
+  const published = surveys.filter((survey) => survey.status !== "draft");
+  const possible = members * published.length;
+
+  const stats = {
+    total: surveys.length,
+    published: surveys.filter((survey) => survey.status === "published").length,
+    draft: surveys.filter((survey) => survey.status === "draft").length,
+    closed: surveys.filter((survey) => survey.status === "closed").length,
+    responses: surveys.reduce(
+      (sum, survey) => sum + (survey.responses || 0),
+      0,
+    ),
+    rate: null,
+  };
+
+  if (possible > 0) {
+    const answered = published.reduce(
+      (sum, survey) => sum + (survey.responses || 0),
+      0,
+    );
+    stats.rate = Math.round((answered / possible) * 100);
+  }
+
   if (loading) return <Loader />;
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <div className="mx-auto max-w-6xl">
-        <h1 className="mb-3 text-4xl font-black tracking-tight text-slate-950">
-          {program?.title || "Program"}
-        </h1>
+      <div>
+        {/* HERO */}
+        <div className="relative mb-8 min-h-[240px] overflow-hidden rounded-2xl bg-black shadow-sm">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url('${program?.image || "/images/mentor_hero.svg"}')`,
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30" />
 
-        <div className="mb-8 flex flex-wrap items-center gap-8 border-y border-slate-200 py-4 text-sm text-[#6f6f72]">
-          <span className="flex items-center gap-2">
-            <FaUsers className="text-slate-400" />
-            <strong className="text-slate-950">{members}</strong> Enrolled
-          </span>
+          <div className="relative z-10 max-w-3xl p-10 text-white">
+            {program?.category && (
+              <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+                <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+                {program.category}
+              </span>
+            )}
 
-          <span className="flex items-center gap-2">
-            <FaClipboardList className="text-slate-400" />
-            <strong className="text-slate-950">{surveys.length}</strong>{" "}
-            {surveys.length === 1 ? "Survey" : "Surveys"}
-          </span>
+            <h2 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">
+              {program?.title || "Program"}
+            </h2>
+
+            {program?.description && (
+              <p className="mb-4 max-w-2xl text-sm leading-6 text-white/85 drop-shadow-md">
+                {program.description}
+              </p>
+            )}
+
+            <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+              <span className="flex items-center gap-2">
+                <FaUsers />
+                {members} {members === 1 ? "startup" : "startups"} in this
+                program
+              </span>
+
+              {(program?.startDate || program?.endDate) && (
+                <span className="flex items-center gap-2">
+                  <FaCalendarAlt />
+                  {formatDate(program?.startDate)} &ndash;{" "}
+                  {formatDate(program?.endDate)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* SURVEY DASHBOARD */}
+        <div className="mb-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+          {[
+            {
+              key: "total",
+              label: "Total surveys",
+              icon: FaClipboardList,
+              tone: "text-[#082d77]",
+              ring: "bg-[#082d77]/5",
+              value: stats.total,
+            },
+            {
+              key: "published",
+              label: "Published",
+              icon: FaCheckCircle,
+              tone: "text-emerald-600",
+              ring: "bg-emerald-50",
+              value: stats.published,
+            },
+            {
+              key: "draft",
+              label: "Drafts",
+              icon: FaPencilAlt,
+              tone: "text-amber-600",
+              ring: "bg-amber-50",
+              value: stats.draft,
+            },
+            {
+              key: "closed",
+              label: "Closed",
+              icon: FaInbox,
+              tone: "text-slate-600",
+              ring: "bg-slate-100",
+              value: stats.closed,
+            },
+            {
+              key: "responses",
+              label: "Responses",
+              icon: FaUsers,
+              tone: "text-[#082d77]",
+              ring: "bg-[#082d77]/5",
+              value: stats.responses,
+            },
+            {
+              key: "rate",
+              label: "Response rate",
+              icon: FaPercent,
+              tone: "text-emerald-600",
+              ring: "bg-emerald-50",
+              // Nothing published means there is no rate to quote yet.
+              value: stats.rate === null ? "—" : `${stats.rate}%`,
+              hint:
+                stats.rate === null
+                  ? "No published survey has been sent to the startups yet"
+                  : "Answers received out of every startup-survey pairing there could be",
+            },
+          ].map((tile) => {
+            const Icon = tile.icon;
+
+            return (
+              <div
+                key={tile.key}
+                className="rounded-xl border border-slate-200/80 bg-white p-3 shadow-sm"
+                title={tile.hint || undefined}
+              >
+                <span
+                  className={`mb-2 inline-flex h-8 w-8 items-center justify-center rounded-full ${tile.ring} ${tile.tone}`}
+                >
+                  <Icon className="text-sm" />
+                </span>
+
+                <p className="break-words text-lg font-black leading-tight text-slate-950">
+                  {tile.value}
+                </p>
+                <p className="mt-1 text-xs font-medium leading-snug text-[#6f6f72]">
+                  {tile.label}
+                </p>
+              </div>
+            );
+          })}
         </div>
 
         <div className="mb-6 flex flex-wrap items-center justify-between gap-4">

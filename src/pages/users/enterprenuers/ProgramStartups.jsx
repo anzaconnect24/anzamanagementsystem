@@ -466,12 +466,12 @@ const ProgramStartups = () => {
           <button
             type="button"
             onClick={() =>
-              navigate(`/dashboard/programManagement/program/${uuid}/modules`)
+              navigate(`/dashboard/programManagement/program/${uuid}/courses`)
             }
             className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
           >
             <FaBookOpen className="text-lg" />
-            Program modules
+            Learning Hub
           </button>
         )}
         {!isUnassigned && (
@@ -484,6 +484,18 @@ const ProgramStartups = () => {
           >
             <FaClipboardList className="text-lg" />
             Surveys
+          </button>
+        )}
+        {!isUnassigned && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}/me`)
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaChartLine className="text-lg" />
+            Monitoring &amp; Evaluation
           </button>
         )}
         {!isUnassigned && (

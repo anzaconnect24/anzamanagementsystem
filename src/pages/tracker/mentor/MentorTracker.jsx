@@ -12,6 +12,7 @@ import Loader from "@/components/common/Loader";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { getStaffAssignedEntreprenuers } from "@/controllers/staffEntreprenuerController";
 import { getPrograms } from "@/controllers/program_controller";
+import { isGrantProgram } from "@/utils/programMeta";
 import { getEnterprenuers } from "@/controllers/user_controller";
 import {
   deleteMentorEnterprise,
@@ -25,9 +26,6 @@ const FLAG_LABEL_MAP = {
   amber: "At risk",
   red: "Critical",
 };
-
-
-
 
 const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
 const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
@@ -64,10 +62,20 @@ const EXCLUDED_PROGRAM_STAGE_LABELS = [
 ];
 
 const getProgramDisplayName = (program) =>
-  String(program?.title || program?.name || program?.programName || program?.programCategory || "").trim();
+  String(
+    program?.title ||
+      program?.name ||
+      program?.programName ||
+      program?.programCategory ||
+      "",
+  ).trim();
 
 const isExcludedProgramStageLabel = (value) =>
-  EXCLUDED_PROGRAM_STAGE_LABELS.includes(String(value || "").trim().toLowerCase());
+  EXCLUDED_PROGRAM_STAGE_LABELS.includes(
+    String(value || "")
+      .trim()
+      .toLowerCase(),
+  );
 
 const getEnterpriseProgramName = (enterprise) =>
   String(
@@ -78,8 +86,6 @@ const getEnterpriseProgramName = (enterprise) =>
       enterprise?.category ||
       "",
   ).trim();
-
-
 
 const formatProgramDate = (value) => {
   if (!value) return "Not set";
@@ -103,7 +109,8 @@ const getEnterpriseEntrepreneurUuid = (enterprise) =>
 
 const getAssignedBusinessName = (assignment) => {
   const entrepreneur = assignment?.Entreprenuer;
-  const directBusinessName = entrepreneur?.Business?.name || entrepreneur?.business?.name;
+  const directBusinessName =
+    entrepreneur?.Business?.name || entrepreneur?.business?.name;
   if (directBusinessName) return directBusinessName;
 
   const businessList = Array.isArray(entrepreneur?.Businesses)
@@ -157,9 +164,12 @@ const getProgramCategories = (program) => {
 const getInitials = (name = "") => {
   const parts = String(name).trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "--";
-  return parts.slice(0, 2).map((part) => part[0]).join("").toUpperCase();
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
 };
-
 
 // Module scope so it is not remounted on every keystroke in the search box,
 // which would close an open menu mid-interaction.
@@ -268,7 +278,13 @@ const MentorTracker = () => {
           uuid: program.uuid,
           name: getProgramDisplayName(program),
         }))
-        .filter((program) => Boolean(program.uuid && program.name && !isExcludedProgramStageLabel(program.name))),
+        .filter((program) =>
+          Boolean(
+            program.uuid &&
+            program.name &&
+            !isExcludedProgramStageLabel(program.name),
+          ),
+        ),
     [programs],
   );
 
@@ -277,7 +293,11 @@ const MentorTracker = () => {
       new Set(
         enterprises
           .map((item) => getEnterpriseProgramName(item))
-          .filter((value) => Boolean(value && value.trim() && !isExcludedProgramStageLabel(value))),
+          .filter((value) =>
+            Boolean(
+              value && value.trim() && !isExcludedProgramStageLabel(value),
+            ),
+          ),
       ),
     );
   }, [enterprises]);
@@ -344,7 +364,8 @@ const MentorTracker = () => {
     const enterpriseByEnt = new Map();
     enterprises.forEach((enterprise) => {
       const uuid = getEnterpriseEntrepreneurUuid(enterprise);
-      if (uuid && !enterpriseByEnt.has(uuid)) enterpriseByEnt.set(uuid, enterprise);
+      if (uuid && !enterpriseByEnt.has(uuid))
+        enterpriseByEnt.set(uuid, enterprise);
     });
 
     const rows = [];
@@ -354,7 +375,11 @@ const MentorTracker = () => {
       const ent = assignment?.Entreprenuer;
       if (!ent?.uuid || seen.has(ent.uuid)) return;
       seen.add(ent.uuid);
-      rows.push({ key: ent.uuid, entrepreneur: ent, enterprise: enterpriseByEnt.get(ent.uuid) || null });
+      rows.push({
+        key: ent.uuid,
+        entrepreneur: ent,
+        enterprise: enterpriseByEnt.get(ent.uuid) || null,
+      });
     });
 
     // Include any registered enterprise whose entrepreneur isn't in the assigned list.
@@ -364,7 +389,8 @@ const MentorTracker = () => {
       if (uuid) seen.add(uuid);
       rows.push({
         key: enterprise.uuid || uuid || enterprise.id,
-        entrepreneur: enterprise.Entreprenuer || enterprise.entreprenuer || null,
+        entrepreneur:
+          enterprise.Entreprenuer || enterprise.entreprenuer || null,
         enterprise,
       });
     });
@@ -416,7 +442,10 @@ const MentorTracker = () => {
         return {
           ...row,
           name:
-            enterprise?.name || business?.name || entrepreneur?.name || "Unnamed startup",
+            enterprise?.name ||
+            business?.name ||
+            entrepreneur?.name ||
+            "Unnamed startup",
           email: entrepreneur?.email || business?.email || "",
           sector: enterprise?.ceSector || business?.BusinessSector?.name || "",
           region: enterprise?.district || business?.location || "",
@@ -428,8 +457,13 @@ const MentorTracker = () => {
             programNameByEntrepreneur.get(entrepreneur?.uuid) ||
             "",
           coverImage:
-            entrepreneur?.image || enterprise?.image || business?.image || HERO_IMAGE_URL,
-          joinedYear: Number.isNaN(joined.getTime()) ? null : joined.getFullYear(),
+            entrepreneur?.image ||
+            enterprise?.image ||
+            business?.image ||
+            HERO_IMAGE_URL,
+          joinedYear: Number.isNaN(joined.getTime())
+            ? null
+            : joined.getFullYear(),
         };
       }),
     [trackedList, programNameByEntrepreneur],
@@ -438,7 +472,9 @@ const MentorTracker = () => {
   const sectorOptions = useMemo(
     () => [
       "All Sectors",
-      ...Array.from(new Set(cardRows.map((r) => r.sector).filter(Boolean))).sort(),
+      ...Array.from(
+        new Set(cardRows.map((r) => r.sector).filter(Boolean)),
+      ).sort(),
     ],
     [cardRows],
   );
@@ -457,7 +493,8 @@ const MentorTracker = () => {
           .some((field) => String(field).toLowerCase().includes(q));
       })
       .sort((a, b) => {
-        if (sortKey === "recent") return (b.joinedYear || 0) - (a.joinedYear || 0);
+        if (sortKey === "recent")
+          return (b.joinedYear || 0) - (a.joinedYear || 0);
         if (sortKey === "sector")
           return String(a.sector).localeCompare(String(b.sector));
         return String(a.name).localeCompare(String(b.name));
@@ -490,7 +527,8 @@ const MentorTracker = () => {
   // an active search is not drowned out by every empty program.
   const programCards = useMemo(() => {
     const rowsByName = new Map(groupedByProgram);
-    const narrowedBySearch = sectorFilter !== "All Sectors" || keyword.trim() !== "";
+    const narrowedBySearch =
+      sectorFilter !== "All Sectors" || keyword.trim() !== "";
     const cards = [];
     const seen = new Set();
 
@@ -551,7 +589,14 @@ const MentorTracker = () => {
       setMilestones(Array.isArray(ms) ? ms : []);
       setEntrepreneurs(Array.isArray(ents) ? ents : []);
       setEnterprises(Array.isArray(enterpriseList) ? enterpriseList : []);
-      setPrograms(Array.isArray(programsResponse?.data) ? programsResponse.data : []);
+      // Grant Management lists the Finance Officer's grant programs only.
+      // /programs also returns learn-and-grow courses and the BDAs' own
+      // mentorship programs, and neither belongs here.
+      setPrograms(
+        Array.isArray(programsResponse?.data)
+          ? programsResponse.data.filter(isGrantProgram)
+          : [],
+      );
       setEntrepreneurPool(
         Array.isArray(poolResponse)
           ? poolResponse
@@ -569,7 +614,6 @@ const MentorTracker = () => {
   useEffect(() => {
     if (userDetails?.uuid) loadData();
   }, [userDetails?.uuid]);
-
 
   const onDeleteEnterprise = async (enterprise) => {
     const shouldDelete = window.confirm(`Delete startup "${enterprise.name}"?`);
@@ -589,7 +633,6 @@ const MentorTracker = () => {
 
   if (loading) return <Loader />;
 
-
   return (
     <div className="min-h-screen px-4 py-6 text-slate-950 md:px-8 xl:px-12">
       <main className="mx-auto max-w-[1480px] space-y-6">
@@ -608,9 +651,12 @@ const MentorTracker = () => {
                   <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
                   Business Development Advisor
                 </div>
-                <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">Startup Portfolio</h1>
+                <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
+                  Startup Portfolio
+                </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-                  Monitor startup progress, milestones, evidence, and grant governance for the entrepreneurs assigned to you.
+                  Monitor startup progress, milestones, evidence, and grant
+                  governance for the entrepreneurs assigned to you.
                 </p>
               </div>
             </div>
@@ -637,10 +683,16 @@ const MentorTracker = () => {
                 <TrackerFilterDropdown
                   id="program"
                   label="Program"
-                  value={enterpriseFilter === "all" ? "All Programs" : enterpriseFilter}
+                  value={
+                    enterpriseFilter === "all"
+                      ? "All Programs"
+                      : enterpriseFilter
+                  }
                   options={["All Programs", ...filterCategories]}
                   onPick={(value) =>
-                    setEnterpriseFilter(value === "All Programs" ? "all" : value)
+                    setEnterpriseFilter(
+                      value === "All Programs" ? "all" : value,
+                    )
                   }
                   open={openDropdown}
                   setOpen={setOpenDropdown}
@@ -675,64 +727,70 @@ const MentorTracker = () => {
                 No programs available yet.
               </div>
             ) : (
-            /* Programs first — opening one shows the startups inside it. */
-            <div className="space-y-6">
-              {programCards.map(({ name, rows, program }) => {
-                const categories = program ? getProgramCategories(program) : [];
-                return (
-                  <article
-                    key={name}
-                    className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm"
-                  >
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <h3 className="text-xl font-black tracking-tight text-[#172033]">
-                        {name}
-                      </h3>
-                      {categories[0] && (
-                        <span className="rounded-full bg-[#082d77]/5 px-3 py-1 text-xs font-bold text-[#082d77]">
-                          {categories[0]}
-                        </span>
+              /* Programs first — opening one shows the startups inside it. */
+              <div className="space-y-6">
+                {programCards.map(({ name, rows, program }) => {
+                  const categories = program
+                    ? getProgramCategories(program)
+                    : [];
+                  return (
+                    <article
+                      key={name}
+                      className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm"
+                    >
+                      <div className="flex flex-wrap items-start justify-between gap-3">
+                        <h3 className="text-xl font-black tracking-tight text-[#172033]">
+                          {name}
+                        </h3>
+                        {categories[0] && (
+                          <span className="rounded-full bg-[#082d77]/5 px-3 py-1 text-xs font-bold text-[#082d77]">
+                            {categories[0]}
+                          </span>
+                        )}
+                      </div>
+
+                      {program?.description && (
+                        <p className="mt-3 text-sm leading-6 text-[#6f6f72]">
+                          {getProgramBlurb(program)}
+                        </p>
                       )}
-                    </div>
 
-                    {program?.description && (
-                      <p className="mt-3 text-sm leading-6 text-[#6f6f72]">
-                        {getProgramBlurb(program)}
-                      </p>
-                    )}
-
-                    <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                      <div className="rounded-xl bg-slate-50 p-4">
-                        <p className="text-xs font-bold text-slate-400">Start</p>
-                        <p className="mt-1 text-sm font-black text-slate-950">
-                          {formatProgramDate(program?.startDate)}
-                        </p>
+                      <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                        <div className="rounded-xl bg-slate-50 p-4">
+                          <p className="text-xs font-bold text-slate-400">
+                            Start
+                          </p>
+                          <p className="mt-1 text-sm font-black text-slate-950">
+                            {formatProgramDate(program?.startDate)}
+                          </p>
+                        </div>
+                        <div className="rounded-xl bg-slate-50 p-4">
+                          <p className="text-xs font-bold text-slate-400">
+                            End
+                          </p>
+                          <p className="mt-1 text-sm font-black text-slate-950">
+                            {formatProgramDate(program?.endDate)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="rounded-xl bg-slate-50 p-4">
-                        <p className="text-xs font-bold text-slate-400">End</p>
-                        <p className="mt-1 text-sm font-black text-slate-950">
-                          {formatProgramDate(program?.endDate)}
-                        </p>
-                      </div>
-                    </div>
 
-                    <div className="mt-5 flex items-center justify-between border-t border-black/10 pt-4">
-                      <span className="text-xs font-bold text-[#8a8f98]">
-                        {rows.length} startup{rows.length === 1 ? "" : "s"}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setOpenProgram(name)}
-                        className="flex items-center gap-1 text-sm font-bold text-green-600 transition hover:text-green-700"
-                      >
-                        View Details
-                        <ArrowRight className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
+                      <div className="mt-5 flex items-center justify-between border-t border-black/10 pt-4">
+                        <span className="text-xs font-bold text-[#8a8f98]">
+                          {rows.length} startup{rows.length === 1 ? "" : "s"}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setOpenProgram(name)}
+                          className="flex items-center gap-1 text-sm font-bold text-green-600 transition hover:text-green-700"
+                        >
+                          View Details
+                          <ArrowRight className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
             )
           ) : (
             <div className="space-y-6">
@@ -754,163 +812,193 @@ const MentorTracker = () => {
                   No startups have been selected into this program for you yet.
                 </div>
               ) : (
-              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
-              {openProgramRows.map((row) => {
-                const { entrepreneur, enterprise } = row;
-                const entUuid = entrepreneur?.uuid || getEnterpriseEntrepreneurUuid(enterprise || {});
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                  {openProgramRows.map((row) => {
+                    const { entrepreneur, enterprise } = row;
+                    const entUuid =
+                      entrepreneur?.uuid ||
+                      getEnterpriseEntrepreneurUuid(enterprise || {});
 
-                // The whole card opens the grant details page, but only once
-                // the startup has a tracker enterprise — that page loads by
-                // enterprise uuid. A startup selected into a program but not
-                // yet registered has none, so its card stays inert and its KYC
-                // action below remains the way in.
-                const openGrantDetails = enterprise
-                  ? () => navigate(`/dashboard/mentorTracker/enterprise/${enterprise.uuid}`)
-                  : null;
+                    // The whole card opens the grant details page, but only once
+                    // the startup has a tracker enterprise — that page loads by
+                    // enterprise uuid. A startup selected into a program but not
+                    // yet registered has none, so its card stays inert and its KYC
+                    // action below remains the way in.
+                    const openGrantDetails = enterprise
+                      ? () =>
+                          navigate(
+                            `/dashboard/mentorTracker/enterprise/${enterprise.uuid}`,
+                          )
+                      : null;
 
-                return (
-                  <article
-                    key={row.key}
-                    role={openGrantDetails ? "button" : undefined}
-                    tabIndex={openGrantDetails ? 0 : undefined}
-                    onClick={openGrantDetails || undefined}
-                    onKeyDown={
-                      openGrantDetails
-                        ? (event) => {
-                            if (event.key !== "Enter" && event.key !== " ") return;
-                            event.preventDefault();
-                            openGrantDetails();
-                          }
-                        : undefined
-                    }
-                    className={`group flex flex-col overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:shadow-lg${
-                      openGrantDetails
-                        ? " cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
-                        : ""
-                    }`}
-                  >
-                    <div className="relative h-56 w-full overflow-hidden bg-black">
-                      <div
-                        className="absolute inset-0 bg-cover bg-center transition duration-300 group-hover:scale-105"
-                        style={{ backgroundImage: `url(${row.coverImage})` }}
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
-                      <span className="absolute bottom-4 left-4 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
-                        {row.sector || "No Sector"}
-                      </span>
-                    </div>
-
-                    <div className="flex flex-1 flex-col p-5">
-                      <h3 className="mb-2 line-clamp-2 text-lg font-bold text-[#111827]">
-                        {row.name}
-                      </h3>
-                      <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
-                        {row.email || "No email provided"}
-                      </p>
-
-                      <div className="space-y-3 text-sm text-[#6f6f72]">
-                        {row.program && (
-                          <div className="flex items-center gap-2">
-                            <Building2 className="h-4 w-4 shrink-0" />
-                            <span className="line-clamp-1">{row.program}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4 shrink-0" />
-                          <span className="line-clamp-1">{row.region || "N/A"}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <CalendarDays className="h-4 w-4 shrink-0" />
-                          <span>
-                            {row.joinedYear
-                              ? `Joined ${row.joinedYear}`
-                              : "Join date not set"}
+                    return (
+                      <article
+                        key={row.key}
+                        role={openGrantDetails ? "button" : undefined}
+                        tabIndex={openGrantDetails ? 0 : undefined}
+                        onClick={openGrantDetails || undefined}
+                        onKeyDown={
+                          openGrantDetails
+                            ? (event) => {
+                                if (event.key !== "Enter" && event.key !== " ")
+                                  return;
+                                event.preventDefault();
+                                openGrantDetails();
+                              }
+                            : undefined
+                        }
+                        className={`group flex flex-col overflow-hidden rounded-xl bg-white shadow-md transition duration-200 hover:-translate-y-0.5 hover:shadow-lg${
+                          openGrantDetails
+                            ? " cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-green-600"
+                            : ""
+                        }`}
+                      >
+                        <div className="relative h-56 w-full overflow-hidden bg-black">
+                          <div
+                            className="absolute inset-0 bg-cover bg-center transition duration-300 group-hover:scale-105"
+                            style={{
+                              backgroundImage: `url(${row.coverImage})`,
+                            }}
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                          <span className="absolute bottom-4 left-4 rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
+                            {row.sector || "No Sector"}
                           </span>
                         </div>
-                      </div>
-                    </div>
 
-                    {enterprise ? (
-                      // The card itself navigates to the grant details page, so
-                      // the row's own actions must not bubble into it — a click
-                      // on Delete or Edit has to do only that.
-                      <div
-                        onClick={(event) => event.stopPropagation()}
-                        className="mx-5 flex items-center justify-between border-t border-black/10 py-4 text-xs text-[#8a8f98]"
-                      >
-                        {/* The management actions live where the reference shows
+                        <div className="flex flex-1 flex-col p-5">
+                          <h3 className="mb-2 line-clamp-2 text-lg font-bold text-[#111827]">
+                            {row.name}
+                          </h3>
+                          <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
+                            {row.email || "No email provided"}
+                          </p>
+
+                          <div className="space-y-3 text-sm text-[#6f6f72]">
+                            {row.program && (
+                              <div className="flex items-center gap-2">
+                                <Building2 className="h-4 w-4 shrink-0" />
+                                <span className="line-clamp-1">
+                                  {row.program}
+                                </span>
+                              </div>
+                            )}
+                            <div className="flex items-center gap-2">
+                              <MapPin className="h-4 w-4 shrink-0" />
+                              <span className="line-clamp-1">
+                                {row.region || "N/A"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <CalendarDays className="h-4 w-4 shrink-0" />
+                              <span>
+                                {row.joinedYear
+                                  ? `Joined ${row.joinedYear}`
+                                  : "Join date not set"}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {enterprise ? (
+                          // The card itself navigates to the grant details page, so
+                          // the row's own actions must not bubble into it — a click
+                          // on Delete or Edit has to do only that.
+                          <div
+                            onClick={(event) => event.stopPropagation()}
+                            className="mx-5 flex items-center justify-between border-t border-black/10 py-4 text-xs text-[#8a8f98]"
+                          >
+                            {/* The management actions live where the reference shows
                             a static "Profile" label — dropping them would remove
                             the only way to open KYC or delete a startup. */}
-                        <div className="flex flex-wrap items-center gap-3 font-bold">
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}?view=1`)}
-                            className="flex items-center gap-1 transition hover:text-[#082d77]"
-                          >
-                            <Building2 className="h-3.5 w-3.5" />
-                            Profile
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => navigate(`/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}`)}
-                            className="transition hover:text-[#082d77]"
-                          >
-                            Edit
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => onDeleteEnterprise(enterprise)}
-                            disabled={deletingEnterpriseUuid === enterprise.uuid}
-                            className="text-rose-600 transition hover:text-rose-700 disabled:opacity-60"
-                          >
-                            {deletingEnterpriseUuid === enterprise.uuid ? "Deleting..." : "Delete"}
-                          </button>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => navigate(`/dashboard/mentorTracker/enterprise/${enterprise.uuid}`)}
-                          className="flex items-center gap-1 font-medium text-green-600 transition hover:text-green-700"
-                        >
-                          View Details
-                          <ArrowRight className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-wrap items-center gap-4 border-t border-slate-100 px-5 py-3">
-                        <button
-                          type="button"
-                          disabled={!entUuid}
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/mentorTracker/enterprise-kyc?entreprenuer=${entUuid}${
-                                business?.uuid ? `&business=${business.uuid}` : ""
-                              }&view=1`,
-                            )
-                          }
-                          className="text-xs font-bold text-slate-500 transition hover:text-[#082d77] disabled:opacity-50"
-                        >
-                          View KYC
-                        </button>
-                        <button
-                          type="button"
-                          disabled={!entUuid}
-                          onClick={() =>
-                            navigate(
-                              `/dashboard/mentorTracker/startup/${entUuid}/milestones?name=${encodeURIComponent(
-                                name || "",
-                              )}${business?.uuid ? `&business=${business.uuid}` : ""}`,
-                            )
-                          }
-                          className="text-xs font-bold text-slate-500 transition hover:text-[#082d77] disabled:opacity-50"
-                        >
-                          View milestones
-                        </button>
-                      </div>
-                    )}
-                  </article>
-                );
-              })}
-              </div>
+                            <div className="flex flex-wrap items-center gap-3 font-bold">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(
+                                    `/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}?view=1`,
+                                  )
+                                }
+                                className="flex items-center gap-1 transition hover:text-[#082d77]"
+                              >
+                                <Building2 className="h-3.5 w-3.5" />
+                                Profile
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  navigate(
+                                    `/dashboard/mentorTracker/enterprise-kyc/${enterprise.uuid}`,
+                                  )
+                                }
+                                className="transition hover:text-[#082d77]"
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => onDeleteEnterprise(enterprise)}
+                                disabled={
+                                  deletingEnterpriseUuid === enterprise.uuid
+                                }
+                                className="text-rose-600 transition hover:text-rose-700 disabled:opacity-60"
+                              >
+                                {deletingEnterpriseUuid === enterprise.uuid
+                                  ? "Deleting..."
+                                  : "Delete"}
+                              </button>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/mentorTracker/enterprise/${enterprise.uuid}`,
+                                )
+                              }
+                              className="flex items-center gap-1 font-medium text-green-600 transition hover:text-green-700"
+                            >
+                              View Details
+                              <ArrowRight className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-4 border-t border-slate-100 px-5 py-3">
+                            <button
+                              type="button"
+                              disabled={!entUuid}
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/mentorTracker/enterprise-kyc?entreprenuer=${entUuid}${
+                                    business?.uuid
+                                      ? `&business=${business.uuid}`
+                                      : ""
+                                  }&view=1`,
+                                )
+                              }
+                              className="text-xs font-bold text-slate-500 transition hover:text-[#082d77] disabled:opacity-50"
+                            >
+                              View KYC
+                            </button>
+                            <button
+                              type="button"
+                              disabled={!entUuid}
+                              onClick={() =>
+                                navigate(
+                                  `/dashboard/mentorTracker/startup/${entUuid}/milestones?name=${encodeURIComponent(
+                                    name || "",
+                                  )}${business?.uuid ? `&business=${business.uuid}` : ""}`,
+                                )
+                              }
+                              className="text-xs font-bold text-slate-500 transition hover:text-[#082d77] disabled:opacity-50"
+                            >
+                              View milestones
+                            </button>
+                          </div>
+                        )}
+                      </article>
+                    );
+                  })}
+                </div>
               )}
             </div>
           )}

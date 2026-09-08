@@ -87,7 +87,6 @@ import Introduction from "./pages/cratSystem/Introduction";
 // import Report from "./pages/cratSystem/Report";
 
 // Reviewer Pages
-import CratReviews from "./pages/reviewer/cratReviews/CratReviews";
 
 // Application Pages
 import CratReviewApplications from "./pages/applications/cratReviewApplications/CratReviewApplications";
@@ -107,7 +106,6 @@ import LegalDomainPage from "./pages/cratSystem/legalDomain/LegalDomain";
 import MarketDomainPage from "./pages/cratSystem/marketDomain/MarketDomain";
 import FinancialDomain from "./pages/cratSystem/financialDomain/FinancialDomain";
 import Report from "./pages/cratSystem/report/Report";
-import CratSubmissionReviewPage from "./pages/cratSystem/reviewAssessment/CratSubmissionReviewPage";
 import DomainAssessmentPage from "./pages/cratSystem/domain/DomainAssessmentPage";
 
 // Dynamic route components
@@ -119,8 +117,12 @@ import ModuleWithCourse from "./pages/learnandgrow/modules/ModuleWithCourse";
 import ModuleDetails from "./pages/learnandgrow/modules/ModuleDetails";
 import SurveyBuilder from "./pages/users/enterprenuers/SurveyBuilder";
 import ProgramSurveys from "./pages/users/enterprenuers/ProgramSurveys";
+import ProgramCourseList from "./pages/users/enterprenuers/ProgramCourseList";
+import ProgramME from "./pages/users/enterprenuers/ProgramME";
 import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
 import MySurveys from "./pages/learnandgrow/surveys/MySurveys";
+import CoursePlayer from "./pages/learnandgrow/player/CoursePlayer";
+import CourseDetails from "./pages/learnandgrow/courses/CourseDetails";
 import TakeSurvey from "./pages/learnandgrow/surveys/TakeSurvey";
 import MessagesWithUuid from "./pages/chat/messages/MessagesWithUuid";
 
@@ -219,8 +221,6 @@ import ProgramUpdatesWithUuid from "./pages/programs/programUpdates/ProgramUpdat
 import SendProgramApplicationWithUuid from "./pages/programs/sendProgramApplication/SendProgramApplicationWithUuid";
 
 // Additional Missing Imports - Reviewer Components
-import ApplicationList from "./pages/reviewer/applicationList/ApplicationList";
-import PreviewPage from "./pages/reviewer/previewPage/PreviewPage";
 
 // Additional Missing Imports - Sector Components
 // import Sectors from "./pages/sectors/Sectors";
@@ -340,8 +340,17 @@ function App() {
               element={<ProgramStartups />}
             />
             <Route
-              path="programManagement/program/:uuid/modules"
+              path="programManagement/program/:uuid/courses"
+              element={<ProgramCourseList />}
+            />
+            <Route
+              path="programManagement/program/:uuid/course/:courseUuid"
               element={<ProgramCourses />}
+            />
+            {/* The old modules url now lands on the course list. */}
+            <Route
+              path="programManagement/program/:uuid/modules"
+              element={<ProgramCourseList />}
             />
             <Route
               path="programManagement/module/:uuid"
@@ -351,6 +360,15 @@ function App() {
               path="programManagement/program/:uuid/surveys"
               element={<ProgramSurveys />}
             />
+            <Route
+              path="programManagement/program/:uuid/me"
+              element={<ProgramME />}
+            />
+            <Route path="learn" element={<CoursePlayer />} />
+            {/* The course page a startup reads before enrolling. */}
+            <Route path="courses/:courseUuid" element={<CourseDetails />} />
+            <Route path="learn/course/:courseUuid" element={<CoursePlayer />} />
+            <Route path="learn/:uuid" element={<CoursePlayer />} />
             <Route path="surveys" element={<MySurveys />} />
             <Route path="surveys/new" element={<SurveyBuilder />} />
             <Route path="surveys/:uuid/take" element={<TakeSurvey />} />
@@ -728,8 +746,6 @@ function App() {
             />
 
             {/* Reviewer Routes - Additional */}
-            <Route path="applicationList" element={<ApplicationList />} />
-            <Route path="previewPage" element={<PreviewPage />} />
 
             {/* Sector Routes */}
             {/* <Route path="sectors" element={<Sectors />} /> */}
@@ -786,13 +802,6 @@ function App() {
             {/* CRAT System Routes */}
             <Route path="introduction" element={<Introduction />} />
             <Route path="report" element={<Report />} />
-
-            {/* Reviewer Routes */}
-            <Route path="cratReviews" element={<CratReviews />} />
-            <Route
-              path="cratReviewAssessment"
-              element={<CratSubmissionReviewPage />}
-            />
 
             {/* Application Routes */}
             <Route

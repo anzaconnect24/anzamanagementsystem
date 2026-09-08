@@ -5,12 +5,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "../../../layouts/DashboardLayout";
-import {
-  getCohortModules,
-  getCohortStartups,
-  getCohortAnalytics,
-} from "@/controllers/cohort_controller";
-import { deleteModule } from "@/controllers/modules_controller";
+import { getCohortAnalytics } from "@/controllers/cohort_controller";
+import { deleteModule, getModules } from "@/controllers/modules_controller";
+import { getCourse } from "@/controllers/course_controller";
+import WorkshopsPanel from "@/components/learning/WorkshopsPanel";
+import EnrollmentsPanel from "@/components/learning/EnrollmentsPanel";
+import ResourcesPanel from "@/components/learning/ResourcesPanel";
 import {
   FaArrowRight,
   FaUsers,
@@ -24,13 +24,6 @@ import {
 // "Staff" or "Reviewer" (see SignUp).
 const CAN_MANAGE_ROLES = ["Admin", "Staff", "Reviewer"];
 
-const formatEnrolled = (value) => {
-  if (!value) return "—";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toISOString().slice(0, 10);
-};
-
 const formatDate = (value) => {
   if (!value) return "N/A";
   const date = new Date(value);
@@ -38,22 +31,26 @@ const formatDate = (value) => {
   return date.toLocaleDateString("en-GB");
 };
 
+// One course inside a programme: its modules, workshops, enrollment and
+// resources. The programme is still in the url so the page can link back to
+// the course list.
 const ProgramCourses = () => {
-  const { uuid } = useParams();
+  const { uuid, courseUuid } = useParams();
   const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
   const canManage = CAN_MANAGE_ROLES.includes(userDetails?.role);
 
   const [loading, setLoading] = useState(true);
+  const [course, setCourse] = useState(null);
   const [program, setProgram] = useState(null);
   const [modules, setModules] = useState([]);
   const [enrolled, setEnrolled] = useState(0);
   const [keyword, setKeyword] = useState("");
 
-  // "modules" | "members" | "analytics" | "certifications"
+  // "modules" | "workshops" | "enrollment" | "resources" | "analytics" |
+  // "certifications". The roster lives on Enrollment, which shows the same
+  // startups alongside their learning progress.
   const [tab, setTab] = useState("modules");
-  const [members, setMembers] = useState(null);
-  const [membersLoading, setMembersLoading] = useState(false);
 
   const [analytics, setAnalytics] = useState(null);
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
@@ -72,35 +69,25 @@ const ProgramCourses = () => {
       .finally(() => setAnalyticsLoading(false));
   };
 
-  const openMembers = () => {
-    setTab("members");
-    if (members !== null) return;
-
-    setMembersLoading(true);
-    getCohortStartups(uuid)
-      .then((body) => setMembers(Array.isArray(body?.data) ? body.data : []))
-      .catch(() => {
-        toast.error("Failed to load program members");
-        setMembers([]);
-      })
-      .finally(() => setMembersLoading(false));
-  };
-
   const load = () => {
     setLoading(true);
 
-    getCohortModules(uuid)
-      .then((body) => {
-        setProgram(body?.program || null);
-        setModules(Array.isArray(body?.data) ? body.data : []);
-        setEnrolled(body?.enrolled || 0);
+    Promise.all([
+      getCourse(courseUuid),
+      getModules({ page: 1, limit: 500, course_uuid: courseUuid }),
+    ])
+      .then(([courseBody, moduleBody]) => {
+        setCourse(courseBody || null);
+        setProgram(courseBody?.program || null);
+        setEnrolled(courseBody?.enrolled || 0);
+        setModules(Array.isArray(moduleBody?.data) ? moduleBody.data : []);
       })
       .catch((error) => {
         console.error(error);
         toast.error(
           error?.response?.status === 404
-            ? "Program not found"
-            : "Failed to load this program's modules",
+            ? "Course not found"
+            : "Failed to load this course",
         );
       })
       .finally(() => setLoading(false));
@@ -108,13 +95,15 @@ const ProgramCourses = () => {
 
   useEffect(() => {
     load();
-  }, [uuid]);
+  }, [courseUuid]);
 
-  // Straight to the module form with this program already chosen — there is
-  // no course to pick in between.
+  // Straight to the module form with this course already chosen. The program
+  // travels with it so the form knows where to return to.
   const openCreateModule = () =>
     navigate(
-      `/dashboard/modules/add/?cohortProgram=${encodeURIComponent(uuid)}`,
+      `/dashboard/modules/add/?course=${encodeURIComponent(
+        courseUuid,
+      )}&program=${encodeURIComponent(uuid)}`,
     );
 
   const remove = async (module) => {
@@ -152,12 +141,22 @@ const ProgramCourses = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* MAIN */}
         <div className="lg:col-span-2">
-          <h1 className="mb-3 text-4xl font-black tracking-tight text-slate-950">
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}/courses`)
+            }
+            className="mb-4 text-sm font-semibold text-[#082d77] transition hover:underline"
+          >
             {program?.title || "Program"}
+          </button>
+
+          <h1 className="mb-3 text-4xl font-black tracking-tight text-slate-950">
+            {course?.title || "Course"}
           </h1>
 
           <p className="mb-6 text-lg leading-7 text-[#6f6f72]">
-            {program?.description || "No description yet."}
+            {course?.description || "No description yet."}
           </p>
 
           <div className="mb-8 flex flex-wrap items-center gap-8 border-y border-slate-200 py-4 text-sm text-[#6f6f72]">
@@ -183,18 +182,40 @@ const ProgramCourses = () => {
                   : "rounded-lg px-4 py-2 text-slate-500 transition hover:text-slate-800"
               }
             >
-              Program Modules
+              Modules
             </button>
             <button
               type="button"
-              onClick={openMembers}
+              onClick={() => setTab("workshops")}
               className={
-                tab === "members"
+                tab === "workshops"
                   ? "rounded-lg bg-white px-4 py-2 text-slate-950 shadow-sm"
                   : "rounded-lg px-4 py-2 text-slate-500 transition hover:text-slate-800"
               }
             >
-              Program Members
+              Workshops
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("enrollment")}
+              className={
+                tab === "enrollment"
+                  ? "rounded-lg bg-white px-4 py-2 text-slate-950 shadow-sm"
+                  : "rounded-lg px-4 py-2 text-slate-500 transition hover:text-slate-800"
+              }
+            >
+              Enrollment
+            </button>
+            <button
+              type="button"
+              onClick={() => setTab("resources")}
+              className={
+                tab === "resources"
+                  ? "rounded-lg bg-white px-4 py-2 text-slate-950 shadow-sm"
+                  : "rounded-lg px-4 py-2 text-slate-500 transition hover:text-slate-800"
+              }
+            >
+              Resources
             </button>
             <button
               type="button"
@@ -224,7 +245,7 @@ const ProgramCourses = () => {
             <>
               <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                 <h2 className="text-2xl font-black tracking-tight text-slate-950">
-                  Modules in this Program
+                  Modules in this Course
                 </h2>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -255,7 +276,7 @@ const ProgramCourses = () => {
               {visible.length === 0 ? (
                 <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
                   {modules.length === 0
-                    ? "No modules have been added to this program yet."
+                    ? "No modules have been added to this course yet."
                     : "No modules match that search."}
                 </div>
               ) : (
@@ -315,105 +336,24 @@ const ProgramCourses = () => {
             </>
           )}
 
-          {tab === "members" && (
-            <>
-              <h2 className="mb-6 text-2xl font-black tracking-tight text-slate-950">
-                Members in this Program
-              </h2>
+          {tab === "workshops" && (
+            <WorkshopsPanel
+              programUuid={uuid}
+              courseUuid={courseUuid}
+              canManage={canManage}
+            />
+          )}
 
-              {membersLoading ? (
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-10 text-center text-sm text-slate-500">
-                  Loading members...
-                </div>
-              ) : !members || members.length === 0 ? (
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-                  No startups are in this program yet.
-                </div>
-              ) : (
-                <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[860px] text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-slate-200 text-[#667085]">
-                          <th className="px-6 py-4 font-medium">Startup</th>
-                          <th className="px-6 py-4 font-medium">Email</th>
-                          <th className="px-6 py-4 font-medium">
-                            Enrollment Date
-                          </th>
-                          <th className="px-6 py-4 font-medium">Status</th>
-                          <th className="px-6 py-4 font-medium">Progress</th>
-                        </tr>
-                      </thead>
+          {tab === "enrollment" && (
+            <EnrollmentsPanel courseUuid={courseUuid} canManage={canManage} />
+          )}
 
-                      <tbody>
-                        {members.map((member) => {
-                          const total = member.modulesTotal || 0;
-                          const done = member.modulesCompleted || 0;
-                          const percent = total
-                            ? Math.round((done / total) * 100)
-                            : 0;
-                          const dropped =
-                            member.membershipStatus === "dropped_out";
-
-                          return (
-                            <tr
-                              key={member.uuid}
-                              className="border-b border-slate-100 last:border-0"
-                            >
-                              <td className="px-6 py-4">
-                                <span className="font-bold text-[#082d77]">
-                                  {member.name ||
-                                    member.Business?.name ||
-                                    "Unnamed Business"}
-                                </span>
-                              </td>
-
-                              <td className="px-6 py-4 text-slate-700">
-                                {member.email || member.User?.email || "—"}
-                              </td>
-
-                              <td className="px-6 py-4 text-slate-700">
-                                {formatEnrolled(member.enrolledAt)}
-                              </td>
-
-                              <td className="px-6 py-4">
-                                <span
-                                  className={
-                                    dropped
-                                      ? "inline-block rounded-full bg-slate-100 px-4 py-1.5 text-sm font-semibold text-slate-600"
-                                      : "inline-block rounded-full bg-teal-500 px-4 py-1.5 text-sm font-semibold text-white"
-                                  }
-                                >
-                                  {dropped ? "Dropped" : "Enrolled"}
-                                </span>
-                              </td>
-
-                              <td className="px-6 py-4">
-                                <p className="mb-1 text-sm text-slate-700">
-                                  {percent}%
-                                </p>
-                                <div
-                                  className="h-1.5 w-full max-w-[240px] overflow-hidden rounded-full bg-slate-100"
-                                  role="progressbar"
-                                  aria-valuenow={percent}
-                                  aria-valuemin={0}
-                                  aria-valuemax={100}
-                                >
-                                  <div
-                                    className="h-full rounded-full bg-teal-500"
-                                    style={{ width: `${percent}%` }}
-                                  />
-                                </div>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              )}
-            </>
+          {tab === "resources" && (
+            <ResourcesPanel
+              programUuid={uuid}
+              courseUuid={courseUuid}
+              canManage={canManage}
+            />
           )}
 
           {tab === "analytics" && (
@@ -514,7 +454,7 @@ const ProgramCourses = () => {
                                 colSpan={5}
                                 className="px-6 py-10 text-center text-sm text-slate-500"
                               >
-                                No modules have been added to this program yet.
+                                No modules have been added to this course yet.
                               </td>
                             </tr>
                           ) : (

@@ -10,6 +10,7 @@ import {
   toggleCatalogQuestion,
   deleteCatalogQuestion,
 } from "@/controllers/crat_controller";
+import { getCohortProgramOptions } from "@/controllers/cohort_controller";
 
 const DOMAIN_LABELS_EN = {
   commercial_marketing: "Commercial & Marketing",
@@ -52,10 +53,14 @@ const toRequiredAttachmentList = (value) => {
   return splitItems.length > 0 ? splitItems : [raw];
 };
 
-const listToTextareaValue = (value) => toRequiredAttachmentList(value).join("\n");
+const listToTextareaValue = (value) =>
+  toRequiredAttachmentList(value).join("\n");
+
+const SHARED_PROGRAM_KEY = "shared";
 
 const emptyForm = {
   domain: "",
+  cohort_program_uuid: "",
   variant: "default",
   question_code: "",
   question_text_en: "",
@@ -74,16 +79,16 @@ const CratCatalogManager = () => {
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filterDomain, setFilterDomain] = useState("");
-  const [filterVariant, setFilterVariant] = useState("");
+  const [filterProgram, setFilterProgram] = useState("");
+  const [programOptions, setProgramOptions] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [editingQuestion, setEditingQuestion] = useState(null);
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
   const [expandedAiPrompt, setExpandedAiPrompt] = useState(null);
   const [domainOptions, setDomainOptions] = useState([]);
-  const [variantOptions, setVariantOptions] = useState(["default"]);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState(false);
-  const [categoryType, setCategoryType] = useState(""); // "domain" or "variant"
+  const [categoryType, setCategoryType] = useState(""); // "domain"
   const [newCategoryName, setNewCategoryName] = useState("");
   const [addingCategory, setAddingCategory] = useState(false);
 
@@ -100,6 +105,10 @@ const CratCatalogManager = () => {
     newQuestion: isSwahili ? "+ Swali Jipya" : "+ New Question",
     allDomains: isSwahili ? "Maeneo Yote" : "All Domains",
     allCategories: isSwahili ? "Kategoria Zote" : "All Categories",
+    sharedQuestions: isSwahili ? "Programu zote" : "All programs",
+    programHelp: isSwahili
+      ? 'Huulizwa tu kwa startups za programu hii. Chagua "Programu zote" ili kila startup iulizwe.'
+      : 'Only asked of startups on this program. Choose "All programs" to ask every startup.',
     loadingCatalog: isSwahili ? "Inapakia katalogi..." : "Loading catalog...",
     noQuestionsFound: isSwahili
       ? "Hakuna maswali yaliyopatikana."
@@ -241,6 +250,11 @@ const CratCatalogManager = () => {
 
   const isAdmin = userDetails?.role === "Admin";
 
+  useEffect(() => {
+    if (!isAdmin) return;
+    getCohortProgramOptions().then(setProgramOptions);
+  }, [isAdmin]);
+
   const load = async () => {
     try {
       setLoading(true);
@@ -251,26 +265,19 @@ const CratCatalogManager = () => {
       const nextDomains = [...new Set((allData || []).map((q) => q.domain))]
         .filter(Boolean)
         .sort();
-      const nextVariants = [
-        ...new Set((allData || []).map((q) => q.variant || "default")),
-      ]
-        .filter(Boolean)
-        .sort();
-
       setDomainOptions(nextDomains);
-      setVariantOptions(
-        nextVariants.includes("default")
-          ? nextVariants
-          : ["default", ...nextVariants],
-      );
 
       // Apply filters to the display data
       let filteredData = allData;
       if (filterDomain) {
         filteredData = filteredData.filter((q) => q.domain === filterDomain);
       }
-      if (filterVariant) {
-        filteredData = filteredData.filter((q) => q.variant === filterVariant);
+      if (filterProgram === SHARED_PROGRAM_KEY) {
+        filteredData = filteredData.filter((q) => !q.CohortProgram);
+      } else if (filterProgram) {
+        filteredData = filteredData.filter(
+          (q) => q.CohortProgram?.uuid === filterProgram,
+        );
       }
 
       setQuestions(filteredData || []);
@@ -283,7 +290,7 @@ const CratCatalogManager = () => {
 
   useEffect(() => {
     if (isAdmin) load();
-  }, [filterDomain, filterVariant, isAdmin]);
+  }, [filterDomain, filterProgram, isAdmin]);
 
   const openCreate = () => {
     setEditingQuestion(null);
@@ -291,6 +298,8 @@ const CratCatalogManager = () => {
       ...emptyForm,
       domain: domainOptions[0] || "",
       variant: "default",
+      cohort_program_uuid:
+        filterProgram === SHARED_PROGRAM_KEY ? "" : filterProgram,
     });
     setShowModal(true);
   };
@@ -300,6 +309,7 @@ const CratCatalogManager = () => {
     setForm({
       domain: q.domain,
       variant: q.variant,
+      cohort_program_uuid: q.CohortProgram?.uuid || "",
       question_code: q.question_code,
       question_text_en: q.question_text_en || "",
       question_text_sw: q.question_text_sw || "",
@@ -338,11 +348,14 @@ const CratCatalogManager = () => {
         ...form,
         domain: form.domain.trim().toLowerCase(),
         variant: (form.variant || "default").trim().toLowerCase(),
-        required_attachments: toRequiredAttachmentList(form.required_attachment),
+        required_attachments: toRequiredAttachmentList(
+          form.required_attachment,
+        ),
         required_attachments_sw: toRequiredAttachmentList(
           form.required_attachment_sw,
         ),
         sort_order: Number(form.sort_order) || 0,
+        cohort_program_uuid: form.cohort_program_uuid || null,
       };
 
       delete payload.required_attachment;
@@ -425,15 +438,6 @@ const CratCatalogManager = () => {
         } else {
           toast.error(labels.domainExists);
         }
-      } else if (categoryType === "variant") {
-        if (!variantOptions.includes(normalizedName)) {
-          setVariantOptions([...variantOptions, normalizedName]);
-          toast.success(
-            labels.categoryAdded.replace("{{name}}", newCategoryName),
-          );
-        } else {
-          toast.error(labels.categoryExists);
-        }
       }
       closeAddCategoryModal();
     } finally {
@@ -493,14 +497,15 @@ const CratCatalogManager = () => {
             ))}
           </select>
           <select
-            value={filterVariant}
-            onChange={(e) => setFilterVariant(e.target.value)}
+            value={filterProgram}
+            onChange={(e) => setFilterProgram(e.target.value)}
             className="rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
           >
             <option value="">{labels.allCategories}</option>
-            {variantOptions.map((v) => (
-              <option key={v} value={v}>
-                {v}
+            <option value={SHARED_PROGRAM_KEY}>{labels.sharedQuestions}</option>
+            {programOptions.map((program) => (
+              <option key={program.uuid} value={program.uuid}>
+                {program.title}
               </option>
             ))}
           </select>
@@ -557,8 +562,8 @@ const CratCatalogManager = () => {
                         <p className="text-xs font-semibold text-slate-800">
                           {domainLabels[q.domain] || q.domain}
                         </p>
-                        <p className="text-xs text-slate-500 capitalize">
-                          {q.variant}
+                        <p className="text-xs text-slate-500">
+                          {q.CohortProgram?.title || labels.sharedQuestions}
                         </p>
                       </td>
                       <td className="border-b border-black/10 px-3 py-3 text-xs text-slate-700">
@@ -695,29 +700,26 @@ const CratCatalogManager = () => {
                   <label className="mb-1 block text-xs font-semibold text-slate-700">
                     {labels.category}
                   </label>
-                  <div className="flex gap-2">
-                    <select
-                      value={form.variant}
-                      onChange={(e) =>
-                        setForm((f) => ({ ...f, variant: e.target.value }))
-                      }
-                      className="flex-1 rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
-                    >
-                      {variantOptions.map((variant) => (
-                        <option key={variant} value={variant}>
-                          {variant}
-                        </option>
-                      ))}
-                    </select>
-                    <button
-                      type="button"
-                      onClick={() => openAddCategoryModal("variant")}
-                      className="rounded-lg border border-black/15 bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-200 hover:text-primary"
-                      title={labels.addNewCategory}
-                    >
-                      +
-                    </button>
-                  </div>
+                  <select
+                    value={form.cohort_program_uuid}
+                    onChange={(e) =>
+                      setForm((f) => ({
+                        ...f,
+                        cohort_program_uuid: e.target.value,
+                      }))
+                    }
+                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm focus:border-primary/40 focus:outline-none"
+                  >
+                    <option value="">{labels.sharedQuestions}</option>
+                    {programOptions.map((program) => (
+                      <option key={program.uuid} value={program.uuid}>
+                        {program.title}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {labels.programHelp}
+                  </p>
                 </div>
               </div>
 

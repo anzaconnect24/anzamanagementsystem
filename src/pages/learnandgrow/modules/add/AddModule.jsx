@@ -17,12 +17,19 @@ const Page = () => {
   const [searchParams] = useSearchParams();
   // A module now belongs to a program. programId is the older course-scoped
   // form, still honoured for the modules authored that way.
+  // A module is authored inside a course. cohortProgram and programId are
+  // the older forms, still honoured for links made before courses existed.
+  const course = searchParams.get("course");
+  const parentProgram = searchParams.get("program");
   const cohortProgram = searchParams.get("cohortProgram");
   const programId = searchParams.get("programId");
 
-  const backLink = cohortProgram
-    ? `/dashboard/programManagement/program/${cohortProgram}/modules`
-    : `/dashboard/modules/${programId}`;
+  const backLink =
+    course && parentProgram
+      ? `/dashboard/programManagement/program/${parentProgram}/course/${course}`
+      : cohortProgram
+        ? `/dashboard/programManagement/program/${cohortProgram}/courses`
+        : `/dashboard/modules/${programId}`;
 
   return (
     <div>
@@ -45,8 +52,10 @@ const Page = () => {
               uploadFile(formData).then((url) => {
                 const payload = {
                   image: url,
-                  cohort_program_uuid: cohortProgram || undefined,
-                  program_uuid: cohortProgram ? undefined : programId,
+                  course_uuid: course || undefined,
+                  cohort_program_uuid:
+                    !course && cohortProgram ? cohortProgram : undefined,
+                  program_uuid: course || cohortProgram ? undefined : programId,
                   title: e.target.title.value,
                   description: e.target.description.value,
                 };

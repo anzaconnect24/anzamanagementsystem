@@ -239,10 +239,30 @@ export const deleteCohortSession = async (uuid, sessionUuid) => {
   }
 };
 
-// The cohort a startup belongs to, given a Business payload from the API.
-// Membership is its own table, so it arrives nested.
-export const cohortOf = (business) =>
-  business?.CohortMembership?.CohortProgram || null;
+// Every cohort a startup belongs to, given a Business payload from the API.
+// Membership is its own table, so it arrives nested — as an array, since a
+// startup can be on several programmes at once.
+//
+// CohortMembership (singular) is still read as a fallback: older responses,
+// and anything cached from before the association became hasMany, carry the
+// single-object shape.
+export const cohortsOf = (business) => {
+  const memberships =
+    business?.CohortMemberships ||
+    (business?.CohortMembership ? [business.CohortMembership] : []);
+
+  // Most recently joined first. The API does not order the nested rows, so
+  // without this the "one cohort" callers below would show whichever the
+  // database happened to return first, and it could change between requests.
+  return [...memberships]
+    .sort((a, b) => new Date(b?.createdAt || 0) - new Date(a?.createdAt || 0))
+    .map((row) => row?.CohortProgram)
+    .filter(Boolean);
+};
+
+// The cohort to show where only one fits — the most recently joined, matching
+// what the API resolves "mine" to.
+export const cohortOf = (business) => cohortsOf(business)[0] || null;
 
 // Programme analytics: summary figures plus a row per course.
 export const getCohortAnalytics = async (uuid) => {

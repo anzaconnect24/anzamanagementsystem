@@ -15,6 +15,7 @@ import Loader from "@/components/common/Loader";
 import Link from "@/utils/link";
 import Image from "@/utils/image";
 import { getModuleOverview } from "@/controllers/modules_controller";
+import LessonBuilder from "@/components/learning/LessonBuilder";
 import ModuleQuizzes from "@/pages/learnandgrow/quizzes/ModuleQuizzes";
 
 const TABS = [
@@ -162,59 +163,9 @@ const ModuleDetails = () => {
                   ))}
                 </div>
 
-                <div className="mb-5 mt-10 flex flex-wrap items-center justify-between gap-3">
-                  <h2 className="text-2xl font-black tracking-tight text-[#101828]">
-                    Slides
-                  </h2>
-
-                  <Link
-                    href={`/dashboard/slides/add?uuid=${module.uuid}`}
-                    className="inline-flex items-center gap-2 rounded-lg bg-[#16a34a] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#15803d]"
-                  >
-                    <FaPlus className="text-xs" />
-                    Add Slide
-                  </Link>
+                <div className="mt-10">
+                  <LessonBuilder moduleUuid={module.uuid} canManage />
                 </div>
-
-                {slides.length === 0 ? (
-                  <div className="rounded-2xl border border-dashed border-[#EAECF0] bg-white p-8 text-center">
-                    <p className="text-sm text-[#667085]">
-                      No slides have been added to this module yet.
-                    </p>
-
-                    <Link
-                      href={`/dashboard/slides/add?uuid=${module.uuid}`}
-                      className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] hover:underline"
-                    >
-                      <FaPlus className="text-xs" />
-                      Add the first slide
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {slides.map((slide, index) => (
-                      <Link
-                        key={slide.uuid}
-                        href={`/dashboard/slides/${module.uuid}`}
-                        className="flex items-center gap-5 rounded-2xl border border-[#EAECF0] bg-white p-5 transition hover:border-[#082d77]/30 hover:shadow-sm"
-                      >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F2F4F7] text-sm font-semibold text-[#475467]">
-                          {index + 1}
-                        </span>
-
-                        <span className="flex-1">
-                          <span className="block text-base leading-7 text-[#101828]">
-                            {slide.title}
-                          </span>
-
-                          <span className="mt-1 block text-xs capitalize text-[#98A2B3]">
-                            {slide.type === "file" ? "File" : "Text"}
-                          </span>
-                        </span>
-                      </Link>
-                    ))}
-                  </div>
-                )}
               </>
             )}
 

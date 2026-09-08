@@ -8,6 +8,7 @@ import { useTranslation } from "@/locales";
 import SidebarLinkGroup from "./SidebarLinkGroup";
 import { getAvailableDomains } from "@/controllers/crat_controller";
 import { getPrograms } from "@/controllers/program_controller";
+import { getNewCourseCount } from "@/controllers/course_controller";
 
 const TRACKER_STARTUPS_MARKER = "__TRACKER_STARTUPS__:";
 
@@ -86,6 +87,27 @@ const Sidebar = ({
   const [isHovered, setIsHovered] = useState(false);
   const [availableDomains, setAvailableDomains] = useState([]);
   const [inProgram, setInProgram] = useState(false);
+  // Courses on the startup's programme it has not taken up yet, badged on
+  // Class Rooms. Refreshed whenever the route changes, so it clears as soon
+  // as they enrol without needing a reload.
+  const [newCourses, setNewCourses] = useState(0);
+
+  useEffect(() => {
+    if (userDetails?.role !== "Enterprenuer") {
+      setNewCourses(0);
+      return;
+    }
+
+    let isMounted = true;
+
+    getNewCourseCount().then((count) => {
+      if (isMounted) setNewCourses(count);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [userDetails?.role, pathname]);
 
   // Only entrepreneurs selected into a program (by the Finance Officer) get the
   // Enterprise Growth Dashboard.
@@ -347,36 +369,36 @@ const Sidebar = ({
       });
     }
 
-    // Program Management: programme categories -> programmes -> the startups
-    // enrolled in each. Admin and Staff only. "Staff" users are stored with
-    // role "Reviewer" (see SignUp), so both values must be accepted.
+    // Portfolio Support gathers the two ways staff work across the portfolio:
+    // the programmes startups are enrolled in, and the grants they are tracked
+    // against. "Staff" users are stored with role "Reviewer" (see SignUp), so
+    // both values must be accepted.
+    const portfolioItems = [];
+
     if (["Admin", "Staff", "Reviewer"].includes(role)) {
-      categories.push({
-        id: "programManagement",
-        title: t("navigation.programManagement", "Program Management"),
-        items: [
-          {
-            name: t("navigation.programCategories", "Program Categories"),
-            path: "/dashboard/programManagement",
-            icon: <MdBusinessCenter className="text-xl" />,
-          },
-        ],
+      // Programme categories -> programmes -> the startups enrolled in each.
+      portfolioItems.push({
+        name: t("navigation.programManagement", "Program Management"),
+        path: "/dashboard/programManagement",
+        icon: <MdBusinessCenter className="text-xl" />,
       });
     }
 
-    // Displayed "Staff" users are stored with role "Reviewer" (see SignUp),
-    // so the BDA tracker must be available to both role values.
+    // Grant management sits with the BDA tracker and belongs to Staff, not
+    // Admin — it was deliberately moved off Admin to the Finance team.
     if (["Staff", "Reviewer"].includes(role)) {
+      portfolioItems.push({
+        name: t("navigation.staffTracker", "Grant Management"),
+        path: "/dashboard/mentorTracker",
+        icon: <BsCalendar3 className="text-xl" />,
+      });
+    }
+
+    if (portfolioItems.length > 0) {
       categories.push({
-        id: "staffTracking",
+        id: "portfolioSupport",
         title: t("navigation.tracking", "Portfolio Support"),
-        items: [
-          {
-            name: t("navigation.staffTracker", "Grant Management"),
-            path: "/dashboard/mentorTracker",
-            icon: <BsCalendar3 className="text-xl" />,
-          },
-        ],
+        items: portfolioItems,
       });
     }
 
@@ -582,13 +604,8 @@ const Sidebar = ({
       });
     }
 
-    if (["Staff", "Reviewer"].includes(role)) {
-      programsItems.push({
-        name: t("navigation.cratReviews", "My CRAT Assignments"),
-        path: "/dashboard/cratReviews",
-        icon: <MdAssignment className="text-xl" />,
-      });
-    }
+    // CRAT is scored by AI on submission and published by an Admin, so staff
+    // no longer have assessments assigned to them to review.
 
     if (["Admin"].includes(role)) {
       programsItems.push({
@@ -629,6 +646,11 @@ const Sidebar = ({
           {
             name: t("navigation.classRooms", "Class Rooms"),
             path: "/dashboard/classRooms",
+            badge: newCourses,
+            badgeTitle:
+              newCourses === 1
+                ? "1 new course is available on your program"
+                : `${newCourses} new courses are available on your program`,
           },
         ],
       });
@@ -864,13 +886,28 @@ const Sidebar = ({
                                   <li key={subItem.name}>
                                     <Link
                                       href={subItem.path}
-                                      className={`flex items-center py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
+                                      className={`flex items-center gap-2 py-2 px-4 rounded-md text-sm text-slate-400 hover:bg-slate-700/50 hover:text-white ${
                                         pathname === subItem.path &&
                                         "bg-slate-700/50 text-white"
                                       }`}
                                     >
                                       {isVisuallyExpanded && (
-                                        <span>{subItem.name}</span>
+                                        <>
+                                          <span className="flex-1">
+                                            {subItem.name}
+                                          </span>
+
+                                          {/* e.g. courses a startup has not
+                                              taken up yet */}
+                                          {subItem.badge > 0 && (
+                                            <span
+                                              title={subItem.badgeTitle}
+                                              className="inline-flex min-w-[20px] items-center justify-center rounded-full bg-[#16a34a] px-1.5 py-0.5 text-[11px] font-bold text-white"
+                                            >
+                                              {subItem.badge}
+                                            </span>
+                                          )}
+                                        </>
                                       )}
                                     </Link>
                                   </li>
