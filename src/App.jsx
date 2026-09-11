@@ -125,6 +125,8 @@ import ProgramCoaching from "./pages/users/enterprenuers/ProgramCoaching";
 import ProgramDocuments from "./pages/users/enterprenuers/ProgramDocuments";
 import ProgramComms from "./pages/users/enterprenuers/ProgramComms";
 import ProgramReports from "./pages/users/enterprenuers/ProgramReports";
+import ProgramDashboard from "./pages/users/enterprenuers/ProgramDashboard";
+import ProgramGrants from "./pages/users/enterprenuers/ProgramGrants";
 import MEPortfolioDashboard from "./pages/users/enterprenuers/MEPortfolioDashboard";
 import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
 import MySurveys from "./pages/learnandgrow/surveys/MySurveys";
@@ -388,6 +390,25 @@ function App() {
             {/* The implementation calendar belongs to whoever runs the
                 programme: Admin, or the advisor leading it. The API narrows
                 it to this programme’s own lead. */}
+            {/* Who on this programme gets a grant. The lead selects; the
+                finance officer disburses against what they set. */}
+            <Route
+              path="programManagement/program/:uuid/grants"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramGrants />
+                </RoleRoute>
+              }
+            />
+            {/* The programme dashboard: the lead’s landing screen. */}
+            <Route
+              path="programManagement/program/:uuid/dashboard"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramDashboard />
+                </RoleRoute>
+              }
+            />
             {/* The report builder. Reading is open to whoever reports on the
                 programme; building and finalising are narrowed by the API. */}
             <Route

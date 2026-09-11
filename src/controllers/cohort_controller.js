@@ -60,6 +60,59 @@ export const setCohortLeads = async (uuid, userUuids) => {
   }
 };
 
+// Who on this programme receives a grant. Every enrolled startup comes back
+// as a candidate, with the ones already selected marked and their committed
+// figure alongside. Disbursement is read-only here - that is the Finance
+// Officer’s step.
+export const getGrantRecipients = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/grant-recipients`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Replaces the roster with exactly these startups. The Program Lead decides.
+export const setGrantRecipients = async (uuid, recipients) => {
+  try {
+    const response = await axios.put(
+      `${BASE()}/${encodeURIComponent(uuid)}/grant-recipients`,
+      { recipients },
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to save the grant recipients",
+      }
+    );
+  }
+};
+
+// The programme dashboard: cohort progress, delivery, finance, approvals and
+// risks, with a traffic light over each and the thresholds that produced it.
+// A measure with nothing behind it yet comes back null, not zero.
+export const getProgramOverview = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/overview`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
 // What a report over this period would say, computed without being saved.
 export const composeProgramReport = async (uuid, params = {}) => {
   try {

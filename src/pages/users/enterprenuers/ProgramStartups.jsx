@@ -561,6 +561,32 @@ const ProgramStartups = () => {
           />
         </div>
 
+        {!isUnassigned && canFileDocuments && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}/grants`)
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaHandHoldingUsd className="text-lg" />
+            Grant Recipients
+          </button>
+        )}
+        {/* First in the row: the lead's landing screen, which answers "are we
+            on track" before any of the tools below it. */}
+        {!isUnassigned && canFileDocuments && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}/dashboard`)
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f54]"
+          >
+            <FaChartLine className="text-lg" />
+            Program Dashboard
+          </button>
+        )}
         {!isUnassigned && canViewLearning && (
           <button
             type="button"

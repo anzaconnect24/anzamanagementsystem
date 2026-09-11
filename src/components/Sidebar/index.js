@@ -388,15 +388,6 @@ const Sidebar = ({
       });
     }
 
-    // Grant management sits with the BDA tracker and belongs to Staff, not
-    // Admin — it was deliberately moved off Admin to the Finance team.
-    if (["BDA"].includes(role)) {
-      portfolioItems.push({
-        name: t("navigation.staffTracker", "Grant Management"),
-        path: "/dashboard/mentorTracker",
-        icon: <BsCalendar3 className="text-xl" />,
-      });
-    }
 
     if (portfolioItems.length > 0) {
       categories.push({
@@ -455,7 +446,10 @@ const Sidebar = ({
       });
     }
 
-    // Grant management moved from Admin to the Finance team (Finance Officer).
+    // Grant Management stays with the Finance Officer: disbursing tranches
+    // and tracking utilisation is their work. What moved to the Program Lead
+    // is only choosing who receives a grant, which they now do from their own
+    // programme — so the BDA no longer has an entry here.
     if (["Finance"].includes(role)) {
       categories.push({
         id: "trackerAdmin",
