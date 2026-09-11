@@ -18,6 +18,7 @@ import {
   UNASSIGNED_PROGRAM_KEY,
 } from "@/controllers/cohort_controller";
 import { getEnterprenuers } from "@/controllers/user_controller";
+import { getCohortLeads, setCohortLeads } from "@/controllers/cohort_controller";
 import SessionFormModal, {
   CAN_COACH_ROLES,
 } from "@/components/programs/SessionFormModal";
@@ -39,11 +40,45 @@ import {
   FaHandHoldingUsd,
   FaChartLine,
   FaFileAlt,
+  FaUserTie,
+  FaFolderOpen,
+  FaBell,
 } from "react-icons/fa";
 
-// Roles allowed to change a program's roster. "Staff" users are stored as
-// either "Staff" or "Reviewer" (see SignUp), so both must be accepted.
-const CAN_MANAGE_ROLES = ["Admin", "Staff", "Reviewer"];
+// Roles allowed to change a program's roster.
+const CAN_MANAGE_ROLES = ["Admin", "BDA"];
+
+// Monitoring & Evaluation belongs to the M&E Officer ("ME") alone.
+const CAN_VIEW_ME_ROLES = ["ME"];
+
+// Every programme is run by a Business Development Advisor. Only an Admin
+// decides who, which is what the API enforces on PUT /leads.
+const CAN_ASSIGN_LEAD_ROLES = ["Admin"];
+
+// The implementation calendar is run by whoever runs the programme. The
+// API narrows this further to the advisor actually leading it.
+const CAN_PLAN_ROLES = ["Admin", "BDA"];
+
+// Coaching oversight is read by everyone who runs or delivers the
+// programme. The API decides how much of it each of them sees.
+const CAN_COACH_VIEW_ROLES = ["Admin", "BDA", "Mentor", "ME"];
+
+// The document library is read by everyone who runs or reports on the
+// programme; the API decides who may file into it.
+const CAN_FILE_DOCUMENT_ROLES = ["Admin", "BDA", "ME", "Finance"];
+
+// The M&E Officer opens a programme only to monitor it, so the learning
+// delivery tools are not theirs. The course endpoints refuse them anyway;
+// this keeps the button from being a dead end.
+const HIDE_LEARNING_ROLES = ["ME"];
+
+// Staff read the roster's Progress percentage, which is these same milestone
+// counts expressed as a percentage, so the raw column is dropped for them.
+const HIDE_MILESTONES_ROLES = ["BDA"];
+
+// Surveys are an M&E instrument, so the M&E Officer is the only role that
+// writes them. Mirrors AUTHOR_ROLES on the survey API.
+const CAN_MANAGE_SURVEY_ROLES = ["ME"];
 
 // The dashboard tiles. Each states its label in words, so the colour is not
 // the only thing distinguishing at-risk from dropped out.
@@ -136,6 +171,21 @@ const ProgramStartups = () => {
   // The startup a coaching session is being set up for; null closes the form.
   const [sessionFor, setSessionFor] = useState(null);
   const canCoach = !isUnassigned && CAN_COACH_ROLES.includes(userDetails?.role);
+  const canViewMe = CAN_VIEW_ME_ROLES.includes(userDetails?.role);
+  const canAssignLead = CAN_ASSIGN_LEAD_ROLES.includes(userDetails?.role);
+  const canPlan = CAN_PLAN_ROLES.includes(userDetails?.role);
+  const canCoachView = CAN_COACH_VIEW_ROLES.includes(userDetails?.role);
+  const canFileDocuments = CAN_FILE_DOCUMENT_ROLES.includes(userDetails?.role);
+
+  // Programme leads: who runs it, and everyone who could.
+  const [leads, setLeads] = useState([]);
+  const [leadCandidates, setLeadCandidates] = useState([]);
+  const [leadPicker, setLeadPicker] = useState(false);
+  const [leadPicked, setLeadPicked] = useState([]);
+  const [savingLeads, setSavingLeads] = useState(false);
+  const canViewLearning = !HIDE_LEARNING_ROLES.includes(userDetails?.role);
+  const showMilestones = !HIDE_MILESTONES_ROLES.includes(userDetails?.role);
+  const canManageSurveys = CAN_MANAGE_SURVEY_ROLES.includes(userDetails?.role);
 
   // Roster editor
   const [showModal, setShowModal] = useState(false);
@@ -151,6 +201,39 @@ const ProgramStartups = () => {
     getCohortDashboard(uuid)
       .then(setStats)
       .catch(() => setStats(null));
+  };
+
+  // Who runs this programme. Everyone on the page sees the lead; only an
+  // Admin can change it.
+  const loadLeads = () => {
+    if (isUnassigned) return;
+
+    getCohortLeads(uuid)
+      .then((body) => {
+        setLeads(Array.isArray(body?.data) ? body.data : []);
+        setLeadCandidates(
+          Array.isArray(body?.candidates) ? body.candidates : [],
+        );
+      })
+      .catch(() => {
+        setLeads([]);
+        setLeadCandidates([]);
+      });
+  };
+
+  const saveLeads = async () => {
+    setSavingLeads(true);
+    const response = await setCohortLeads(uuid, leadPicked);
+    setSavingLeads(false);
+
+    if (response?.status === false) {
+      toast.error(response.message || "Failed to save the program lead");
+      return;
+    }
+
+    toast.success("Program lead saved");
+    setLeadPicker(false);
+    loadLeads();
   };
 
   const loadRoster = () => {
@@ -173,6 +256,11 @@ const ProgramStartups = () => {
       })
       .finally(() => setLoading(false));
   };
+
+  useEffect(() => {
+    loadLeads();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [uuid]);
 
   useEffect(() => {
     loadRoster();
@@ -316,6 +404,17 @@ const ProgramStartups = () => {
               {startups.length} {startups.length === 1 ? "startup" : "startups"}{" "}
               in this {isUnassigned ? "list" : "program"}
             </span>
+
+            {/* Who runs the programme, so it is answerable to someone on
+                sight rather than only inside the picker. */}
+            {!isUnassigned && (
+              <span className="flex items-center gap-2">
+                <FaUserTie />
+                {leads.length
+                  ? leads.map((person) => person.name).join(", ")
+                  : "No program lead assigned"}
+              </span>
+            )}
 
             {!isUnassigned && (program?.startDate || program?.endDate) && (
               <span className="flex items-center gap-2">
@@ -462,7 +561,7 @@ const ProgramStartups = () => {
           />
         </div>
 
-        {!isUnassigned && (
+        {!isUnassigned && canViewLearning && (
           <button
             type="button"
             onClick={() =>
@@ -474,7 +573,7 @@ const ProgramStartups = () => {
             Learning Hub
           </button>
         )}
-        {!isUnassigned && (
+        {!isUnassigned && canManageSurveys && (
           <button
             type="button"
             onClick={() =>
@@ -486,7 +585,7 @@ const ProgramStartups = () => {
             Surveys
           </button>
         )}
-        {!isUnassigned && (
+        {!isUnassigned && canViewMe && (
           <button
             type="button"
             onClick={() =>
@@ -498,12 +597,82 @@ const ProgramStartups = () => {
             Monitoring &amp; Evaluation
           </button>
         )}
-        {!isUnassigned && (
+        {!isUnassigned && canFileDocuments && (
           <button
             type="button"
-            disabled
-            title="Program reports are not available yet"
-            className="inline-flex cursor-not-allowed items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-slate-400 shadow-sm ring-1 ring-slate-200"
+            onClick={() =>
+              navigate(
+                `/dashboard/programManagement/program/${uuid}/communications`,
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaBell className="text-lg" />
+            Communications
+          </button>
+        )}
+        {!isUnassigned && canFileDocuments && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                `/dashboard/programManagement/program/${uuid}/documents`,
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaFolderOpen className="text-lg" />
+            Documents
+          </button>
+        )}
+        {!isUnassigned && canCoachView && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                `/dashboard/programManagement/program/${uuid}/coaching`,
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaUserTie className="text-lg" />
+            Coaching
+          </button>
+        )}
+        {!isUnassigned && canPlan && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(
+                `/dashboard/programManagement/program/${uuid}/calendar`,
+              )
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaCalendarAlt className="text-lg" />
+            Implementation Calendar
+          </button>
+        )}
+        {!isUnassigned && canAssignLead && (
+          <button
+            type="button"
+            onClick={() => {
+              setLeadPicked(leads.map((person) => person.uuid));
+              setLeadPicker(true);
+            }}
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
+          >
+            <FaUserTie className="text-lg" />
+            {leads.length ? "Change Program Lead" : "Assign Program Lead"}
+          </button>
+        )}
+        {!isUnassigned && canFileDocuments && (
+          <button
+            type="button"
+            onClick={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}/reports`)
+            }
+            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
           >
             <FaFileAlt className="text-lg" />
             Reports
@@ -536,7 +705,9 @@ const ProgramStartups = () => {
                   <th className="px-5 py-4">Sector</th>
                   <th className="px-5 py-4">Region</th>
                   <th className="px-5 py-4">Progress</th>
-                  <th className="px-5 py-4">Milestones</th>
+                  {showMilestones && (
+                    <th className="px-5 py-4">Milestones</th>
+                  )}
                   <th className="px-5 py-4">Modules</th>
                   <th className="px-5 py-4">Revenue Growth</th>
                   <th className="px-5 py-4">Jobs</th>
@@ -610,9 +781,11 @@ const ProgramStartups = () => {
                         )}
                       </td>
 
-                      <td className="px-5 py-4 text-[#6f6f72]">
-                        {total ? `${done} / ${total}` : "—"}
-                      </td>
+                      {showMilestones && (
+                        <td className="px-5 py-4 text-[#6f6f72]">
+                          {total ? `${done} / ${total}` : "—"}
+                        </td>
+                      )}
 
                       <td className="px-5 py-4">
                         {item.modulesTotal ? (
@@ -719,7 +892,7 @@ const ProgramStartups = () => {
                       </td>
 
                       <td className="px-5 py-4">
-                        {canCoach && (
+                        <div className="flex flex-wrap gap-2">{canViewMe && (<button type="button" onClick={(event)=>{event.stopPropagation();navigate(`/dashboard/programManagement/program/${uuid}/me?businessUuid=${encodeURIComponent(item.uuid)}`)}} className="rounded-lg border border-[#082d77]/20 px-3 py-2 text-xs font-semibold text-[#082d77]">M&amp;E profile</button>)}{canCoach && (
                           <button
                             type="button"
                             onClick={(event) => {
@@ -735,7 +908,7 @@ const ProgramStartups = () => {
                             <FaPlus className="text-[10px]" />
                             Set up session
                           </button>
-                        )}
+                        )}</div>
                       </td>
                     </tr>
                   );
@@ -757,6 +930,98 @@ const ProgramStartups = () => {
       )}
 
       {/* ROSTER EDITOR */}
+      {/* PROGRAM LEAD */}
+      {leadPicker && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+          <div className="flex max-h-[85vh] w-full max-w-xl flex-col overflow-hidden rounded-2xl bg-white shadow-xl">
+            <div className="border-b border-slate-100 p-6">
+              <h3 className="text-xl font-black tracking-tight text-slate-950">
+                Program lead
+              </h3>
+              <p className="mt-1 text-sm text-[#667085]">
+                The Business Development Advisor who runs {program?.title || "this program"}.
+                Leads are notified about their cohort and can reach it in the tracker.
+              </p>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4">
+              {leadCandidates.length === 0 ? (
+                <p className="p-6 text-center text-sm text-slate-500">
+                  No one is eligible to lead a program yet.
+                </p>
+              ) : (
+                leadCandidates.map((person) => {
+                  const picked = leadPicked.includes(person.uuid);
+
+                  return (
+                    <button
+                      key={person.uuid}
+                      type="button"
+                      aria-pressed={picked}
+                      onClick={() =>
+                        setLeadPicked((prev) =>
+                          prev.includes(person.uuid)
+                            ? prev.filter((item) => item !== person.uuid)
+                            : [...prev, person.uuid],
+                        )
+                      }
+                      className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left transition ${
+                        picked ? "bg-[#f0fdf4]" : "hover:bg-slate-50"
+                      }`}
+                    >
+                      <span
+                        className={`grid h-4 w-4 shrink-0 place-items-center rounded border text-[10px] text-white ${
+                          picked
+                            ? "border-[#16a34a] bg-[#16a34a]"
+                            : "border-slate-300"
+                        }`}
+                      >
+                        {picked ? "✓" : null}
+                      </span>
+
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-bold text-slate-900">
+                          {person.name}
+                        </span>
+                        <span className="block truncate text-xs text-[#667085]">
+                          {person.email}
+                        </span>
+                      </span>
+
+                      <span className="shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-600">
+                        {person.role === "BDA"
+                          ? "Business Development Advisor"
+                          : person.role}
+                      </span>
+                    </button>
+                  );
+                })
+              )}
+            </div>
+
+            <div className="flex items-center justify-end gap-3 border-t border-slate-100 p-6">
+              <button
+                type="button"
+                onClick={() => setLeadPicker(false)}
+                disabled={savingLeads}
+                className="rounded-lg bg-slate-100 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-200 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={saveLeads}
+                disabled={savingLeads}
+                className="rounded-lg bg-[#082d77] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#061f54] disabled:opacity-60"
+              >
+                {savingLeads ? "Saving..." : "Save lead"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
           <div className="w-full max-w-2xl rounded-2xl bg-white p-6">

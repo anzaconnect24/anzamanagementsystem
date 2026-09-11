@@ -31,8 +31,7 @@ const ModuleQuizzesPage = ({ moduleId: moduleIdProp, embedded = false }) => {
   const [userAttempts, setUserAttempts] = useState([]);
 
   const router = useRouter();
-  // "Staff" is stored as either "Staff" or "Reviewer" (see SignUp).
-  const isAdmin = ["Admin", "Staff", "Reviewer"].includes(userDetails?.role);
+  const isAdmin = ["Admin", "BDA"].includes(userDetails?.role);
 
   useEffect(() => {
     loadData();

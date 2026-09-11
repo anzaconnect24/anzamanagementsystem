@@ -48,6 +48,7 @@ const emptyDetails = {
   startDate: "",
   endDate: "",
   image: "",
+  recordType:"programme", parentProgrammeId:"", objective:"", partner:"", geographicScope:"", reportingFrequency:"quarterly", targetParticipants:"", status:"active",
 };
 
 const StartupPrograms = () => {
@@ -104,6 +105,7 @@ const StartupPrograms = () => {
       startDate: toDateInput(program.startDate),
       endDate: toDateInput(program.endDate),
       image: program.image || "",
+      recordType:program.recordType||"programme",parentProgrammeId:program.parentProgrammeId||"",objective:program.objective||"",partner:program.partner||"",geographicScope:program.geographicScope||"",reportingFrequency:program.reportingFrequency||"quarterly",targetParticipants:program.targetParticipants??"",status:program.status||"active",
     });
     setImageFile(null);
   };
@@ -202,6 +204,14 @@ const StartupPrograms = () => {
         // Editable on an existing program too — it decides which category
         // tile the program appears under.
         category: details.programCategory,
+        recordType:details.recordType,
+        parentProgrammeId:details.recordType==="cohort"?(details.parentProgrammeId||null):null,
+        objective:details.objective||null,
+        partner:details.partner||null,
+        geographicScope:details.geographicScope||null,
+        reportingFrequency:details.reportingFrequency,
+        targetParticipants:details.targetParticipants||null,
+        status:details.status,
       };
 
       const response = isNew
@@ -624,6 +634,15 @@ const StartupPrograms = () => {
                   }
                 />
               </div>
+
+              <div><label className="mb-1 block text-sm font-medium text-[#475569]">Record type</label><select value={details.recordType} onChange={e=>setDetails(p=>({...p,recordType:e.target.value}))} className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"><option value="programme">Programme</option><option value="cohort">Cohort</option></select></div>
+              {details.recordType==="cohort"&&<div><label className="mb-1 block text-sm font-medium text-[#475569]">Parent programme *</label><select value={details.parentProgrammeId} onChange={e=>setDetails(p=>({...p,parentProgrammeId:e.target.value}))} className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"><option value="">Select programme</option>{programs.filter(p=>p.recordType!=="cohort"&&!p.archivedAt).map(p=><option key={p.id} value={p.id}>{p.title}</option>)}</select></div>}
+              <div className="md:col-span-2"><label className="mb-1 block text-sm font-medium text-[#475569]">Programme objective</label><textarea value={details.objective} onChange={e=>setDetails(p=>({...p,objective:e.target.value}))} className="min-h-20 w-full rounded-lg border border-[#b7c5e5] px-3 py-2"/></div>
+              <div><label className="mb-1 block text-sm font-medium text-[#475569]">Partner / donor</label><input value={details.partner} onChange={e=>setDetails(p=>({...p,partner:e.target.value}))} className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"/></div>
+              <div><label className="mb-1 block text-sm font-medium text-[#475569]">Geographic scope</label><input value={details.geographicScope} onChange={e=>setDetails(p=>({...p,geographicScope:e.target.value}))} className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"/></div>
+              <div><label className="mb-1 block text-sm font-medium text-[#475569]">Reporting frequency</label><select value={details.reportingFrequency} onChange={e=>setDetails(p=>({...p,reportingFrequency:e.target.value}))} className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"><option value="monthly">Monthly</option><option value="quarterly">Quarterly</option><option value="custom">Custom</option></select></div>
+              <div><label className="mb-1 block text-sm font-medium text-[#475569]">Target participants</label><input type="number" min="0" value={details.targetParticipants} onChange={e=>setDetails(p=>({...p,targetParticipants:e.target.value}))} className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"/></div>
+              <div><label className="mb-1 block text-sm font-medium text-[#475569]">Status</label><select value={details.status} onChange={e=>setDetails(p=>({...p,status:e.target.value}))} className="w-full rounded-lg border border-[#b7c5e5] px-3 py-2"><option value="planned">Planned</option><option value="active">Active</option><option value="completed">Completed</option><option value="paused">Paused</option></select></div>
 
               <div className="md:col-span-2">
                 <label className="mb-1 block text-sm font-medium text-[#475569]">

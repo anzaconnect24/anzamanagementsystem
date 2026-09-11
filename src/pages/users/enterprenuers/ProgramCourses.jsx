@@ -20,9 +20,8 @@ import {
   FaThLarge,
 } from "react-icons/fa";
 
-// Staff author the modules a programme runs. "Staff" is stored as either
-// "Staff" or "Reviewer" (see SignUp).
-const CAN_MANAGE_ROLES = ["Admin", "Staff", "Reviewer"];
+// Business Development Advisors author the modules a programme runs.
+const CAN_MANAGE_ROLES = ["Admin", "BDA"];
 
 const formatDate = (value) => {
   if (!value) return "N/A";

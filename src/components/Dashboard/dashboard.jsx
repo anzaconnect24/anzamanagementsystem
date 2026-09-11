@@ -38,14 +38,25 @@ const DashboardHero = ({ userDetails, data }) => {
       image: "/images/business-class-hero.svg",
     },
 
-    Reviewer: {
-      badge: "Reviewer Dashboard",
+    BDA: {
+      badge: "Business Development Advisor Dashboard",
       title: "Review and Evaluate Startup Applications",
       description:
         "Assess business applications, review startup readiness, and support quality onboarding across the Anza Connect ecosystem.",
       statOne: `${data?.pendingBusiness || 0} Pending Reviews`,
       statTwo: "Application Reviews",
       statThree: "Startup Evaluation",
+      image: "/images/business-class-hero.svg",
+    },
+
+    ME: {
+      badge: "Monitoring & Evaluation Dashboard",
+      title: "Track Programme Results and Verify Impact Data",
+      description:
+        "Configure results frameworks and indicators, verify the data startups report, and monitor impact across every programme in the portfolio.",
+      statOne: `${data?.enterprenuers || 0} Startups`,
+      statTwo: "Results Frameworks",
+      statThree: "Impact Reporting",
       image: "/images/business-class-hero.svg",
     },
 
@@ -108,8 +119,8 @@ const DashboardHero = ({ userDetails, data }) => {
           </p>
         </div>
 
-        {/* Staff users are stored as either "Staff" or "Reviewer" (see SignUp),
-            so both are excluded here. */}
+        {/* Only the roles with a profile of their own get Edit Profile;
+            Admin, Business Development Advisors, Finance and M&E do not. */}
         {["Enterprenuer", "Investor", "Mentor"].includes(userDetails?.role) && (
           <Link
             href="/dashboard/entreprenuer-profile"
@@ -444,7 +455,7 @@ const Dashboard = () => {
         </div>
       )}
 
-      {["Admin", "Reviewer"].includes(userDetails.role) && (
+      {["Admin", "BDA"].includes(userDetails.role) && (
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
             <CardDataStats

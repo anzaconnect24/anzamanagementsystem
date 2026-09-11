@@ -11,7 +11,7 @@ const options = {
     type: "donut",
   },
   colors: ["#219654", "#375E83", "#259AE6", "#FFA70B"],
-  labels: ["Admin", "Reviewer", "Entrepreneur", "Investor"],
+  labels: ["Admin", "Advisor", "Entrepreneur", "Investor"],
   legend: {
     show: true,
     position: "bottom",

@@ -23,7 +23,7 @@ import StaffCourseView from "./StaffCourseView";
 
 // Admin and staff open a course to review it, not to take it, so they get the
 // tabbed course record instead of the learner's enrol-and-continue page.
-const STAFF_ROLES = ["Admin", "Staff", "Reviewer"];
+const STAFF_ROLES = ["Admin", "BDA"];
 
 const fallbackImage = "/images/ideation-classes.svg";
 

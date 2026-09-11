@@ -1,4 +1,5 @@
 import { useSearchParams } from "react-router-dom";
+import StatCard from "./StatCard";
 import {
   CalendarDays,
   ChevronRight,
@@ -85,20 +86,6 @@ const daysUntil = (value) => {
   return Math.round((startOfDay(target) - startOfDay(new Date())) / 86400000);
 };
 
-// Value first and large, label beneath, and a small tinted icon top-right.
-const StatCard = ({ label, value, sub, icon, tone = "text-[#0b2b5c]" }) => (
-  <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/50">
-    <div className="flex items-start justify-between gap-3">
-      <p className="min-w-0 truncate text-xl font-black tracking-tight text-slate-950">
-        {value}
-      </p>
-      <span className={`shrink-0 ${tone}`}>{icon}</span>
-    </div>
-
-    <p className="mt-3 text-sm font-medium text-slate-500">{label}</p>
-    {sub}
-  </div>
-);
 
 const DetailRow = ({ icon, label, children }) => (
   <div className="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-center sm:gap-4">

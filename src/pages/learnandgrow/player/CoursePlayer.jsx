@@ -12,6 +12,7 @@ import {
   FaExternalLinkAlt,
   FaFileAlt,
   FaFilePowerpoint,
+  FaGraduationCap,
   FaLayerGroup,
   FaPlayCircle,
   FaRegFileAlt,
@@ -27,6 +28,8 @@ import {
   getResources,
   resourceTypeLabel,
 } from "@/controllers/workshop_controller";
+import { getCourses } from "@/controllers/course_controller";
+import CourseCard from "@/components/learning/CourseCard";
 import WorkshopsPanel from "@/components/learning/WorkshopsPanel";
 import ResourcesPanel from "@/components/learning/ResourcesPanel";
 
@@ -69,6 +72,14 @@ const CoursePlayer = () => {
   const uuid = courseUuid || routeUuid || "mine";
   const [searchParams] = useSearchParams();
 
+  // Reached from Program Learning with no course named. Resolving "mine"
+  // straight to an outline drops the learner into the modules of whichever
+  // course the API picked, with no say in it. This entry lists the courses
+  // on the programme first, and the player opens only once one is chosen.
+  const pickingCourse = !courseUuid && !routeUuid;
+  const [courseList, setCourseList] = useState([]);
+  const [programme, setProgramme] = useState(null);
+
   const [loading, setLoading] = useState(true);
   const [outline, setOutline] = useState(null);
   // Null shows the module cards; a uuid opens that module's slides.
@@ -103,8 +114,20 @@ const CoursePlayer = () => {
       .finally(() => setLoading(false));
 
   useEffect(() => {
+    if (pickingCourse) {
+      setLoading(true);
+      getCourses("mine")
+        .then((body) => {
+          setCourseList(Array.isArray(body?.data) ? body.data : []);
+          if (body?.program) setProgramme(body.program);
+        })
+        .catch(() => toast.error("Failed to load your courses"))
+        .finally(() => setLoading(false));
+      return;
+    }
+
     load(false);
-  }, [uuid]);
+  }, [uuid, pickingCourse]);
 
   const modules = outline?.modules || [];
 
@@ -141,6 +164,76 @@ const CoursePlayer = () => {
 
   if (loading) return <Loader />;
 
+  // Step one: which course. Picking one hands over to the player on the
+  // existing /dashboard/learn/course/:courseUuid route, so the rest of the
+  // journey - course, then its modules - is unchanged.
+  if (pickingCourse) {
+    return (
+      <div className="min-h-screen px-6 py-4">
+        {/* HERO - the same treatment the Courses page uses. */}
+        <div className="relative mb-10 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{
+              backgroundImage: `url(${programme?.image || "/images/mentor_hero.svg"})`,
+            }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/55 to-[#c9672b]/30" />
+
+          <div className="relative z-10 max-w-3xl p-10 text-white">
+            <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+              Program Learning
+            </span>
+
+            <h1 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
+              {programme?.title || "Your programme"}
+            </h1>
+
+            <p className="mb-4 max-w-2xl text-sm leading-6 text-white/85 drop-shadow-md">
+              Pick up where you left off. Open a course to work through its
+              modules, workshops and resources at your own pace.
+            </p>
+
+            <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+              <span className="flex items-center gap-2">
+                <FaLayerGroup />
+                {courseList.length}{" "}
+                {courseList.length === 1 ? "course" : "courses"}
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaGraduationCap />
+                Guided Learning
+              </span>
+
+              <span className="flex items-center gap-2">
+                <FaClock />
+                Flexible Learning
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {courseList.length === 0 ? (
+          <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
+            No course has been published on your programme yet.
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {courseList.map((course) => (
+              <CourseCard
+                key={course.uuid}
+                course={course}
+                program={programme}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   if (!outline || items.length === 0) {
     return (
       <div className="min-h-screen px-6 py-6">
@@ -170,7 +263,7 @@ const CoursePlayer = () => {
         <div className="relative z-10 max-w-3xl p-10 text-white">
           <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
-            {outline.program?.title || "Class Rooms"}
+            {outline.program?.title || "Courses"}
           </span>
 
           <h2 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">
@@ -350,13 +443,9 @@ const CoursePlayer = () => {
             {/* SLIDES IN THIS MODULE */}
             <aside className="order-2 lg:order-1">
               <div className="rounded-3xl bg-white p-6 shadow-sm">
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900">
+                <h2 className="mb-5 text-2xl font-bold tracking-tight text-slate-900">
                   {openModule.title}
                 </h2>
-                <p className="mb-5 mt-1 text-sm leading-6 text-[#8a8f98]">
-                  {openModule.progress.completed} of {openModule.progress.total}{" "}
-                  done · your progress saves as you go.
-                </p>
 
                 <div className="space-y-3">
                   {openModule.content.map((item) => (

@@ -2,6 +2,7 @@
 import { useContext, useEffect, useState } from "react";
 import {
   deleteUser,
+  createInternalUser,
   getAllUsers,
   inviteUser,
   updateUser,
@@ -14,6 +15,19 @@ import Spinner from "@/components/spinner";
 import { UserContext } from "../../../layouts/DashboardLayout";
 
 import { useTranslation } from "../../../locales";
+
+// Every role the row editor can show. A user whose stored role is not in here
+// (a legacy value, say) renders as itself rather than silently displaying
+// whichever option happens to come first.
+const ROLE_OPTIONS = [
+  "Admin",
+  "BDA",
+  "ME",
+  "Finance",
+  "Investor",
+  "Mentor",
+  "Enterprenuer",
+];
 
 const Page = () => {
   const { t } = useTranslation();
@@ -33,7 +47,12 @@ const Page = () => {
   const [selectedRole, setSelectedRole] = useState("all");
   const { userDetails } = useContext(UserContext);
 
-  useEffect(() => {
+  // Internal staff accounts are created here because they are deliberately
+  // absent from the public sign-up form.
+  const [showStaffForm, setshowStaffForm] = useState(false);
+  const [creatingStaff, setcreatingStaff] = useState(false);
+
+  const loadUsers = () =>
     getAllUsers(limit, currentPage, searchTerm).then((body) => {
       setadminCount(body.adminCount);
       settotal(body.count);
@@ -42,6 +61,10 @@ const Page = () => {
       setUsers(body.data);
       setloading(false);
     });
+
+  useEffect(() => {
+    loadUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [limit, currentPage, searchTerm]);
 
   return loading ? (
@@ -96,7 +119,12 @@ const Page = () => {
               >
                 <option value="all">{t("users.allRoles", "All Roles")}</option>
                 <option value="Admins">{t("users.admin", "Admins")}</option>
-                <option value="Staff">{t("users.staff", "Staff")}</option>
+                <option value="BDA">
+                  {t("users.bda", "Business Development Advisor")}
+                </option>
+                <option value="ME">
+                  {t("users.meOfficer", "Monitoring & Evaluation Officer")}
+                </option>
                 <option value="Finance">
                   {t("users.finance", "Finance Officer")}
                 </option>
@@ -107,10 +135,28 @@ const Page = () => {
                 <option value="Enterprenuer">
                   {t("users.entrepreneur", "Entrepreneur")}
                 </option>
-                <option value="Reviewer">
-                  {t("users.reviewer", "Reviewer")}
-                </option>
               </select>
+
+              <button
+                onClick={() => setshowStaffForm(true)}
+                className="inline-flex items-center gap-2 rounded-lg bg-[#082d77] px-4 py-2 font-medium text-white hover:bg-[#082d77]/90"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 4v16m8-8H4"
+                  />
+                </svg>
+                {t("users.addStaffAccount", "Add Staff Account")}
+              </button>
 
               <button
                 onClick={() => setshowInvitationForm(true)}
@@ -135,6 +181,153 @@ const Page = () => {
             </div>
           </div>
         </div>
+
+        {/* Staff Account Modal. Business Development Advisor, Finance Officer,
+            M&E Officer and Admin accounts exist only through here. */}
+        {showStaffForm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+            <div className="max-h-full w-full max-w-md overflow-y-auto rounded-xl bg-white shadow-lg dark:bg-boxdark">
+              <div className="p-6">
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-xl font-semibold">
+                    {t("users.addStaffAccount", "Add Staff Account")}
+                  </h3>
+                  <button
+                    onClick={() => setshowStaffForm(false)}
+                    className="text-gray-500 hover:text-gray-700 dark:text-gray-400"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-6 w-6"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
+                  </button>
+                </div>
+
+                <p className="mb-4 text-sm text-gray-500 dark:text-gray-400">
+                  The account is active immediately. Share the password with
+                  them so they can sign in and change it.
+                </p>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const form = e.target;
+                    setcreatingStaff(true);
+
+                    createInternalUser({
+                      name: form.name.value,
+                      email: form.email.value,
+                      phone: form.phone.value,
+                      role: form.role.value,
+                      password: form.password.value,
+                    })
+                      .then((body) => {
+                        if (body?.status === false) {
+                          toast.error(
+                            body.message || "Could not create the account",
+                          );
+                          return;
+                        }
+                        toast.success("Account created");
+                        setshowStaffForm(false);
+                        loadUsers();
+                      })
+                      .finally(() => setcreatingStaff(false));
+                  }}
+                  className="space-y-4"
+                >
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      {t("users.fullName", "Full Name")}
+                    </label>
+                    <input
+                      name="name"
+                      required
+                      className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2 outline-none focus:border-primary dark:border-strokedark"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      {t("users.emailAddress", "Email Address")}
+                    </label>
+                    <input
+                      name="email"
+                      type="email"
+                      required
+                      className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2 outline-none focus:border-primary dark:border-strokedark"
+                      placeholder="user@example.com"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      {t("users.phone", "Phone")}
+                    </label>
+                    <input
+                      name="phone"
+                      className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2 outline-none focus:border-primary dark:border-strokedark"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      {t("users.role", "Role")}
+                    </label>
+                    <select
+                      name="role"
+                      defaultValue="BDA"
+                      className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2 outline-none focus:border-primary dark:border-strokedark"
+                    >
+                      <option value="BDA">
+                        {t("users.bda", "Business Development Advisor")}
+                      </option>
+                      <option value="ME">
+                        {t("users.meOfficer", "Monitoring & Evaluation Officer")}
+                      </option>
+                      <option value="Finance">
+                        {t("users.finance", "Finance Officer")}
+                      </option>
+                      <option value="Admin">{t("users.admin", "Admin")}</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="mb-2 block text-sm font-medium">
+                      {t("users.password", "Password")}
+                    </label>
+                    <input
+                      name="password"
+                      type="text"
+                      required
+                      minLength={6}
+                      className="w-full rounded-lg border border-stroke bg-transparent px-4 py-2 outline-none focus:border-primary dark:border-strokedark"
+                      placeholder="At least 6 characters"
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={creatingStaff}
+                    className="flex w-full items-center justify-center rounded-lg bg-primary py-2 px-4 font-medium text-white hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    {creatingStaff ? <Spinner /> : "Create account"}
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Invitation Form Modal */}
         {showInvitationForm && (
@@ -241,7 +434,7 @@ const Page = () => {
               <tbody>
                 {users.map((user, index) => (
                   <tr
-                    key={index}
+                    key={user.uuid || index}
                     className="border-b border-stroke dark:border-strokedark hover:bg-gray-50 dark:hover:bg-meta-4 transition-colors"
                   >
                     <td className="py-4 px-4">
@@ -285,7 +478,7 @@ const Page = () => {
                           className={`w-2 h-2 rounded-full ${
                             user.role === "Admin"
                               ? "bg-primary"
-                              : user.role === "Staff"
+                              : user.role === "BDA"
                               ? "bg-success"
                               : user.role === "Mentor"
                               ? "bg-warning"
@@ -324,7 +517,16 @@ const Page = () => {
                               updateUser(
                                 { role: e.target.value },
                                 user.uuid
-                              ).then(() => {
+                              ).then((updated) => {
+                                if (!updated) {
+                                  toast.error(
+                                    t(
+                                      "users.roleUpdateFailed",
+                                      "Could not update the role"
+                                    )
+                                  );
+                                  return;
+                                }
                                 toast.success(
                                   t(
                                     "users.roleUpdatedSuccessfully",
@@ -339,13 +541,22 @@ const Page = () => {
                             }
                           }}
                           className="w-full rounded-lg border-stroke bg-transparent px-3 py-1 outline-none focus:border-primary dark:border-strokedark"
-                          defaultValue={user.role}
+                          value={user.role || ""}
                         >
+                          {user.role && !ROLE_OPTIONS.includes(user.role) && (
+                            <option value={user.role}>{user.role}</option>
+                          )}
                           <option value="Admin">
                             {t("users.admin", "Admin")}
                           </option>
-                          <option value="Staff">
-                            {t("users.staff", "Staff")}
+                          <option value="BDA">
+                            {t("users.bda", "Business Development Advisor")}
+                          </option>
+                          <option value="ME">
+                            {t(
+                              "users.meOfficer",
+                              "Monitoring & Evaluation Officer",
+                            )}
                           </option>
                           <option value="Finance">
                             {t("users.finance", "Finance Officer")}
@@ -358,9 +569,6 @@ const Page = () => {
                           </option>
                           <option value="Enterprenuer">
                             {t("users.entrepreneur", "Entrepreneur")}
-                          </option>
-                          <option value="Reviewer">
-                            {t("users.reviewer", "Reviewer")}
                           </option>
                         </select>
                       </div>

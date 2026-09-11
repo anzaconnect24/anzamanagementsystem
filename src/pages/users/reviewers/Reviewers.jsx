@@ -21,13 +21,13 @@ const Page = () => {
   return (
     <UserDirectory
       badge="Portfolio Support"
-      title={t("navigation.staff", "Staff")}
+      title={t("navigation.bdas", "Business Development Advisors")}
       description="The business development advisors who support startups through their grant programs, coaching sessions, and milestone reporting."
-      chips={["Staff Profiles", "Startup Support"]}
-      heading="Available Staff"
+      chips={["Advisor Profiles", "Startup Support"]}
+      heading="Available Business Development Advisors"
       users={users}
       loading={loading}
-      emptyText="No staff found."
+      emptyText="No business development advisors found."
     />
   );
 };

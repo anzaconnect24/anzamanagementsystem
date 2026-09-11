@@ -84,9 +84,8 @@ const ProgramsPage = () => {
   };
 
   // Staff upload and edit courses; deleting one destroys its modules and
-  // slides, so that stays with Admin. "Staff" is stored as "Staff" or
-  // "Reviewer" (see SignUp).
-  const canAuthor = ["Admin", "Staff", "Reviewer"].includes(userDetails?.role);
+  // slides, so that stays with Admin.
+  const canAuthor = ["Admin", "BDA"].includes(userDetails?.role);
   const isAdmin = ["Admin"].includes(userDetails?.role);
 
   const formatCourseName = (value) => {

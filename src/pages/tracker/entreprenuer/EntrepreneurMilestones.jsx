@@ -10,7 +10,6 @@ import {
   reviseTrackerMilestone,
   submitTrackerMilestone,
   updateEnterpriseBudgetDocument,
-  updateMentorEnterpriseKpis,
 } from "@/controllers/trackerController";
 import { uploadFile } from "@/controllers/file_upload_controller";
 import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
@@ -355,16 +354,6 @@ const EntrepreneurMilestones = () => {
   const [budgetDocForm, setBudgetDocForm] = useState({ description: "" });
   const [budgetDocFile, setBudgetDocFile] = useState(null);
   const [savingBudgetDoc, setSavingBudgetDoc] = useState(false);
-  const [showKpiForm, setShowKpiForm] = useState(false);
-  const [savingKpis, setSavingKpis] = useState(false);
-  const [kpiForm, setKpiForm] = useState({
-    monthlyRevenue: "",
-    employees: "",
-    wasteDiverted: "",
-    ceReadinessScore: "",
-    capitalMobilised: "",
-    activeCustomers: "",
-  });
   // The milestone form collects Milestone / Key activities / Planned amount /
   // KPI-Impact / Timeline, and takes several rows so a whole plan can be
   // entered before it goes to the BDA. Key activities reuse the
@@ -893,58 +882,7 @@ const EntrepreneurMilestones = () => {
 
   const enterprise = dashboard?.enterprise || {};
   const program = dashboard?.program || enterprise?.Program || null;
-  useEffect(() => {
-    setKpiForm({
-      monthlyRevenue: String(enterprise?.monthlyRevenue ?? ""),
-      employees: String(enterprise?.employees ?? ""),
-      wasteDiverted: String(enterprise?.wasteDiverted ?? ""),
-      ceReadinessScore: enterprise?.ceReadinessScore === null || enterprise?.ceReadinessScore === undefined ? "" : String(enterprise.ceReadinessScore),
-      capitalMobilised: String(enterprise?.capitalMobilised ?? ""),
-      activeCustomers: String(enterprise?.activeCustomers ?? ""),
-    });
-  }, [enterprise?.uuid]);
 
-  // Was previously a local-only optimistic update with no backend call at
-  // all — it showed "KPI values updated" and reset silently on next reload.
-  // Now actually persists via the existing, already Enterprenuer-authorized
-  // PATCH /tracker/enterprises/:uuid/kpis.
-  const onSaveKpis = async (e) => {
-    e.preventDefault();
-    if (savingKpis) return;
-
-    if (!enterprise?.uuid) {
-      toast.error("No tracker workspace yet — nothing to save KPIs to.");
-      return;
-    }
-
-    setSavingKpis(true);
-    try {
-      const payload = {
-        monthlyRevenue: Number(kpiForm.monthlyRevenue || 0),
-        employees: Number(kpiForm.employees || 0),
-        wasteDiverted: Number(kpiForm.wasteDiverted || 0),
-        ceReadinessScore:
-          kpiForm.ceReadinessScore === "" ? null : Number(kpiForm.ceReadinessScore),
-        capitalMobilised: Number(kpiForm.capitalMobilised || 0),
-        activeCustomers: Number(kpiForm.activeCustomers || 0),
-      };
-
-      const updated = await updateMentorEnterpriseKpis(enterprise.uuid, payload);
-
-      setDashboard((prev) => ({
-        ...prev,
-        enterprise: { ...(prev?.enterprise || {}), ...(updated || payload) },
-      }));
-      setShowKpiForm(false);
-      toast.success("KPI values updated");
-    } catch (error) {
-      toast.error(
-        error?.response?.data?.message || "Failed to save KPI values"
-      );
-    } finally {
-      setSavingKpis(false);
-    }
-  };
 
   const enterpriseDocuments = parseDocuments(enterprise?.documents);
   const budgetDocumentUrl = enterpriseDocuments.budgetDocumentUrl || "";
@@ -1122,13 +1060,6 @@ const EntrepreneurMilestones = () => {
     );
   }, [openReportTranche, reportGroups, reportableMilestones]);
 
-  // KPI values shown as cards under the KPI Tracking panel — the same figures
-  // the Edit KPIs form updates.
-  const activeCustomers = Number(kpiForm.activeCustomers || enterprise?.activeCustomers || 0);
-  const employees = Number(kpiForm.employees || enterprise?.employees || 0);
-  const monthlyRevenue = Number(kpiForm.monthlyRevenue || enterprise?.monthlyRevenue || 0);
-  const capitalMobilised = Number(kpiForm.capitalMobilised || enterprise?.capitalMobilised || 0);
-
 
   // Financial summary shown in the stat cards below the hero (mirrors the
   // finance officer's view). Disbursement is derived from tranche stages whose
@@ -1261,103 +1192,6 @@ const EntrepreneurMilestones = () => {
         </section>
 
         <div className="space-y-8">
-            {/* KPI summary cards. */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[
-                {
-                  icon: <Wallet className="h-5 w-5" />,
-                  tint: "bg-emerald-50 text-emerald-600",
-                  label: "Monthly Revenue",
-                  value: formatCurrency(monthlyRevenue),
-                },
-                {
-                  icon: <TrendingUp className="h-5 w-5" />,
-                  tint: "bg-amber-50 text-amber-600",
-                  label: "Capital Mobilised",
-                  value: formatCurrency(capitalMobilised),
-                },
-                {
-                  icon: <Users className="h-5 w-5" />,
-                  tint: "bg-blue-50 text-blue-600",
-                  label: "Employees",
-                  value: employees,
-                },
-                {
-                  icon: <UserCheck className="h-5 w-5" />,
-                  tint: "bg-violet-50 text-violet-600",
-                  label: "Active Customers",
-                  value: activeCustomers,
-                },
-              ].map((kpi) => (
-                <div
-                  key={kpi.label}
-                  className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className={`grid h-9 w-9 shrink-0 place-items-center rounded-xl ${kpi.tint}`}
-                    >
-                      {kpi.icon}
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-[11px] font-semibold text-[#64748b]">
-                        {kpi.label}
-                      </p>
-                      <p className="mt-1 text-sm font-black tracking-tight text-[#111827]">
-                        {kpi.value}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* KPI Tracking panel, sitting below the KPI summary cards. */}
-            <PortalCard
-              icon={<BarChart3 className="h-5 w-5" />}
-              title="KPI Tracking"
-              subtitle="Operational indicators for enterprise growth and reporting."
-              action={
-                <button
-                  type="button"
-                  onClick={() => setShowKpiForm((prev) => !prev)}
-                  className="rounded-xl border border-[#082d77]/20 bg-[#082d77]/5 px-4 py-2.5 text-sm font-bold text-[#082d77] transition hover:bg-[#082d77]/10"
-                >
-                  {showKpiForm ? "Close KPI Edit" : "Edit KPIs"}
-                </button>
-              }
-            >
-              {showKpiForm && (
-                <form onSubmit={onSaveKpis} className="mb-5 grid grid-cols-1 gap-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4 md:grid-cols-3">
-                  <div>
-                    <label className={milestoneLabelClass} htmlFor="kpi-monthly-revenue">Monthly revenue</label>
-                    <input id="kpi-monthly-revenue" className={baseInputClass} type="number" min="0" placeholder="Monthly revenue" value={kpiForm.monthlyRevenue} onChange={(e) => setKpiForm((prev) => ({ ...prev, monthlyRevenue: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={milestoneLabelClass} htmlFor="kpi-capital-mobilised">Capital mobilised</label>
-                    <input id="kpi-capital-mobilised" className={baseInputClass} type="number" min="0" placeholder="Capital mobilised" value={kpiForm.capitalMobilised} onChange={(e) => setKpiForm((prev) => ({ ...prev, capitalMobilised: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={milestoneLabelClass} htmlFor="kpi-employees">Employees</label>
-                    <input id="kpi-employees" className={baseInputClass} type="number" min="0" placeholder="Employees" value={kpiForm.employees} onChange={(e) => setKpiForm((prev) => ({ ...prev, employees: e.target.value }))} />
-                  </div>
-                  <div>
-                    <label className={milestoneLabelClass} htmlFor="kpi-active-customers">Active customers</label>
-                    <input id="kpi-active-customers" className={baseInputClass} type="number" min="0" placeholder="Active customers" value={kpiForm.activeCustomers} onChange={(e) => setKpiForm((prev) => ({ ...prev, activeCustomers: e.target.value }))} />
-                  </div>
-                  <div className="flex items-end justify-end md:col-span-3">
-                    <button
-                      type="submit"
-                      disabled={savingKpis}
-                      className="rounded-xl bg-[#082d77] px-5 py-3 text-sm font-bold text-white transition hover:bg-[#061f54] disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                      {savingKpis ? "Saving..." : "Save KPI Updates"}
-                    </button>
-                  </div>
-                </form>
-              )}
-            </PortalCard>
-
             {/* Grant financial summary. */}
             <div>
               <h2 className="mb-4 text-lg font-black tracking-tight text-[#172033]">

@@ -24,6 +24,320 @@ export const getCohortProgramOptions = async () => {
   }
 };
 
+// Who runs a programme, plus everyone eligible to be added, so the picker
+// needs one call. Business Development Advisors are the role that leads a
+// programme; the API also allows Admin, Mentor and Finance.
+export const getCohortLeads = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/leads`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Replaces a programme’s leads with exactly these users. Admin only.
+export const setCohortLeads = async (uuid, userUuids) => {
+  try {
+    const response = await axios.put(
+      `${BASE()}/${encodeURIComponent(uuid)}/leads`,
+      { userUuids },
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to save the program leads",
+      }
+    );
+  }
+};
+
+// What a report over this period would say, computed without being saved.
+export const composeProgramReport = async (uuid, params = {}) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/reports/compose`,
+      { headers, params },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// The list, or one report in full when recordUuid is given.
+export const getProgramReports = async (uuid, recordUuid) => {
+  try {
+    const path = recordUuid
+      ? `${BASE()}/${encodeURIComponent(uuid)}/reports/${encodeURIComponent(recordUuid)}`
+      : `${BASE()}/${encodeURIComponent(uuid)}/reports`;
+
+    const response = await axios.get(path, { headers });
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Creates a report with its figures frozen, or edits a draft. Pass
+// { refresh: true } to re-base a draft on today’s figures.
+export const saveProgramReport = async (uuid, data, recordUuid) => {
+  try {
+    const path = recordUuid
+      ? `${BASE()}/${encodeURIComponent(uuid)}/reports/${encodeURIComponent(recordUuid)}`
+      : `${BASE()}/${encodeURIComponent(uuid)}/reports`;
+
+    const response = recordUuid
+      ? await axios.patch(path, data, { headers })
+      : await axios.post(path, data, { headers });
+
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to save the report",
+      }
+    );
+  }
+};
+
+// What the programme has sent its cohort, with the vocabularies the compose
+// form needs and whether this caller may send at all.
+export const getProgramAnnouncements = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/announcements`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+export const sendProgramAnnouncement = async (uuid, data) => {
+  try {
+    const response = await axios.post(
+      `${BASE()}/${encodeURIComponent(uuid)}/announcements`,
+      data,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || { status: false, message: "Failed to send" }
+    );
+  }
+};
+
+// What needs the team’s attention: overdue activities, reports awaiting
+// review, participants falling behind, and open or escalated risks.
+export const getProgramAlerts = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/alerts`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Tell the programme’s staff about the current alerts. Deliberate, so the
+// team is notified when the lead decides rather than on every page load.
+export const raiseProgramAlerts = async (uuid) => {
+  try {
+    const response = await axios.post(
+      `${BASE()}/${encodeURIComponent(uuid)}/alerts/raise`,
+      {},
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || { status: false, message: "Failed to raise" }
+    );
+  }
+};
+
+// The programme document library. Each document carries its tags and its
+// version history, with the authoritative file called out as "current".
+export const getProgramDocuments = async (uuid, params = {}) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/documents`,
+      { headers, params },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Files a document, or another version of one when recordUuid is given.
+// Multipart, so the auth header is set without the JSON content type.
+export const uploadProgramDocument = async (uuid, form, recordUuid) => {
+  try {
+    const path = recordUuid
+      ? `${BASE()}/${encodeURIComponent(uuid)}/documents/${encodeURIComponent(recordUuid)}/versions`
+      : `${BASE()}/${encodeURIComponent(uuid)}/documents`;
+
+    const response = await axios.post(path, form, {
+      headers: { Authorization: headers.Authorization },
+    });
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to file the document",
+      }
+    );
+  }
+};
+
+export const archiveProgramDocument = async (uuid, recordUuid) => {
+  try {
+    const response = await axios.delete(
+      `${BASE()}/${encodeURIComponent(uuid)}/documents/${encodeURIComponent(recordUuid)}`,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to archive the document",
+      }
+    );
+  }
+};
+
+// Who coaches whom on a programme: the assigned mentor and advisor, the
+// agreed support areas, the next session, and each visit with its notes and
+// action items. Private notes on a confidential session arrive as null with
+// notesWithheld set, so the page can say so rather than show a blank.
+export const getCohortCoaching = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/coaching`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Assign the coach and advisor and record the agreed support areas. The
+// programme lead decides this, not the coach.
+export const setCohortCoaching = async (uuid, businessUuid, data) => {
+  try {
+    const response = await axios.patch(
+      `${BASE()}/${encodeURIComponent(uuid)}/coaching/${encodeURIComponent(businessUuid)}`,
+      data,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to save the coaching assignment",
+      }
+    );
+  }
+};
+
+// The programme implementation calendar: every dated piece of work, plus the
+// type and status vocabularies, the people who can own an entry, and the
+// headline figures. One call so the page needs no second round trip.
+export const getCohortCalendar = async (uuid, params = {}) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/calendar`,
+      { headers, params },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Creates when recordUuid is absent, edits when it is given.
+export const saveCohortCalendarEntry = async (uuid, data, recordUuid) => {
+  try {
+    const path = recordUuid
+      ? `${BASE()}/${encodeURIComponent(uuid)}/calendar/${encodeURIComponent(recordUuid)}`
+      : `${BASE()}/${encodeURIComponent(uuid)}/calendar`;
+
+    const response = recordUuid
+      ? await axios.patch(path, data, { headers })
+      : await axios.post(path, data, { headers });
+
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to save the calendar entry",
+      }
+    );
+  }
+};
+
+export const deleteCohortCalendarEntry = async (uuid, recordUuid) => {
+  try {
+    const response = await axios.delete(
+      `${BASE()}/${encodeURIComponent(uuid)}/calendar/${encodeURIComponent(recordUuid)}`,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to remove the calendar entry",
+      }
+    );
+  }
+};
+
+export const getMyCohortPrograms = async () => {
+  try {
+    const response = await axios.get(`${BASE()}/mine`, { headers });
+    return response.data.body || { business: null, data: [], count: 0 };
+  } catch (error) {
+    console.log(error.response);
+    return { business: null, data: [], count: 0 };
+  }
+};
+
 // The programme grid, with roster counts and the unassigned tally.
 export const getCohortPrograms = async () => {
   try {

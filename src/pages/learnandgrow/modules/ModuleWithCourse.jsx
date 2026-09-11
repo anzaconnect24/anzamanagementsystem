@@ -241,7 +241,19 @@ const Page = () => {
 
         {/* MODULES */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {modules.map((item, idx) => {
+          {(() => {
+            // Modules open in order: the next one unlocks only when every
+            // earlier one is finished. Mirrors the server rule in
+            // course.controller.js - tracked as "all earlier modules are
+            // done" rather than "the one before is done", so a module left
+            // incomplete cannot be skipped past by finishing a later one.
+            //
+            // Authors are building the course, not working through it, so
+            // they see it unlocked.
+            const isAuthor = ["Admin", "BDA"].includes(userDetails?.role);
+            let earlierComplete = true;
+
+            return modules.map((item, idx) => {
             const length = item.Slides.length;
 
             const progress = item.Slides.reduce(
@@ -258,33 +270,14 @@ const Page = () => {
                 ? (progress / length) * 100
                 : 0;
 
-            let isLocked = false;
+            // A module with no slides cannot be finished, so it must not gate
+            // the ones after it - otherwise an empty placeholder would lock
+            // the rest of the course for good.
+            const complete = length > 0 && progress === length;
+            const isLocked = !isAuthor && !earlierComplete;
 
-            if (
-              idx > 0 &&
-              !["Admin"].includes(userDetails.role)
-            ) {
-              const prev = modules[idx - 1];
-
-              const prevLength = prev.Slides.length;
-
-              const prevProgress =
-                prev.Slides.reduce(
-                  (prevValue, curr) =>
-                    prevValue +
-                    (curr.SlideReaders.length > 0
-                      ? 1
-                      : 0),
-                  0
-                );
-
-              const prevPercentage =
-                prevLength > 0
-                  ? (prevProgress / prevLength) *
-                    100
-                  : 0;
-
-              isLocked = prevPercentage < 100;
+            if (length > 0) {
+              earlierComplete = earlierComplete && complete;
             }
 
             return (
@@ -377,9 +370,10 @@ const Page = () => {
                         {isLocked ? (
                           <button
                             disabled
-                            className="rounded-xl bg-[#F2F4F7] px-4 py-2 text-sm font-semibold text-[#98A2B3]"
+                            aria-label="Locked"
+                            className="rounded-xl bg-[#F2F4F7] px-4 py-2 text-sm text-[#98A2B3]"
                           >
-                            Locked
+                            <BsLock />
                           </button>
                         ) : (
                           <Link
@@ -441,8 +435,9 @@ const Page = () => {
                   </div>
                 </div>
               </div>
-            );
-          })}
+              );
+            });
+          })()}
         </div>
       </div>
     </div>

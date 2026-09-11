@@ -640,7 +640,7 @@ const TrackerStartupDetails = () => {
             ? response.data
             : [];
         const staffOnly = all.filter((user) =>
-          ["Staff", "Reviewer"].includes(user.role),
+          ["BDA"].includes(user.role),
         );
         if (!cancelled) setBdaList(staffOnly.length ? staffOnly : all);
       } catch {

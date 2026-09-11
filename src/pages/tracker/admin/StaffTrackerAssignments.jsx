@@ -60,9 +60,9 @@ const StaffTrackerAssignments = () => {
           getEnterprenuers(1000, 1, " "),
         ]);
         // Staff-role users are the Business Development Advisors (BDAs).
-        // "Staff" is displayed for users stored with role "Reviewer".
+        // Business Development Advisors.
         const allStaff = asArray(staffResponse);
-        const staffOnly = allStaff.filter((user) => ["Staff", "Reviewer"].includes(user.role));
+        const staffOnly = allStaff.filter((user) => ["BDA"].includes(user.role));
         setStaffList(staffOnly.length ? staffOnly : allStaff);
         setEntrepreneurs(asArray(entrepreneurResponse));
       } catch (error) {

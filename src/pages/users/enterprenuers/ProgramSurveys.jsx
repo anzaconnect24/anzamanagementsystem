@@ -20,9 +20,9 @@ import {
   setSurveyStatus,
 } from "@/controllers/survey_controller";
 
-// Staff write the surveys a programme runs. "Staff" is stored as either
-// "Staff" or "Reviewer" (see SignUp).
-const CAN_MANAGE_ROLES = ["Admin", "Staff", "Reviewer"];
+// Who may open the survey builder for a programme. Mirrors AUTHOR_ROLES on
+// the survey API.
+const CAN_MANAGE_ROLES = ["ME"];
 
 const formatDate = (value) => {
   if (!value) return "N/A";

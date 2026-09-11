@@ -54,10 +54,10 @@ const Page = () => {
     setSelectedBdaUuid("");
     setShowBdaModal(true);
     // Staff-role users are the Business Development Advisors (BDAs).
-    // "Staff" is displayed for users stored with role "Reviewer".
+    // Business Development Advisors.
     getReviewers(1000, 1).then((body) => {
       const all = Array.isArray(body) ? body : Array.isArray(body?.data) ? body.data : [];
-      const staffOnly = all.filter((user) => ["Staff", "Reviewer"].includes(user.role));
+      const staffOnly = all.filter((user) => ["BDA"].includes(user.role));
       setBdaList(staffOnly.length ? staffOnly : all);
     });
   };
@@ -953,7 +953,7 @@ const Page = () => {
             </div>
           </div>
 
-          {["Admin", "Mentor", "Investor", "Staff"].includes(
+          {["Admin", "Mentor", "Investor", "BDA"].includes(
             userDetails.role,
           ) && (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
@@ -1290,7 +1290,7 @@ const Page = () => {
             )}
 
             <div className="mt-4 flex flex-col gap-4">
-              {["Admin", "Staff"].includes(userDetails.role) && (
+              {["Admin", "BDA"].includes(userDetails.role) && (
                 <button
                   onClick={handleDownloadAIReport}
                   disabled={pdfLoading}

@@ -247,6 +247,60 @@ export const getMeIndicatorHistory = async (uuid, indicatorUuid) => {
   }
 };
 
+const operation = async (method, path, data, params) => {
+  try {
+    const response = await axios({ method, url: `${BASE()}${path}`, data, params, headers });
+    return response.data;
+  } catch (error) {
+    return failure(error, "M&E operation failed");
+  }
+};
+
+export const getMeOperationsDashboard = (uuid) => operation("get", `/${encodeURIComponent(uuid)}/operations/dashboard`);
+export const getMyMeDashboard=(uuid)=>operation("get",`/${encodeURIComponent(uuid)}/my-dashboard`);
+export const getMePortfolioDashboard=(params={})=>operation("get","/portfolio/dashboard",null,params);
+export const getMeReports = (uuid, params = {}) => operation("get", `/${encodeURIComponent(uuid)}/reports`, null, params);
+export const saveMeReport = (uuid, data) => operation("post", `/${encodeURIComponent(uuid)}/reports`, data);
+export const submitMeReport = (uuid, reportUuid) => operation("post", `/${encodeURIComponent(uuid)}/reports/${encodeURIComponent(reportUuid)}/submit`);
+export const reviewMeReport = (uuid, reportUuid, data) => operation("patch", `/${encodeURIComponent(uuid)}/reports/${encodeURIComponent(reportUuid)}/review`, data);
+export const getMeAssessments = (uuid, params = {}) => operation("get", `/${encodeURIComponent(uuid)}/assessments`, null, params);
+export const getMeAssessmentTemplates=(uuid)=>operation("get",`/${encodeURIComponent(uuid)}/assessment-templates`);
+export const saveMeAssessmentTemplate=(uuid,data)=>operation("post",`/${encodeURIComponent(uuid)}/assessment-templates`,data);
+export const saveMeAssessment = (uuid, data) => operation("post", `/${encodeURIComponent(uuid)}/assessments`, data);
+export const reviewMeAssessment=(uuid,recordUuid,data)=>operation("patch",`/${encodeURIComponent(uuid)}/assessments/${encodeURIComponent(recordUuid)}/review`,data);
+export const compareMeAssessments = (uuid, params = {}) => operation("get", `/${encodeURIComponent(uuid)}/assessments/compare`, null, params);
+export const getMeMetrics = (uuid, params = {}) => operation("get", `/${encodeURIComponent(uuid)}/metrics`, null, params);
+export const getMeEvidence = (uuid, params = {}) => operation("get", `/${encodeURIComponent(uuid)}/evidence`, null, params);
+export const saveMeEvidence = (uuid, data) => operation("post", `/${encodeURIComponent(uuid)}/evidence`, data);
+export const reviewMeEvidence=(uuid,recordUuid,data)=>operation("patch",`/${encodeURIComponent(uuid)}/evidence/${encodeURIComponent(recordUuid)}/review`,data);
+export const uploadMeEvidence=async(uuid,data)=>{try{const response=await axios.post(`${BASE()}/${encodeURIComponent(uuid)}/evidence/upload`,data,{headers:{...headers,"Content-Type":"multipart/form-data"}});return response.data;}catch(error){return failure(error,"Failed to upload evidence");}};
+export const downloadMeEvidence=(uuid,recordUuid)=>axios.get(`${BASE()}/${encodeURIComponent(uuid)}/evidence/${encodeURIComponent(recordUuid)}/file`,{headers,responseType:"blob"});
+export const exportMeData=(uuid,type="reports")=>`${BASE()}/${encodeURIComponent(uuid)}/export?type=${encodeURIComponent(type)}`;
+export const downloadMeExport=async(uuid,type="reports")=>axios.get(exportMeData(uuid,type),{headers,responseType:"blob"});
+export const getMeActivities = (uuid) => operation("get", `/${encodeURIComponent(uuid)}/activities`);
+export const saveMeActivity = (uuid,data) => operation("post", `/${encodeURIComponent(uuid)}/activities`,data);
+export const saveMeAttendance = (uuid,activityUuid,data) => operation("put", `/${encodeURIComponent(uuid)}/activities/${encodeURIComponent(activityUuid)}/attendance`,data);
+const deliveryList=(resource)=>(uuid,params={})=>operation("get",`/${encodeURIComponent(uuid)}/${resource}`,null,params);
+const deliverySave=(resource)=>(uuid,data,recordUuid)=>operation(recordUuid?"patch":"post",`/${encodeURIComponent(uuid)}/${resource}${recordUuid?`/${encodeURIComponent(recordUuid)}`:""}`,data);
+export const getMeGoals=deliveryList("goals");
+export const saveMeGoal=deliverySave("goals");
+export const saveMeGoalMilestone=(uuid,goalUuid,data)=>operation("post",`/${encodeURIComponent(uuid)}/goals/${encodeURIComponent(goalUuid)}/milestones`,data);
+export const getMeFunding=deliveryList("funding");
+export const saveMeFunding=deliverySave("funding");
+export const getMeEmployment=deliveryList("employment");
+export const saveMeEmployment=deliverySave("employment");
+export const getMeImpact=deliveryList("impact");
+export const saveMeImpact=deliverySave("impact");
+export const getMeRisks=deliveryList("risks");
+export const refreshMeRisks=(uuid)=>operation("post",`/${encodeURIComponent(uuid)}/risks/refresh`);
+export const generateMeReminders=(uuid)=>operation("post",`/${encodeURIComponent(uuid)}/reminders/generate`);
+export const reviewMeRisk=(uuid,recordUuid,data)=>operation("patch",`/${encodeURIComponent(uuid)}/risks/${encodeURIComponent(recordUuid)}`,data);
+export const getMeDataQuality=deliveryList("data-quality");
+export const getMeMentorship=deliveryList("mentorship");
+export const resolveMeDataQuality=(uuid,recordUuid,data)=>operation("patch",`/${encodeURIComponent(uuid)}/data-quality/${encodeURIComponent(recordUuid)}/resolve`,data);
+export const getMyMeReminders=()=>operation("get","/reminders/mine");
+export const markMeReminderRead=(recordUuid)=>operation("patch",`/reminders/${encodeURIComponent(recordUuid)}/read`);
+
 // Labels for the enumerations the API returns as snake_case keys.
 const titleise = (value) =>
   String(value || "")

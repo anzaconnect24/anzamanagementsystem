@@ -44,6 +44,7 @@ import {
   FaWpforms,
   FaRegLightbulb,
   FaClipboardList,
+  FaChartLine,
 } from "react-icons/fa";
 import {
   RiTeamLine,
@@ -218,7 +219,7 @@ const Sidebar = ({
           name: t("navigation.dashboard", "Dashboard"),
           path: "/dashboard/",
           icon: <MdOutlineDashboard className="text-xl" />,
-          roles: ["Admin", "Enterprenuer", "Investor", "Mentor", "Staff"],
+          roles: ["Admin", "Enterprenuer", "Investor", "Mentor", "BDA", "ME"],
         },
       ],
     });
@@ -248,12 +249,16 @@ const Sidebar = ({
             path: "/dashboard/mentors",
           },
           {
-            name: t("navigation.staff", "Staff"),
+            name: t("navigation.bdas", "Business Development Advisors"),
             path: "/dashboard/reviewers",
           },
           {
             name: t("navigation.financeOfficers", "Finance Officers"),
             path: "/dashboard/financeOfficers",
+          },
+          {
+            name: t("navigation.meOfficers", "M&E Officers"),
+            path: "/dashboard/meOfficers",
           },
           {
             name: t("navigation.admins", "Admins"),
@@ -308,7 +313,7 @@ const Sidebar = ({
     }
 
     if (
-      ["Investor", "Enterprenuer", "Staff", "Reviewer", "Finance"].includes(
+      ["Investor", "Enterprenuer", "BDA", "Finance"].includes(
         role,
       )
     ) {
@@ -319,7 +324,7 @@ const Sidebar = ({
       });
     }
 
-    if (["Staff", "Reviewer", "Finance"].includes(role)) {
+    if (["BDA", "Finance"].includes(role)) {
       peopleItems.push({
         name: t("navigation.investors", "Investors"),
         path: "/dashboard/investors",
@@ -371,11 +376,10 @@ const Sidebar = ({
 
     // Portfolio Support gathers the two ways staff work across the portfolio:
     // the programmes startups are enrolled in, and the grants they are tracked
-    // against. "Staff" users are stored with role "Reviewer" (see SignUp), so
-    // both values must be accepted.
+    // against.
     const portfolioItems = [];
 
-    if (["Admin", "Staff", "Reviewer"].includes(role)) {
+    if (["Admin", "BDA"].includes(role)) {
       // Programme categories -> programmes -> the startups enrolled in each.
       portfolioItems.push({
         name: t("navigation.programManagement", "Program Management"),
@@ -386,7 +390,7 @@ const Sidebar = ({
 
     // Grant management sits with the BDA tracker and belongs to Staff, not
     // Admin — it was deliberately moved off Admin to the Finance team.
-    if (["Staff", "Reviewer"].includes(role)) {
+    if (["BDA"].includes(role)) {
       portfolioItems.push({
         name: t("navigation.staffTracker", "Grant Management"),
         path: "/dashboard/mentorTracker",
@@ -402,20 +406,50 @@ const Sidebar = ({
       });
     }
 
-    if (["Enterprenuer"].includes(role) && inProgram) {
+    // Monitoring & Evaluation belongs to the M&E Officer ("ME") alone. It sat
+    // with Staff, then briefly with Admin as well; both were removed.
+    if (role === "ME") {
+      categories.push({
+        id: "monitoringEvaluation",
+        title: t("navigation.monitoringEvaluation", "Monitoring & Evaluation"),
+        items: [
+          {
+            name: t("navigation.mePortfolio", "M&E Portfolio"),
+            path: "/dashboard/programManagement/me",
+            icon: <MdAssignment className="text-xl" />,
+          },
+          {
+            name: t("navigation.programmeMe", "Programme M&E"),
+            path: "/dashboard/programManagement",
+            icon: <FaChartLine className="text-xl" />,
+          },
+        ],
+      });
+    }
+
+    if (["Enterprenuer"].includes(role)) {
       categories.push({
         id: "milestones",
         title: t("navigation.enterpriseGrowth", "Enterprise Growth"),
         items: [
-          {
-            name: t("navigation.grantManagement", "Grant Management"),
-            path: "/dashboard/myMilestones",
-            icon: <FaWpforms className="text-xl" />,
-          },
+          ...(inProgram
+            ? [
+                {
+                  name: t("navigation.grantManagement", "Grant Management"),
+                  path: "/dashboard/myMilestones",
+                  icon: <FaWpforms className="text-xl" />,
+                },
+              ]
+            : []),
           {
             name: t("navigation.coachingSessions", "Coaching Sessions"),
             path: "/dashboard/coachingSessions",
             icon: <BsCalendar3 className="text-xl" />,
+          },
+          {
+            name: t("navigation.myMeProgress", "Monitoring and Evaluation"),
+            path: "/dashboard/my-me-progress",
+            icon: <FaClipboardList className="text-xl" />,
           },
         ],
       });
@@ -628,31 +662,52 @@ const Sidebar = ({
       });
     }
 
-    if (
-      ["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)
-    ) {
+    if (["Admin", "Enterprenuer", "BDA", "Mentor"].includes(role)) {
+      const learnItems = [
+        {
+          name: t("navigation.generalResources", "General Resources"),
+          path: "/dashboard/generalResources",
+        },
+        {
+          name: t("navigation.businessTools", "Business Tools"),
+          path: "/dashboard/businessTools",
+        },
+      ];
+
+      // Class Rooms is where a startup takes the courses on its own
+      // programme, so it is listed for startups only. The new-course badge
+      // is only ever counted for them anyway.
+      if (role === "Enterprenuer") {
+        learnItems.push({
+          name: t("navigation.availableCourses", "Available Courses"),
+          path: "/dashboard/classRooms",
+          badge: newCourses,
+          badgeTitle:
+            newCourses === 1
+              ? "1 new course is available on your program"
+              : `${newCourses} new courses are available on your program`,
+        });
+
+        // The course player: working through the modules, workshops and
+        // resources of the programme they are already on.
+        learnItems.push({
+          name: t("navigation.programLearning", "Program Learning"),
+          path: "/dashboard/learn",
+        });
+      }
+
+      // Writing a course once and choosing its programmes is Admin work.
+      if (role === "Admin") {
+        learnItems.push({
+          name: t("navigation.courseLibrary", "Course Library"),
+          path: "/dashboard/courses/library",
+        });
+      }
+
       programsItems.push({
-        name: t("navigation.learnAndGrow", "Learn & Grow"),
+        name: t("navigation.learnAndGrow", "Learn and Grow"),
         icon: <IoDocumentTextOutline className="text-xl" />,
-        submenu: [
-          {
-            name: t("navigation.generalResources", "General Resources"),
-            path: "/dashboard/generalResources",
-          },
-          {
-            name: t("navigation.businessTools", "Business Tools"),
-            path: "/dashboard/businessTools",
-          },
-          {
-            name: t("navigation.classRooms", "Class Rooms"),
-            path: "/dashboard/classRooms",
-            badge: newCourses,
-            badgeTitle:
-              newCourses === 1
-                ? "1 new course is available on your program"
-                : `${newCourses} new courses are available on your program`,
-          },
-        ],
+        submenu: learnItems,
       });
     }
 
@@ -666,7 +721,7 @@ const Sidebar = ({
     }
 
     if (
-      ["Admin", "Enterprenuer", "Staff", "Mentor", "Reviewer"].includes(role)
+      ["Admin", "Enterprenuer", "BDA", "Mentor"].includes(role)
     ) {
       programsItems.push({
         name: t("navigation.successStories", "Success Stories"),
@@ -687,11 +742,11 @@ const Sidebar = ({
       [
         "Enterprenuer",
         "Investor",
-        "Staff",
+        "BDA",
         "Mentor",
         "Admin",
-        "Reviewer",
         "Finance",
+        "ME",
       ].includes(role)
     ) {
       categories.push({

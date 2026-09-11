@@ -16,6 +16,7 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import Loader from "@/components/common/Loader";
+import ProgramMEOperations from "@/components/me/ProgramMEOperations";
 import { UserContext } from "../../../layouts/DashboardLayout";
 import {
   archiveMeIndicator,
@@ -35,14 +36,28 @@ import {
   updateMeIndicator,
 } from "@/controllers/me_controller";
 
-// Configuring the framework is M&E Manager / Programme Manager work. The
-// platform stores those staff as "Staff" or "Reviewer" (see SignUp).
-const CAN_MANAGE_ROLES = ["Admin", "Staff", "Reviewer"];
+// Configuring the framework and verifying data is the M&E Officer's job
+// (role "ME"). Neither Staff nor Admin have M&E access.
+const CAN_MANAGE_ROLES = ["ME"];
 
 const TABS = [
   { key: "overview", label: "Overview" },
   { key: "framework", label: "Results Framework" },
   { key: "indicators", label: "Indicators" },
+  { key: "operations", label: "M&E Dashboard" },
+  { key: "reports", label: "Progress Reports" },
+  { key: "assessments", label: "Assessments" },
+  { key: "assessmentSetup", label: "Assessment Setup" },
+  { key: "performance", label: "Business Performance" },
+  { key: "activities", label: "Activities" },
+  { key: "goals", label: "Goals" },
+  { key: "funding", label: "Funding" },
+  { key: "employment", label: "Employment" },
+  { key: "impact", label: "Impact" },
+  { key: "mentorship", label: "Mentorship" },
+  { key: "risks", label: "Risk Flags" },
+  { key: "quality", label: "Data Quality" },
+  { key: "evidence", label: "Evidence" },
 ];
 
 const formatDate = (value) => {
@@ -964,6 +979,10 @@ const ProgramME = () => {
       )}
 
       {/* ---------------------------------------------------------- MODALS */}
+      {["operations", "reports", "assessments", "performance", "evidence"].includes(tab) && (
+        <ProgramMEOperations programUuid={uuid} section={tab} canManage={canManage} />
+      )}
+
       {resultForm && (
         <Modal
           title={resultForm.parentUuid ? "Add Output" : "Add Outcome"}

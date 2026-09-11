@@ -1,6 +1,7 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { getEnterprenuers } from "@/controllers/user_controller";
 import {
   getCohortProgramOptions,
@@ -157,18 +158,27 @@ const Enterprenuers = () => {
       setIsFetching(true);
     }
 
-    getEnterprenuers(limit, page, debouncedKeyword, revenueParams).then(
-      (body) => {
+    getEnterprenuers(limit, page, debouncedKeyword, revenueParams)
+      .then((body) => {
         let filteredData = Array.isArray(body?.data) ? [...body.data] : [];
 
         filteredData = applyFilters(filteredData);
 
         setCount(body?.count || 0);
         setUsers(filteredData);
+      })
+      // Without this the page sat on its loading spinner forever whenever the
+      // request failed, which reads as "Startups does not open" rather than as
+      // an error anyone can act on.
+      .catch(() => {
+        setUsers([]);
+        setCount(0);
+        toast.error("Failed to load startups");
+      })
+      .finally(() => {
         setloading(false);
         setIsFetching(false);
-      },
-    );
+      });
   }, [sortConfig, filters, page, debouncedKeyword]);
 
   const applyFilters = (filteredData) => {

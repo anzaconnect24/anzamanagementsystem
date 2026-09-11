@@ -23,9 +23,8 @@ import {
 } from "@/controllers/course_controller";
 import { Field, Modal, inputClass } from "@/components/learning/formBits";
 
-// Staff author the courses a programme runs. "Staff" is stored as either
-// "Staff" or "Reviewer" (see SignUp).
-const CAN_MANAGE_ROLES = ["Admin", "Staff", "Reviewer"];
+// Business Development Advisors author the courses a programme runs.
+const CAN_MANAGE_ROLES = ["Admin", "BDA"];
 
 const blank = {
   title: "",

@@ -6,7 +6,7 @@ import { createCohortSession } from "@/controllers/cohort_controller";
 
 // Setting up a coaching session for one startup. Shared by the program's
 // startup roster and its Coaching Sessions page so both behave identically.
-export const CAN_COACH_ROLES = ["Admin", "Staff", "Reviewer", "Mentor"];
+export const CAN_COACH_ROLES = ["Admin", "BDA", "Mentor"];
 
 export const SESSION_TYPES = [
   "One-on-one coaching",

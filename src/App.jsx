@@ -46,6 +46,7 @@ import Mentors from "./pages/users/mentors/Mentors";
 import Reviewers from "./pages/users/reviewers/Reviewers";
 import Admins from "./pages/users/admins/Admins";
 import FinanceOfficers from "./pages/users/financeOfficers/FinanceOfficers";
+import MEOfficers from "./pages/users/meOfficers/MEOfficers";
 import InterestedEnterprenuers from "./pages/users/interestedEnterprenuers/InterestedEntreprenuers";
 
 // Mentor Pages
@@ -119,10 +120,18 @@ import SurveyBuilder from "./pages/users/enterprenuers/SurveyBuilder";
 import ProgramSurveys from "./pages/users/enterprenuers/ProgramSurveys";
 import ProgramCourseList from "./pages/users/enterprenuers/ProgramCourseList";
 import ProgramME from "./pages/users/enterprenuers/ProgramME";
+import ProgramCalendar from "./pages/users/enterprenuers/ProgramCalendar";
+import ProgramCoaching from "./pages/users/enterprenuers/ProgramCoaching";
+import ProgramDocuments from "./pages/users/enterprenuers/ProgramDocuments";
+import ProgramComms from "./pages/users/enterprenuers/ProgramComms";
+import ProgramReports from "./pages/users/enterprenuers/ProgramReports";
+import MEPortfolioDashboard from "./pages/users/enterprenuers/MEPortfolioDashboard";
 import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
 import MySurveys from "./pages/learnandgrow/surveys/MySurveys";
 import CoursePlayer from "./pages/learnandgrow/player/CoursePlayer";
 import CourseDetails from "./pages/learnandgrow/courses/CourseDetails";
+import CourseLibrary from "./pages/learnandgrow/courses/CourseLibrary";
+import AddCourse from "./pages/learnandgrow/courses/AddCourse";
 import TakeSurvey from "./pages/learnandgrow/surveys/TakeSurvey";
 import MessagesWithUuid from "./pages/chat/messages/MessagesWithUuid";
 
@@ -247,6 +256,7 @@ import EnterpriseTrackerDetails from "./pages/tracker/mentor/EnterpriseTrackerDe
 import EnterpriseKyc from "./pages/tracker/mentor/EnterpriseKyc";
 import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
 import CoachingSessions from "./pages/tracker/entreprenuer/CoachingSessions";
+import MyMEProgress from "./pages/tracker/entreprenuer/MyMEProgress";
 import GrantContract from "./pages/tracker/entreprenuer/GrantContract";
 import ProgramMemberRoute from "./components/guards/ProgramMemberRoute";
 import RoleRoute from "./components/guards/RoleRoute";
@@ -331,6 +341,15 @@ function App() {
 
             {/* Program Management (Admin/Staff): category -> program -> startups. */}
             <Route path="programManagement" element={<ProgramCategories />} />
+            {/* Monitoring & Evaluation is the M&E Officer's workspace alone. */}
+            <Route
+              path="programManagement/me"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <MEPortfolioDashboard />
+                </RoleRoute>
+              }
+            />
             <Route
               path="programManagement/category/:category"
               element={<StartupPrograms />}
@@ -356,29 +375,133 @@ function App() {
               path="programManagement/module/:uuid"
               element={<ModuleDetails />}
             />
+            {/* Writing surveys is M&E work; startups answer them through
+                /dashboard/surveys, which stays open to them. */}
             <Route
               path="programManagement/program/:uuid/surveys"
-              element={<ProgramSurveys />}
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <ProgramSurveys />
+                </RoleRoute>
+              }
+            />
+            {/* The implementation calendar belongs to whoever runs the
+                programme: Admin, or the advisor leading it. The API narrows
+                it to this programme’s own lead. */}
+            {/* The report builder. Reading is open to whoever reports on the
+                programme; building and finalising are narrowed by the API. */}
+            <Route
+              path="programManagement/program/:uuid/reports"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramReports />
+                </RoleRoute>
+              }
+            />
+            {/* Cohort communications and the internal alert board. Reading is
+                open to whoever reports on the programme; sending is narrowed
+                by the API to Admin and the lead. */}
+            <Route
+              path="programManagement/program/:uuid/communications"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramComms />
+                </RoleRoute>
+              }
+            />
+            {/* The document library. Finance and M&E read it; filing is
+                narrowed by the API to Admin and the programme lead. */}
+            <Route
+              path="programManagement/program/:uuid/documents"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramDocuments />
+                </RoleRoute>
+              }
+            />
+            {/* Coaching oversight. Mentors are admitted too - the API shows
+                them only the enterprises they coach, and holds back the
+                private notes on anyone else’s confidential sessions. */}
+            <Route
+              path="programManagement/program/:uuid/coaching"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "Mentor", "ME"]}>
+                  <ProgramCoaching />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="programManagement/program/:uuid/calendar"
+              element={
+                <RoleRoute allow={["Admin", "BDA"]}>
+                  <ProgramCalendar />
+                </RoleRoute>
+              }
             />
             <Route
               path="programManagement/program/:uuid/me"
-              element={<ProgramME />}
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <ProgramME />
+                </RoleRoute>
+              }
             />
             <Route path="learn" element={<CoursePlayer />} />
             {/* The course page a startup reads before enrolling. */}
+            {/* The admin course library: write a course once and choose the
+                programs it appears on. Listed before "courses/:courseUuid"
+                so "library" is not read as a course uuid. */}
+            <Route
+              path="courses/library"
+              element={
+                <RoleRoute allow={["Admin"]}>
+                  <CourseLibrary />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="courses/library/new"
+              element={
+                <RoleRoute allow={["Admin"]}>
+                  <AddCourse />
+                </RoleRoute>
+              }
+            />
             <Route path="courses/:courseUuid" element={<CourseDetails />} />
             <Route path="learn/course/:courseUuid" element={<CoursePlayer />} />
             <Route path="learn/:uuid" element={<CoursePlayer />} />
             <Route path="surveys" element={<MySurveys />} />
-            <Route path="surveys/new" element={<SurveyBuilder />} />
+            <Route
+              path="surveys/new"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyBuilder />
+                </RoleRoute>
+              }
+            />
             <Route path="surveys/:uuid/take" element={<TakeSurvey />} />
-            <Route path="surveys/:uuid/edit" element={<SurveyBuilder />} />
-            <Route path="surveys/:uuid/results" element={<SurveyResults />} />
+            <Route
+              path="surveys/:uuid/edit"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyBuilder />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="surveys/:uuid/results"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyResults />
+                </RoleRoute>
+              }
+            />
             <Route path="investors" element={<Investors />} />
             <Route path="mentors" element={<Mentors />} />
             <Route path="reviewers" element={<Reviewers />} />
             <Route path="admins" element={<Admins />} />
             <Route path="financeOfficers" element={<FinanceOfficers />} />
+            <Route path="meOfficers" element={<MEOfficers />} />
             <Route
               path="interestedEnterprenuers"
               element={<InterestedEnterprenuers />}
@@ -435,12 +558,9 @@ function App() {
             />
             <Route
               path="coachingSessions"
-              element={
-                <ProgramMemberRoute>
-                  <CoachingSessions />
-                </ProgramMemberRoute>
-              }
+              element={<CoachingSessions />}
             />
+            <Route path="my-me-progress" element={<MyMEProgress />} />
             <Route
               path="myMilestones/kyc"
               element={
@@ -782,7 +902,17 @@ function App() {
               path="programsApplications"
               element={<ProgramsApplications />}
             />
-            <Route path="classRooms" element={<ClassRooms />} />
+            {/* Courses is a learner page. Admin reaches courses through the
+                Course Library instead, so it is listed by every role except
+                Admin rather than left open by URL. */}
+            <Route
+              path="classRooms"
+              element={
+                <RoleRoute allow={["Enterprenuer", "BDA", "Mentor", "Finance", "ME"]}>
+                  <ClassRooms />
+                </RoleRoute>
+              }
+            />
             <Route path="generalResources" element={<GeneralResources />} />
             <Route path="businessTools" element={<BusinessTools />} />
             <Route

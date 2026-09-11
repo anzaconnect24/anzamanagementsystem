@@ -79,7 +79,7 @@ const FundingAgreements = () => {
           : Array.isArray(staffBody?.data)
             ? staffBody.data
             : [];
-        const staffOnly = all.filter((u) => u.role === "Staff");
+        const staffOnly = all.filter((u) => u.role === "BDA");
         setBdaList(staffOnly.length ? staffOnly : all);
       })
       .catch(() => toast.error("Failed to load startups"))

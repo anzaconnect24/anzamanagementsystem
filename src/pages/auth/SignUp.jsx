@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import Spinner from "@/components/spinner";
 import { register } from "@/controllers/user_controller";
 import { createBusiness } from "@/controllers/business_controller";
-import { createStaffProfile } from "@/controllers/staff_profile_controller";
 import { createMentorProfile } from "@/controllers/mentor_profile_controller";
 import { getSectors } from "@/controllers/sector_controller";
 import { createInvestorProfile } from "@/controllers/investor_profile_controller";
@@ -20,11 +19,25 @@ import InvestorSignupForm from "../../component/investorSignupForm";
 import MentorSignupForm from "../../component/mentorSignupForm";
 import { Eye, EyeOff, UserRound } from "lucide-react";
 
+// The roles a visitor can register as. Internal staff accounts - Business
+// Development Advisor, Finance Officer, M&E Officer and Admin - are created
+// by an Admin from the Users page instead, and the register endpoint rejects
+// them, so they are deliberately absent here.
+const ROLE_OPTIONS = [
+  {
+    value: "Enterprenuer",
+    labelKey: "roles.entrepreneur",
+    label: "Entrepreneur",
+  },
+  { value: "Investor", labelKey: "roles.investor", label: "Investor" },
+  { value: "Mentor", labelKey: "roles.mentor", label: "Mentor" },
+];
+
 const SignUp = () => {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const [role, setRole] = useState("Reviewer");
+  const [role, setRole] = useState("Enterprenuer");
   const [loading, setloading] = useState(false);
   const [sectors, setSectors] = useState([]);
   const [showPassword, setshowPassword] = useState(false);
@@ -75,16 +88,14 @@ const SignUp = () => {
   const steps =
     role === "Enterprenuer"
       ? ["User Information", "Business Information", "Profile Image"]
-      : role === "Reviewer" || role === "Finance"
-        ? ["User Information", "Profile Image"]
-        : role === "Mentor"
-          ? [
-              "User Information",
-              "Mentorship Profile",
-              "Availability & Motivation",
-              "Profile Image",
-            ]
-          : ["User Information", "Profile Information", "Profile Image"];
+      : role === "Mentor"
+        ? [
+            "User Information",
+            "Mentorship Profile",
+            "Availability & Motivation",
+            "Profile Image",
+          ]
+        : ["User Information", "Profile Information", "Profile Image"];
 
   const inputClass =
     "h-[40px] w-full rounded-lg border border-gray-300 bg-[#ffffff] px-5 text-[16px] text-black outline-none focus:border-[#082d77] focus:ring-2 focus:ring-[#082d77]/20";
@@ -242,18 +253,6 @@ const SignUp = () => {
                 };
               }
 
-              let staffData;
-
-              if (role === "Reviewer") {
-                staffData = {
-                  title: formValues.staffTitle,
-                  department: formValues.staffDepartment,
-                  yearOfEmployment: formValues.staffYearOfEmployment,
-                  employeeID: formValues.staffEmployeeID,
-                  supervisor: formValues.staffSupervisor,
-                };
-              }
-
               let mentorData;
 
               if (role === "Mentor") {
@@ -294,11 +293,6 @@ const SignUp = () => {
                     for: "Admin",
                   });
 
-                  if (role === "Reviewer") {
-                    staffData.user_uuid = data.body.uuid;
-                    createStaffProfile(staffData);
-                  }
-
                   if (role === "Mentor") {
                     mentorData.user_uuid = data.body.uuid;
                     // Surfaced rather than swallowed: without this profile the
@@ -315,7 +309,7 @@ const SignUp = () => {
                   if (role === "Enterprenuer") {
                     createNotification({
                       message: `${userData.name} has joined as ${userData.role}, waiting for confirmation`,
-                      for: "Reviewer",
+                      for: "BDA",
                     });
 
                     createBusiness(businessData).then((businessResponse) => {
@@ -432,24 +426,11 @@ const SignUp = () => {
                     className={inputClass}
                     name="role"
                   >
-                    {["Staff", "Finance", "Enterprenuer", "Investor", "Mentor"].map(
-                      (item) => (
-                        <option
-                          key={item}
-                          value={item === "Staff" ? "Reviewer" : item}
-                        >
-                          {item === "Staff"
-                            ? t("roles.staff", "Staff")
-                            : item === "Finance"
-                              ? t("roles.finance", "Finance Officer")
-                              : item === "Enterprenuer"
-                                ? t("roles.entrepreneur", "Entrepreneur")
-                                : item === "Investor"
-                                  ? t("roles.investor", "Investor")
-                                  : t("roles.mentor", "Mentor")}
-                        </option>
-                      ),
-                    )}
+                    {ROLE_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {t(item.labelKey, item.label)}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

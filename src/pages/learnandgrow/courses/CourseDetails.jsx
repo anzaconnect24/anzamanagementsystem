@@ -45,7 +45,7 @@ const CourseDetails = () => {
   const [course, setCourse] = useState(null);
   const [enrolling, setEnrolling] = useState(false);
 
-  const canAuthor = ["Admin", "Staff", "Reviewer"].includes(userDetails?.role);
+  const canAuthor = ["Admin", "BDA"].includes(userDetails?.role);
 
   const load = () => {
     setLoading(true);
@@ -95,6 +95,7 @@ const CourseDetails = () => {
 
   const enrolled = !!course.myEnrollment;
   const openable = canAuthor || enrolled;
+
   const starts = formatDay(course.startDate);
   const ends = formatDay(course.endDate);
 
@@ -190,17 +191,6 @@ const CourseDetails = () => {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-[1fr_320px]">
         {/* WHAT IS IN THE COURSE */}
         <div>
-          {course.objectives && (
-            <div className="mb-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
-              <h2 className="mb-2 text-lg font-black tracking-tight text-slate-950">
-                What you will learn
-              </h2>
-              <p className="whitespace-pre-line text-sm leading-7 text-[#667085]">
-                {course.objectives}
-              </p>
-            </div>
-          )}
-
           <h2 className="mb-1 text-2xl font-black tracking-tight text-slate-950">
             Modules in this course
           </h2>
@@ -273,9 +263,10 @@ const CourseDetails = () => {
                       </span>
 
                       {module.locked && (
-                        <span className="shrink-0 rounded-full bg-[#F2F4F7] px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-[#98A2B3]">
-                          Locked
-                        </span>
+                        <FaLock
+                          aria-label="Locked"
+                          className="shrink-0 text-xs text-[#98A2B3]"
+                        />
                       )}
                     </span>
 

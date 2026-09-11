@@ -29,7 +29,7 @@ const MentorEntreprenuer = () => {
   // mentors should appear under "My Mentors".
   const onlyMentors = (list) =>
     (Array.isArray(list) ? list : []).filter(
-      (app) => !["Reviewer", "Staff", "Finance"].includes(app?.Mentor?.role),
+      (app) => !["BDA", "Finance"].includes(app?.Mentor?.role),
     );
 
   useEffect(() => {

@@ -70,6 +70,20 @@ export const getCourse = async (courseUuid) => {
   }
 };
 
+// The whole course library across programmes, each course carrying the
+// programmes it is visible to. Admin-only on the server.
+export const getAllCourses = async () => {
+  try {
+    const response = await axios.get(`${BASE()}/courses`, {
+      headers: authHeaders(),
+    });
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
 export const createCourse = async (programUuid, data) => {
   try {
     const response = await axios.post(

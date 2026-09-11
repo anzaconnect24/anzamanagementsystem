@@ -26,7 +26,7 @@ import {
 const DOMAIN_LABELS = {
   commercial_marketing: "Commercial and Market Domain",
   financial: "Financial Domain",
-  legal_compliance: "Legal & Compliance Domain",
+  legal_compliance: "Legal and Compliance Domain",
   operations: "Operations Domain",
 };
 
