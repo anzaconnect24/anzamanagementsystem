@@ -60,6 +60,43 @@ export const setCohortLeads = async (uuid, userUuids) => {
   }
 };
 
+// The programme workplan: outputs, their activities, and the month/week
+// columns the timeline grid is drawn from. The columns are computed by the
+// API so the screen and any later export agree on what a week is.
+export const getProgramWorkplan = async (uuid) => {
+  try {
+    const response = await axios.get(
+      `${BASE()}/${encodeURIComponent(uuid)}/workplan`,
+      { headers },
+    );
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    throw error;
+  }
+};
+
+// Saves the plan whole - rows reorder and move between outputs, so a partial
+// save would be meaningless.
+export const saveProgramWorkplan = async (uuid, outputs) => {
+  try {
+    const response = await axios.put(
+      `${BASE()}/${encodeURIComponent(uuid)}/workplan`,
+      { outputs },
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to save the workplan",
+      }
+    );
+  }
+};
+
 // Who on this programme receives a grant. Every enrolled startup comes back
 // as a candidate, with the ones already selected marked and their committed
 // figure alongside. Disbursement is read-only here - that is the Finance
@@ -263,6 +300,73 @@ export const uploadProgramDocument = async (uuid, form, recordUuid) => {
       error?.response?.data || {
         status: false,
         message: "Failed to file the document",
+      }
+    );
+  }
+};
+
+// Retag or rename a filed document — including moving it between folders.
+// The files themselves are untouched; this is the label, not the contents.
+export const updateProgramDocument = async (uuid, recordUuid, body) => {
+  try {
+    const response = await axios.patch(
+      `${BASE()}/${encodeURIComponent(uuid)}/documents/${encodeURIComponent(recordUuid)}`,
+      body,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to update the document",
+      }
+    );
+  }
+};
+
+// Folders within the library. They are read back with the documents, so there
+// is no getter here. Without a folderUuid this creates one; with it, renames
+// or recolours that folder.
+export const saveProgramDocumentFolder = async (uuid, body, folderUuid) => {
+  try {
+    const path = `${BASE()}/${encodeURIComponent(uuid)}/document-folders`;
+
+    const response = folderUuid
+      ? await axios.patch(
+          `${path}/${encodeURIComponent(folderUuid)}`,
+          body,
+          { headers },
+        )
+      : await axios.post(path, body, { headers });
+
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to save the folder",
+      }
+    );
+  }
+};
+
+// Removes the folder, never its documents: they return to Unfiled.
+export const deleteProgramDocumentFolder = async (uuid, folderUuid) => {
+  try {
+    const response = await axios.delete(
+      `${BASE()}/${encodeURIComponent(uuid)}/document-folders/${encodeURIComponent(folderUuid)}`,
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Failed to remove the folder",
       }
     );
   }

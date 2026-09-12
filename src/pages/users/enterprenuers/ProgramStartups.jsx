@@ -106,6 +106,17 @@ const STAT_TILES = [
   },
 ];
 
+// Startup names are entered however the founder typed them — PAYGUARD
+// LIMITED, ekomobility — so they are normalised for display rather than
+// shouted back. Done here rather than with CSS `capitalize`, which leaves an
+// all-caps name all-caps. Mirrors formatCourseName on the programmes page.
+const startupName = (value) =>
+  String(value || "")
+    .trim()
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
 const formatDate = (value) => {
   if (!value) return "N/A";
   const date = new Date(value);
@@ -268,6 +279,127 @@ const ProgramStartups = () => {
 
   const openProfile = (businessUuid) =>
     navigate(`/dashboard/enterprenuers/businessDetails/${businessUuid}`);
+
+  // The tools this programme is run with. Declared as data so the grid is a
+  // plain map and each entry states, in one place, who may see it and where it
+  // goes. Tints cycle through the palette so no two neighbours look alike.
+  const goTo = (suffix) =>
+    navigate(`/dashboard/programManagement/program/${uuid}${suffix}`);
+
+  const tools = [
+    {
+      show: canFileDocuments,
+      label: "Dashboard",
+      note: "Are we on track?",
+      icon: <FaChartLine />,
+      
+      ink: "text-blue-700",
+      onClick: () => goTo("/dashboard"),
+    },
+    {
+      show: canFileDocuments,
+      label: "Grant recipients",
+      note: "Who receives a grant",
+      icon: <FaHandHoldingUsd />,
+      
+      ink: "text-emerald-700",
+      onClick: () => goTo("/grants"),
+    },
+    {
+      show: canPlan,
+      label: "Workplan",
+      note: "Outputs and activities",
+      icon: <FaClipboardList />,
+      ink: "text-indigo-700",
+      onClick: () => goTo("/workplan"),
+    },
+    {
+      show: canPlan,
+      label: "Calendar",
+      note: "Dated delivery work",
+      icon: <FaCalendarAlt />,
+
+      ink: "text-cyan-700",
+      onClick: () => goTo("/calendar"),
+    },
+    {
+      show: canCoachView,
+      label: "Coaching",
+      note: "Who coaches whom",
+      icon: <FaUserTie />,
+      
+      ink: "text-violet-700",
+      onClick: () => goTo("/coaching"),
+    },
+    {
+      show: canFileDocuments,
+      label: "Documents",
+      note: "Contracts and evidence",
+      icon: <FaFolderOpen />,
+      
+      ink: "text-amber-700",
+      onClick: () => goTo("/documents"),
+    },
+    {
+      show: canFileDocuments,
+      label: "Communications",
+      note: "Announcements and alerts",
+      icon: <FaBell />,
+      
+      ink: "text-pink-700",
+      onClick: () => goTo("/communications"),
+    },
+    {
+      show: canFileDocuments,
+      label: "Reports",
+      note: "Monthly to donor",
+      icon: <FaFileAlt />,
+      
+      ink: "text-sky-700",
+      onClick: () => goTo("/reports"),
+    },
+    {
+      show: canViewLearning,
+      label: "Learning hub",
+      note: "Courses on this program",
+      icon: <FaBookOpen />,
+      
+      ink: "text-teal-700",
+      onClick: () => goTo("/courses"),
+    },
+    {
+      show: canManageSurveys,
+      label: "Surveys",
+      note: "Ask the cohort",
+      icon: <FaClipboardList />,
+      
+      ink: "text-purple-700",
+      onClick: () => goTo("/surveys"),
+    },
+    {
+      show: canViewMe,
+      label: "M&E",
+      note: "Indicators and impact",
+      icon: <FaChartLine />,
+      
+      ink: "text-rose-700",
+      onClick: () => goTo("/me"),
+    },
+    {
+      show: canAssignLead,
+      label: leads.length ? "Change lead" : "Assign lead",
+      note: leads.length
+        ? leads.map((person) => person.name).join(", ")
+        : "Nobody assigned yet",
+      icon: <FaUserTie />,
+      
+      ink: "text-slate-700",
+      onClick: () => {
+        setLeadPicked(leads.map((person) => person.uuid));
+        setLeadPicker(true);
+      },
+    },
+  ].filter((tool) => tool.show);
 
   const openRosterEditor = () => {
     setSelected(startups.map((item) => item.uuid));
@@ -548,6 +680,35 @@ const ProgramStartups = () => {
         </>
       )}
 
+      {/* PROGRAM TOOLS
+          Everything the lead runs this programme with, as one set of cards
+          rather than a wrapping row of look-alike buttons. The cards are
+          white; the colour is carried by the icon alone, so a tool is picked
+          out by its mark and position without the grid turning into a
+          patchwork. */}
+      {!isUnassigned && tools.length > 0 && (
+        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-5">
+          {tools.map((tool) => (
+            <button
+              key={tool.label}
+              type="button"
+              onClick={tool.onClick}
+              className="rounded-2xl bg-white p-5 text-left shadow-sm shadow-slate-200/50 ring-1 ring-slate-200/70 transition hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <span className={`text-xl ${tool.ink}`}>{tool.icon}</span>
+
+              <span className="mt-4 block text-sm font-bold text-slate-900">
+                {tool.label}
+              </span>
+
+              <span className="mt-1 block text-sm text-[#667085]">
+                {tool.note}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
       {/* TOOLBAR */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="relative min-w-[260px] flex-1">
@@ -561,156 +722,13 @@ const ProgramStartups = () => {
           />
         </div>
 
-        {!isUnassigned && canFileDocuments && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/dashboard/programManagement/program/${uuid}/grants`)
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaHandHoldingUsd className="text-lg" />
-            Grant Recipients
-          </button>
-        )}
-        {/* First in the row: the lead's landing screen, which answers "are we
-            on track" before any of the tools below it. */}
-        {!isUnassigned && canFileDocuments && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/dashboard/programManagement/program/${uuid}/dashboard`)
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#061f54]"
-          >
-            <FaChartLine className="text-lg" />
-            Program Dashboard
-          </button>
-        )}
-        {!isUnassigned && canViewLearning && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/dashboard/programManagement/program/${uuid}/courses`)
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaBookOpen className="text-lg" />
-            Learning Hub
-          </button>
-        )}
-        {!isUnassigned && canManageSurveys && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/dashboard/programManagement/program/${uuid}/surveys`)
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaClipboardList className="text-lg" />
-            Surveys
-          </button>
-        )}
-        {!isUnassigned && canViewMe && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/dashboard/programManagement/program/${uuid}/me`)
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaChartLine className="text-lg" />
-            Monitoring &amp; Evaluation
-          </button>
-        )}
-        {!isUnassigned && canFileDocuments && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `/dashboard/programManagement/program/${uuid}/communications`,
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaBell className="text-lg" />
-            Communications
-          </button>
-        )}
-        {!isUnassigned && canFileDocuments && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `/dashboard/programManagement/program/${uuid}/documents`,
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaFolderOpen className="text-lg" />
-            Documents
-          </button>
-        )}
-        {!isUnassigned && canCoachView && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `/dashboard/programManagement/program/${uuid}/coaching`,
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaUserTie className="text-lg" />
-            Coaching
-          </button>
-        )}
-        {!isUnassigned && canPlan && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(
-                `/dashboard/programManagement/program/${uuid}/calendar`,
-              )
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaCalendarAlt className="text-lg" />
-            Implementation Calendar
-          </button>
-        )}
-        {!isUnassigned && canAssignLead && (
-          <button
-            type="button"
-            onClick={() => {
-              setLeadPicked(leads.map((person) => person.uuid));
-              setLeadPicker(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaUserTie className="text-lg" />
-            {leads.length ? "Change Program Lead" : "Assign Program Lead"}
-          </button>
-        )}
-        {!isUnassigned && canFileDocuments && (
-          <button
-            type="button"
-            onClick={() =>
-              navigate(`/dashboard/programManagement/program/${uuid}/reports`)
-            }
-            className="inline-flex items-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-semibold text-[#082d77] shadow-sm ring-1 ring-[#082d77]/20 transition hover:bg-slate-50"
-          >
-            <FaFileAlt className="text-lg" />
-            Reports
-          </button>
-        )}
         {canManage && (
           <button
             type="button"
             onClick={openRosterEditor}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#082d77] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-blue-700 hover:shadow-md active:scale-[0.98]"
+            className="inline-flex items-center gap-2 rounded-lg bg-[#16a34a] px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#15803d] hover:shadow-md active:scale-[0.98]"
           >
-            <FaUserEdit className="text-lg text-blue-200" />
+            <FaUserEdit className="text-lg text-emerald-100" />
             Manage startups
           </button>
         )}
@@ -773,9 +791,9 @@ const ProgramStartups = () => {
                       className="cursor-pointer border-b border-slate-100 last:border-0 hover:bg-slate-50/70 focus:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#082d77]"
                     >
                       <td className="px-5 py-4">
-                        <span className="font-bold text-[#082d77]">
-                          {item.name ||
-                            t("users.unnamedBusiness", "Unnamed Business")}
+                        <span className="font-bold text-slate-900">
+                          {startupName(item.name) ||
+                            t("users.unnamedBusiness", "Unnamed business")}
                         </span>
                       </td>
 

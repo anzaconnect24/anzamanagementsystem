@@ -132,6 +132,7 @@ const ProgramGrants = () => {
   }
 
   const { program, summary, canEdit } = payload;
+  const grantProgramUuid = payload.grantProgram?.uuid || null;
 
   return (
     <div className="min-h-screen px-6 py-4">
@@ -242,15 +243,15 @@ const ProgramGrants = () => {
         </div>
       ) : (
         <div className="overflow-x-auto rounded-2xl bg-white shadow-sm shadow-slate-200/50">
-          <table className="w-full min-w-[900px] text-left text-sm">
+          <table className="w-full min-w-[880px] text-left text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500">
                 <th className="px-5 py-4">Receives a grant</th>
                 <th className="px-5 py-4">Startup</th>
                 <th className="px-5 py-4">Sector</th>
                 <th className="px-5 py-4">Grant committed</th>
-                <th className="px-5 py-4">Purpose</th>
                 <th className="px-5 py-4">Disbursement</th>
+                <th className="px-5 py-4">Grant</th>
               </tr>
             </thead>
 
@@ -310,20 +311,6 @@ const ProgramGrants = () => {
                       />
                     </td>
 
-                    <td className="px-5 py-4">
-                      <input
-                        className={inputClass}
-                        placeholder="What the grant is for"
-                        disabled={!canEdit || !state.isRecipient}
-                        value={state.grantPurpose ?? ""}
-                        onChange={(e) =>
-                          update(row.businessUuid, {
-                            grantPurpose: e.target.value,
-                          })
-                        }
-                      />
-                    </td>
-
                     {/* Read-only: disbursing is the finance officer's step, and
                         a startup already paid cannot be taken off the roster. */}
                     <td className="px-5 py-4">
@@ -335,6 +322,29 @@ const ProgramGrants = () => {
                       ) : (
                         <span className="text-xs text-slate-400">
                           Not disbursed
+                        </span>
+                      )}
+                    </td>
+
+                    {/* The recipient’s own grant: contract, tranches and
+                        milestone reporting. Only once they are actually on
+                        the roster and the grant programme exists. */}
+                    <td className="px-5 py-4">
+                      {row.isRecipient && grantProgramUuid && row.entreprenuerUuid ? (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            navigate(
+                              `/dashboard/trackerPrograms/${grantProgramUuid}/startup/${row.entreprenuerUuid}`,
+                            )
+                          }
+                          className="whitespace-nowrap rounded-lg border border-[#082d77]/20 px-3 py-2 text-xs font-semibold text-[#082d77] transition hover:bg-slate-50"
+                        >
+                          Open grant
+                        </button>
+                      ) : (
+                        <span className="text-xs text-slate-400">
+                          {row.isRecipient ? "Save to open" : "—"}
                         </span>
                       )}
                     </td>

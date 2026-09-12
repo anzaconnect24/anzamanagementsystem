@@ -123,10 +123,12 @@ import ProgramME from "./pages/users/enterprenuers/ProgramME";
 import ProgramCalendar from "./pages/users/enterprenuers/ProgramCalendar";
 import ProgramCoaching from "./pages/users/enterprenuers/ProgramCoaching";
 import ProgramDocuments from "./pages/users/enterprenuers/ProgramDocuments";
+import LiveFeed from "./pages/feed/LiveFeed";
 import ProgramComms from "./pages/users/enterprenuers/ProgramComms";
 import ProgramReports from "./pages/users/enterprenuers/ProgramReports";
 import ProgramDashboard from "./pages/users/enterprenuers/ProgramDashboard";
 import ProgramGrants from "./pages/users/enterprenuers/ProgramGrants";
+import ProgramWorkplan from "./pages/users/enterprenuers/ProgramWorkplan";
 import MEPortfolioDashboard from "./pages/users/enterprenuers/MEPortfolioDashboard";
 import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
 import MySurveys from "./pages/learnandgrow/surveys/MySurveys";
@@ -335,6 +337,10 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
 
+            {/* The live feed is the one screen with no role gate: every
+                signed-in user reads and writes the same board. */}
+            <Route path="feed" element={<LiveFeed />} />
+
             {/* User Management Routes */}
             <Route path="users" element={<Users />} />
             {/* Startups is the flat directory for every role. */}
@@ -390,6 +396,15 @@ function App() {
             {/* The implementation calendar belongs to whoever runs the
                 programme: Admin, or the advisor leading it. The API narrows
                 it to this programme’s own lead. */}
+            {/* The workplan: outputs, activities and when each runs. */}
+            <Route
+              path="programManagement/program/:uuid/workplan"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramWorkplan />
+                </RoleRoute>
+              }
+            />
             {/* Who on this programme gets a grant. The lead selects; the
                 finance officer disburses against what they set. */}
             <Route
@@ -623,10 +638,14 @@ function App() {
                 </RoleRoute>
               }
             />
+            {/* A recipient’s grant: contract, advisor, tranches and milestone
+                reporting. The Program Lead opens it from Grant Recipients, so
+                it is no longer Finance-only. The tracker APIs behind it
+                already accept a BDA. */}
             <Route
               path="trackerPrograms/:programUuid/startup/:entUuid"
               element={
-                <RoleRoute allow={["Finance"]}>
+                <RoleRoute allow={["Finance", "Admin", "BDA"]}>
                   <TrackerStartupDetails />
                 </RoleRoute>
               }

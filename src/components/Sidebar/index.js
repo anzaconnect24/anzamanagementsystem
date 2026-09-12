@@ -45,6 +45,7 @@ import {
   FaRegLightbulb,
   FaClipboardList,
   FaChartLine,
+  FaRegCommentDots,
 } from "react-icons/fa";
 import {
   RiTeamLine,
@@ -220,6 +221,21 @@ const Sidebar = ({
           path: "/dashboard/",
           icon: <MdOutlineDashboard className="text-xl" />,
           roles: ["Admin", "Enterprenuer", "Investor", "Mentor", "BDA", "ME"],
+        },
+        {
+          // The one item every role shares: the community board.
+          name: t("navigation.liveFeed", "Live Feed"),
+          path: "/dashboard/feed",
+          icon: <FaRegCommentDots className="text-xl" />,
+          roles: [
+            "Admin",
+            "Enterprenuer",
+            "Investor",
+            "Mentor",
+            "BDA",
+            "ME",
+            "Finance",
+          ],
         },
       ],
     });
