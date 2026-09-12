@@ -1,8 +1,6 @@
 "use client";
 import { useContext, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { ArrowLeft } from "lucide-react";
 import Loader from "@/components/common/Loader";
 import { UserContext } from "@/layouts/DashboardLayout";
 import SignedContractCard from "@/components/tracker/SignedContractCard";
@@ -18,7 +16,6 @@ const HERO_IMAGE_URL = "/images/mentor_hero.svg";
 // Standalone grant-contract page for the startup — download, sign and upload the
 // signed copy. Opened from the "Grant Contract" button on the milestones hero.
 const GrantContract = () => {
-  const navigate = useNavigate();
   const { userDetails } = useContext(UserContext);
 
   const [loading, setLoading] = useState(true);
@@ -88,15 +85,6 @@ const GrantContract = () => {
   return (
     <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-8 xl:px-12">
       <main className="mx-auto max-w-[1480px] space-y-6">
-        <button
-          type="button"
-          onClick={() => navigate("/dashboard/myMilestones")}
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#082d77]"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to grant management
-        </button>
-
         <section
           className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
           style={{

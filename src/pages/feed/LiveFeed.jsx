@@ -3,12 +3,14 @@
 import { useContext, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import {
-  FaChevronDown,
+  FaBookmark,
+  FaChartBar,
   FaImage,
   FaPaperPlane,
+  FaRegBookmark,
   FaRegComment,
-  FaRegThumbsDown,
   FaRegThumbsUp,
+  FaRetweet,
   FaSearch,
   FaThumbsDown,
   FaThumbsUp,
@@ -26,6 +28,8 @@ import {
   reactToFeedPost,
   removeFeedComment,
   removeFeedPost,
+  repostFeedPost,
+  saveFeedPost,
 } from "@/controllers/feed_controller";
 import { server_url } from "@/utils/endpoint";
 
@@ -67,6 +71,17 @@ const when = (value) => {
     month: "long",
     year: "numeric",
   });
+};
+
+// The reactions a reader can leave without writing a comment. They all live
+// behind the one button: a tap leaves the first of them, holding it opens
+// the rest. Order here is the order they are offered in.
+const REACTIONS = {
+  like: { label: "Like", glyph: "👍", ink: "text-[#082d77]" },
+  dislike: { label: "Dislike", glyph: "👎", ink: "text-rose-600" },
+  love: { label: "Love", glyph: "❤️", ink: "text-rose-500" },
+  celebrate: { label: "Celebrate", glyph: "🎉", ink: "text-amber-500" },
+  insightful: { label: "Insightful", glyph: "💡", ink: "text-violet-600" },
 };
 
 const Avatar = ({ person, size = "h-10 w-10" }) => (
@@ -114,6 +129,32 @@ const LiveFeed = () => {
   const [replying, setReplying] = useState(null);
   const [confirming, setConfirming] = useState(null);
 
+  // Which post has its reaction picker open, if any. One button carries all
+  // the reactions: a tap likes, and hovering or holding it opens the rest.
+  const [picker, setPicker] = useState(null);
+  const pickerTimer = useRef(null);
+
+  const openPicker = (uuid, delay = 350) => {
+    clearTimeout(pickerTimer.current);
+    pickerTimer.current = setTimeout(() => setPicker(uuid), delay);
+  };
+
+  // Leaving closes it, but not instantly — the pointer has to cross the gap
+  // between the button and the row of faces above it.
+  const closePicker = () => {
+    clearTimeout(pickerTimer.current);
+    pickerTimer.current = setTimeout(() => setPicker(null), 250);
+  };
+
+  const cancelPicker = () => clearTimeout(pickerTimer.current);
+
+  const closePickerNow = () => {
+    clearTimeout(pickerTimer.current);
+    setPicker(null);
+  };
+
+  useEffect(() => () => clearTimeout(pickerTimer.current), []);
+
   // Posts written since this page was painted, held back rather than shoved
   // in under the reader's cursor.
   const [waiting, setWaiting] = useState(0);
@@ -122,7 +163,12 @@ const LiveFeed = () => {
   const read = (params) => getFeed({ limit: 20, ...params });
 
   const load = (params = {}) =>
-    read({ keyword: keyword.trim() || undefined, ...params })
+    read({
+      keyword: keyword.trim() || undefined,
+      // "Saved" is a narrowing the server does, not a sort the page can fake.
+      saved: sort === "saved" ? 1 : undefined,
+      ...params,
+    })
       .then((body) => {
         setPosts(body.data || []);
         setMeta({ count: body.count || 0, hasMore: !!body.hasMore });
@@ -149,6 +195,14 @@ const LiveFeed = () => {
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [keyword]);
+
+  // Switching to or from Saved changes which posts the server sends, so it
+  // re-reads rather than reordering what is already here.
+  useEffect(() => {
+    setLoading(true);
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sort]);
 
   // The feed keeps itself current, but never moves the page while it is
   // being read: new posts are counted, and go in when the reader asks.
@@ -308,23 +362,35 @@ const LiveFeed = () => {
   // Like or dislike. The button lights straight away and the server's
   // recount replaces the guess a moment later — a reaction that waits on a
   // round trip feels broken, and a guess that is never corrected drifts.
-  const onReact = async (post, value) => {
-    const next = post.myReaction === value ? 0 : value;
+  const onReact = async (post, kind) => {
+    closePickerNow();
 
-    const guess = {
-      myReaction: next,
-      likes:
-        post.likes -
-        (post.myReaction === 1 ? 1 : 0) +
-        (next === 1 ? 1 : 0),
-      dislikes:
-        post.dislikes -
-        (post.myReaction === -1 ? 1 : 0) +
-        (next === -1 ? 1 : 0),
-    };
+    // Tapping the reaction you already left takes it back.
+    const next = post.myReaction === kind ? null : kind;
+
+    const counts = { ...(post.reactions || {}) };
+
+    if (post.myReaction) {
+      counts[post.myReaction] = Math.max(
+        (counts[post.myReaction] || 1) - 1,
+        0,
+      );
+      if (!counts[post.myReaction]) delete counts[post.myReaction];
+    }
+
+    if (next) counts[next] = (counts[next] || 0) + 1;
 
     setPosts((prev) =>
-      prev.map((row) => (row.uuid === post.uuid ? { ...row, ...guess } : row)),
+      prev.map((row) =>
+        row.uuid === post.uuid
+          ? {
+              ...row,
+              myReaction: next,
+              reactions: counts,
+              reactionCount: Object.values(counts).reduce((s, n) => s + n, 0),
+            }
+          : row,
+      ),
     );
 
     const response = await reactToFeedPost(post.uuid, next);
@@ -337,8 +403,8 @@ const LiveFeed = () => {
             ? {
                 ...row,
                 myReaction: post.myReaction,
-                likes: post.likes,
-                dislikes: post.dislikes,
+                reactions: post.reactions,
+                reactionCount: post.reactionCount,
               }
             : row,
         ),
@@ -354,13 +420,66 @@ const LiveFeed = () => {
         row.uuid === post.uuid
           ? {
               ...row,
-              likes: truth.likes,
-              dislikes: truth.dislikes,
-              myReaction: truth.myReaction,
+              reactions: truth.reactions || {},
+              reactionCount: truth.reactionCount || 0,
+              myReaction: truth.myReaction || null,
             }
           : row,
       ),
     );
+  };
+
+  // Resharing puts a post of your own at the top of the feed pointing at the
+  // original, so the feed is re-read rather than patched in place.
+  const onRepost = async (post) => {
+    const response = await repostFeedPost(post.uuid);
+
+    if (response?.status === false) {
+      toast.error(response.message || "Failed to repost");
+      return;
+    }
+
+    const truth = response.body || response;
+    toast.success(truth.reposted ? "Reposted" : "Repost removed");
+
+    setLoading(true);
+    load();
+  };
+
+  const onSave = async (post) => {
+    // The bookmark fills straight away; the server's count follows.
+    setPosts((prev) =>
+      prev.map((row) =>
+        row.uuid === post.uuid ? { ...row, saved: !row.saved } : row,
+      ),
+    );
+
+    const response = await saveFeedPost(post.uuid);
+
+    if (response?.status === false) {
+      setPosts((prev) =>
+        prev.map((row) =>
+          row.uuid === post.uuid ? { ...row, saved: post.saved } : row,
+        ),
+      );
+      toast.error(response.message || "Failed to save");
+      return;
+    }
+
+    const truth = response.body || response;
+
+    setPosts((prev) =>
+      prev.map((row) =>
+        row.uuid === post.uuid
+          ? { ...row, saved: truth.saved, saveCount: truth.saveCount }
+          : row,
+      ),
+    );
+
+    // In the saved view, unsaving takes the post off the screen it is on.
+    if (!truth.saved && sort === "saved") {
+      setPosts((prev) => prev.filter((row) => row.uuid !== post.uuid));
+    }
   };
 
   const onRemovePost = async () => {
@@ -549,14 +668,15 @@ const LiveFeed = () => {
           {/* SORT AND SEARCH */}
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-white p-3 shadow-sm shadow-slate-200/50">
             <div className="relative">
-              <FaChevronDown className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-xs text-slate-400" />
+              {/* No drawn chevron here: the select brings its own. */}
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value)}
-                className="appearance-none rounded-lg bg-transparent py-2 pl-9 pr-4 text-sm font-semibold text-[#344054] outline-none"
+                className="rounded-lg border border-slate-200 bg-white py-2 pl-3 pr-8 text-sm text-[#344054] outline-none focus:border-[#082d77]"
               >
                 <option value="latest">Latest activity</option>
                 <option value="discussed">Most discussed</option>
+                <option value="saved">Saved</option>
               </select>
             </div>
 
@@ -616,8 +736,13 @@ const LiveFeed = () => {
                               {label(post.author?.role)}
                             </span>
                           </p>
-                          <p className="text-xs text-[#8a8f98]">
+                          <p className="flex items-center gap-1.5 text-xs text-[#8a8f98]">
                             {when(post.createdAt)}
+                            {post.repostOf ? (
+                              <>
+                                ·<FaRetweet /> reposted
+                              </>
+                            ) : null}
                           </p>
                         </div>
                       </div>
@@ -649,16 +774,70 @@ const LiveFeed = () => {
                         </h2>
                       ) : null}
 
-                      <p className="whitespace-pre-wrap text-sm leading-6 text-[#475467]">
-                        {post.body}
-                      </p>
+                      {post.body ? (
+                        <p className="whitespace-pre-wrap text-sm leading-6 text-[#475467]">
+                          {post.body}
+                        </p>
+                      ) : null}
+
+                      {/* A repost carries the original inside it, so the feed
+                          shows what was shared and not just that it was. */}
+                      {post.repostOf ? (
+                        <div className="mt-3 overflow-hidden rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-3 p-3">
+                            <Avatar
+                              person={post.repostOf.author}
+                              size="h-9 w-9"
+                            />
+
+                            <div className="min-w-0">
+                              <p className="truncate text-sm">
+                                <span className="font-black text-[#111a2e]">
+                                  {post.repostOf.author?.name || "Member"}
+                                </span>
+                                <span className="ml-2 text-[#8a8f98]">
+                                  {label(post.repostOf.author?.role)}
+                                </span>
+                              </p>
+                              <p className="text-xs text-[#8a8f98]">
+                                {when(post.repostOf.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+
+                          {post.repostOf.imageUrl ? (
+                            <img
+                              src={`${server_url}${post.repostOf.imageUrl}`}
+                              alt={post.repostOf.title || "Post"}
+                              className="max-h-72 w-full bg-slate-50 object-cover"
+                            />
+                          ) : null}
+
+                          <div className="p-3">
+                            {post.repostOf.title ? (
+                              <h3 className="mb-1 text-base font-black tracking-tight text-slate-950">
+                                {post.repostOf.title}
+                              </h3>
+                            ) : null}
+
+                            <p className="whitespace-pre-wrap text-sm leading-6 text-[#475467]">
+                              {post.repostOf.body}
+                            </p>
+                          </div>
+                        </div>
+                      ) : null}
                     </div>
 
-                    {/* WHO IS TALKING */}
+                    {/* WHO IS TALKING — and the way into the thread, now that
+                        the Comment button is gone. */}
                     {post.commentCount > 0 ? (
-                      <div className="flex min-w-0 items-center gap-3 border-t border-slate-100 px-4 py-2.5">
+                      <button
+                        type="button"
+                        onClick={() => toggleThread(post)}
+                        className="flex w-full min-w-0 items-center gap-3 px-4 py-2.5 text-left transition hover:bg-slate-50"
+                      >
                         {post.commenters.length ? (
-                          <div className="flex -space-x-2">
+                          <span className="flex -space-x-2">
                             {post.commenters.slice(0, 5).map((person) => (
                               <Avatar
                                 key={person.uuid}
@@ -666,79 +845,180 @@ const LiveFeed = () => {
                                 size="h-8 w-8"
                               />
                             ))}
-                          </div>
+                          </span>
                         ) : null}
 
-                        <p className="truncate text-xs text-[#667085]">
+                        <span className="truncate text-xs text-[#667085]">
                           {`${post.commenters[0]?.name || "Someone"}${
                             post.commentCount > 1
                               ? ` and ${post.commentCount - 1} other${post.commentCount - 1 === 1 ? "" : "s"}`
                               : ""
                           } commented`}
-                        </p>
-                      </div>
+                        </span>
+
+                        <span className="ml-auto shrink-0 text-xs font-semibold text-[#082d77]">
+                          {isOpen ? "Hide" : `Show ${post.commentCount}`}
+                        </span>
+                      </button>
                     ) : null}
 
-                    {/* LIKE, DISLIKE, COMMENTS */}
-                    <footer className="flex items-center gap-1 border-t border-slate-100 px-2 py-1.5">
-                      <button
-                        type="button"
-                        onClick={() => onReact(post, 1)}
-                        aria-pressed={post.myReaction === 1}
-                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition hover:bg-slate-50 ${
-                          post.myReaction === 1
-                            ? "text-[#082d77]"
-                            : "text-[#667085]"
-                        }`}
+                    {/* REACTIONS — one button holding all of them. A tap
+                        likes; holding it, or hovering, opens the rest. */}
+                    <footer className="relative flex flex-wrap items-center gap-3 px-3 py-2">
+                      <div
+                        className="relative"
+                        onMouseEnter={() => openPicker(post.uuid)}
+                        onMouseLeave={closePicker}
                       >
-                        {post.myReaction === 1 ? (
-                          <FaThumbsUp />
-                        ) : (
-                          <FaRegThumbsUp />
-                        )}
-                        Like
-                        {post.likes ? (
-                          <span className="font-black">{post.likes}</span>
-                        ) : null}
-                      </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            onReact(post, post.myReaction || "like")
+                          }
+                          onTouchStart={() => openPicker(post.uuid, 450)}
+                          onTouchEnd={cancelPicker}
+                          onContextMenu={(event) => {
+                            event.preventDefault();
+                            setPicker(post.uuid);
+                          }}
+                          aria-pressed={!!post.myReaction}
+                          title={
+                            post.myReaction
+                              ? `${REACTIONS[post.myReaction].label} — tap to take it back`
+                              : "Like — hold for more"
+                          }
+                          className={`relative z-30 inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition hover:bg-slate-50 ${
+                            post.myReaction
+                              ? REACTIONS[post.myReaction].ink
+                              : "text-[#667085]"
+                          }`}
+                        >
+                          {!post.myReaction ? (
+                            <FaRegThumbsUp />
+                          ) : post.myReaction === "like" ? (
+                            <FaThumbsUp />
+                          ) : post.myReaction === "dislike" ? (
+                            <FaThumbsDown />
+                          ) : (
+                            <span className="text-base leading-none">
+                              {REACTIONS[post.myReaction].glyph}
+                            </span>
+                          )}
 
-                      <button
-                        type="button"
-                        onClick={() => onReact(post, -1)}
-                        aria-pressed={post.myReaction === -1}
-                        className={`inline-flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold transition hover:bg-slate-50 ${
-                          post.myReaction === -1
-                            ? "text-rose-600"
-                            : "text-[#667085]"
-                        }`}
-                      >
-                        {post.myReaction === -1 ? (
-                          <FaThumbsDown />
-                        ) : (
-                          <FaRegThumbsDown />
-                        )}
-                        Dislike
-                        {post.dislikes ? (
-                          <span className="font-black">{post.dislikes}</span>
+                          {post.myReaction
+                            ? REACTIONS[post.myReaction].label
+                            : "Like"}
+                        </button>
+
+                        {picker === post.uuid ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={closePickerNow}
+                              aria-label="Close reactions"
+                              className="fixed inset-0 z-20 cursor-default"
+                            />
+
+                            <div className="absolute bottom-full left-0 z-30 mb-1 flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-1.5 shadow-lg">
+                              {Object.keys(REACTIONS).map((kind) => (
+                                <button
+                                  key={kind}
+                                  type="button"
+                                  onClick={() => onReact(post, kind)}
+                                  title={REACTIONS[kind].label}
+                                  aria-label={REACTIONS[kind].label}
+                                  className={`rounded-full px-2 py-1 text-xl transition hover:scale-125 ${
+                                    post.myReaction === kind
+                                      ? "bg-slate-100"
+                                      : ""
+                                  }`}
+                                >
+                                  {REACTIONS[kind].glyph}
+                                </button>
+                              ))}
+                            </div>
+                          </>
                         ) : null}
-                      </button>
+                      </div>
 
                       <button
                         type="button"
                         onClick={() => toggleThread(post)}
-                        className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg py-2.5 text-sm font-semibold text-[#667085] transition hover:bg-slate-50"
+                        className="inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold text-[#667085] transition hover:bg-slate-50"
                       >
                         <FaRegComment />
-                        {isOpen
-                          ? "Hide"
-                          : post.commentCount
-                            ? `Comments ${post.commentCount}`
-                            : "Comment"}
+                        Comments
+                        {post.commentCount ? (
+                          <span className="font-black">
+                            {post.commentCount}
+                          </span>
+                        ) : null}
                       </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onRepost(post)}
+                        aria-pressed={post.reposted}
+                        title={
+                          post.reposted
+                            ? "Remove your repost"
+                            : "Share this with the feed"
+                        }
+                        className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition hover:bg-slate-50 ${
+                          post.reposted ? "text-emerald-600" : "text-[#667085]"
+                        }`}
+                      >
+                        <FaRetweet />
+                        Repost
+                        {post.repostCount ? (
+                          <span className="font-black">
+                            {post.repostCount}
+                          </span>
+                        ) : null}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => onSave(post)}
+                        aria-pressed={post.saved}
+                        title={
+                          post.saved ? "Remove from saved" : "Save for later"
+                        }
+                        className={`inline-flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition hover:bg-slate-50 ${
+                          post.saved ? "text-[#082d77]" : "text-[#667085]"
+                        }`}
+                      >
+                        {post.saved ? <FaBookmark /> : <FaRegBookmark />}
+                        {post.saved ? "Saved" : "Save"}
+                      </button>
+
+                      {/* Reach: people who have had this post on screen,
+                          counted once each however often they scroll by. */}
+                      <span
+                        title={`${post.viewCount} ${post.viewCount === 1 ? "person has" : "people have"} seen this`}
+                        className="flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-[#667085]"
+                      >
+                        <FaChartBar />
+                        {post.viewCount}
+                      </span>
+
+                      {/* What everyone left, as the glyphs themselves. */}
+                      {post.reactionCount ? (
+                        <span className="ml-auto flex items-center gap-1 text-xs text-[#8a8f98]">
+                          {Object.keys(REACTIONS)
+                            .filter((kind) => post.reactions?.[kind])
+                            .map((kind) => (
+                              <span key={kind} title={REACTIONS[kind].label}>
+                                {REACTIONS[kind].glyph}
+                              </span>
+                            ))}
+                          {post.reactionCount}
+                        </span>
+                      ) : null}
                     </footer>
 
                     {isOpen ? (
-                      <div className="border-t border-slate-100 bg-slate-50/60 p-5">
+                      <div className="bg-slate-50/60 p-5">
                         {thread.length ? (
                           <ul className="mb-4 space-y-3">
                             {thread.map((comment) => (
@@ -793,7 +1073,7 @@ const LiveFeed = () => {
                     {/* Always here, whether or not the thread is open: a feed
                         you have to click twice to reply to is a feed nobody
                         replies to. */}
-                    <div className="flex items-center gap-3 border-t border-slate-100 p-4">
+                    <div className="flex items-center gap-3 p-4 pt-2">
                       <Avatar person={userDetails} size="h-9 w-9" />
 
                       <input

@@ -52,14 +52,15 @@ export const removeFeedPost = async (uuid) => {
   }
 };
 
-// Like (1), dislike (-1), or take it back (0). Sending the value that is
-// already set also takes it back, which is what tapping a lit button means.
-// The response carries the recounted totals, so the page never has to guess.
-export const reactToFeedPost = async (uuid, value) => {
+// React by name — like, dislike, love, celebrate, insightful — or pass an
+// empty kind to take it back. Sending the reaction that is already set also
+// takes it back, which is what tapping a lit button means. The response
+// carries the recounted totals, so the page never has to guess.
+export const reactToFeedPost = async (uuid, kind) => {
   try {
     const response = await axios.put(
       `${BASE()}/${encodeURIComponent(uuid)}/reaction`,
-      { value },
+      { kind: kind || "" },
       { headers },
     );
     return response.data;
@@ -67,6 +68,41 @@ export const reactToFeedPost = async (uuid, value) => {
     console.log(error.response);
     return (
       error?.response?.data || { status: false, message: "Failed to react" }
+    );
+  }
+};
+
+// Reshare a post, or take the reshare back — the same call does both. The
+// repost appears in the feed as its own post, under your name.
+export const repostFeedPost = async (uuid) => {
+  try {
+    const response = await axios.post(
+      `${BASE()}/${encodeURIComponent(uuid)}/repost`,
+      {},
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || { status: false, message: "Failed to repost" }
+    );
+  }
+};
+
+// Save a post, or unsave it. Private to whoever saved it.
+export const saveFeedPost = async (uuid) => {
+  try {
+    const response = await axios.put(
+      `${BASE()}/${encodeURIComponent(uuid)}/save`,
+      {},
+      { headers },
+    );
+    return response.data;
+  } catch (error) {
+    console.log(error.response);
+    return (
+      error?.response?.data || { status: false, message: "Failed to save" }
     );
   }
 };

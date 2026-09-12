@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  FaArrowLeft,
   FaCheckCircle,
   FaCoins,
   FaHandHoldingUsd,
@@ -136,14 +135,6 @@ const ProgramGrants = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() => navigate(`/dashboard/programManagement/program/${uuid}`)}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:underline"
-      >
-        <FaArrowLeft /> Back to program
-      </button>
-
       {/* HERO */}
       <div className="relative mb-8 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div
@@ -246,9 +237,11 @@ const ProgramGrants = () => {
           <table className="w-full min-w-[880px] text-left text-sm">
             <thead>
               <tr className="border-b border-slate-100 text-xs font-semibold text-slate-500">
-                <th className="px-5 py-4">Receives a grant</th>
                 <th className="px-5 py-4">Startup</th>
                 <th className="px-5 py-4">Sector</th>
+                {/* The decision sits next to the amount it governs: you say
+                    yes, then you say how much. */}
+                <th className="px-5 py-4">Receives a grant</th>
                 <th className="px-5 py-4">Grant committed</th>
                 <th className="px-5 py-4">Disbursement</th>
                 <th className="px-5 py-4">Grant</th>
@@ -262,10 +255,30 @@ const ProgramGrants = () => {
                 return (
                   <tr
                     key={row.businessUuid}
-                    className={`border-b border-slate-100 last:border-0 ${
-                      state.isRecipient ? "bg-emerald-50/40" : ""
-                    }`}
+                    className="border-b border-slate-100 last:border-0"
                   >
+                    <td className="px-5 py-4">
+                      {/* Sentence case in CSS rather than in the data: the
+                          registered name is what it is — "PAYGUARD LIMITED" —
+                          and rewriting it on the way in would lose the only
+                          copy of how the company actually spells itself. */}
+                      <span
+                        title={row.name}
+                        className="block font-bold lowercase text-slate-900 first-letter:uppercase"
+                      >
+                        {row.name}
+                      </span>
+                      {row.location ? (
+                        <span className="mt-0.5 block text-xs text-[#8a8f98]">
+                          {row.location}
+                        </span>
+                      ) : null}
+                    </td>
+
+                    <td className="px-5 py-4 text-[#6f6f72]">
+                      {row.sector || "—"}
+                    </td>
+
                     <td className="px-5 py-4">
                       <label className="inline-flex cursor-pointer items-center gap-2">
                         <input
@@ -283,19 +296,6 @@ const ProgramGrants = () => {
                           {state.isRecipient ? "Yes" : "No"}
                         </span>
                       </label>
-                    </td>
-
-                    <td className="px-5 py-4">
-                      <span className="font-bold text-[#082d77]">{row.name}</span>
-                      {row.location ? (
-                        <span className="mt-0.5 block text-xs text-[#8a8f98]">
-                          {row.location}
-                        </span>
-                      ) : null}
-                    </td>
-
-                    <td className="px-5 py-4 text-[#6f6f72]">
-                      {row.sector || "—"}
                     </td>
 
                     <td className="px-5 py-4">
@@ -340,11 +340,11 @@ const ProgramGrants = () => {
                           }
                           className="whitespace-nowrap rounded-lg border border-[#082d77]/20 px-3 py-2 text-xs font-semibold text-[#082d77] transition hover:bg-slate-50"
                         >
-                          Open grant
+                          Manage grant
                         </button>
                       ) : (
                         <span className="text-xs text-slate-400">
-                          {row.isRecipient ? "Save to open" : "—"}
+                          {row.isRecipient ? "Save to manage" : "—"}
                         </span>
                       )}
                     </td>

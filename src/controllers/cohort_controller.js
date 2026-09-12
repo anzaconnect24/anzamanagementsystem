@@ -428,7 +428,7 @@ export const setCohortCoaching = async (uuid, businessUuid, data) => {
   }
 };
 
-// The programme implementation calendar: every dated piece of work, plus the
+// The Program Calendar: every dated piece of work, plus the
 // type and status vocabularies, the people who can own an entry, and the
 // headline figures. One call so the page needs no second round trip.
 export const getCohortCalendar = async (uuid, params = {}) => {

@@ -24,7 +24,6 @@ import SessionFormModal, {
 } from "@/components/programs/SessionFormModal";
 import { cohortOf } from "@/controllers/cohort_controller";
 import {
-  FaArrowLeft,
   FaBuilding,
   FaMapMarkerAlt,
   FaCalendarAlt,
@@ -55,7 +54,7 @@ const CAN_VIEW_ME_ROLES = ["ME"];
 // decides who, which is what the API enforces on PUT /leads.
 const CAN_ASSIGN_LEAD_ROLES = ["Admin"];
 
-// The implementation calendar is run by whoever runs the programme. The
+// The Program Calendar is run by whoever runs the programme. The
 // API narrows this further to the advisor actually leading it.
 const CAN_PLAN_ROLES = ["Admin", "BDA"];
 
@@ -315,7 +314,7 @@ const ProgramStartups = () => {
     },
     {
       show: canPlan,
-      label: "Calendar",
+      label: "Program Calendar",
       note: "Dated delivery work",
       icon: <FaCalendarAlt />,
 
@@ -484,24 +483,6 @@ const ProgramStartups = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() =>
-          // Back to the category this program sits in, or to the category grid
-          // when there isn't one (the Unassigned list, or an uncategorised
-          // program).
-          navigate(
-            program?.category
-              ? `/dashboard/programManagement/category/${encodeURIComponent(program.category)}`
-              : "/dashboard/programManagement",
-          )
-        }
-        className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:text-blue-700"
-      >
-        <FaArrowLeft />{" "}
-        {program?.category ? "Back to programs" : "Back to categories"}
-      </button>
-
       {/* HERO */}
       <div className="relative mb-8 min-h-[240px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div

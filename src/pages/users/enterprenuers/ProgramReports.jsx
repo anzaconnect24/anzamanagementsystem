@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  FaArrowLeft,
   FaCheckCircle,
   FaFileAlt,
   FaLock,
@@ -253,7 +252,6 @@ const Snapshot = ({ snapshot }) => {
 // records rather than rebuilt from a spreadsheet.
 const ProgramReports = () => {
   const { uuid } = useParams();
-  const navigate = useNavigate();
 
   const [payload, setPayload] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -384,14 +382,6 @@ const ProgramReports = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() => navigate(`/dashboard/programManagement/program/${uuid}`)}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:underline"
-      >
-        <FaArrowLeft /> Back to program
-      </button>
-
       {/* HERO */}
       <div className="relative mb-8 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div

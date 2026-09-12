@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FaArrowLeft, FaCheck, FaChevronDown } from "react-icons/fa";
+import { FaCheck, FaChevronDown } from "react-icons/fa";
 import { createCourse } from "@/controllers/course_controller";
 import { getCohortProgramOptions } from "@/controllers/cohort_controller";
 
@@ -87,14 +87,6 @@ const AddCourse = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() => navigate("/dashboard/courses/library")}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:underline"
-      >
-        <FaArrowLeft /> Back to course library
-      </button>
-
       {/* HERO */}
       <div className="relative mb-10 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div

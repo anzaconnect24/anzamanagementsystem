@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  FaArrowLeft,
   FaCalendarAlt,
   FaChartLine,
   FaCheckCircle,
@@ -174,14 +173,6 @@ const ProgramDashboard = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() => go("")}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:underline"
-      >
-        <FaArrowLeft /> Back to program
-      </button>
-
       {/* HERO — the answer to "are we on track" before anything else. */}
       <div className="relative mb-8 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div
@@ -346,7 +337,7 @@ const ProgramDashboard = () => {
               onClick={() => go("/calendar")}
               className="text-xs font-bold text-[#082d77] hover:underline"
             >
-              Open calendar
+              Open program calendar
             </button>
           </div>
 

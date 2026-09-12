@@ -23,7 +23,6 @@ import {
   FaArrowRight,
   FaPlus,
   FaExclamationTriangle,
-  FaArrowLeft,
 } from "react-icons/fa";
 
 const DEFAULT_PROGRAM_IMAGE = "/images/ideation-classes.svg";
@@ -273,14 +272,6 @@ const StartupPrograms = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() => navigate("/dashboard/programManagement")}
-        className="mb-5 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:text-blue-700"
-      >
-        <FaArrowLeft /> Back to categories
-      </button>
-
       {/* HERO */}
       <div className="relative mb-10 min-h-[320px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div

@@ -45,7 +45,6 @@ import {
   FaRegLightbulb,
   FaClipboardList,
   FaChartLine,
-  FaRegCommentDots,
 } from "react-icons/fa";
 import {
   RiTeamLine,
@@ -53,7 +52,7 @@ import {
   RiPhoneLine,
 } from "react-icons/ri";
 import { BsCalendar3, BsCardChecklist } from "react-icons/bs";
-import { BiMessageDetail } from "react-icons/bi";
+import { BiBroadcast, BiMessageDetail } from "react-icons/bi";
 import { IoDocumentTextOutline, IoSettingsOutline } from "react-icons/io5";
 import { logout } from "@/utils/local_storage";
 
@@ -226,7 +225,23 @@ const Sidebar = ({
           // The one item every role shares: the community board.
           name: t("navigation.liveFeed", "Live Feed"),
           path: "/dashboard/feed",
-          icon: <FaRegCommentDots className="text-xl" />,
+          icon: <BiBroadcast className="text-xl" />,
+          roles: [
+            "Admin",
+            "Enterprenuer",
+            "Investor",
+            "Mentor",
+            "BDA",
+            "ME",
+            "Finance",
+          ],
+        },
+        {
+          // The second: everyone's calendar. Reachable from the header panel
+          // before this, which meant knowing it was there.
+          name: t("navigation.calendar", "Calendar"),
+          path: "/dashboard/calendar",
+          icon: <BsCalendar3 className="text-xl" />,
           roles: [
             "Admin",
             "Enterprenuer",

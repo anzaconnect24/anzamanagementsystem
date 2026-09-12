@@ -1,9 +1,9 @@
 "use client";
 
 import { Fragment, useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FaArrowLeft, FaPlus, FaTimes, FaTrash } from "react-icons/fa";
+import { FaPlus, FaTimes, FaTrash } from "react-icons/fa";
 import Loader from "@/components/common/Loader";
 import {
   getProgramWorkplan,
@@ -47,7 +47,6 @@ const emptyActivity = () => ({
 // and a month-by-week grid showing when each runs.
 const ProgramWorkplan = () => {
   const { uuid } = useParams();
-  const navigate = useNavigate();
 
   const [payload, setPayload] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -158,14 +157,6 @@ const ProgramWorkplan = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() => navigate(`/dashboard/programManagement/program/${uuid}`)}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:underline"
-      >
-        <FaArrowLeft /> Back to program
-      </button>
-
       {/* HERO */}
       <div className="relative mb-8 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div
@@ -193,11 +184,11 @@ const ProgramWorkplan = () => {
 
       {/* ACTIONS */}
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-[#8a8f98]">
-          {data.length === 0
-            ? "Nothing planned yet."
-            : `${data.length} output${data.length === 1 ? "" : "s"} · ${data.reduce((n, o) => n + o.activities.length, 0)} activities`}
-        </p>
+        {/* The plan's name, where the tally of outputs and activities used to
+            be. The counts are visible in the table itself; the name is not. */}
+        <h2 className="text-lg font-bold text-slate-900">
+          {program?.title ? `${program.title} workplan` : "Workplan"}
+        </h2>
 
         {canEdit ? (
           <div className="flex flex-wrap items-center gap-3">
@@ -421,16 +412,23 @@ const ProgramWorkplan = () => {
       ) : (
         /* THE PLAN */
         <div className="overflow-x-auto rounded-2xl bg-white shadow-sm shadow-slate-200/50">
-          <table className="w-full border-collapse text-left text-sm">
+          {/* table-fixed, so the shares below are obeyed rather than treated
+              as suggestions the widest cell can overrule. The min-width keeps
+              a long programme scrollable instead of crushing its weeks to a
+              hairline: the shares are of the table, not of the viewport. */}
+          <table className="w-full min-w-[1000px] table-fixed border-collapse text-left text-sm">
             <thead>
               <tr>
-                <th className="sticky left-0 z-10 min-w-[240px] bg-[#4285f4] px-4 py-3 text-white">
+                {/* Half the table is the schedule, which is what a workplan is
+                    for. The other half is split 20/20/10 between the three
+                    columns of prose. */}
+                <th className="sticky left-0 z-10 w-[20%] bg-[#4285f4] px-4 py-3 text-white">
                   Outputs
                 </th>
-                <th className="min-w-[320px] bg-[#4285f4] px-4 py-3 text-white">
+                <th className="w-[20%] bg-[#4285f4] px-4 py-3 text-white">
                   Activities
                 </th>
-                <th className="min-w-[160px] bg-[#4285f4] px-4 py-3 text-white">
+                <th className="w-[10%] bg-[#4285f4] px-4 py-3 text-white">
                   Responsible
                 </th>
 
@@ -438,6 +436,13 @@ const ProgramWorkplan = () => {
                   <th
                     key={month.key}
                     colSpan={month.weeks.length}
+                    // The months divide the schedule's 50% between them, and
+                    // each spreads its share across its own weeks. Under
+                    // table-fixed the header row is what sets every column's
+                    // width, so this is the only place it can be said.
+                    style={{
+                      width: `${months.length ? 50 / months.length : 50}%`,
+                    }}
                     className="border-l border-white/30 bg-[#4285f4] px-3 py-3 text-center text-white"
                   >
                     {month.label}
@@ -466,7 +471,7 @@ const ProgramWorkplan = () => {
 
                   {output.activities.length === 0 ? (
                     <tr>
-                      <td className="border border-slate-200 px-4 py-3 align-top text-sm text-[#475467]">
+                      <td className="break-words border border-slate-200 px-4 py-3 align-top text-sm text-[#475467]">
                         {output.description}
                       </td>
                       <td
@@ -483,13 +488,13 @@ const ProgramWorkplan = () => {
                         {index === 0 ? (
                           <td
                             rowSpan={output.activities.length}
-                            className="border border-slate-200 px-4 py-3 align-top text-sm leading-6 text-[#475467]"
+                            className="break-words border border-slate-200 px-4 py-3 align-top text-sm leading-6 text-[#475467]"
                           >
                             {output.description}
                           </td>
                         ) : null}
 
-                        <td className="border border-slate-200 px-4 py-2.5 align-top text-sm leading-6 text-[#111a2e]">
+                        <td className="break-words border border-slate-200 px-4 py-2.5 align-top text-sm leading-6 text-[#111a2e]">
                           {activity.title}
                           {activity.status !== "planned" ? (
                             <span className="mt-0.5 block text-xs text-[#8a8f98]">
@@ -501,7 +506,7 @@ const ProgramWorkplan = () => {
                         {/* Who is answerable for this activity. Unassigned is
                             said plainly rather than left blank — a gap in the
                             plan reads the same as a missing column. */}
-                        <td className="border border-slate-200 px-4 py-2.5 align-top text-sm leading-6 text-[#111a2e]">
+                        <td className="break-words border border-slate-200 px-4 py-2.5 align-top text-sm leading-6 text-[#111a2e]">
                           {activity.owner ? (
                             activity.owner.name
                           ) : (
@@ -513,7 +518,7 @@ const ProgramWorkplan = () => {
                           <td
                             key={week.start}
                             title={`Week of ${week.start}`}
-                            className="w-8 border border-slate-200 p-0"
+                            className="border border-slate-200 p-0"
                           >
                             {runsIn(activity, week) ? (
                               <span

@@ -124,6 +124,7 @@ import ProgramCalendar from "./pages/users/enterprenuers/ProgramCalendar";
 import ProgramCoaching from "./pages/users/enterprenuers/ProgramCoaching";
 import ProgramDocuments from "./pages/users/enterprenuers/ProgramDocuments";
 import LiveFeed from "./pages/feed/LiveFeed";
+import MyCalendar from "./pages/calendar/MyCalendar";
 import ProgramComms from "./pages/users/enterprenuers/ProgramComms";
 import ProgramReports from "./pages/users/enterprenuers/ProgramReports";
 import ProgramDashboard from "./pages/users/enterprenuers/ProgramDashboard";
@@ -341,6 +342,10 @@ function App() {
                 signed-in user reads and writes the same board. */}
             <Route path="feed" element={<LiveFeed />} />
 
+            {/* Everyone's calendar: events published to them, and their own
+                reminders. No role gate — the visibility is per entry. */}
+            <Route path="calendar" element={<MyCalendar />} />
+
             {/* User Management Routes */}
             <Route path="users" element={<Users />} />
             {/* Startups is the flat directory for every role. */}
@@ -393,7 +398,7 @@ function App() {
                 </RoleRoute>
               }
             />
-            {/* The implementation calendar belongs to whoever runs the
+            {/* The Program Calendar belongs to whoever runs the
                 programme: Admin, or the advisor leading it. The API narrows
                 it to this programme’s own lead. */}
             {/* The workplan: outputs, activities and when each runs. */}

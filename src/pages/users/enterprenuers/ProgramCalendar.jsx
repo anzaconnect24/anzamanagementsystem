@@ -4,12 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import toast from "react-hot-toast";
 import {
-  FaArrowLeft,
-  FaCalendarAlt,
   FaCheckCircle,
+  FaChevronLeft,
+  FaChevronRight,
   FaClock,
-  FaCoins,
+  FaCompressAlt,
   FaExclamationTriangle,
+  FaExpandAlt,
   FaLayerGroup,
   FaPen,
   FaPlus,
@@ -18,11 +19,16 @@ import {
 } from "react-icons/fa";
 import Loader from "@/components/common/Loader";
 import StatCard from "@/components/tracker/StatCard";
+import CalendarPanel from "@/components/calendar/CalendarPanel";
+import MiniMonth, { monthCells } from "@/components/calendar/MiniMonth";
 import {
   deleteCohortCalendarEntry,
   getCohortCalendar,
   saveCohortCalendarEntry,
 } from "@/controllers/cohort_controller";
+// The same day key and the same month the platform calendar uses. This file
+// had its own copies of both, identical down to the comment.
+import { dayKey } from "@/utils/calendar_colours";
 
 const inputClass =
   "w-full rounded-lg border border-slate-300 px-4 py-2.5 text-sm text-[#111a2e] outline-none focus:border-[#082d77] focus:ring-2 focus:ring-[#082d77]/20";
@@ -38,6 +44,44 @@ const STATUS_CHIP = {
   overdue: "bg-rose-50 text-rose-700",
   cancelled: "bg-slate-100 text-slate-400 line-through",
 };
+
+// Each kind of activity gets its own colour on the grid, so a month reads as
+// a shape before it is read as words. Calendar colours, not the status
+// palette — status is still said in the word on the chip.
+const EVENT_TINT = {
+  workshop: "bg-[#0b8043]",
+  mentoring: "bg-[#3f51b5]",
+  mentoring_session: "bg-[#3f51b5]",
+  site_visit: "bg-[#e8710a]",
+  investor_event: "bg-[#8e24aa]",
+  reporting_deadline: "bg-[#d50000]",
+  grant_milestone: "bg-[#c0ca33]",
+  partner_meeting: "bg-[#039be5]",
+  other: "bg-[#616161]",
+};
+
+// Anything the server invents later still gets a stable colour rather than
+// falling to grey: the same type is the same colour every time.
+const SPARE = [
+  "bg-[#7986cb]",
+  "bg-[#33b679]",
+  "bg-[#e67c73]",
+  "bg-[#f6bf26]",
+  "bg-[#009688]",
+  "bg-[#795548]",
+];
+
+const tintFor = (type) => {
+  if (EVENT_TINT[type]) return EVENT_TINT[type];
+
+  const text = String(type || "");
+  let hash = 0;
+  for (let i = 0; i < text.length; i += 1) hash = (hash * 31 + text.charCodeAt(i)) % 997;
+
+  return SPARE[hash % SPARE.length];
+};
+
+const WEEKDAYS = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
 const pretty = (value) =>
   String(value || "")
@@ -56,8 +100,6 @@ const day = (value) => {
       });
 };
 
-const money = (value) => Number(value || 0).toLocaleString();
-
 const emptyEntry = {
   name: "",
   activityType: "workshop",
@@ -66,15 +108,81 @@ const emptyEntry = {
   location: "",
   facilitator: "",
   ownerUuid: "",
-  plannedParticipants: "",
-  actualParticipants: "",
-  budgetPlanned: "",
-  cost: "",
   deliverables: "",
   status: "planned",
 };
 
-// The programme implementation calendar. The workplan as dated work: every
+// One activity in the schedule list. The same shape as an event on the
+// platform calendar — colour bar, name, when, who — carrying what a programme
+// activity has instead of what an event has: an owner, a due date and evidence.
+const ActivityRow = ({ entry, onOpen, onRemove }) => (
+  <div className="flex gap-3 border-b border-slate-100 px-5 py-4 last:border-b-0">
+    <span
+      className={`mt-1 h-full w-1 shrink-0 rounded-full ${tintFor(entry.activityType)}`}
+      aria-hidden="true"
+    />
+
+    <div className="min-w-0 flex-1">
+      <button
+        type="button"
+        onClick={() => onOpen(entry)}
+        className="block w-full text-left"
+      >
+        <span className="flex flex-wrap items-center gap-2">
+          <span
+            className={`font-semibold text-slate-900 ${
+              entry.status === "cancelled" ? "line-through opacity-60" : ""
+            }`}
+          >
+            {entry.name}
+          </span>
+
+          <span
+            className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
+              entry.overdue
+                ? STATUS_CHIP.overdue
+                : STATUS_CHIP[entry.status] || STATUS_CHIP.planned
+            }`}
+          >
+            {entry.overdue ? "Overdue" : pretty(entry.status)}
+          </span>
+        </span>
+
+        <span className="mt-1 block text-sm text-slate-500">
+          {day(entry.activityDate)} · {pretty(entry.activityType)}
+          {entry.dueDate ? ` · due ${day(entry.dueDate)}` : ""}
+        </span>
+
+        <span className="mt-1 block text-xs text-slate-400">
+          {entry.owner?.name || "Unassigned"}
+          {entry.evidenceCount ? ` · ${entry.evidenceCount} evidence` : ""}
+        </span>
+      </button>
+    </div>
+
+    <div className="flex shrink-0 items-start gap-3 pt-1">
+      <button
+        type="button"
+        onClick={() => onOpen(entry)}
+        aria-label={`Edit ${entry.name}`}
+        className="text-[#082d77] transition hover:opacity-70"
+      >
+        <FaPen />
+      </button>
+
+      <button
+        type="button"
+        onClick={() => onRemove(entry)}
+        aria-label={`Remove ${entry.name}`}
+        className="text-rose-600 transition hover:opacity-70"
+      >
+        <FaTrash />
+      </button>
+    </div>
+  </div>
+);
+
+// The Program Calendar. The workplan as dated work: every
 // workshop, mentoring session, site visit, investor event, reporting deadline,
 // grant milestone and partner meeting in one schedule, each answerable to
 // someone by a date.
@@ -86,6 +194,19 @@ const ProgramCalendar = () => {
   const [loading, setLoading] = useState(true);
   const [typeFilter, setTypeFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+
+  // How the schedule is read. "schedule" is the same shape as the platform
+  // calendar the top bar leads to — a month to pick from, a list to read — and
+  // is the default for the same reason it is there: it answers "what is next"
+  // without making anybody parse a grid. The whole month and the
+  // detailed table are both a press away.
+  const [view, setView] = useState("schedule");
+  const [tab, setTab] = useState("upcoming");
+  const [selected, setSelected] = useState("");
+  const [cursor, setCursor] = useState(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), 1);
+  });
 
   const [editing, setEditing] = useState(null); // entry uuid, or "new"
   const [form, setForm] = useState(emptyEntry);
@@ -127,8 +248,71 @@ const ProgramCalendar = () => {
     [entries, typeFilter, statusFilter],
   );
 
-  const openNew = () => {
-    setForm(emptyEntry);
+  // Everything on the grid, filed by the day it happens. Built once per
+  // change rather than filtered per cell — forty-two cells scanning the whole
+  // list is forty-two passes for no reason.
+  const byDay = useMemo(() => {
+    const map = new Map();
+
+    for (const entry of visible) {
+      const key = String(entry.activityDate || "").slice(0, 10);
+      if (!key) continue;
+
+      const list = map.get(key) || [];
+      list.push(entry);
+      map.set(key, list);
+    }
+
+    return map;
+  }, [visible]);
+
+  const cells = useMemo(() => monthCells(cursor), [cursor]);
+  const today = dayKey(new Date());
+
+  // The tabs the platform calendar has, asked of programme work instead of
+  // events. There is no Invites here — nobody RSVPs to a reporting deadline —
+  // so Overdue takes that slot: it is the one that is a queue, the one with
+  // something waiting on somebody.
+  const TABS = [
+    { key: "upcoming", label: "Upcoming" },
+    { key: "overdue", label: "Overdue" },
+    { key: "past", label: "Past" },
+    { key: "all", label: "All" },
+  ];
+
+  const dayOf = (entry) => String(entry.activityDate || "").slice(0, 10);
+
+  // A day chosen in the picker wins over the tab, the same as on the platform
+  // calendar: asking for the 18th and being shown next week would make the
+  // picker a liar.
+  const listed = useMemo(() => {
+    const ordered = [...visible].sort((a, b) => (dayOf(a) < dayOf(b) ? -1 : 1));
+
+    if (selected) return ordered.filter((entry) => dayOf(entry) === selected);
+
+    if (tab === "all") return ordered;
+    if (tab === "overdue") return ordered.filter((entry) => entry.overdue);
+    if (tab === "past") {
+      return ordered.filter((entry) => dayOf(entry) < today).reverse();
+    }
+
+    return ordered.filter((entry) => dayOf(entry) >= today);
+  }, [visible, selected, tab, today]);
+
+  const overdueCount = useMemo(
+    () => visible.filter((entry) => entry.overdue).length,
+    [visible],
+  );
+
+  const step = (months) =>
+    setCursor(
+      (prev) => new Date(prev.getFullYear(), prev.getMonth() + months, 1),
+    );
+
+  // Clicking an empty day starts an activity on that day, which is what
+  // clicking a day on a calendar has always meant.
+  const openNew = (date) => {
+    setForm({ ...emptyEntry, activityDate: date ? dayKey(date) : "" });
     setEditing("new");
   };
 
@@ -141,10 +325,6 @@ const ProgramCalendar = () => {
       location: entry.location || "",
       facilitator: entry.facilitator || "",
       ownerUuid: entry.owner?.uuid || "",
-      plannedParticipants: entry.plannedParticipants ?? "",
-      actualParticipants: entry.actualParticipants ?? "",
-      budgetPlanned: entry.budgetPlanned ?? "",
-      cost: entry.cost ?? "",
       deliverables: entry.deliverables || "",
       status: entry.status || "planned",
     });
@@ -211,14 +391,6 @@ const ProgramCalendar = () => {
 
   return (
     <div className="min-h-screen px-6 py-4">
-      <button
-        type="button"
-        onClick={() => navigate(`/dashboard/programManagement/program/${uuid}`)}
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-[#082d77] transition hover:underline"
-      >
-        <FaArrowLeft /> Back to program
-      </button>
-
       {/* HERO */}
       <div className="relative mb-8 min-h-[200px] overflow-hidden rounded-2xl bg-black shadow-sm">
         <div
@@ -230,7 +402,7 @@ const ProgramCalendar = () => {
         <div className="relative z-10 max-w-3xl p-10 text-white">
           <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
-            Implementation Calendar
+            Program Calendar
           </span>
 
           <h1 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">
@@ -240,13 +412,13 @@ const ProgramCalendar = () => {
           <p className="max-w-2xl text-sm leading-6 text-white/85 drop-shadow-md">
             Workshops, mentoring, site visits, investor events, reporting
             deadlines, grant milestones and partner meetings — each with an
-            owner, a date it is due, a budget and what it must produce.
+            owner, a date it is due and what it must produce.
           </p>
         </div>
       </div>
 
       {/* HEADLINE FIGURES */}
-      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatCard
           icon={<FaLayerGroup />}
           label="Activities"
@@ -272,18 +444,74 @@ const ProgramCalendar = () => {
           tone="text-rose-600"
           sub={<p className="mt-1 text-xs text-slate-400">Past their due date</p>}
         />
-        <StatCard
-          icon={<FaCoins />}
-          label="Budget spent"
-          value={money(summary.budgetSpent)}
-          tone="text-amber-500"
-          sub={
-            <p className="mt-1 text-xs text-slate-400">
-              of {money(summary.budgetPlanned)} planned
-            </p>
-          }
-        />
       </div>
+
+      {/* MONTH BAR — only for the two wider shapes. In the schedule view the
+          month carries its own controls, the way the platform calendar's
+          does. */}
+      {view !== "schedule" ? (
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              const now = new Date();
+              setCursor(new Date(now.getFullYear(), now.getMonth(), 1));
+            }}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-[#344054] transition hover:bg-slate-50"
+          >
+            Today
+          </button>
+
+          <button
+            type="button"
+            onClick={() => step(-1)}
+            aria-label="Previous month"
+            className="rounded-full p-2.5 text-slate-500 transition hover:bg-slate-100"
+          >
+            <FaChevronLeft />
+          </button>
+
+          <button
+            type="button"
+            onClick={() => step(1)}
+            aria-label="Next month"
+            className="rounded-full p-2.5 text-slate-500 transition hover:bg-slate-100"
+          >
+            <FaChevronRight />
+          </button>
+
+          <h2 className="ml-2 text-xl font-bold tracking-tight text-slate-900">
+            {cursor.toLocaleDateString("en-GB", {
+              month: "long",
+              year: "numeric",
+            })}
+          </h2>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setView("schedule")}
+            aria-label="Back to the schedule"
+            title="Back to the schedule"
+            className="rounded-lg border border-slate-300 p-2.5 text-slate-500 transition hover:bg-slate-50"
+          >
+            <FaCompressAlt className="text-sm" />
+          </button>
+
+          <select
+            value={view}
+            onChange={(event) => setView(event.target.value)}
+            className="rounded-lg border border-slate-300 py-2 pl-3 pr-8 text-sm text-[#344054] outline-none focus:border-[#082d77]"
+          >
+            <option value="schedule">Schedule</option>
+            <option value="month">Month grid</option>
+            <option value="table">Table</option>
+          </select>
+        </div>
+      </div>
+      ) : null}
 
       {/* FILTERS */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -316,18 +544,198 @@ const ProgramCalendar = () => {
           </select>
         </div>
 
-        <button
-          type="button"
-          onClick={openNew}
-          className="inline-flex items-center gap-2 rounded-lg bg-[#16a34a] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
-        >
-          <FaPlus />
-          Add Activity
-        </button>
+        {/* In the schedule view the panel's own + does this, so one button is
+            enough. */}
+        {view !== "schedule" ? (
+          <button
+            type="button"
+            onClick={() => openNew()}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#16a34a] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#15803d]"
+          >
+            <FaPlus />
+            Add Activity
+          </button>
+        ) : null}
       </div>
 
-      {/* SCHEDULE */}
-      {visible.length === 0 ? (
+      {/* THE SCHEDULE — the shape the platform calendar uses. */}
+      {view === "schedule" ? (
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <div className="flex w-full shrink-0 flex-col lg:w-2/5">
+            {/* The expand control straddles the top edge of the month it
+                grows, rather than sitting in a toolbar away from it. */}
+            <div className="relative mt-4 flex flex-1">
+              <button
+                type="button"
+                onClick={() => setView("month")}
+                aria-label="Expand the calendar"
+                title="Expand the calendar"
+                className="absolute -top-4 left-1/2 z-10 flex h-9 w-9 -translate-x-1/2 items-center justify-center rounded-full bg-[#082d77] text-white shadow-md transition hover:bg-[#0a3a97]"
+              >
+                <FaExpandAlt className="text-xs" />
+              </button>
+
+              <MiniMonth
+                cursor={cursor}
+                onStep={step}
+                selected={selected}
+                onSelect={setSelected}
+                byDay={byDay}
+                // Coloured by the kind of work, not by a colour somebody
+                // picked — that is the only thing this month does differently.
+                dotClass={(entry) => tintFor(entry.activityType)}
+              />
+            </div>
+          </div>
+
+          <CalendarPanel
+            title="Activities"
+            tabs={TABS.map((item) =>
+              item.key === "overdue" ? { ...item, badge: overdueCount } : item,
+            )}
+            tab={tab}
+            onTab={(next) => {
+              setTab(next);
+              // A tab and a chosen day are two answers to the same question,
+              // so choosing one clears the other.
+              setSelected("");
+            }}
+            onBack={() =>
+              navigate(`/dashboard/programManagement/program/${uuid}`)
+            }
+            onCreate={() =>
+              openNew(selected ? new Date(`${selected}T00:00:00`) : undefined)
+            }
+            createLabel="Add an activity"
+            selected={selected}
+            onClearDay={() => setSelected("")}
+            isEmpty={listed.length === 0}
+            emptyText={
+              entries.length === 0
+                ? "Nothing is scheduled yet."
+                : "No activity found."
+            }
+          >
+            {listed.map((entry) => (
+              <ActivityRow
+                key={entry.uuid}
+                entry={entry}
+                onOpen={openEdit}
+                onRemove={setConfirming}
+              />
+            ))}
+          </CalendarPanel>
+        </div>
+      ) : null}
+
+      {/* THE MONTH */}
+      {view === "month" ? (
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div className="grid grid-cols-7 border-b border-slate-200">
+            {WEEKDAYS.map((name) => (
+              <div
+                key={name}
+                className="px-2 py-2.5 text-center text-xs font-semibold tracking-wide text-slate-500"
+              >
+                {name}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-7">
+            {cells.map((date) => {
+              const key = dayKey(date);
+              const outside = date.getMonth() !== cursor.getMonth();
+              const isToday = key === today;
+              const events = byDay.get(key) || [];
+
+              return (
+                <div
+                  key={key}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => openNew(date)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") openNew(date);
+                  }}
+                  className={`min-h-[118px] cursor-pointer border-b border-r border-slate-200 p-1.5 transition hover:bg-slate-50 ${
+                    outside ? "bg-slate-50/60" : ""
+                  }`}
+                >
+                  <div className="mb-1 flex justify-center">
+                    <span
+                      className={`flex h-6 min-w-6 items-center justify-center rounded-full px-1.5 text-xs font-semibold ${
+                        isToday
+                          ? "bg-[#1a73e8] text-white"
+                          : outside
+                            ? "text-slate-300"
+                            : "text-slate-600"
+                      }`}
+                    >
+                      {/* The 1st says which month it is, the way a calendar
+                          does when a week straddles two. */}
+                      {date.getDate() === 1
+                        ? date.toLocaleDateString("en-GB", {
+                            month: "short",
+                            day: "numeric",
+                          })
+                        : date.getDate()}
+                    </span>
+                  </div>
+
+                  <div className="space-y-1">
+                    {events.slice(0, 3).map((entry) => (
+                      <button
+                        key={entry.uuid}
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          openEdit(entry);
+                        }}
+                        title={`${entry.name} — ${pretty(entry.activityType)}${
+                          entry.owner ? ` · ${entry.owner.name}` : ""
+                        }`}
+                        className={`block w-full truncate rounded px-1.5 py-0.5 text-left text-xs font-semibold text-white ${tintFor(
+                          entry.activityType,
+                        )} ${entry.status === "cancelled" ? "opacity-50 line-through" : ""}`}
+                      >
+                        {entry.overdue ? "⚠ " : ""}
+                        {entry.name}
+                      </button>
+                    ))}
+
+                    {events.length > 3 ? (
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setView("table");
+                        }}
+                        className="block w-full px-1.5 text-left text-xs font-semibold text-slate-500 hover:underline"
+                      >
+                        {events.length - 3} more
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* What the colours mean, so the grid is readable without
+              clicking anything. */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-slate-200 px-4 py-3 text-xs text-[#667085]">
+            {types.map((type) => (
+              <span key={type} className="inline-flex items-center gap-1.5">
+                <span
+                  className={`h-2.5 w-2.5 rounded-sm ${tintFor(type)}`}
+                />
+                {pretty(type)}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : view !== "table" ? null : visible.length === 0 ? (
         <div className="mx-auto max-w-3xl rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
           {entries.length === 0
             ? "Nothing is scheduled yet. Add the first activity to start the workplan."
@@ -343,8 +751,6 @@ const ProgramCalendar = () => {
                 <th className="px-5 py-4">Scheduled</th>
                 <th className="px-5 py-4">Due</th>
                 <th className="px-5 py-4">Owner</th>
-                <th className="px-5 py-4">Participants</th>
-                <th className="px-5 py-4">Budget</th>
                 <th className="px-5 py-4">Evidence</th>
                 <th className="px-5 py-4">Status</th>
                 <th className="px-5 py-4">Action</th>
@@ -388,18 +794,6 @@ const ProgramCalendar = () => {
                     {entry.owner?.name || (
                       <span className="text-slate-400">Unassigned</span>
                     )}
-                  </td>
-
-                  <td className="px-5 py-4 text-[#6f6f72]">
-                    {entry.actualParticipants ?? entry.participants ?? 0}
-                    {entry.plannedParticipants
-                      ? ` / ${entry.plannedParticipants}`
-                      : ""}
-                  </td>
-
-                  <td className="px-5 py-4 text-[#6f6f72]">
-                    {money(entry.cost)}
-                    {entry.budgetPlanned ? ` / ${money(entry.budgetPlanned)}` : ""}
                   </td>
 
                   <td className="px-5 py-4 text-[#6f6f72]">
@@ -588,68 +982,6 @@ const ProgramCalendar = () => {
                     onChange={(e) =>
                       setForm({ ...form, location: e.target.value })
                     }
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass} htmlFor="cal-planned">
-                    Participants expected
-                  </label>
-                  <input
-                    id="cal-planned"
-                    type="number"
-                    min="0"
-                    className={inputClass}
-                    value={form.plannedParticipants}
-                    onChange={(e) =>
-                      setForm({ ...form, plannedParticipants: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass} htmlFor="cal-actual">
-                    Participants attended
-                  </label>
-                  <input
-                    id="cal-actual"
-                    type="number"
-                    min="0"
-                    className={inputClass}
-                    value={form.actualParticipants}
-                    onChange={(e) =>
-                      setForm({ ...form, actualParticipants: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass} htmlFor="cal-budget">
-                    Budget planned
-                  </label>
-                  <input
-                    id="cal-budget"
-                    type="number"
-                    min="0"
-                    className={inputClass}
-                    value={form.budgetPlanned}
-                    onChange={(e) =>
-                      setForm({ ...form, budgetPlanned: e.target.value })
-                    }
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass} htmlFor="cal-cost">
-                    Spent so far
-                  </label>
-                  <input
-                    id="cal-cost"
-                    type="number"
-                    min="0"
-                    className={inputClass}
-                    value={form.cost}
-                    onChange={(e) => setForm({ ...form, cost: e.target.value })}
                   />
                 </div>
 
