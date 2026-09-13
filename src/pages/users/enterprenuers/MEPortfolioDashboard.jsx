@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import toast from "react-hot-toast";
 import dynamic from "@/utils/dynamic";
 import {
@@ -20,6 +20,16 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
   ssr: false,
 });
 
+// Leaflet touches window on import, so the map loads in its own chunk and only
+// when the page renders.
+const CoverageMap = dynamic(() => import("@/components/Maps/CoverageMap"), {
+  loading: () => (
+    <div className="flex h-full items-center justify-center text-sm text-[#6f6f72]">
+      Loading map…
+    </div>
+  ),
+});
+
 // Categorical steps, one set per mode. These are the validated pairs: worst
 // adjacent CVD ΔE 24.7 light / 26.8 dark, normal-vision ΔE 33.6 / 31.8, all
 // above the 8 / 15 floors, so the two series stay apart for every reader.
@@ -28,12 +38,28 @@ const PALETTE = {
   dark: { one: "#3987e5", two: "#d95926", ink: "#c3c2b7", grid: "#333a48" },
 };
 
+// The regions on the coverage map. A map is an all-pairs form - any two circles
+// can sit side by side - and only the first three categorical slots stay
+// distinguishable under that test (validated on the map's land colour #f2efe9:
+// worst CVD dE 9.2 light / 9.4 dark, normal-vision 24.0 / 20.9). Five slots
+// failed outright, so the three largest regions get a colour each and every
+// other region shares the muted gray. Orange and aqua sit under 3:1 on the
+// land; the ranked list beside the map carries every value, which is the
+// required relief.
+const REGION_COLOURS = {
+  light: ["#2a78d6", "#eb6834", "#1baf7a"],
+  dark: ["#3987e5", "#d95926", "#199e70"],
+};
+const OTHER_REGION = "#898781";
+
 // Reserved for state, never reused as a series colour, and always shipped
-// alongside the status word rather than standing in for it.
+// alongside the status word rather than standing in for it. These are the
+// palette's status steps, deliberately distinct from the categorical slots the
+// region map uses - so "Behind schedule" red can never read as a region.
 const STATUS = {
-  onTrack: { label: "On track", dot: "#1baf7a", chip: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" },
-  atRisk: { label: "Needs attention", dot: "#eda100", chip: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" },
-  behind: { label: "Behind schedule", dot: "#e34948", chip: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400" },
+  onTrack: { label: "On track", dot: "#0ca30c", chip: "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" },
+  atRisk: { label: "Needs attention", dot: "#fab219", chip: "bg-amber-50 text-amber-700 dark:bg-amber-500/10 dark:text-amber-400" },
+  behind: { label: "Behind schedule", dot: "#d03b3b", chip: "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-400" },
 };
 
 const statusFor = (rate) =>
@@ -103,23 +129,47 @@ const MEPortfolioDashboard = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState("");
+  const [programme, setProgramme] = useState("");
+  // Which regions own a colour. Set once from the unfiltered portfolio and kept
+  // when a filter is applied, so a colour follows its region rather than its
+  // rank - a filter that reorders the list never repaints the map.
+  const [regionOrder, setRegionOrder] = useState([]);
 
-  const load = useCallback(async (statusFilter) => {
+  // Filters apply the moment they change, so requests can overlap. Each one is
+  // numbered and only the latest may write to the page - a quick second choice
+  // is never overwritten by the slower answer to the first.
+  const latestRequest = useRef(0);
+
+  // filters: { status, program } - only the ones actually chosen are sent.
+  const load = useCallback(async (filters = {}) => {
+    const request = ++latestRequest.current;
     setLoading(true);
-    const response = await getMePortfolioDashboard(
-      statusFilter ? { status: statusFilter } : {},
+    const params = Object.fromEntries(
+      Object.entries(filters).filter(([, value]) => value),
     );
+    const response = await getMePortfolioDashboard(params);
+    if (request !== latestRequest.current) return;
     if (response?.status === false) {
       toast.error(response.message || "Failed to load the M&E portfolio");
       setData(null);
     } else {
-      setData(response?.body ?? response);
+      const body = response?.body ?? response;
+      setData(body);
+      // Region colours are fixed from the whole, unfiltered portfolio only.
+      if (!Object.keys(params).length) {
+        setRegionOrder(
+          (body?.geography?.rows || [])
+            .filter((row) => row.location !== "Not recorded")
+            .slice(0, REGION_COLOURS.light.length)
+            .map((row) => row.location),
+        );
+      }
     }
     setLoading(false);
   }, []);
 
   useEffect(() => {
-    load("");
+    load({});
   }, [load]);
 
   const gender = data?.gender || { male: 0, female: 0 };
@@ -138,8 +188,20 @@ const MEPortfolioDashboard = () => {
   const workforceTotal = workforceBars.reduce((sum, bar) => sum + bar.value, 0);
 
   const geography = data?.geography || { locations: 0, rows: [] };
-  const topLocations = geography.rows.slice(0, 8);
-  const locationMax = topLocations.reduce((max, row) => Math.max(max, row.businesses), 0);
+  // Every location is listed beside the map now, so the bars scale to the
+  // largest of all of them rather than of a top eight.
+  const locationMax = geography.rows.reduce((max, row) => Math.max(max, row.businesses), 0);
+  const regionPalette = isDark ? REGION_COLOURS.dark : REGION_COLOURS.light;
+  const colorFor = (location) => {
+    const slot = regionOrder.indexOf(location);
+    return slot >= 0 ? regionPalette[slot] : OTHER_REGION;
+  };
+
+  // Every sector the portfolio's startups are registered under, largest first.
+  // Shares are of the startups reached, so they add up to the headline figure.
+  const sectors = data?.sectors || { count: 0, rows: [] };
+  const sectorMax = sectors.rows.reduce((max, row) => Math.max(max, row.businesses), 0);
+  const sectorTotal = sectors.rows.reduce((sum, row) => sum + row.businesses, 0);
 
   const collection = data?.dataCollection || { collected: 0, pending: 0, rate: 0 };
   const trend = data?.submissionTrend || [];
@@ -148,6 +210,10 @@ const MEPortfolioDashboard = () => {
   const officers = data?.fieldOfficers || { active: 0, rows: [] };
   const feedback = data?.feedback || [];
   const programmes = data?.programmesData || [];
+  // The programme the page is narrowed to, if any. Named in the hero so the
+  // filter's effect is visible before any panel is read.
+  const selectedProgramme =
+    (data?.programmeOptions || []).find((option) => option.uuid === programme) || null;
 
   // One series, so no legend: the panel title names what is plotted. A single
   // hue throughout - the bars differ by category, not by magnitude of meaning.
@@ -259,7 +325,7 @@ const MEPortfolioDashboard = () => {
           </span>
 
           <h1 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">
-            Programs M&amp;E Dashboard
+            {selectedProgramme ? selectedProgramme.title : "Programs M&E Dashboard"}
           </h1>
 
           <p className="mb-4 max-w-2xl text-sm leading-6 text-white/85 drop-shadow-md">
@@ -291,13 +357,36 @@ const MEPortfolioDashboard = () => {
 
       {/* FILTERS — one row above the panels, as on the programme pages. */}
       <div className="mb-6 flex flex-wrap items-center gap-2">
+        <label htmlFor="me-programme" className="sr-only">
+          Filter by programme
+        </label>
+        <select
+          id="me-programme"
+          value={programme}
+          onChange={(event) => {
+            setProgramme(event.target.value);
+            load({ status, program: event.target.value });
+          }}
+          className="max-w-full rounded-lg border border-stroke bg-white px-4 py-2.5 text-sm text-black outline-none focus:border-[#082d77] dark:border-strokedark dark:bg-boxdark dark:text-white sm:max-w-xs"
+        >
+          <option value="">All programmes</option>
+          {(data.programmeOptions || []).map((option) => (
+            <option key={option.uuid} value={option.uuid}>
+              {option.title}
+            </option>
+          ))}
+        </select>
+
         <label htmlFor="me-status" className="sr-only">
           Filter by programme status
         </label>
         <select
           id="me-status"
           value={status}
-          onChange={(event) => setStatus(event.target.value)}
+          onChange={(event) => {
+            setStatus(event.target.value);
+            load({ status: event.target.value, program: programme });
+          }}
           className="rounded-lg border border-stroke bg-white px-4 py-2.5 text-sm text-black outline-none focus:border-[#082d77] dark:border-strokedark dark:bg-boxdark dark:text-white"
         >
           <option value="">All programme statuses</option>
@@ -305,14 +394,6 @@ const MEPortfolioDashboard = () => {
           <option value="completed">Completed</option>
           <option value="planned">Planned</option>
         </select>
-
-        <button
-          type="button"
-          onClick={() => load(status)}
-          className="rounded-lg bg-[#082d77] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#082d77]/90"
-        >
-          Apply
-        </button>
 
         {loading ? (
           <span className="text-sm text-[#6f6f72] dark:text-bodydark">
@@ -375,38 +456,88 @@ const MEPortfolioDashboard = () => {
         />
       </div>
 
-      {/* COVERAGE AND PEOPLE */}
-      <div className="mb-6 grid gap-4 lg:grid-cols-3">
-        <Panel title="Geographic coverage">
-          {topLocations.length ? (
-            <ul className="space-y-3">
-              {topLocations.map((row) => (
-                <li key={row.location}>
-                  <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
-                    <span className="truncate font-semibold text-black dark:text-white">
-                      {row.location}
-                    </span>
-                    <span className="shrink-0 font-bold text-[#6f6f72] dark:text-bodydark">
-                      {num(row.businesses)}
-                    </span>
-                  </div>
-                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-strokedark">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${locationMax ? (row.businesses / locationMax) * 100 : 0}%`,
-                        backgroundColor: colors.one,
-                      }}
-                    />
-                  </div>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <Empty>No startup has a location recorded yet.</Empty>
-          )}
-        </Panel>
+      {/* COVERAGE — the map is the spatial view; the ranked list beside it is
+          the same data as text, so every count is readable without hovering. */}
+      <Panel
+        title="Geographic coverage"
+        className="mb-6"
+        action={
+          <span className="text-xs font-semibold text-[#6f6f72] dark:text-bodydark">
+            {num(geography.locations)} {geography.locations === 1 ? "location" : "locations"}
+          </span>
+        }
+      >
+        {geography.rows.length ? (
+          <div className="grid gap-5 lg:grid-cols-5">
+            <div className="h-[380px] overflow-hidden rounded-xl border border-stroke dark:border-strokedark lg:col-span-3">
+              <CoverageMap
+                rows={geography.rows}
+                total={data.entrepreneursSupported}
+                colorFor={colorFor}
+              />
+            </div>
 
+            <ul className="max-h-[380px] space-y-3 overflow-y-auto pr-1 lg:col-span-2">
+              {geography.rows.map((row) => {
+                const unrecorded = row.location === "Not recorded";
+                const share = data.entrepreneursSupported
+                  ? Math.round((row.businesses / data.entrepreneursSupported) * 100)
+                  : 0;
+
+                return (
+                  <li key={row.location}>
+                    <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
+                      <span className="flex min-w-0 items-center gap-2">
+                        {unrecorded ? null : (
+                          <span
+                            aria-hidden="true"
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: colorFor(row.location) }}
+                          />
+                        )}
+                        <span
+                          className={`truncate font-semibold ${
+                            unrecorded
+                              ? "italic text-[#6f6f72] dark:text-bodydark"
+                              : "text-black dark:text-white"
+                          }`}
+                        >
+                          {row.location}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-[#6f6f72] dark:text-bodydark">
+                        <span className="font-bold text-black dark:text-white">
+                          {num(row.businesses)}
+                        </span>{" "}
+                        &middot; {share}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-strokedark">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${locationMax ? (row.businesses / locationMax) * 100 : 0}%`,
+                          backgroundColor: unrecorded ? "#94a3b8" : colorFor(row.location),
+                        }}
+                      />
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <p className="text-xs text-[#6f6f72] dark:text-bodydark lg:col-span-5">
+              The three largest regions each have their own colour; every other
+              region is shown in gray.
+            </p>
+          </div>
+        ) : (
+          <Empty>No startup has a location recorded yet.</Empty>
+        )}
+      </Panel>
+
+      {/* PEOPLE */}
+      <div className="mb-6 grid gap-4 lg:grid-cols-2">
         <Panel title="Jobs by gender">
           {genderTotal ? (
             <>
@@ -451,6 +582,70 @@ const MEPortfolioDashboard = () => {
           )}
         </Panel>
       </div>
+
+      {/* SECTORS — which parts of the economy the portfolio reaches. One series,
+          so every bar wears the same hue and the title stands in for a legend.
+          "Not recorded" is drawn in neutral gray and sorted last, so a gap in
+          the data never reads as the portfolio's leading sector. */}
+      <Panel
+        title="Startups by sector"
+        className="mb-6"
+        action={
+          <span className="text-xs font-semibold text-[#6f6f72] dark:text-bodydark">
+            {num(sectors.count)} {sectors.count === 1 ? "sector" : "sectors"}
+          </span>
+        }
+      >
+        {sectors.rows.length ? (
+          <ul className="grid gap-x-8 gap-y-4 md:grid-cols-2">
+            {sectors.rows.map((row) => {
+              const unrecorded = row.sector === "Not recorded";
+              const share = sectorTotal ? Math.round((row.businesses / sectorTotal) * 100) : 0;
+
+              return (
+                <li
+                  key={row.sector}
+                  title={`${row.sector}: ${num(row.businesses)} ${
+                    row.businesses === 1 ? "startup" : "startups"
+                  } (${share}%), ${num(row.active)} active`}
+                >
+                  <div className="mb-1 flex items-baseline justify-between gap-3 text-sm">
+                    <span
+                      className={`truncate font-semibold ${
+                        unrecorded
+                          ? "italic text-[#6f6f72] dark:text-bodydark"
+                          : "text-black dark:text-white"
+                      }`}
+                    >
+                      {row.sector}
+                    </span>
+                    <span className="shrink-0 text-[#6f6f72] dark:text-bodydark">
+                      <span className="font-bold text-black dark:text-white">
+                        {num(row.businesses)}
+                      </span>{" "}
+                      &middot; {share}%
+                    </span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-strokedark">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${sectorMax ? (row.businesses / sectorMax) * 100 : 0}%`,
+                        backgroundColor: unrecorded ? "#94a3b8" : colors.one,
+                      }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-[#6f6f72] dark:text-bodydark">
+                    {num(row.active)} active
+                  </p>
+                </li>
+              );
+            })}
+          </ul>
+        ) : (
+          <Empty>No startup is enrolled on a programme that matches this filter.</Empty>
+        )}
+      </Panel>
 
       {/* DELIVERY */}
       <div className="mb-6 grid gap-4 lg:grid-cols-3">
@@ -518,7 +713,12 @@ const MEPortfolioDashboard = () => {
                   <p className="text-xs text-[#6f6f72] dark:text-bodydark">Collected</p>
                 </div>
                 <div>
-                  <p className="text-2xl font-black" style={{ color: STATUS.atRisk.dot }}>
+                  <p className="flex items-center justify-center gap-2 text-2xl font-black text-black dark:text-white">
+                    <span
+                      aria-hidden="true"
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ backgroundColor: STATUS.atRisk.dot }}
+                    />
                     {num(collection.pending)}
                   </p>
                   <p className="text-xs text-[#6f6f72] dark:text-bodydark">Outstanding</p>

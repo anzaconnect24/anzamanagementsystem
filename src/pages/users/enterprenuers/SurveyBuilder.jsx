@@ -1,18 +1,39 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { FaArrowLeft, FaPlus, FaTrash } from "react-icons/fa";
+import {
+  FaArrowLeft,
+  FaGlobeAfrica,
+  FaPlus,
+  FaSearch,
+  FaTrash,
+  FaUserFriends,
+} from "react-icons/fa";
 import Loader from "@/components/common/Loader";
 import {
   QUESTION_TYPES,
   createSurvey,
   getSurvey,
+  getSurveyAudiences,
   updateSurvey,
 } from "@/controllers/survey_controller";
 
 const CHOICE_TYPES = ["single_choice", "multiple_choice"];
+
+// Roles as people know them, for the people picker.
+const ROLE_LABELS = {
+  Enterprenuer: "Startup",
+  Mentor: "Mentor",
+  Investor: "Investor",
+  BDA: "Business Development Advisor",
+  Finance: "Finance Officer",
+  Admin: "Admin",
+  ME: "M&E Officer",
+};
+
+const roleLabel = (role) => ROLE_LABELS[role] || role;
 
 const blankQuestion = () => ({
   key: `q-${Math.random().toString(36).slice(2)}`,
@@ -22,8 +43,16 @@ const blankQuestion = () => ({
   required: true,
 });
 
-// Writing a survey: its title, a note for respondents, and the questions.
-// Reached from the Surveys tab of a program, and returns there when saved.
+const inputClass =
+  "w-full rounded-lg border border-black/10 px-4 py-2.5 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600";
+
+// Writing a survey: its title, a note for respondents, who it goes to, and the
+// questions.
+//
+// Started from a programme's Surveys tab (?program=), it belongs to that
+// programme and goes to its startups, as before. Started from the M&E
+// Officer's Surveys page, it goes to every startup on the platform or to the
+// people chosen here.
 const SurveyBuilder = () => {
   // uuid is present when editing an existing survey.
   const { uuid } = useParams();
@@ -39,6 +68,16 @@ const SurveyBuilder = () => {
   const [description, setDescription] = useState("");
   const [questions, setQuestions] = useState([blankQuestion()]);
 
+  // Who receives it.
+  const [audience, setAudience] = useState(cohortProgram ? "program" : "all_startups");
+  const [picked, setPicked] = useState([]);
+  const [people, setPeople] = useState([]);
+  const [startupCount, setStartupCount] = useState(0);
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+
+  const isProgramSurvey = audience === "program";
+
   useEffect(() => {
     if (!uuid) return;
 
@@ -47,6 +86,8 @@ const SurveyBuilder = () => {
         setTitle(body.title || "");
         setDescription(body.description || "");
         setProgramUuid(body.program?.uuid || cohortProgram);
+        setAudience(body.audience || "program");
+        setPicked((body.recipients || []).map((person) => person.uuid));
         setQuestions(
           (body.questions || []).map((question, index) => ({
             key: `q-${index}`,
@@ -59,11 +100,52 @@ const SurveyBuilder = () => {
       })
       .catch(() => toast.error("Failed to load this survey"))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [uuid]);
 
-  const backLink = programUuid
-    ? `/dashboard/programManagement/program/${programUuid}/surveys`
-    : "/dashboard/programManagement";
+  // The people list is only needed for a survey that reaches beyond a
+  // programme, and only fetched then.
+  useEffect(() => {
+    if (isProgramSurvey) return;
+
+    getSurveyAudiences().then((body) => {
+      setPeople(Array.isArray(body?.data) ? body.data : []);
+      setStartupCount(body?.startups || 0);
+    });
+  }, [isProgramSurvey]);
+
+  const roles = useMemo(
+    () => [...new Set(people.map((person) => person.role))].sort(),
+    [people],
+  );
+
+  const shown = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    return people.filter(
+      (person) =>
+        (!roleFilter || person.role === roleFilter) &&
+        (!query ||
+          [person.name, person.business, person.email]
+            .filter(Boolean)
+            .some((value) => String(value).toLowerCase().includes(query))),
+    );
+  }, [people, search, roleFilter]);
+
+  const pickedSet = useMemo(() => new Set(picked), [picked]);
+
+  const toggle = (id) =>
+    setPicked((current) =>
+      current.includes(id)
+        ? current.filter((item) => item !== id)
+        : [...current, id],
+    );
+
+  const backLink = isProgramSurvey
+    ? programUuid
+      ? `/dashboard/programManagement/program/${programUuid}/surveys`
+      : "/dashboard/programManagement"
+    : "/dashboard/surveys/manage";
 
   const patch = (key, changes) =>
     setQuestions((current) =>
@@ -121,6 +203,11 @@ const SurveyBuilder = () => {
       return;
     }
 
+    if (audience === "users" && picked.length === 0) {
+      toast.error("Choose at least one person to send this survey to");
+      return;
+    }
+
     setSaving(true);
 
     const payload = {
@@ -128,11 +215,18 @@ const SurveyBuilder = () => {
       description: description.trim() || null,
       questions: cleaned,
       status,
+      ...(isProgramSurvey
+        ? {}
+        : { audience, userUuids: audience === "users" ? picked : [] }),
     };
 
     const response = uuid
       ? await updateSurvey(uuid, payload)
-      : await createSurvey({ ...payload, cohortProgram: programUuid });
+      : await createSurvey(
+          isProgramSurvey
+            ? { ...payload, audience: "program", cohortProgram: programUuid }
+            : payload,
+        );
 
     setSaving(false);
 
@@ -142,7 +236,13 @@ const SurveyBuilder = () => {
     }
 
     toast.success(
-      status === "published" ? "Survey published" : "Survey saved as a draft",
+      status !== "published"
+        ? "Survey saved as a draft"
+        : isProgramSurvey
+          ? "Survey published"
+          : audience === "all_startups"
+            ? `Survey sent to all ${startupCount.toLocaleString()} startups`
+            : `Survey sent to ${picked.length} ${picked.length === 1 ? "person" : "people"}`,
     );
     navigate(backLink);
   };
@@ -175,7 +275,7 @@ const SurveyBuilder = () => {
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Enter survey title"
-              className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+              className={inputClass}
             />
           </div>
 
@@ -188,11 +288,159 @@ const SurveyBuilder = () => {
               rows={3}
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="Tell the startups what this survey is for"
-              className="w-full rounded-lg border border-black/10 px-4 py-2.5 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+              placeholder="Tell respondents what this survey is for"
+              className={inputClass}
             />
           </div>
         </div>
+
+        {/* WHO RECEIVES IT — only for a survey that is not a programme's own. */}
+        {!isProgramSurvey && (
+          <div className="mb-6 rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-black tracking-tight text-slate-950">
+              Who receives this survey
+            </h2>
+            <p className="mb-4 mt-1 text-sm text-[#6f6f72]">
+              Nobody sees it until you publish it.
+            </p>
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              {[
+                {
+                  key: "all_startups",
+                  icon: <FaGlobeAfrica />,
+                  label: "All startups",
+                  note: `Every startup account on the platform${
+                    startupCount ? ` — ${startupCount.toLocaleString()} today` : ""
+                  }, including any that join later.`,
+                },
+                {
+                  key: "users",
+                  icon: <FaUserFriends />,
+                  label: "Selected people",
+                  note: "Only the people you choose below, of any role.",
+                },
+              ].map((option) => (
+                <button
+                  key={option.key}
+                  type="button"
+                  onClick={() => setAudience(option.key)}
+                  aria-pressed={audience === option.key}
+                  className={`flex items-start gap-3 rounded-xl border p-4 text-left transition ${
+                    audience === option.key
+                      ? "border-[#082d77] bg-[#082d77]/5"
+                      : "border-slate-200 hover:bg-slate-50"
+                  }`}
+                >
+                  <span className="mt-0.5 text-[#082d77]">{option.icon}</span>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-bold text-slate-950">
+                      {option.label}
+                    </span>
+                    <span className="block text-xs leading-5 text-[#6f6f72]">
+                      {option.note}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            {audience === "users" && (
+              <div className="mt-5 border-t border-slate-100 pt-5">
+                <div className="mb-3 flex flex-wrap items-center gap-3">
+                  <div className="relative min-w-[200px] flex-1">
+                    <FaSearch className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-[#98A2B3]" />
+                    <input
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Search by name, company or email"
+                      aria-label="Search people"
+                      className={`${inputClass} pl-9`}
+                    />
+                  </div>
+
+                  <select
+                    value={roleFilter}
+                    onChange={(event) => setRoleFilter(event.target.value)}
+                    aria-label="Filter people by role"
+                    className="rounded-lg border border-black/10 px-4 py-2.5 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+                  >
+                    <option value="">All roles</option>
+                    {roles.map((role) => (
+                      <option key={role} value={role}>
+                        {roleLabel(role)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
+                  <span className="font-semibold text-slate-950">
+                    {picked.length} selected
+                  </span>
+
+                  <span className="flex flex-wrap gap-4">
+                    {shown.length ? (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setPicked((current) => [
+                            ...new Set([...current, ...shown.map((person) => person.uuid)]),
+                          ])
+                        }
+                        className="font-semibold text-[#082d77] hover:underline"
+                      >
+                        Select all {shown.length} shown
+                      </button>
+                    ) : null}
+
+                    {picked.length ? (
+                      <button
+                        type="button"
+                        onClick={() => setPicked([])}
+                        className="font-semibold text-rose-600 hover:underline"
+                      >
+                        Clear
+                      </button>
+                    ) : null}
+                  </span>
+                </div>
+
+                <div className="max-h-80 overflow-y-auto rounded-xl border border-slate-200 p-2">
+                  {shown.length === 0 ? (
+                    <p className="p-3 text-sm text-slate-500">
+                      {people.length ? "Nobody matches this search." : "Loading people…"}
+                    </p>
+                  ) : (
+                    shown.map((person) => (
+                      <label
+                        key={person.uuid}
+                        className="flex cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-sm hover:bg-slate-50"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={pickedSet.has(person.uuid)}
+                          onChange={() => toggle(person.uuid)}
+                        />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-semibold text-slate-950">
+                            {person.name}
+                          </span>
+                          <span className="block truncate text-xs text-[#6f6f72]">
+                            {person.business || person.email}
+                          </span>
+                        </span>
+                        <span className="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+                          {roleLabel(person.role)}
+                        </span>
+                      </label>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="text-xl font-black tracking-tight text-slate-950">
@@ -245,7 +493,7 @@ const SurveyBuilder = () => {
                   patch(question.key, { questionText: event.target.value })
                 }
                 placeholder="What do you want to ask?"
-                className="mb-4 w-full rounded-lg border border-black/10 px-4 py-2.5 text-sm outline-none focus:border-green-600 focus:ring-1 focus:ring-green-600"
+                className={`mb-4 ${inputClass}`}
               />
 
               <div className="flex flex-wrap items-center gap-4">
@@ -338,7 +586,7 @@ const SurveyBuilder = () => {
             onClick={() => save("published")}
             className="inline-flex items-center gap-2 rounded-lg bg-[#16a34a] px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#15803d] disabled:opacity-60"
           >
-            {saving ? "Saving..." : "Publish Survey"}
+            {saving ? "Saving..." : isProgramSurvey ? "Publish Survey" : "Publish and Send"}
           </button>
 
           <button

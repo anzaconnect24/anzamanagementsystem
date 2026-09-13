@@ -45,6 +45,20 @@ import {
   FaRegLightbulb,
   FaClipboardList,
   FaChartLine,
+  FaHandHoldingUsd,
+  FaInbox,
+  FaBalanceScale,
+  FaProjectDiagram,
+  FaColumns,
+  FaFolderOpen,
+  FaClipboardCheck,
+  FaUniversity,
+  FaBuilding,
+  FaComments,
+  FaCheckCircle,
+  FaChartPie,
+  FaBell,
+  FaUserShield,
 } from "react-icons/fa";
 import {
   RiTeamLine,
@@ -236,22 +250,7 @@ const Sidebar = ({
             "Finance",
           ],
         },
-        {
-          // The second: everyone's calendar. Reachable from the header panel
-          // before this, which meant knowing it was there.
-          name: t("navigation.calendar", "Calendar"),
-          path: "/dashboard/calendar",
-          icon: <BsCalendar3 className="text-xl" />,
-          roles: [
-            "Admin",
-            "Enterprenuer",
-            "Investor",
-            "Mentor",
-            "BDA",
-            "ME",
-            "Finance",
-          ],
-        },
+        // The calendar is opened from the header's calendar icon, not listed here.
       ],
     });
 
@@ -290,6 +289,10 @@ const Sidebar = ({
           {
             name: t("navigation.meOfficers", "M&E Officers"),
             path: "/dashboard/meOfficers",
+          },
+          {
+            name: t("navigation.capitalManagers", "Capital Facilitation Managers"),
+            path: "/dashboard/capitalManagers",
           },
           {
             name: t("navigation.admins", "Admins"),
@@ -344,7 +347,7 @@ const Sidebar = ({
     }
 
     if (
-      ["Investor", "Enterprenuer", "BDA", "Finance"].includes(
+      ["Investor", "Enterprenuer", "BDA", "Finance", "ME"].includes(
         role,
       )
     ) {
@@ -355,7 +358,9 @@ const Sidebar = ({
       });
     }
 
-    if (["BDA", "Finance"].includes(role)) {
+    // The M&E Officer monitors the whole portfolio, so they read the same
+    // community directory as the other staff roles.
+    if (["BDA", "Finance", "ME"].includes(role)) {
       peopleItems.push({
         name: t("navigation.investors", "Investors"),
         path: "/dashboard/investors",
@@ -441,10 +446,66 @@ const Sidebar = ({
             icon: <MdAssignment className="text-xl" />,
           },
           {
+            // Surveys sent to every startup or to people chosen by name. A
+            // programme's own surveys stay on that programme's page.
+            name: t("navigation.surveys", "Surveys"),
+            path: "/dashboard/surveys/manage",
+            icon: <FaClipboardList className="text-xl" />,
+          },
+          {
             name: t("navigation.programmeMe", "Programme M&E"),
             path: "/dashboard/programManagement",
             icon: <FaChartLine className="text-xl" />,
           },
+        ],
+      });
+    }
+
+    // Capital Facilitation is the Capital Facilitation Manager's workspace: the
+    // gatekeeper between enterprises and capital providers. Their Dashboard
+    // entry above already opens the capital dashboard.
+    if (role === "CFM") {
+      categories.push({
+        id: "capitalFacilitation",
+        title: t("navigation.capitalFacilitation", "Capital Facilitation"),
+        items: [
+          { name: t("navigation.capitalRequests", "Capital Requests"), path: "/dashboard/capital/requests", icon: <FaInbox className="text-xl" /> },
+          { name: t("navigation.capitalMatching", "Capital Matching"), path: "/dashboard/capital/matching", icon: <FaBalanceScale className="text-xl" /> },
+          { name: t("navigation.capitalIntroductions", "Introductions"), path: "/dashboard/capital/introductions", icon: <FaHandshake className="text-xl" /> },
+          { name: t("navigation.capitalOpportunities", "Capital Opportunities"), path: "/dashboard/capital/opportunities", icon: <FaProjectDiagram className="text-xl" /> },
+          { name: t("navigation.capitalPipeline", "Capital Pipeline"), path: "/dashboard/capital/pipeline", icon: <FaColumns className="text-xl" /> },
+          { name: t("navigation.dealRooms", "Deal Rooms"), path: "/dashboard/capital/deal-rooms", icon: <FaFolderOpen className="text-xl" /> },
+          { name: t("navigation.dueDiligence", "Due Diligence"), path: "/dashboard/capital/due-diligence", icon: <FaClipboardCheck className="text-xl" /> },
+        ],
+      });
+      categories.push({
+        id: "capitalNetwork",
+        title: t("navigation.capitalNetwork", "Capital Network"),
+        items: [
+          { name: t("navigation.capitalProviders", "Capital Providers"), path: "/dashboard/capital/providers", icon: <FaUniversity className="text-xl" /> },
+          { name: t("navigation.capitalEnterprises", "Enterprises"), path: "/dashboard/capital/enterprises", icon: <FaBuilding className="text-xl" /> },
+          { name: t("navigation.capitalCommunications", "Communications"), path: "/dashboard/capital/communications", icon: <FaComments className="text-xl" /> },
+        ],
+      });
+      categories.push({
+        id: "capitalResults",
+        title: t("navigation.capitalResults", "Results"),
+        items: [
+          { name: t("navigation.capitalFacilitated", "Capital Facilitated"), path: "/dashboard/capital/facilitated", icon: <FaCheckCircle className="text-xl" /> },
+          { name: t("navigation.capitalReports", "Reports"), path: "/dashboard/capital/reports", icon: <FaChartPie className="text-xl" /> },
+          { name: t("navigation.capitalNotifications", "Notifications"), path: "/dashboard/capital/notifications", icon: <FaBell className="text-xl" /> },
+          { name: t("navigation.capitalSettings", "Settings & Audit"), path: "/dashboard/capital/settings", icon: <IoSettingsOutline className="text-xl" /> },
+        ],
+      });
+    }
+
+    // Administrators decide who may do what in capital facilitation.
+    if (role === "Admin") {
+      categories.push({
+        id: "capitalAdmin",
+        title: t("navigation.capitalFacilitation", "Capital Facilitation"),
+        items: [
+          { name: t("navigation.capitalPermissions", "Capital Settings & Permissions"), path: "/dashboard/capital/settings", icon: <FaUserShield className="text-xl" /> },
         ],
       });
     }
@@ -509,29 +570,16 @@ const Sidebar = ({
         path: "/dashboard/investmentApplications",
         icon: <BsCardChecklist className="text-xl" />,
       });
+
+      // Capital facilitation: interest in an enterprise goes through Anza.
+      businessItems.push({
+        name: t("navigation.capitalDeals", "Capital Deals"),
+        path: "/dashboard/capital-deals",
+        icon: <FaHandHoldingUsd className="text-xl" />,
+      });
     }
 
     if (["Admin"].includes(role)) {
-      businessItems.push({
-        name: t("navigation.investmentRequests", "Investment Requests"),
-        path: "/dashboard/pendingRequests",
-        icon: <RiMoneyDollarCircleLine className="text-xl" />,
-        submenu: [
-          {
-            name: t("navigation.requestsInProgress", "Requests in Progress"),
-            path: "/dashboard/pendingRequests",
-          },
-          {
-            name: t("navigation.matchedRequests", "Matched Requests"),
-            path: "/dashboard/acceptedRequests",
-          },
-          {
-            name: t("navigation.mismatchedRequests", "Mismatched Requests"),
-            path: "/dashboard/rejectedRequests",
-          },
-        ],
-      });
-
       businessItems.push({
         name: t("navigation.applications", "Applications"),
         path: "/dashboard/pendingApplications",
@@ -605,6 +653,13 @@ const Sidebar = ({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),
         path: "/dashboard/opportunities",
         icon: <RiPhoneLine className="text-xl" />,
+      });
+
+      // Raising capital through Anza's Capital Facilitation team.
+      investmentItems.push({
+        name: t("navigation.raiseCapital", "Raise Capital"),
+        path: "/dashboard/capital",
+        icon: <FaHandHoldingUsd className="text-xl" />,
       });
     }
 
@@ -736,8 +791,10 @@ const Sidebar = ({
       });
     }
 
-    // Surveys a startup has been asked to answer, on its own programme.
-    if (role === "Enterprenuer") {
+    // Surveys to answer. A startup gets its programme's and any sent to every
+    // startup; anyone may be sent one by name, so every role but the M&E
+    // Officer - who writes them - has somewhere to answer.
+    if (role !== "ME") {
       programsItems.push({
         name: t("navigation.surveys", "Surveys"),
         path: "/dashboard/surveys",
@@ -772,6 +829,7 @@ const Sidebar = ({
         "Admin",
         "Finance",
         "ME",
+        "CFM",
       ].includes(role)
     ) {
       categories.push({

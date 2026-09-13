@@ -21,8 +21,9 @@ const formatDate = (value) => {
   });
 };
 
-// What the programme's startups answered. Tallies for the choice and rating
-// questions, and the written answers verbatim.
+// What respondents answered. Tallies for the choice and rating questions, and
+// the written answers verbatim. A survey may have gone to a programme, to every
+// startup, or to people chosen by name, so nothing here assumes a startup.
 const SurveyResults = () => {
   const { uuid } = useParams();
   const navigate = useNavigate();
@@ -70,7 +71,7 @@ const SurveyResults = () => {
 
         <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {[
-            { key: "sent", label: "Startups", value: results.members },
+            { key: "sent", label: "Sent to", value: results.members },
             { key: "got", label: "Responses", value: results.responded },
             { key: "rate", label: "Response Rate", value: `${rate}%` },
             {
@@ -183,14 +184,14 @@ const SurveyResults = () => {
 
         {results.respondents.length === 0 ? (
           <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center text-sm text-slate-500">
-            No startup has answered this survey yet.
+            Nobody has answered this survey yet.
           </div>
         ) : (
           <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
             <table className="w-full text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-[#667085]">
-                  <th className="px-6 py-4 font-medium">Startup</th>
+                  <th className="px-6 py-4 font-medium">Respondent</th>
                   <th className="px-6 py-4 font-medium">Email</th>
                   <th className="px-6 py-4 font-medium">Submitted</th>
                 </tr>
@@ -203,7 +204,7 @@ const SurveyResults = () => {
                     className="border-b border-slate-100 last:border-0"
                   >
                     <td className="px-6 py-4 font-bold text-[#082d77]">
-                      {row.name || "Unnamed Business"}
+                      {row.name || "Unnamed"}
                     </td>
                     <td className="px-6 py-4 text-slate-700">
                       {row.email || "—"}

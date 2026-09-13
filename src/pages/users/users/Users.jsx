@@ -24,6 +24,7 @@ const ROLE_OPTIONS = [
   "BDA",
   "ME",
   "Finance",
+  "CFM",
   "Investor",
   "Mentor",
   "Enterprenuer",
@@ -127,6 +128,9 @@ const Page = () => {
                 </option>
                 <option value="Finance">
                   {t("users.finance", "Finance Officer")}
+                </option>
+                <option value="CFM">
+                  {t("users.capitalManager", "Capital Facilitation Manager")}
                 </option>
                 <option value="Investor">
                   {t("users.investor", "Investor")}
@@ -297,6 +301,9 @@ const Page = () => {
                       </option>
                       <option value="Finance">
                         {t("users.finance", "Finance Officer")}
+                      </option>
+                      <option value="CFM">
+                        {t("users.capitalManager", "Capital Facilitation Manager")}
                       </option>
                       <option value="Admin">{t("users.admin", "Admin")}</option>
                     </select>

@@ -132,6 +132,7 @@ import ProgramGrants from "./pages/users/enterprenuers/ProgramGrants";
 import ProgramWorkplan from "./pages/users/enterprenuers/ProgramWorkplan";
 import MEPortfolioDashboard from "./pages/users/enterprenuers/MEPortfolioDashboard";
 import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
+import SurveyManager from "./pages/users/enterprenuers/SurveyManager";
 import MySurveys from "./pages/learnandgrow/surveys/MySurveys";
 import CoursePlayer from "./pages/learnandgrow/player/CoursePlayer";
 import CourseDetails from "./pages/learnandgrow/courses/CourseDetails";
@@ -272,6 +273,39 @@ import FundingAgreements from "./pages/tracker/admin/FundingAgreements";
 import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
 import TrackerStartupDetails from "./pages/tracker/admin/TrackerStartupDetails";
 import StaffStartupMilestones from "./pages/tracker/mentor/StaffStartupMilestones";
+import CapitalManagers from "./pages/users/capitalManagers/CapitalManagers";
+import CapitalRoute from "./components/capital/CapitalRoute";
+import CapitalHome from "./pages/capital/CapitalHome";
+import CapitalRequests from "./pages/capital/CapitalRequests";
+import CapitalRequestDetail from "./pages/capital/CapitalRequestDetail";
+import CapitalMatching from "./pages/capital/CapitalMatching";
+import ManageMatching from "./pages/capital/ManageMatching";
+import CapitalIntroductions from "./pages/capital/CapitalIntroductions";
+import CapitalOpportunities from "./pages/capital/CapitalOpportunities";
+import CapitalOpportunityRecord from "./pages/capital/CapitalOpportunityRecord";
+import CapitalPipeline from "./pages/capital/CapitalPipeline";
+import CapitalDealRooms from "./pages/capital/CapitalDealRooms";
+import CapitalDueDiligence from "./pages/capital/CapitalDueDiligence";
+import CapitalProviders from "./pages/capital/CapitalProviders";
+import CapitalProviderDetail from "./pages/capital/CapitalProviderDetail";
+import CapitalEnterprises from "./pages/capital/CapitalEnterprises";
+import CapitalCommunications from "./pages/capital/CapitalCommunications";
+import CapitalFacilitated from "./pages/capital/CapitalFacilitated";
+import CapitalReports from "./pages/capital/CapitalReports";
+import CapitalNotifications from "./pages/capital/CapitalNotifications";
+import CapitalSettings from "./pages/capital/CapitalSettings";
+import CapitalDeals from "./pages/capital/CapitalDeals";
+
+// Capital facilitation screens are open to the internal roles an administrator
+// can grant capital permissions to; CapitalRoute then checks the permission.
+const CAPITAL_STAFF = ["CFM", "Admin", "BDA", "ME", "Finance"];
+
+// One capital facilitation page: staff only, and only with the permission.
+const capitalPage = (need, page) => (
+  <RoleRoute allow={CAPITAL_STAFF}>
+    <CapitalRoute need={need}>{page}</CapitalRoute>
+  </RoleRoute>
+);
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -512,6 +546,16 @@ function App() {
             <Route path="learn/course/:courseUuid" element={<CoursePlayer />} />
             <Route path="learn/:uuid" element={<CoursePlayer />} />
             <Route path="surveys" element={<MySurveys />} />
+            {/* The M&E Officer's surveys that reach beyond one programme: to
+                every startup, or to people chosen by name. */}
+            <Route
+              path="surveys/manage"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyManager />
+                </RoleRoute>
+              }
+            />
             <Route
               path="surveys/new"
               element={
@@ -543,6 +587,48 @@ function App() {
             <Route path="admins" element={<Admins />} />
             <Route path="financeOfficers" element={<FinanceOfficers />} />
             <Route path="meOfficers" element={<MEOfficers />} />
+            <Route
+              path="capitalManagers"
+              element={
+                <RoleRoute allow={["Admin"]}>
+                  <CapitalManagers />
+                </RoleRoute>
+              }
+            />
+
+            {/* Capital facilitation. /capital is shared by everyone a capital
+                notification reaches: enterprises land on their own capital
+                workspace, staff on the facilitation dashboard. Every other
+                screen is staff-only and needs its capital permission. */}
+            <Route path="capital" element={<CapitalHome />} />
+            <Route path="capital/requests" element={capitalPage(["capital.requests.view"], <CapitalRequests />)} />
+            <Route path="capital/requests/:uuid" element={capitalPage(["capital.requests.view"], <CapitalRequestDetail />)} />
+            <Route path="capital/matching" element={capitalPage(["capital.matching.manage"], <CapitalMatching />)} />
+            <Route path="capital/matching/:uuid" element={capitalPage(["capital.matching.manage"], <ManageMatching />)} />
+            <Route path="capital/introductions" element={capitalPage(["capital.introductions.manage"], <CapitalIntroductions />)} />
+            <Route path="capital/opportunities" element={capitalPage(["capital.opportunities.view"], <CapitalOpportunities />)} />
+            <Route path="capital/opportunities/:uuid" element={capitalPage(["capital.opportunities.view"], <CapitalOpportunityRecord />)} />
+            <Route path="capital/pipeline" element={capitalPage(["capital.opportunities.view"], <CapitalPipeline />)} />
+            <Route path="capital/deal-rooms" element={capitalPage(["capital.dealrooms.manage"], <CapitalDealRooms />)} />
+            <Route path="capital/due-diligence" element={capitalPage(["capital.duediligence.manage"], <CapitalDueDiligence />)} />
+            <Route path="capital/providers" element={capitalPage(["capital.providers.view"], <CapitalProviders />)} />
+            <Route path="capital/providers/:uuid" element={capitalPage(["capital.providers.view"], <CapitalProviderDetail />)} />
+            <Route path="capital/enterprises" element={capitalPage(["capital.requests.view"], <CapitalEnterprises />)} />
+            <Route path="capital/communications" element={capitalPage(["capital.communications.moderate"], <CapitalCommunications />)} />
+            <Route path="capital/facilitated" element={capitalPage(["capital.reports.view", "capital.outcomes.manage"], <CapitalFacilitated />)} />
+            <Route path="capital/reports" element={capitalPage(["capital.reports.view"], <CapitalReports />)} />
+            <Route path="capital/notifications" element={capitalPage([], <CapitalNotifications />)} />
+            <Route path="capital/settings" element={capitalPage(["capital.settings.manage", "capital.permissions.manage", "capital.audit.view"], <CapitalSettings />)} />
+            {/* A capital provider's side: enterprises seeking capital, its
+                requests to Anza, and deals once introduced. */}
+            <Route
+              path="capital-deals"
+              element={
+                <RoleRoute allow={["Investor"]}>
+                  <CapitalDeals />
+                </RoleRoute>
+              }
+            />
             <Route
               path="interestedEnterprenuers"
               element={<InterestedEnterprenuers />}

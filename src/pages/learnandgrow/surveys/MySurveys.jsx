@@ -21,8 +21,9 @@ const formatDate = (value) => {
   return date.toLocaleDateString("en-GB");
 };
 
-// The published surveys of the programme a startup is enrolled in. The API
-// filters by the caller's own programme, so nothing is filtered again here.
+// Every published survey addressed to the signed-in person: their programme's,
+// ones sent to every startup, and ones sent to them by name. The API decides
+// what is addressed to whom, so nothing is filtered again here.
 const MySurveys = () => {
   const navigate = useNavigate();
 
@@ -80,10 +81,12 @@ const MySurveys = () => {
           )}
 
           <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
-            <span className="flex items-center gap-2">
-              <FaUsers />
-              {members} {members === 1 ? "startup" : "startups"} in this program
-            </span>
+            {program && (
+              <span className="flex items-center gap-2">
+                <FaUsers />
+                {members} {members === 1 ? "startup" : "startups"} in this program
+              </span>
+            )}
 
             {(program?.startDate || program?.endDate) && (
               <span className="flex items-center gap-2">
@@ -156,8 +159,7 @@ const MySurveys = () => {
         <div className="rounded-2xl border border-dashed border-slate-200 bg-white p-10 text-center">
           <FaClipboardList className="mx-auto mb-3 text-3xl text-slate-300" />
           <p className="text-sm text-slate-500">
-            No surveys have been shared with the program in which you were
-            enrolled.
+            No surveys have been shared with you yet.
           </p>
         </div>
       ) : (

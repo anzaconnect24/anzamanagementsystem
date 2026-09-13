@@ -42,6 +42,25 @@ export const getSurveys = async (cohortProgram) => {
   }
 };
 
+// Who a survey reaches, in the words the M&E Officer picks from.
+export const AUDIENCES = [
+  { value: "all_startups", label: "All startups" },
+  { value: "users", label: "Selected people" },
+];
+
+// Everyone a survey can be sent to by name, with the business each startup
+// runs. For the M&E Officer only; an empty list rather than a throw, so the
+// builder still opens if it fails.
+export const getSurveyAudiences = async () => {
+  try {
+    const response = await axios.get(`${BASE()}/audiences`, { headers });
+    return response.data.body;
+  } catch (error) {
+    console.log(error.response);
+    return { startups: 0, data: [] };
+  }
+};
+
 export const getSurvey = async (uuid) => {
   try {
     const response = await axios.get(`${BASE()}/${encodeURIComponent(uuid)}`, {
