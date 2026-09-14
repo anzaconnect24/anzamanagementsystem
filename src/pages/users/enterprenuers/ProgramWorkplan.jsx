@@ -286,7 +286,7 @@ const ProgramWorkplan = () => {
                 {/* Names the unlabelled fields below, so "Responsible" reads
                     the same in the editor as it does in the plan. */}
                 {output.activities.length > 0 ? (
-                  <div className="hidden gap-2 px-3 text-xs font-semibold uppercase tracking-wide text-[#8a8f98] md:grid md:grid-cols-[1fr_140px_140px_160px_130px_32px]">
+                  <div className="hidden gap-2 px-3 text-sm font-semibold capitalize text-black md:grid md:grid-cols-[1fr_140px_140px_160px_130px_32px]">
                     <span>Activity</span>
                     <span>Start</span>
                     <span>End</span>

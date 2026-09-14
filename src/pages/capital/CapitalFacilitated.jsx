@@ -66,7 +66,7 @@ const CapitalFacilitated = () => {
         <Field label="Financing type" className="w-44"><Select value={filters.financingType} onChange={set("financingType")} placeholder="All" options={(options?.financingTypes || []).map((v) => ({ value: v, label: financingLabel(v) }))} /></Field>
         <Field label="Manager" className="w-40"><Select value={filters.manager} onChange={set("manager")} placeholder="All" options={options?.managers || []} getValue={(o) => o.uuid} getLabel={(o) => o.name} /></Field>
         <Field label="Opened from" className="w-36"><input type="date" className={inputClass} value={filters.dateFrom} onChange={(e) => set("dateFrom")(e.target.value)} /></Field>
-        <Field label="to" className="w-36"><input type="date" className={inputClass} value={filters.dateTo} onChange={(e) => set("dateTo")(e.target.value)} /></Field>
+        <Field label="To" className="w-36"><input type="date" className={inputClass} value={filters.dateTo} onChange={(e) => set("dateTo")(e.target.value)} /></Field>
       </FilterBar>
 
       <Card title={`${result.data.length} financings`} padded={false}>

@@ -17,6 +17,8 @@ import {
   MatchScore,
   buttonClass,
 } from "@/components/capital/CapitalUI";
+import DeleteCapitalRequest from "@/components/capital/DeleteCapitalRequest";
+import useCapitalAccess from "@/components/capital/useCapitalAccess";
 import {
   financingLabel,
   money,
@@ -29,6 +31,7 @@ import {
 // requests behind it.
 const CapitalRequests = () => {
   const navigate = useNavigate();
+  const { can } = useCapitalAccess();
   const [params, setParams] = useSearchParams();
   const [options, setOptions] = useState(null);
   const [result, setResult] = useState(null);
@@ -84,6 +87,8 @@ const CapitalRequests = () => {
 
   if (!result) return <LoadingBlock label="Loading capital requests…" />;
 
+  const canDelete = can("capital.requests.delete");
+
   return (
     <div className="min-h-screen px-4 py-4 md:px-6">
       <CapitalHero
@@ -126,7 +131,7 @@ const CapitalRequests = () => {
         <Field label="Submitted from" className="w-36">
           <input type="date" className={inputClass} value={filters.dateFrom} onChange={(e) => set("dateFrom")(e.target.value)} />
         </Field>
-        <Field label="to" className="w-36">
+        <Field label="To" className="w-36">
           <input type="date" className={inputClass} value={filters.dateTo} onChange={(e) => set("dateTo")(e.target.value)} />
         </Field>
       </FilterBar>
@@ -152,6 +157,28 @@ const CapitalRequests = () => {
             { key: "submittedAt", label: "Submitted", className: "whitespace-nowrap", render: (row) => shortDate(row.submittedAt) },
             { key: "status", label: "Status", render: (row) => <StatusChip value={row.status} label={requestStatusLabel(row.status)} /> },
             { key: "manager", label: "Manager", render: (row) => row.assignedManager?.name || <span className="text-xs text-slate-400">Unassigned</span> },
+            ...(canDelete
+              ? [
+                  {
+                    key: "actions",
+                    label: "Actions",
+                    render: (row) =>
+                      row.opportunities ? (
+                        <span className="text-xs text-slate-400" title="A request with capital opportunities is closed, not deleted">In use</span>
+                      ) : (
+                        // Keep clicks on the button and its dialog from opening the row.
+                        <div onClick={(event) => event.stopPropagation()}>
+                          <DeleteCapitalRequest
+                            request={row}
+                            label="Delete"
+                            className="rounded-lg border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-rose-700 transition hover:bg-rose-50"
+                            onDeleted={load}
+                          />
+                        </div>
+                      ),
+                  },
+                ]
+              : []),
           ]}
         />
 

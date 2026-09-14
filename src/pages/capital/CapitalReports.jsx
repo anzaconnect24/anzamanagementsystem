@@ -158,7 +158,7 @@ const CapitalReports = () => {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <tr className="border-b border-slate-200 text-sm font-semibold capitalize text-black">
                     <th className="px-4 py-3">{breakdown.label}</th>
                     <th className="px-4 py-3 text-right">Requests</th>
                     <th className="px-4 py-3 text-right">Requested</th>

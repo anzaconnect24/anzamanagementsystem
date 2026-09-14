@@ -312,6 +312,18 @@ const Enterprenuers = () => {
               Business Profiles
             </span>
           </div>
+
+          {/* The Capital Facilitation Manager also follows which startups
+              have asked for capital and how far each has got. */}
+          {userDetails?.role === "CFM" && (
+            <Link
+              href="/dashboard/capital/enterprises"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white/15 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/25"
+            >
+              Startups seeking capital
+              <FaArrowRight />
+            </Link>
+          )}
         </div>
       </div>
 

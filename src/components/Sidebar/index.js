@@ -46,6 +46,7 @@ import {
   FaClipboardList,
   FaChartLine,
   FaHandHoldingUsd,
+  FaCoins,
   FaInbox,
   FaBalanceScale,
   FaProjectDiagram,
@@ -482,8 +483,8 @@ const Sidebar = ({
         id: "capitalNetwork",
         title: t("navigation.capitalNetwork", "Capital Network"),
         items: [
-          { name: t("navigation.capitalProviders", "Capital Providers"), path: "/dashboard/capital/providers", icon: <FaUniversity className="text-xl" /> },
-          { name: t("navigation.capitalEnterprises", "Enterprises"), path: "/dashboard/capital/enterprises", icon: <FaBuilding className="text-xl" /> },
+          { name: t("navigation.investors", "Investors"), path: "/dashboard/investors", icon: <FaUniversity className="text-xl" /> },
+          { name: t("navigation.startups", "Startups"), path: "/dashboard/enterprenuers", icon: <FaBuilding className="text-xl" /> },
           { name: t("navigation.capitalCommunications", "Communications"), path: "/dashboard/capital/communications", icon: <FaComments className="text-xl" /> },
         ],
       });
@@ -626,25 +627,31 @@ const Sidebar = ({
     }
 
     if (["Enterprenuer"].includes(role)) {
+      // Raise Capital: investors, applications and interest all go through
+      // Anza's Capital Facilitation team, which makes every introduction.
       investmentItems.push({
-        name: t("navigation.investorConnection", "Investor Connection"),
-        path: "/dashboard/investors",
-        icon: <RiMoneyDollarCircleLine className="text-xl" />,
+        name: t("navigation.raiseCapital", "Raise Capital"),
+        path: "/dashboard/capital",
+        icon: <FaCoins className="text-xl" />,
         submenu: [
           {
             name: t("navigation.investors", "Investors"),
-            path: "/dashboard/investors",
+            path: "/dashboard/capital/investors",
           },
           {
             name: t(
               "navigation.investmentApplications",
               "Investment Applications",
             ),
-            path: "/dashboard/investmentApplications",
+            path: "/dashboard/capital/applications",
           },
           {
             name: t("navigation.interestedInvestors", "Interested Investors"),
-            path: "/dashboard/interestedInvestors",
+            path: "/dashboard/capital/interested-investors",
+          },
+          {
+            name: t("navigation.myDeals", "My Deals"),
+            path: "/dashboard/capital",
           },
         ],
       });
@@ -653,13 +660,6 @@ const Sidebar = ({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),
         path: "/dashboard/opportunities",
         icon: <RiPhoneLine className="text-xl" />,
-      });
-
-      // Raising capital through Anza's Capital Facilitation team.
-      investmentItems.push({
-        name: t("navigation.raiseCapital", "Raise Capital"),
-        path: "/dashboard/capital",
-        icon: <FaHandHoldingUsd className="text-xl" />,
       });
     }
 

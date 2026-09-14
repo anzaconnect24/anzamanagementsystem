@@ -66,7 +66,7 @@ const CapitalOpportunities = () => {
         <Field label="Region" className="w-36"><input className={inputClass} value={filters.region} onChange={(e) => set("region")(e.target.value)} placeholder="e.g. Dodoma" /></Field>
         <Field label="Manager" className="w-40"><Select value={filters.manager} onChange={set("manager")} placeholder="All" options={options?.managers || []} getValue={(o) => o.uuid} getLabel={(o) => o.name} /></Field>
         <Field label="Created from" className="w-36"><input type="date" className={inputClass} value={filters.dateFrom} onChange={(e) => set("dateFrom")(e.target.value)} /></Field>
-        <Field label="to" className="w-36"><input type="date" className={inputClass} value={filters.dateTo} onChange={(e) => set("dateTo")(e.target.value)} /></Field>
+        <Field label="To" className="w-36"><input type="date" className={inputClass} value={filters.dateTo} onChange={(e) => set("dateTo")(e.target.value)} /></Field>
       </FilterBar>
 
       <Card title={`${result.count} capital ${result.count === 1 ? "opportunity" : "opportunities"}`} padded={false} className={`transition-opacity ${refreshing ? "opacity-60" : ""}`}>

@@ -43,7 +43,7 @@ export const Card = ({ title, action, children, className = "", padded = true })
   <section className={`rounded-2xl border border-slate-200 bg-white shadow-sm ${className}`}>
     {title || action ? (
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 px-5 py-3">
-        {title ? <h2 className="text-base font-bold text-slate-900">{title}</h2> : <span />}
+        {title ? <h2 className="text-base font-bold capitalize text-black">{title}</h2> : <span />}
         {action}
       </div>
     ) : null}
@@ -88,9 +88,13 @@ export const MatchScore = ({ score, showLabel = true }) => {
   );
 };
 
-// One row of filters above the content they scope.
+// One row of filters above the content they scope. Filter titles read with
+// every word capitalised and black, unlike the small grey uppercase form labels.
+const FILTER_TITLES =
+  "[&>label>span:first-child]:capitalize [&>label>span:first-child]:tracking-normal [&>label>span:first-child]:text-sm [&>label>span:first-child]:font-medium [&>label>span:first-child]:text-black";
+
 export const FilterBar = ({ children, onReset }) => (
-  <div className="mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm">
+  <div className={`mb-4 flex flex-wrap items-end gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm ${FILTER_TITLES}`}>
     {children}
     {onReset ? (
       <button type="button" onClick={onReset} className={`${buttonClass.link} mb-2 ml-auto`}>
@@ -135,7 +139,7 @@ export const DataTable = ({ columns, rows, rowKey = (row) => row.uuid, onRowClic
     <div className="overflow-x-auto">
       <table className="w-full min-w-[720px] text-left text-sm">
         <thead>
-          <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <tr className="border-b border-slate-200 text-sm font-semibold capitalize text-black">
             {columns.map((column) => (
               <th key={column.key} className={`px-4 py-3 ${column.className || ""}`}>
                 {column.label}

@@ -61,6 +61,8 @@ export const listCapitalRequests = (params) => call("get", "/requests", { params
 export const getCapitalRequest = (uuid) => call("get", `/requests/${enc(uuid)}`);
 export const reviewCapitalRequest = (uuid, data) => call("patch", `/requests/${enc(uuid)}/review`, { data, fallback: "Failed to update the request" });
 export const uploadRequestDocument = (uuid, file, fields) => uploadTo(`/requests/${enc(uuid)}/documents`, file, fields);
+export const deleteCapitalRequest = (uuid, data) => call("delete", `/requests/${enc(uuid)}`, { data, fallback: "Failed to delete the capital request" });
+export const deleteMyCapitalRequest = (uuid, data) => call("delete", `/my/requests/${enc(uuid)}`, { data, fallback: "Failed to delete the application" });
 
 // ---- Capital providers ---------------------------------------------------------------
 export const listCapitalProviders = (params) => call("get", "/providers", { params });

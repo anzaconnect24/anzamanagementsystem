@@ -295,6 +295,9 @@ import CapitalReports from "./pages/capital/CapitalReports";
 import CapitalNotifications from "./pages/capital/CapitalNotifications";
 import CapitalSettings from "./pages/capital/CapitalSettings";
 import CapitalDeals from "./pages/capital/CapitalDeals";
+import CapitalInvestors from "./pages/capital/CapitalInvestors";
+import CapitalApplications from "./pages/capital/CapitalApplications";
+import CapitalInterestedInvestors from "./pages/capital/CapitalInterestedInvestors";
 
 // Capital facilitation screens are open to the internal roles an administrator
 // can grant capital permissions to; CapitalRoute then checks the permission.
@@ -601,6 +604,11 @@ function App() {
                 workspace, staff on the facilitation dashboard. Every other
                 screen is staff-only and needs its capital permission. */}
             <Route path="capital" element={<CapitalHome />} />
+            {/* Raise Capital, the startup's side: investors to be introduced
+                to, its applications, and investors interested in it. */}
+            <Route path="capital/investors" element={<RoleRoute allow={["Enterprenuer"]}><CapitalInvestors /></RoleRoute>} />
+            <Route path="capital/applications" element={<RoleRoute allow={["Enterprenuer"]}><CapitalApplications /></RoleRoute>} />
+            <Route path="capital/interested-investors" element={<RoleRoute allow={["Enterprenuer"]}><CapitalInterestedInvestors /></RoleRoute>} />
             <Route path="capital/requests" element={capitalPage(["capital.requests.view"], <CapitalRequests />)} />
             <Route path="capital/requests/:uuid" element={capitalPage(["capital.requests.view"], <CapitalRequestDetail />)} />
             <Route path="capital/matching" element={capitalPage(["capital.matching.manage"], <CapitalMatching />)} />

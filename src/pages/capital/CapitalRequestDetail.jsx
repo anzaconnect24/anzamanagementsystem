@@ -27,6 +27,7 @@ import {
   buttonClass,
 } from "@/components/capital/CapitalUI";
 import { AuditTrail, NotesPanel, openDocument } from "@/components/capital/CapitalRecord";
+import DeleteCapitalRequest from "@/components/capital/DeleteCapitalRequest";
 import useCapitalAccess from "@/components/capital/useCapitalAccess";
 import {
   DOCUMENT_CATEGORY_LABELS,
@@ -110,6 +111,8 @@ const CapitalRequestDetail = () => {
   const reviewer = can("capital.requests.review");
   const available = reviewer ? REVIEW.filter((item) => item.from.includes(record.status)) : [];
   const matchable = (options?.matchableStatuses || []).includes(record.status);
+  // Only a request with no capital opportunities can be deleted; the rest are closed.
+  const deletable = can("capital.requests.delete") && !record.opportunityList.length;
 
   const begin = (item) => {
     setForm({ readinessStatus: record.readinessStatus === "not_assessed" && item.action === "approve_for_matching" ? "ready" : record.readinessStatus, managerUuid: record.assignedManager?.uuid || "" });
@@ -187,11 +190,12 @@ const CapitalRequestDetail = () => {
         <span className="text-sm text-slate-600">Readiness: <strong className="text-slate-800">{readinessLabel(record.readinessStatus)}</strong></span>
         <span className="text-sm text-slate-600">Manager: <strong className="text-slate-800">{record.assignedManager?.name || "Unassigned"}</strong></span>
         {record.legacyRequest ? <span className="rounded-full bg-slate-100 px-2.5 py-0.5 text-xs text-slate-600">From an investment request</span> : null}
-        {available.length ? (
+        {available.length || deletable ? (
           <div className="ml-auto flex flex-wrap gap-2">
             {available.map((item) => (
               <button key={item.action} type="button" className={buttonClass[item.tone]} onClick={() => begin(item)}>{item.label}</button>
             ))}
+            {deletable ? <DeleteCapitalRequest request={record} onDeleted={() => navigate("/dashboard/capital/requests")} /> : null}
           </div>
         ) : null}
       </div>

@@ -893,7 +893,7 @@ const ProgramDocuments = () => {
         // No overflow-hidden on this wrapper: the ⋮ menus hang out of their
         // rows, and clipping them would cut the menu in half.
         <div className="rounded-2xl border border-slate-200 bg-white">
-          <div className="hidden grid-cols-[minmax(0,3fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_90px_44px] gap-4 border-b border-slate-100 px-4 py-3 text-xs font-bold uppercase tracking-wide text-slate-400 md:grid">
+          <div className="hidden grid-cols-[minmax(0,3fr)_minmax(0,1.2fr)_minmax(0,1.2fr)_90px_44px] gap-4 border-b border-slate-100 px-4 py-3 text-sm font-bold capitalize text-black md:grid">
             <span>Name</span>
             <span>{here ? "Enterprise" : "Folder"}</span>
             <span>Last modified</span>

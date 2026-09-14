@@ -768,7 +768,7 @@ const MEPortfolioDashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-stroke text-xs font-bold uppercase tracking-wide text-[#6f6f72] dark:border-strokedark dark:text-bodydark">
+                  <tr className="border-b border-stroke text-sm font-bold capitalize text-black dark:border-strokedark dark:text-bodydark">
                     <th className="px-2 py-3">Lead</th>
                     <th className="px-2 py-3">Sessions this month</th>
                     <th className="px-2 py-3">Last logged</th>

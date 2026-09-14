@@ -1,5 +1,6 @@
 "use client";
 
+import { profileListText } from "@/utils/profile_list";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { getInvestors } from "@/controllers/user_controller";
 import Loader from "@/components/common/Loader";
@@ -277,15 +278,11 @@ const Page = () => {
     }
   };
 
-  const getInvestmentType = (investor) => {
-    const values = Object.values(
-      investor?.InvestorProfile?.investmentType || {}
+  const getInvestmentType = (investor) =>
+    profileListText(
+      investor?.InvestorProfile?.investmentType,
+      t("users.structureNotSpecified", "Structure not specified")
     );
-
-    return values.length > 0
-      ? values.join(", ")
-      : t("users.structureNotSpecified", "Structure not specified");
-  };
 
   if (error) {
     return (
@@ -351,6 +348,19 @@ const Page = () => {
               Funding Profiles
             </span>
           </div>
+
+          {/* The Capital Facilitation Manager also keeps each investor's
+              matching profile: sectors, ticket size, instruments. */}
+          {userDetails?.role === "CFM" && (
+            <button
+              type="button"
+              onClick={() => router.push("/dashboard/capital/providers")}
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white/15 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/25"
+            >
+              Manage matching profiles
+              <FaArrowRight />
+            </button>
+          )}
         </div>
       </div>
 

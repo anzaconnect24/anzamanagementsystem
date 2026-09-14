@@ -114,9 +114,9 @@ const CratCatalogManager = () => {
       ? "Hakuna maswali yaliyopatikana."
       : "No questions found.",
     code: isSwahili ? "Msimbo" : "Code",
-    domainVariant: isSwahili ? "Eneo / Kategoria" : "Domain / Variant",
+    domainVariant: isSwahili ? "Eneo / kategoria" : "Domain / variant",
     questionHeader: isSwahili ? "Swali" : "Question (EN)",
-    aiPrompt: isSwahili ? "Maelekezo ya AI" : "AI Prompt",
+    aiPrompt: isSwahili ? "Maelekezo ya AI" : "AI prompt",
     order: isSwahili ? "Mpangilio" : "Order",
     status: isSwahili ? "Hali" : "Status",
     actions: isSwahili ? "Vitendo" : "Actions",
@@ -526,25 +526,25 @@ const CratCatalogManager = () => {
               <table className="w-full min-w-[900px]">
                 <thead className="bg-slate-100">
                   <tr>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                       {labels.code}
                     </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                       {labels.domainVariant}
                     </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700 w-72">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black w-72">
                       {labels.questionHeader}
                     </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                       {labels.aiPrompt}
                     </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                       {labels.order}
                     </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                       {labels.status}
                     </th>
-                    <th className="border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                    <th className="border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                       {labels.actions}
                     </th>
                   </tr>

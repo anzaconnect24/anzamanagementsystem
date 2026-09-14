@@ -191,7 +191,7 @@ const ManageMatching = () => {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <tr className="border-b border-slate-200 text-sm font-semibold capitalize text-black">
                   <th className="px-4 py-3">Criterion</th>
                   {compared.map((row) => <th key={row.provider.uuid} className="px-4 py-3 normal-case">{row.provider.name}</th>)}
                 </tr>

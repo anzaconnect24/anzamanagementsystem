@@ -458,31 +458,59 @@ const Dashboard = () => {
       {["Admin", "BDA"].includes(userDetails.role) && (
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-            <CardDataStats
-              link="/dashboard/pendingApplications"
-              title={t(
-                "dashboard.pendingBusinessApplications",
-                "Pending business applications",
-              )}
-              total={data.pendingBusiness}
-              rate="0.43%"
-              levelUp
-            >
-              <SlPeople className="text-lg text-primary dark:text-white" />
-            </CardDataStats>
+            {/* The BDA works with the whole community, so they see its size;
+                approving applications stays with the Admin. */}
+            {userDetails.role === "BDA" ? (
+              <>
+                <CardDataStats
+                  link="/dashboard/enterprenuers"
+                  title={t("dashboard.totalStartups", "Total startups")}
+                  total={data.enterprenuers || 0}
+                  rate="0.43%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
 
-            <CardDataStats
-              link="/dashboard/users"
-              title={t(
-                "dashboard.pendingUserApplications",
-                "Pending users applications",
-              )}
-              total={data.pendingUser}
-              rate="4.35%"
-              levelUp
-            >
-              <SlPeople className="text-lg text-primary dark:text-white" />
-            </CardDataStats>
+                <CardDataStats
+                  link="/dashboard/investors"
+                  title={t("dashboard.totalInvestors", "Total investors")}
+                  total={data.investors || 0}
+                  rate="4.35%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
+              </>
+            ) : (
+              <>
+                <CardDataStats
+                  link="/dashboard/pendingApplications"
+                  title={t(
+                    "dashboard.pendingBusinessApplications",
+                    "Pending business applications",
+                  )}
+                  total={data.pendingBusiness}
+                  rate="0.43%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
+
+                <CardDataStats
+                  link="/dashboard/users"
+                  title={t(
+                    "dashboard.pendingUserApplications",
+                    "Pending users applications",
+                  )}
+                  total={data.pendingUser}
+                  rate="4.35%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
+              </>
+            )}
 
             <CardDataStats
               link="/dashboard/pendingRequests"

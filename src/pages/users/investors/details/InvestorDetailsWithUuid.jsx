@@ -1,5 +1,6 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
+import { profileListText } from "@/utils/profile_list";
 import { getAdmins, getUserInfo } from "@/controllers/user_controller.js";
 import { timeAgo } from "@/utils/time_ago";
 import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
@@ -102,9 +103,10 @@ const Page = () => {
     },
     {
       label: t("users.structure", "Investment Type"),
-      value: user?.InvestorProfile?.investmentType
-        ? Object.values(user.InvestorProfile.investmentType).join(", ")
-        : t("mentorHub.notAvailable", "N/A"),
+      value: profileListText(
+        user?.InvestorProfile?.investmentType,
+        t("mentorHub.notAvailable", "N/A"),
+      ),
     },
     {
       label: t("users.ticketSize", "Investment Range"),

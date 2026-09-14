@@ -1,3 +1,4 @@
+import { profileList } from "@/utils/profile_list";
 import Spinner from "@/components/spinner";
 import { useState, useEffect } from "react";
 import { updateInvestorProfile } from "../controllers/investor_profile_controller";
@@ -21,9 +22,11 @@ const UpdateInvestorProfile = ({ user, refresh, setRefresh }) => {
   const [formValues, setFormValues] = useState({
     investorLinkedIn: profile.linkedinURL || "",
     investorWebsite: profile.website || "",
-    investorFocus: Object.values(profile.investmentFocus || {}),
+    // Stored as JSON text; reading it as an object would split it into
+    // characters and save them back.
+    investorFocus: profileList(profile.investmentFocus),
     investorTicketSize: profile.investmentSize || "",
-    investorStructure: Object.values(profile.investmentType || {}),
+    investorStructure: profileList(profile.investmentType),
     investorBio: profile.bio || "",
     investorNotableInvestments: profile.notableInvestment || "",
     investorPortfolio: null,

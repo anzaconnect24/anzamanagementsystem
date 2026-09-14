@@ -298,26 +298,26 @@ const CratReviewApplicationsPage = () => {
                   <table className="min-w-[1480px] w-full table-fixed">
                     <thead className="bg-slate-100">
                       <tr>
-                        <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                        <th className="w-14 border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                           #
                         </th>
-                        <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                        <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                           Entrepreneur
                         </th>
-                        <th className="w-40 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                        <th className="w-40 border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                           Status
                         </th>
-                        <th className="w-44 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                        <th className="w-44 border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                           Updated
                         </th>
-                        <th className="w-28 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                        <th className="w-28 border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                           Open
                         </th>
-                        <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
+                        <th className="w-64 border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
                           Actions
                         </th>
-                        <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-xs font-semibold uppercase tracking-wide text-slate-700">
-                          Admin Notes
+                        <th className="w-72 border-b border-black/10 px-3 py-3 text-left text-sm font-semibold capitalize text-black">
+                          Admin notes
                         </th>
                       </tr>
                     </thead>
