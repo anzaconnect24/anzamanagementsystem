@@ -312,6 +312,12 @@ const StartupPrograms = () => {
         </div>
       </div>
 
+      <h2 className="mb-4 text-2xl font-bold text-[#172033]">
+        {isUncategorised
+          ? "Programs Without a Category"
+          : "Available Programs"}
+      </h2>
+
       {/* SEARCH + ALL STARTUPS */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div className="relative min-w-[260px] flex-1">
