@@ -568,6 +568,12 @@ const Page = () => {
                           <option value="Finance">
                             {t("users.finance", "Finance Officer")}
                           </option>
+                          <option value="CFM">
+                            {t(
+                              "users.capitalManager",
+                              "Capital Facilitation Manager",
+                            )}
+                          </option>
                           <option value="Investor">
                             {t("users.investor", "Investor")}
                           </option>

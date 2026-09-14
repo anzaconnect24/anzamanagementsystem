@@ -59,7 +59,7 @@ import {
   FaCheckCircle,
   FaChartPie,
   FaBell,
-  FaUserShield,
+  FaBullseye,
 } from "react-icons/fa";
 import {
   RiTeamLine,
@@ -264,7 +264,7 @@ const Sidebar = ({
         icon: <SlPeople className="text-xl" />,
         submenu: [
           {
-            name: t("navigation.users", "Users"),
+            name: t("navigation.userSettings", "User Settings"),
             path: "/dashboard/users",
           },
           {
@@ -500,16 +500,6 @@ const Sidebar = ({
       });
     }
 
-    // Administrators decide who may do what in capital facilitation.
-    if (role === "Admin") {
-      categories.push({
-        id: "capitalAdmin",
-        title: t("navigation.capitalFacilitation", "Capital Facilitation"),
-        items: [
-          { name: t("navigation.capitalPermissions", "Capital Settings & Permissions"), path: "/dashboard/capital/settings", icon: <FaUserShield className="text-xl" /> },
-        ],
-      });
-    }
 
     if (["Enterprenuer"].includes(role)) {
       categories.push({
@@ -534,6 +524,11 @@ const Sidebar = ({
             name: t("navigation.myMeProgress", "Monitoring and Evaluation"),
             path: "/dashboard/my-me-progress",
             icon: <FaClipboardList className="text-xl" />,
+          },
+          {
+            name: t("navigation.programmeTargets", "Programme Milestones & KPIs"),
+            path: "/dashboard/my-programme-targets",
+            icon: <FaBullseye className="text-xl" />,
           },
         ],
       });
@@ -613,12 +608,6 @@ const Sidebar = ({
     const investmentItems = [];
 
     if (["Admin"].includes(role)) {
-      investmentItems.push({
-        name: t("navigation.investorConnection", "Investor Connection"),
-        path: "/dashboard/investors",
-        icon: <RiMoneyDollarCircleLine className="text-xl" />,
-      });
-
       investmentItems.push({
         name: t("navigation.openCallsForFunding", "Open calls for funding"),
         path: "/dashboard/opportunities",

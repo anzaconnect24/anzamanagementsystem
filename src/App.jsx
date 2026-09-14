@@ -130,6 +130,7 @@ import ProgramReports from "./pages/users/enterprenuers/ProgramReports";
 import ProgramDashboard from "./pages/users/enterprenuers/ProgramDashboard";
 import ProgramGrants from "./pages/users/enterprenuers/ProgramGrants";
 import ProgramWorkplan from "./pages/users/enterprenuers/ProgramWorkplan";
+import ProgramTargets from "./pages/users/enterprenuers/ProgramTargets";
 import MEPortfolioDashboard from "./pages/users/enterprenuers/MEPortfolioDashboard";
 import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
 import SurveyManager from "./pages/users/enterprenuers/SurveyManager";
@@ -263,6 +264,7 @@ import EnterpriseKyc from "./pages/tracker/mentor/EnterpriseKyc";
 import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
 import CoachingSessions from "./pages/tracker/entreprenuer/CoachingSessions";
 import MyMEProgress from "./pages/tracker/entreprenuer/MyMEProgress";
+import MyProgramTargets from "./pages/tracker/entreprenuer/MyProgramTargets";
 import GrantContract from "./pages/tracker/entreprenuer/GrantContract";
 import ProgramMemberRoute from "./components/guards/ProgramMemberRoute";
 import RoleRoute from "./components/guards/RoleRoute";
@@ -444,6 +446,16 @@ function App() {
               element={
                 <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
                   <ProgramWorkplan />
+                </RoleRoute>
+              }
+            />
+            {/* Tailored milestones and KPIs every startup on the programme
+                must report; the advisor sets them and reviews submissions. */}
+            <Route
+              path="programManagement/program/:uuid/milestones-kpis"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramTargets />
                 </RoleRoute>
               }
             />
@@ -696,6 +708,14 @@ function App() {
               element={<CoachingSessions />}
             />
             <Route path="my-me-progress" element={<MyMEProgress />} />
+            <Route
+              path="my-programme-targets"
+              element={
+                <RoleRoute allow={["Enterprenuer"]}>
+                  <MyProgramTargets />
+                </RoleRoute>
+              }
+            />
             <Route
               path="myMilestones/kyc"
               element={

@@ -42,6 +42,7 @@ import {
   FaUserTie,
   FaFolderOpen,
   FaBell,
+  FaBullseye,
 } from "react-icons/fa";
 
 // Roles allowed to change a program's roster.
@@ -311,6 +312,14 @@ const ProgramStartups = () => {
       icon: <FaClipboardList />,
       ink: "text-indigo-700",
       onClick: () => goTo("/workplan"),
+    },
+    {
+      show: canFileDocuments,
+      label: "Milestones & KPIs",
+      note: "What startups must report",
+      icon: <FaBullseye />,
+      ink: "text-orange-700",
+      onClick: () => goTo("/milestones-kpis"),
     },
     {
       show: canPlan,
