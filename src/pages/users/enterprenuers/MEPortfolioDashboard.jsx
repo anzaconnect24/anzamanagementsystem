@@ -21,7 +21,7 @@ const ReactApexChart = dynamic(() => import("react-apexcharts"), {
 });
 
 // Leaflet touches window on import, so the map loads in its own chunk and only
-// when the page renders.
+// when the page renders.M
 const CoverageMap = dynamic(() => import("@/components/Maps/CoverageMap"), {
   loading: () => (
     <div className="flex h-full items-center justify-center text-sm text-[#6f6f72]">
@@ -768,7 +768,7 @@ const MEPortfolioDashboard = () => {
             <div className="overflow-x-auto">
               <table className="w-full min-w-[420px] text-left text-sm">
                 <thead>
-                  <tr className="border-b border-stroke text-sm font-bold capitalize text-black dark:border-strokedark dark:text-bodydark">
+                  <tr className="border-b border-stroke text-sm font-bold text-black dark:border-strokedark dark:text-bodydark">
                     <th className="px-2 py-3">Lead</th>
                     <th className="px-2 py-3">Sessions this month</th>
                     <th className="px-2 py-3">Last logged</th>

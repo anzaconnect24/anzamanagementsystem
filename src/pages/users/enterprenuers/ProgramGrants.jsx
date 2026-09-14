@@ -330,12 +330,19 @@ const ProgramGrants = () => {
                         milestone reporting. Only once they are actually on
                         the roster and the grant programme exists. */}
                     <td className="px-5 py-4">
-                      {row.isRecipient && grantProgramUuid && row.entreprenuerUuid ? (
+                      {row.isRecipient && grantProgramUuid && (row.trackerEnterpriseUuid || row.entreprenuerUuid) ? (
                         <button
                           type="button"
                           onClick={() =>
+                            // The recipient's grant workspace: milestones with
+                            // every activity, comments and the plan verdict.
+                            // Whoever cannot act on this programme reads it.
+                            // A recipient without a tracker record yet falls
+                            // back to the finance view of the grant.
                             navigate(
-                              `/dashboard/trackerPrograms/${grantProgramUuid}/startup/${row.entreprenuerUuid}`,
+                              row.trackerEnterpriseUuid
+                                ? `/dashboard/mentorTracker/enterprise/${row.trackerEnterpriseUuid}${canEdit ? "" : "?view=1"}`
+                                : `/dashboard/trackerPrograms/${grantProgramUuid}/startup/${row.entreprenuerUuid}`,
                             )
                           }
                           className="whitespace-nowrap rounded-lg border border-[#082d77]/20 px-3 py-2 text-xs font-semibold text-[#082d77] transition hover:bg-slate-50"

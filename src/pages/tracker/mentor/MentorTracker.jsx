@@ -655,8 +655,9 @@ const MentorTracker = () => {
                   Startup Portfolio
                 </h1>
                 <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
-                  Monitor startup progress, milestones, evidence, and grant
-                  governance for the entrepreneurs assigned to you.
+                  Review and approve the milestone plans and reports startups
+                  submit, and monitor their progress, evidence and grant
+                  governance across every program.
                 </p>
               </div>
             </div>

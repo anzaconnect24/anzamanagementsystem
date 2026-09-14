@@ -50,6 +50,19 @@ export const emptyMilestoneReport = () => ({
 
 const REPORT_KEYS = Object.keys(emptyMilestoneReport());
 
+// Each activity of a milestone is reported on its own line.
+const ACTIVITY_REPORT_KEYS = ["completionStatus", "actualAmount", "receiptEvidence", "narrative"];
+
+const sanitizeActivityReport = (value) => {
+  const base = { completionStatus: "", actualAmount: "", receiptEvidence: "", narrative: "", attachments: [] };
+  if (!value || typeof value !== "object") return base;
+  ACTIVITY_REPORT_KEYS.forEach((key) => {
+    if (value[key] !== undefined && value[key] !== null) base[key] = String(value[key]);
+  });
+  if (Array.isArray(value.attachments)) base.attachments = value.attachments.map(String).filter(Boolean);
+  return base;
+};
+
 // Keep only the known keys so a hand-edited or older payload can't smuggle
 // extra fields into the submission.
 const sanitizeReport = (value) => {
@@ -60,6 +73,9 @@ const sanitizeReport = (value) => {
       base[key] = String(value[key]);
     }
   });
+  if (Array.isArray(value.activities)) {
+    base.activities = value.activities.map(sanitizeActivityReport);
+  }
   return base;
 };
 
@@ -93,7 +109,13 @@ export const milestoneReportNotes = (submissionNotes) =>
 
 // A row is worth persisting only if the startup actually filled something in.
 export const hasReportData = (report) =>
-  REPORT_KEYS.some((key) => String(report?.[key] || "").trim());
+  REPORT_KEYS.some((key) => String(report?.[key] || "").trim()) ||
+  (Array.isArray(report?.activities) &&
+    report.activities.some(
+      (line) =>
+        ACTIVITY_REPORT_KEYS.some((key) => String(line?.[key] || "").trim()) ||
+        (line?.attachments || []).length > 0,
+    ));
 
 // Rebuild submissionNotes from the narrative plus the structured row.
 export const buildSubmissionNotes = (notes, report) => {

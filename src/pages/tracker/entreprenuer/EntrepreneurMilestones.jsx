@@ -27,6 +27,12 @@ import {
 import MilestoneReportTable from "@/components/tracker/MilestoneReportTable";
 import MilestoneStatusTable from "@/components/tracker/MilestoneStatusTable";
 import {
+  activityLabel,
+  activityReportAt,
+  milestoneActivityRows,
+  summariseActivityReports,
+} from "@/utils/milestoneActivities";
+import {
   TIMELINE_SPAN_OPTIONS,
   buildMilestoneDescription,
   buildSubmissionNotes,
@@ -50,6 +56,7 @@ import {
   Briefcase,
   Layers,
   CalendarDays,
+  Plus,
 } from "lucide-react";
 
 const TRACKER_CATEGORIES_MARKER = "__TRACKER_CATEGORIES__:";
@@ -339,12 +346,18 @@ const EntrepreneurMilestones = () => {
   const getReportRow = (item) =>
     reportById[item.uuid] || reportFromMilestone(item);
 
-  const setReportField = (uuid, key, value) =>
+  // Each activity is reported on its own line; `activityIndex` names it.
+  const setReportField = (uuid, key, value, activityIndex) =>
     setReportById((prev) => {
-      const current =
-        prev[uuid] ||
-        reportFromMilestone(milestones.find((m) => m.uuid === uuid));
-      return { ...prev, [uuid]: { ...current, [key]: value } };
+      const milestone = milestones.find((m) => m.uuid === uuid);
+      const current = prev[uuid] || reportFromMilestone(milestone);
+      if (activityIndex === undefined) {
+        return { ...prev, [uuid]: { ...current, [key]: value } };
+      }
+      const count = milestoneActivityRows(milestone).length;
+      const activities = Array.from({ length: count }, (_, i) => activityReportAt(current, i));
+      activities[activityIndex] = { ...activities[activityIndex], [key]: value };
+      return { ...prev, [uuid]: { ...current, activities } };
     });
   // Milestones section is tabbed: "create" (+ Milestone), "report" (Milestone
   // Reporting), "status" (Milestone Status) and "attachments" (Attachments).
@@ -380,20 +393,19 @@ const EntrepreneurMilestones = () => {
           : row,
       ),
     );
+  // Removing a milestone's only activity removes the milestone itself, as long
+  // as another milestone remains - there is no separate Remove milestone.
   const removeActivity = (rowIndex, activityIndex) =>
-    setMilestoneRows((prev) =>
-      prev.map((row, i) =>
+    setMilestoneRows((prev) => {
+      if ((prev[rowIndex]?.activities.length || 0) <= 1) {
+        return prev.length > 1 ? prev.filter((_, i) => i !== rowIndex) : prev;
+      }
+      return prev.map((row, i) =>
         i === rowIndex
-          ? {
-              ...row,
-              activities:
-                row.activities.length > 1
-                  ? row.activities.filter((_, ai) => ai !== activityIndex)
-                  : row.activities,
-            }
+          ? { ...row, activities: row.activities.filter((_, ai) => ai !== activityIndex) }
           : row,
-      ),
-    );
+      );
+    });
   const updateActivity = (rowIndex, activityIndex, field, value) =>
     setMilestoneRows((prev) =>
       prev.map((row, i) =>
@@ -474,18 +486,28 @@ const EntrepreneurMilestones = () => {
 
     // Everything is reported in the grid now, so validate the row: a status is
     // always required, and a variance has to be explained.
-    const row = targetMilestone ? getReportRow(targetMilestone) : null;
+    // Every activity is reported on its own line: each needs a status, and
+    // each variance has to be explained.
+    const draft = targetMilestone ? getReportRow(targetMilestone) : null;
+    const activityRows = targetMilestone ? milestoneActivityRows(targetMilestone) : [];
+    const lines = activityRows.map((_, i) => activityReportAt(draft, i));
+    const single = activityRows.length === 1;
 
-    if (!row?.completionStatus) {
-      toast.error("Select a status for this milestone");
+    const missingStatus = lines.findIndex((line) => !line.completionStatus);
+    if (!activityRows.length || missingStatus >= 0) {
+      const at = Math.max(missingStatus, 0);
+      toast.error(`Select a status for "${activityLabel(activityRows[at] || {}, at)}"`);
       return;
     }
 
-    const variance = computeVariance(row.plannedAmount, row.actualAmount);
-
-    if (variance !== null && variance !== 0 && !String(row.narrative).trim()) {
+    const unexplained = lines.findIndex((line, i) => {
+      const planned = activityRows[i].plannedAmount || (single ? draft?.plannedAmount : "");
+      const variance = computeVariance(planned, line.actualAmount);
+      return variance !== null && variance !== 0 && !String(line.narrative).trim();
+    });
+    if (unexplained >= 0) {
       toast.error(
-        "Planned and actual amounts differ — add a narrative explaining the variance",
+        `Planned and actual amounts differ for "${activityLabel(activityRows[unexplained], unexplained)}" — add a narrative explaining the variance`,
       );
       return;
     }
@@ -493,23 +515,35 @@ const EntrepreneurMilestones = () => {
     setSubmittingById((prev) => ({ ...prev, [uuid]: true }));
 
     try {
-      const selectedFiles = Array.from(filesById[uuid] || []);
-      const uploadedAttachmentUrls = [];
-
-      for (const file of selectedFiles) {
-        const formData = new FormData();
-        formData.append("file", file);
-        const fileUrl = await uploadFile(formData);
-        if (typeof fileUrl === "string" && fileUrl.trim()) {
-          uploadedAttachmentUrls.push(fileUrl.trim());
+      // Files are picked per activity; each upload joins that activity's line.
+      const picked =
+        filesById[uuid] && !Array.isArray(filesById[uuid]) ? filesById[uuid] : {};
+      for (const [index, chosen] of Object.entries(picked)) {
+        for (const file of Array.from(chosen || [])) {
+          const formData = new FormData();
+          formData.append("file", file);
+          const fileUrl = await uploadFile(formData);
+          if (typeof fileUrl === "string" && fileUrl.trim() && lines[index]) {
+            lines[index] = { ...lines[index], attachments: [...lines[index].attachments, fileUrl.trim()] };
+          }
         }
       }
+
+      // The milestone's own line is summed from its activities, so finance
+      // totals and exports still read the milestone as a whole.
+      const row = summariseActivityReports({ ...(draft || {}), activities: lines }, activityRows);
+      const submissionAttachments = [
+        ...new Set([
+          ...parseSubmissionAttachments(targetMilestone.submissionAttachments),
+          ...lines.flatMap((line) => line.attachments),
+        ]),
+      ];
 
       // The row travels as structured data; its narrative doubles as the report
       // text, so anything reading submissionNotes still gets readable prose.
       await submitTrackerMilestone(uuid, {
         submissionNotes: buildSubmissionNotes(row.narrative, row),
-        submissionAttachments: uploadedAttachmentUrls,
+        submissionAttachments,
       });
 
       toast.success("Report submitted for mentor review");
@@ -1288,7 +1322,7 @@ const EntrepreneurMilestones = () => {
                 title="Add Milestone"
                 subtitle="Create milestones with their key activities, planned amount and timeline, then wait for mentor approval."
               >
-                <form onSubmit={onCreateMilestone} className="mb-5 space-y-3 rounded-2xl border border-[#082d77]/10 bg-[#082d77]/5 p-4">
+                <form onSubmit={onCreateMilestone} className="mb-5 space-y-3">
                   {/* One table: Tranche and Milestone rowSpan down one
                       milestone's activities (each milestone sets its own
                       tranche, independent of the others); every other column
@@ -1358,14 +1392,6 @@ const EntrepreneurMilestones = () => {
                                             updateMilestoneRow(idx, "title", e.target.value)
                                           }
                                         />
-                                        <button
-                                          type="button"
-                                          onClick={() => removeMilestoneRow(idx)}
-                                          disabled={milestoneRows.length <= 1}
-                                          className={milestoneRemoveClass}
-                                        >
-                                          Remove milestone
-                                        </button>
                                       </div>
                                     </td>
                                   )}
@@ -1379,6 +1405,18 @@ const EntrepreneurMilestones = () => {
                                           updateActivity(idx, activityIndex, "text", e.target.value)
                                         }
                                       />
+                                      {/* Another activity for this milestone, added under its last one. */}
+                                      {activityIndex === row.activities.length - 1 && (
+                                        <button
+                                          type="button"
+                                          onClick={() => addActivity(idx)}
+                                          title="Add another activity"
+                                          aria-label={`Add an activity to ${row.title || `Milestone ${idx + 1}`}`}
+                                          className="mt-2 grid h-8 w-8 place-items-center rounded-full border border-[#082d77]/20 bg-[#082d77]/5 text-[#082d77] transition hover:bg-[#082d77]/10"
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                        </button>
+                                      )}
                                     </td>
                                     <td className={tableCellClass}>
                                       <input
@@ -1456,7 +1494,7 @@ const EntrepreneurMilestones = () => {
                                       <button
                                         type="button"
                                         onClick={() => removeActivity(idx, activityIndex)}
-                                        disabled={row.activities.length <= 1}
+                                        disabled={row.activities.length <= 1 && milestoneRows.length <= 1}
                                         title="Remove activity"
                                         className={milestoneRemoveClass}
                                       >
@@ -1466,17 +1504,6 @@ const EntrepreneurMilestones = () => {
                                   </tr>
                                 );
                               })}
-                              <tr>
-                                <td colSpan={8} className={`${tableCellClass} bg-[#f8fafc]`}>
-                                  <button
-                                    type="button"
-                                    onClick={() => addActivity(idx)}
-                                    className="text-xs font-bold text-[#082d77] hover:underline"
-                                  >
-                                    + Add activity to “{row.title || `Milestone ${idx + 1}`}”
-                                  </button>
-                                </td>
-                              </tr>
                           </Fragment>
                         ))}
                       </tbody>
@@ -1610,8 +1637,14 @@ const EntrepreneurMilestones = () => {
                       editable
                       showReview
                       onChange={setReportField}
-                      onAttach={(uuid, files) =>
-                        setFilesById((prev) => ({ ...prev, [uuid]: files }))
+                      onAttach={(uuid, files, activityIndex = 0) =>
+                        setFilesById((prev) => ({
+                          ...prev,
+                          [uuid]: {
+                            ...(prev[uuid] && !Array.isArray(prev[uuid]) ? prev[uuid] : {}),
+                            [activityIndex]: files,
+                          },
+                        }))
                       }
                       rows={visibleReportables.map((item) => {
                         const attachments = parseSubmissionAttachments(
@@ -1660,9 +1693,10 @@ const EntrepreneurMilestones = () => {
                             (normalizedStatus === "completed" &&
                               ps !== PLAN_STATUS.REJECTED));
                         const kpiProgress = getKpiProgress(item);
-                        const selectedFiles = Array.isArray(filesById[item.uuid])
-                          ? filesById[item.uuid]
-                          : [];
+                        const selectedFiles =
+                          filesById[item.uuid] && !Array.isArray(filesById[item.uuid])
+                            ? filesById[item.uuid]
+                            : {};
                         const showKpiPanel = disbursed && kpiProgress.length > 0;
                         // A decline belongs to whoever sent it back: finance
                         // declines set planStatus to rejected and leave finance
@@ -1681,6 +1715,7 @@ const EntrepreneurMilestones = () => {
 
                         return {
                           uuid: item.uuid,
+                          milestone: item,
                           title: item.title,
                           activity: item.tranchePlannedUse,
                           kpiImpact: milestoneKpiImpact(item),

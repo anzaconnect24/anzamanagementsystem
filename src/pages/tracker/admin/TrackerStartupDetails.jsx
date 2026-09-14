@@ -72,6 +72,7 @@ const SECTION_TABS = [
   { id: "milestones", label: "Milestones" },
   { id: "status", label: "Milestone Status" },
   { id: "report", label: "Milestone Reporting" },
+  { id: "attachments", label: "Attachments" },
 ];
 
 const SECTION_SUBTITLE = {
@@ -81,6 +82,8 @@ const SECTION_SUBTITLE = {
     "Where every milestone stands: whether the BDA has approved the plan, and what has happened to the report filed against it.",
   report:
     "The startup's reports, budgeted against actual spend, with their evidence. Approve the tranche once the plan is BDA-approved, or decline it.",
+  attachments:
+    "Documents the startup uploaded from their Attachments tab. Read-only — view or download them here.",
 };
 
 const planHeadClass =
@@ -217,7 +220,8 @@ const TrackerStartupDetails = () => {
         : [];
       const matchesEnt = (e) =>
         (e?.Entreprenuer?.uuid || e?.entreprenuer_uuid) === entUuid;
-      let match = enterprises.find(matchesEnt);
+      // Overview entries wrap the record as { enterprise, milestones, ... }.
+      let match = enterprises.map((e) => e?.enterprise || e).find(matchesEnt);
 
       // The overview lookup is best-effort. If it didn't resolve the enterprise,
       // fall back to the full enterprise list — the same records the BDA reads —
@@ -1005,39 +1009,6 @@ const TrackerStartupDetails = () => {
         onUpload={onUploadContract}
       />
 
-      {/* The startup's own budget document, uploaded from their Attachments
-          tab — read-only here, finance just views/downloads it. */}
-      {(() => {
-        const documents = parseDocuments(enterprise?.documents);
-        const budgetDocumentUrl = documents.budgetDocumentUrl;
-        if (!budgetDocumentUrl) return null;
-
-        return (
-          <div className="rounded-2xl border border-black/10 bg-white p-6">
-            <div className="mb-1 flex items-center gap-2">
-              <FileText className="h-5 w-5 text-emerald-600" />
-              <h2 className="text-lg font-black tracking-tight text-[#111827]">
-                Budget Document
-              </h2>
-            </div>
-            {documents.budgetDocumentDescription && (
-              <p className="mb-3 text-sm text-[#64748b]">
-                {documents.budgetDocumentDescription}
-              </p>
-            )}
-            <a
-              href={budgetDocumentUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-2 text-sm font-bold text-[#163b8f] hover:underline"
-            >
-              <Download className="h-4 w-4" />
-              View / download budget document
-            </a>
-          </div>
-        );
-      })()}
-
       {/* Who coaches this startup. The assignment is what puts their milestones
           in front of a BDA for review, so it lives on the startup's own page
           rather than only on the separate assignments screen. */}
@@ -1408,7 +1379,7 @@ const TrackerStartupDetails = () => {
           {/* The approved plan as a document to work from. Only offered once the
               BDA has approved something — before that there is no plan to
               print, so the button would produce an empty table. */}
-          {approvedMilestones.length > 0 && (
+          {milestoneTab !== "attachments" && approvedMilestones.length > 0 && (
             <button
               type="button"
               onClick={onDownloadTemplate}
@@ -1426,20 +1397,77 @@ const TrackerStartupDetails = () => {
         {/* One tab per tranche, inside every section. The open one stays in the
             URL, so the view can still be linked to and the back button still
             works. */}
-        {milestones.length > 0 &&
+        {milestoneTab !== "attachments" &&
+          milestones.length > 0 &&
           !openTranche &&
           renderTrancheList(
             milestoneTab === "report" ? "Tranche Reports" : "Tranche Milestones",
             milestoneTab === "report" ? "Reports" : "Milestones",
           )}
 
-        {milestones.length > 0 &&
+        {milestoneTab !== "attachments" &&
+          milestones.length > 0 &&
           openTranche &&
           renderTrancheHeading(
             milestoneTab === "report" ? "All reports" : "All milestones",
           )}
 
-        {milestones.length === 0 ? (
+        {milestoneTab === "attachments" ? (
+          // The startup's budget document, uploaded from their own Attachments
+          // tab — finance only views or downloads it.
+          (() => {
+            const documents = parseDocuments(enterprise?.documents);
+            const budgetDocumentUrl = documents.budgetDocumentUrl;
+
+            if (!budgetDocumentUrl) {
+              return (
+                <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
+                  The startup has not uploaded any attachments yet.
+                </div>
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto rounded-xl border border-black/10">
+                <table className="w-full min-w-[560px] border-collapse bg-white">
+                  <thead>
+                    <tr>
+                      <th className={`${planHeadClass} w-[25%]`}>Document</th>
+                      <th className={planHeadClass}>Description</th>
+                      <th className={`${planHeadClass} w-[20%]`}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className={`${planCellClass} font-bold text-[#111827]`}>
+                        <span className="inline-flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-emerald-600" />
+                          Budget Document
+                        </span>
+                      </td>
+                      <td className={`${planCellClass} whitespace-pre-line`}>
+                        {documents.budgetDocumentDescription || (
+                          <span className="text-[#94a3b8]">—</span>
+                        )}
+                      </td>
+                      <td className={planCellClass}>
+                        <a
+                          href={budgetDocumentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 text-sm font-bold text-[#163b8f] hover:underline"
+                        >
+                          <Download className="h-4 w-4" />
+                          View / download
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()
+        ) : milestones.length === 0 ? (
           <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
             No milestones have been set for this startup yet.
           </div>
@@ -1561,6 +1589,7 @@ const TrackerStartupDetails = () => {
 
                 return {
                   uuid: milestone.uuid,
+                  milestone,
                   title: milestone.title,
                   activity: milestone.tranchePlannedUse,
                   kpiImpact: milestoneKpiImpact(milestone),
