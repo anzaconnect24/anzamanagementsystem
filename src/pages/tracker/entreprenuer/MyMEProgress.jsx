@@ -82,8 +82,9 @@ function Hero({ business, program, programCount }) {
     <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/images/mentor_hero.svg')" }}/>
     <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30"/>
     <div className="relative z-10 max-w-3xl p-10 text-white">
-      <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm"><span className="h-2 w-2 rounded-full bg-[#f08a3c]"/>Monitoring &amp; Evaluation</span>
-      <h1 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">{business?.name || "My business progress"}</h1>
+      {/* The activity names the page; the business it belongs to sits above it. */}
+      <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm"><span className="h-2 w-2 rounded-full bg-[#f08a3c]"/>{business?.name || "My business"}</span>
+      <h1 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">Monitoring and Evaluation</h1>
       <p className="mb-4 max-w-2xl text-sm leading-6 text-white/85 drop-shadow-md">Submit programme updates and follow verified growth over time.</p>
       <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
         <span className="flex items-center gap-2"><FaLayerGroup/>{program?.title || `${programCount} ${programCount === 1 ? "programme" : "programmes"}`}</span>

@@ -152,7 +152,7 @@ const MySurveys = () => {
       </div>
 
       <h2 className="mb-6 text-2xl font-black tracking-tight text-slate-950">
-        Surveys
+        Available Surveys
       </h2>
 
       {surveys.length === 0 ? (

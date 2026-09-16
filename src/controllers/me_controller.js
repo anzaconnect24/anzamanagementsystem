@@ -301,6 +301,19 @@ export const resolveMeDataQuality=(uuid,recordUuid,data)=>operation("patch",`/${
 export const getMyMeReminders=()=>operation("get","/reminders/mine");
 export const markMeReminderRead=(recordUuid)=>operation("patch",`/reminders/${encodeURIComponent(recordUuid)}/read`);
 
+// The startups on a programme, for the pickers every M&E section filters by.
+export const getMeBusinesses = (uuid) => operation("get", `/${encodeURIComponent(uuid)}/businesses`);
+// Runs the data-quality rules and raises flags for what they find.
+export const runMeDataQuality = (uuid) => operation("post", `/${encodeURIComponent(uuid)}/data-quality/run`);
+export const updateMeActivity = (uuid, activityUuid, data) =>
+  operation("patch", `/${encodeURIComponent(uuid)}/activities/${encodeURIComponent(activityUuid)}`, data);
+export const updateMeGoalMilestone = (uuid, goalUuid, milestoneUuid, data) =>
+  operation(
+    "patch",
+    `/${encodeURIComponent(uuid)}/goals/${encodeURIComponent(goalUuid)}/milestones/${encodeURIComponent(milestoneUuid)}`,
+    data,
+  );
+
 // Labels for the enumerations the API returns as snake_case keys.
 const titleise = (value) =>
   String(value || "")

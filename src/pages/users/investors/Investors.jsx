@@ -1,6 +1,8 @@
 "use client";
 
 import { profileListText } from "@/utils/profile_list";
+import { investorAnswers } from "@/components/investors/InvestorProfileDetails";
+import { CAPITAL_TYPES, TICKET_SIZES } from "@/utils/investorProfileOptions";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { getInvestors } from "@/controllers/user_controller";
 import Loader from "@/components/common/Loader";
@@ -17,6 +19,12 @@ import {
   FaMapMarkerAlt,
   FaArrowRight,
 } from "react-icons/fa";
+
+// The ticket size's position in the answer list, so larger tickets sort later.
+const ticketRank = (ticket) => {
+  const index = TICKET_SIZES.indexOf(ticket);
+  return index < 0 ? -1 : index;
+};
 
 const Page = () => {
   const { t, isSwahili } = useTranslation();
@@ -61,25 +69,11 @@ const Page = () => {
     },
     ticketSize: {
       label: t("users.ticketSize", "Ticket Size"),
-      options: [
-        "All Ticket Sizes",
-        "100K - 200K",
-        "300K - 400K",
-        "500K - 600K",
-        "700K - 800K",
-        "900K+",
-      ],
+      options: ["All Ticket Sizes", ...TICKET_SIZES],
     },
     structure: {
       label: t("users.structure", "Structure"),
-      options: [
-        "All Structures",
-        "Equity",
-        "Debt",
-        "Grant",
-        "Convertible Note",
-        "Revenue Share",
-      ],
+      options: ["All Structures", ...CAPITAL_TYPES],
     },
   };
 
@@ -158,21 +152,27 @@ const Page = () => {
       let processedData = [...response.data];
 
       if (isFiltering) {
+        const answersOf = (item) => investorAnswers(item.InvestorProfile || {});
+
         if (filters.sector !== "All Sectors") {
-          processedData = processedData.filter(
-            (item) => item.sector === filters.sector
+          processedData = processedData.filter((item) =>
+            answersOf(item).sectors.some(
+              (sector) => sector.toLowerCase() === filters.sector.toLowerCase()
+            )
           );
         }
 
         if (filters.ticketSize !== "All Ticket Sizes") {
           processedData = processedData.filter(
-            (item) => item.ticketSize === filters.ticketSize
+            (item) => answersOf(item).ticketSize === filters.ticketSize
           );
         }
 
         if (filters.structure !== "All Structures") {
-          processedData = processedData.filter(
-            (item) => item.structure === filters.structure
+          processedData = processedData.filter((item) =>
+            answersOf(item)
+              .capitalType.toLowerCase()
+              .includes(filters.structure.toLowerCase())
           );
         }
       }
@@ -186,26 +186,25 @@ const Page = () => {
 
           case "sector":
             return (
-              direction * ((a.sector || "").localeCompare(b.sector || "") || 0)
+              direction *
+              ((investorAnswers(a.InvestorProfile || {}).sectors[0] || "").localeCompare(
+                investorAnswers(b.InvestorProfile || {}).sectors[0] || ""
+              ) || 0)
             );
 
-          case "ticketSize": {
-            const getTicketValue = (ticket) => {
-              if (!ticket) return 0;
-              const match = ticket.match(/(\d+)K/);
-              return match ? parseInt(match[1], 10) : 0;
-            };
-
+          case "ticketSize":
             return (
               direction *
-              (getTicketValue(a.ticketSize) - getTicketValue(b.ticketSize))
+              (ticketRank(investorAnswers(a.InvestorProfile || {}).ticketSize) -
+                ticketRank(investorAnswers(b.InvestorProfile || {}).ticketSize))
             );
-          }
 
           case "structure":
             return (
               direction *
-              ((a.structure || "").localeCompare(b.structure || "") || 0)
+              (investorAnswers(a.InvestorProfile || {}).capitalType.localeCompare(
+                investorAnswers(b.InvestorProfile || {}).capitalType
+              ) || 0)
             );
 
           default:
@@ -279,6 +278,7 @@ const Page = () => {
   };
 
   const getInvestmentType = (investor) =>
+    investor?.InvestorProfile?.capitalType ||
     profileListText(
       investor?.InvestorProfile?.investmentType,
       t("users.structureNotSpecified", "Structure not specified")
@@ -484,30 +484,32 @@ const Page = () => {
 
                   <div className="absolute bottom-4 left-4">
                     <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
-                      {isSwahili
-                        ? investor?.InvestorProfile?.BusinessSector?.swName
-                        : investor?.InvestorProfile?.BusinessSector?.name ||
-                          t("users.noSector", "No Sector")}
+                      {investorAnswers(investor?.InvestorProfile || {}).sectors[0] ||
+                        (isSwahili
+                          ? investor?.InvestorProfile?.BusinessSector?.swName
+                          : investor?.InvestorProfile?.BusinessSector?.name) ||
+                        t("users.noSector", "No Sector")}
                     </span>
                   </div>
                 </div>
 
                 <div className="flex min-h-[250px] flex-col p-5">
                   <h3 className="mb-2 line-clamp-2 text-lg font-bold text-[#111827]">
-                    {investor.name ||
+                    {investor?.InvestorProfile?.company ||
+                      investor.name ||
                       t("users.unnamedInvestor", "Unnamed Investor")}
                   </h3>
 
                   <p className="mb-5 line-clamp-1 text-sm text-[#6f6f72]">
-                    {investor.email ||
-                      t("users.noEmailProvided", "No email provided")}
+                    {investorAnswers(investor?.InvestorProfile || {}).investorType ||
+                      "Investor"}
                   </p>
 
                   <div className="space-y-3 text-sm text-[#6f6f72]">
                     <div className="flex items-center gap-2">
                       <FaMoneyBillWave className="shrink-0" />
                       <span className="line-clamp-1">
-                        {investor?.InvestorProfile?.investmentSize ||
+                        {investorAnswers(investor?.InvestorProfile || {}).ticketSize ||
                           t(
                             "users.ticketSizeNotSpecified",
                             "Ticket size not specified"
@@ -522,11 +524,11 @@ const Page = () => {
                       </span>
                     </div>
 
-                    {investor.location && (
+                    {investorAnswers(investor?.InvestorProfile || {}).headquarters && (
                       <div className="flex items-center gap-2">
                         <FaMapMarkerAlt className="shrink-0" />
                         <span className="line-clamp-1">
-                          {investor.location}
+                          {investorAnswers(investor?.InvestorProfile || {}).headquarters}
                         </span>
                       </div>
                     )}

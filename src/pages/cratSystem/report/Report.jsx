@@ -8,6 +8,11 @@ import React, {
 import toast from "react-hot-toast";
 
 import { UserContext } from "@/layouts/DashboardLayout";
+import {
+  INVESTMENT_READY_PERCENT,
+  PARTIALLY_READY_PERCENT,
+  readinessLabel,
+} from "@/utils/cratReadiness";
 
 import {
   getInternalReport,
@@ -60,22 +65,16 @@ const DOMAIN_CONFIG = [
   },
 ];
 
-// A startup is investment-ready at 70% and above — the same threshold the
-// generated PDF report uses.
-const READINESS_THRESHOLD = 70;
+// A startup is investment ready at 70% and above — see utils/cratReadiness,
+// the same definition the API and the generated PDF report apply.
+const READINESS_THRESHOLD = INVESTMENT_READY_PERCENT;
 
-const getStatusLabel = (percentage) => {
-  if (percentage >= READINESS_THRESHOLD) return "Ready";
-
-  if (percentage >= 60) return "Partially Ready";
-
-  return "Not Ready";
-};
+const getStatusLabel = (percentage) => readinessLabel(percentage);
 
 const getPercentageColor = (percentage) => {
-  if (percentage >= READINESS_THRESHOLD) return "text-green-600";
+  if (percentage >= INVESTMENT_READY_PERCENT) return "text-green-600";
 
-  if (percentage >= 60) return "text-yellow-500";
+  if (percentage >= PARTIALLY_READY_PERCENT) return "text-yellow-500";
 
   return "text-red-500";
 };

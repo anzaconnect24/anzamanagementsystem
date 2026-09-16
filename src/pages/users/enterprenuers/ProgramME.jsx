@@ -979,7 +979,8 @@ const ProgramME = () => {
       )}
 
       {/* ---------------------------------------------------------- MODALS */}
-      {["operations", "reports", "assessments", "performance", "evidence"].includes(tab) && (
+      {/* Every tab after Indicators is an operations section. */}
+      {!["overview", "framework", "indicators"].includes(tab) && (
         <ProgramMEOperations programUuid={uuid} section={tab} canManage={canManage} />
       )}
 

@@ -10,6 +10,7 @@ import { toast } from "react-hot-toast";
 import { createConversation } from "@/controllers/conversation_controller";
 import { createNotification } from "@/controllers/notification_controller";
 import { assignEntreprenuerToMentor } from "@/controllers/mentorEntreprenuerController";
+import { readinessLabel } from "@/utils/cratReadiness";
 import { assignEntreprenuerToStaff } from "@/controllers/staffEntreprenuerController";
 import Spinner from "@/components/spinner";
 import { updateUser, getReviewers } from "@/controllers/user_controller";
@@ -84,11 +85,8 @@ const Page = () => {
     }
   };
 
-  const toReadinessStatus = (percentage) => {
-    if (percentage >= 75) return "Ready";
-    if (percentage >= 60) return "Partially Ready";
-    return "Not Ready";
-  };
+  // Investment ready at 70% and above — see utils/cratReadiness.
+  const toReadinessStatus = (percentage) => readinessLabel(percentage);
 
   const toSafeOverallPercent = (value, fallback = 0) => {
     const parsed = Number(value);

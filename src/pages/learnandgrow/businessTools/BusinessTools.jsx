@@ -112,7 +112,7 @@ const BusinessTools = () => {
       {/* HEADER */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-[#172033]">
-          Browse by Category
+          Available Business Tools
         </h2>
 
         {["Admin"].includes(userDetails.role) && (

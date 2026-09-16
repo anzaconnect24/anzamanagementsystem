@@ -155,12 +155,13 @@ const MyProgramTargets = () => {
         />
         <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30" />
         <div className="relative z-10 max-w-3xl p-10 text-white">
+          {/* The activity names the page; the programme it belongs to sits above it. */}
           <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
-            Programme Milestones & KPIs
+            {entry?.program.title || "Your programme"}
           </span>
           <h1 className="mb-3 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">
-            {entry?.program.title || "Your programme"}
+            Milestones and KPIs
           </h1>
           <p className="max-w-2xl text-sm leading-6 text-white/85 drop-shadow-md">
             Report progress on the milestones and KPIs your business development
@@ -195,13 +196,19 @@ const MyProgramTargets = () => {
             </div>
           )}
 
-          <div className="rounded-2xl border border-black/10 bg-white p-6">
-            <h2 className="text-lg font-black tracking-tight text-[#111827]">Milestones & KPIs</h2>
-            <p className="mb-4 text-sm text-[#64748b]">
+          {/* The section is titled above its panel, so the card holds only the
+              lines themselves. */}
+          <div>
+            <h2 className="text-lg font-black tracking-tight text-[#111827]">
+              Program Milestones and KPIs
+            </h2>
+            <p className="text-sm text-[#64748b]">
               Fill in every line, then submit. Lines awaiting review or approved
               are locked; a line sent back for more information opens again.
             </p>
+          </div>
 
+          <div className="rounded-2xl border border-black/10 bg-white p-6">
             {targets.length === 0 ? (
               <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
                 Your business development advisor has not set milestones or KPIs

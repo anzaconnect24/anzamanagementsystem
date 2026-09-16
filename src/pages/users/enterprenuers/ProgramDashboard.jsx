@@ -329,7 +329,7 @@ const ProgramDashboard = () => {
         {/* UPCOMING */}
         <section className="rounded-2xl bg-white p-5 shadow-sm shadow-slate-200/50">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+            <h3 className="text-sm font-bold capitalize text-slate-700">
               Upcoming activities
             </h3>
             <button
@@ -368,7 +368,7 @@ const ProgramDashboard = () => {
         {/* INTERVENTION */}
         <section className="rounded-2xl bg-white p-5 shadow-sm shadow-slate-200/50">
           <div className="mb-3 flex items-center justify-between gap-3">
-            <h3 className="text-sm font-bold uppercase tracking-wide text-slate-500">
+            <h3 className="text-sm font-bold capitalize text-slate-700">
               Enterprises requiring intervention
             </h3>
             <button

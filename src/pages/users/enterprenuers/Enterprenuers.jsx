@@ -288,11 +288,11 @@ const Enterprenuers = () => {
         <div className="relative z-10 max-w-3xl p-10 text-white">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
-            Entrepreneur Network
+            Startup Network
           </span>
 
           <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
-            Entrepreneurs
+            Startups
           </h2>
 
           <p className="mb-6 text-lg text-white/85 drop-shadow-md">
@@ -328,7 +328,7 @@ const Enterprenuers = () => {
       </div>
 
       <h2 className="mb-6 text-2xl font-bold text-[#172033]">
-        Available Entrepreneurs
+        Available Startups
       </h2>
 
       <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
@@ -509,7 +509,7 @@ const Enterprenuers = () => {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-[#6f6f72]">
               Showing {(page - 1) * limit + 1} - {Math.min(page * limit, count)}{" "}
-              of {count} Entrepreneurs
+              of {count} Startups
             </p>
 
             <div className="flex flex-wrap items-center gap-2">

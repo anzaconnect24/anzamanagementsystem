@@ -526,7 +526,7 @@ const Sidebar = ({
             icon: <FaClipboardList className="text-xl" />,
           },
           {
-            name: t("navigation.programmeTargets", "Programme Milestones & KPIs"),
+            name: t("navigation.programmeTargets", "Milestones and KPIs"),
             path: "/dashboard/my-programme-targets",
             icon: <FaBullseye className="text-xl" />,
           },

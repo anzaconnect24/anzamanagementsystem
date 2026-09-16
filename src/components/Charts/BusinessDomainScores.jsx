@@ -8,6 +8,7 @@ import {
 } from "@/controllers/crat_controller";
 import { UserContext } from "@/layouts/DashboardLayout";
 import { useTranslation } from "@/locales";
+import { readinessColor, readinessLabelT } from "@/utils/cratReadiness";
 
 // Localized loading component for dynamic import
 const LoadingChart = () => {
@@ -61,11 +62,8 @@ const mapPublishedReportToScoreData = (published, t) => {
     legal: "legal_compliance",
   };
 
-  const toStatus = (pct) => {
-    if (pct >= 75) return t("report.ready", "Ready");
-    if (pct >= 60) return t("report.partiallyReady", "Partially Ready");
-    return t("report.notReady", "Not Ready");
-  };
+  // Investment ready at 70% and above — see utils/cratReadiness.
+  const toStatus = (pct) => readinessLabelT(pct, t);
 
   const result = {};
   Object.entries(domainMap).forEach(([chartKey, apiKey]) => {
@@ -165,11 +163,8 @@ const BusinessDomainScores = ({ userDetails, initialScoreData }) => {
   // Calculate bar colors based on CRAT readiness levels
   const getBarColors = () => {
     const safeScoreData = normalizeScoreData(scoreData);
-    const getColor = (score) => {
-      if (score >= 75) return "#219654"; // Ready - 75-100%
-      if (score >= 60) return "#f4dc2c"; // Partially Ready - 60-74%
-      return "#EF4444"; // Not Ready - 0-59%
-    };
+    // Investment ready 70-100%, partially ready 60-69%, not ready below.
+    const getColor = (score) => readinessColor(score);
     return [
       getColor(safeScoreData.commercial?.percentage || 0),
       getColor(safeScoreData.financial?.percentage || 0),

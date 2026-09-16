@@ -41,22 +41,32 @@ const Page = () => {
     getData();
   }, [uuid]);
 
+  const mentor = user?.MentorProfile || {};
+  const answer = (value) => value || t("common.notAvailable", "N/A");
+  const listOf = (...values) => {
+    for (const value of values) {
+      const items = expertiseList(value);
+      if (items.length) return items.join(", ");
+    }
+    return "";
+  };
+
   const heroCards = [
     {
-      label: t("mentorProfile.smeFocus", "SME Focus"),
-      value: user?.MentorProfile?.smeFocus || t("common.notAvailable", "N/A"),
+      label: t("mentorProfile.experience", "Experience"),
+      value: answer(mentor.experienceYears),
     },
     {
       label: t("business.location", "Location"),
-      value: user?.MentorProfile?.location || t("common.notAvailable", "N/A"),
+      value: answer([mentor.location, mentor.country].filter(Boolean).join(", ")),
     },
     {
       label: t("mentorProfile.areasOfExpertise", "Areas of expertise"),
-      value: expertiseList(user?.MentorProfile?.areasOfExperties).join(", ") || t("common.notAvailable", "N/A"),
+      value: answer(listOf(mentor.expertiseAreas, mentor.areasOfExperties)),
     },
     {
-      label: t("business.sector", "Sector"),
-      value: (isSwahili ? user?.MentorProfile?.BusinessSector?.swName : user?.MentorProfile?.BusinessSector?.name) || t("common.notAvailable", "N/A"),
+      label: t("mentorProfile.preferredStage", "Preferred stage"),
+      value: answer(listOf(mentor.preferredStages) || mentor.smeFocus),
     },
   ];
 
@@ -150,32 +160,40 @@ const Page = () => {
             {[
               {
                 icon: "🎯",
-                label: t("mentorProfile.mentorshipFocus", "Mentorship focus"),
-                value:
-                  Object.keys(user?.MentorProfile?.mentorshipFocus || {}).length > 0
-                    ? Object.values(user.MentorProfile.mentorshipFocus).join(", ")
-                    : typeof user?.MentorProfile?.mentorshipFocus === "string"
-                      ? user.MentorProfile.mentorshipFocus
-                      : "",
+                label: t("mentorProfile.mentorshipFocus", "How they support entrepreneurs"),
+                value: listOf(mentor.supportTypes, mentor.mentorshipFocus),
+              },
+              {
+                icon: "🌎",
+                label: t("mentorProfile.areasOfExpertise", "Areas of expertise"),
+                value: listOf(mentor.expertiseAreas, mentor.areasOfExperties),
+              },
+              {
+                icon: "🏭",
+                label: t("mentorProfile.industries", "Industries"),
+                value: listOf(mentor.industries) || mentor.BusinessSector?.name || "",
+              },
+              {
+                icon: "🪜",
+                label: t("mentorProfile.preferredStage", "Preferred stage of business"),
+                value: listOf(mentor.preferredStages) || mentor.smeFocus || "",
               },
               {
                 icon: "📅",
                 label: t("mentorProfile.availability", "Availability"),
                 // Stored lower-case by some records ("weekly"), so present it
                 // with a capital first letter.
-                value: capitalizeFirst(user?.MentorProfile?.mentorAvailability),
+                value: capitalizeFirst(mentor.mentorAvailability),
               },
               {
-                icon: "🌎",
-                label: t("mentorProfile.areasOfExpertise", "Areas of expertise"),
-                value: expertiseList(
-                  user?.MentorProfile?.areasOfExperties,
-                ).join(", "),
+                icon: "💻",
+                label: t("mentorProfile.format", "Mentoring format"),
+                value: listOf(mentor.mentoringFormat),
               },
               {
-                icon: "🗣️",
-                label: t("mentorProfile.languages", "Languages"),
-                value: user?.MentorProfile?.language,
+                icon: "🧭",
+                label: t("mentorProfile.experience", "Professional experience"),
+                value: mentor.experienceYears || "",
               },
             ].map((row) => (
               <div

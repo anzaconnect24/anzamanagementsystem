@@ -296,7 +296,7 @@ const ProgramTargets = () => {
     <div className="rounded-2xl border border-black/10 bg-white p-6">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-lg font-black tracking-tight text-[#111827]">Milestones & KPIs</h2>
+          <h2 className="text-lg font-black tracking-tight text-[#111827]">Program Milestones and KPIs</h2>
           <p className="text-sm text-[#64748b]">
             What every startup on this programme is required to report and submit.
           </p>

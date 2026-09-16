@@ -16,7 +16,6 @@ import { getScoreData } from "@/controllers/crat_general_controller";
 import {
   getAdminTrackerOverview,
   getMentorOverview,
-  listTrackerMilestones,
 } from "@/controllers/trackerController";
 import TanzaniaMap from "../Maps/TanzaniaMap";
 import { useTranslation } from "@/locales";
@@ -194,7 +193,6 @@ const Dashboard = () => {
   const [aiReport, setAiReport] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
   const [mentorTrackerStats, setMentorTrackerStats] = useState(null);
-  const [myMilestonesCount, setMyMilestonesCount] = useState(0);
 
   useEffect(() => {
     getMentorOverviewStats().then((res) => {
@@ -213,14 +211,6 @@ const Dashboard = () => {
       );
     }
 
-    if (userDetails.role === "Enterprenuer") {
-      listTrackerMilestones().then((items) => {
-        const openMilestones = (items || []).filter((item) =>
-          ["pending", "in_progress", "submitted"].includes(item.status),
-        );
-        setMyMilestonesCount(openMilestones.length);
-      });
-    }
   }, [userDetails.role]);
 
   useEffect(() => {
@@ -328,7 +318,8 @@ const Dashboard = () => {
             </div>
           )}
 
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
+          {/* Auto-fit, so the cards fill the row whatever their number. */}
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
             <CardDataStats
               link="/dashboard/enterprenuers"
               title={t("dashboard.totalStartups", "Total Startups")}
@@ -369,15 +360,6 @@ const Dashboard = () => {
               <SlPeople className="text-lg text-primary dark:text-white" />
             </CardDataStats>
 
-            <CardDataStats
-              link="/dashboard/myMilestones"
-              title={t("dashboard.myMilestones", "My Milestones")}
-              total={myMilestonesCount}
-              rate="0.95%"
-              levelUp
-            >
-              <SlPeople className="text-lg text-primary dark:text-white" />
-            </CardDataStats>
 
             <div className="col-span-1 w-full md:col-span-5">
               <PerformanceOverview userDetails={userDetails} />
