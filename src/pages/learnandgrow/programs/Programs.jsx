@@ -75,6 +75,9 @@ const ProgramsPage = () => {
     }
   };
 
+  // Staff upload and edit courses; deleting one destroys its modules and
+  // slides, so that stays with Admin.
+  const canAuthor = ["Admin", "BDA"].includes(userDetails?.role);
   const isAdmin = ["Admin"].includes(userDetails?.role);
 
   const formatCourseName = (value) => {
@@ -121,8 +124,9 @@ const ProgramsPage = () => {
       const list = target
         ? all.filter(
             (item) =>
-              String(item.programCategory || "").trim().toLowerCase() ===
-              target,
+              String(item.programCategory || "")
+                .trim()
+                .toLowerCase() === target,
           )
         : all;
       setPrograms(list);
@@ -210,7 +214,7 @@ const ProgramsPage = () => {
       <div className="mb-6 flex items-center justify-between gap-4">
         <h2 className="text-2xl font-bold text-[#101828]">Explore Courses</h2>
 
-        {isAdmin && (
+        {canAuthor && (
           <button
             className="rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
             onClick={() => {
@@ -232,7 +236,7 @@ const ProgramsPage = () => {
             There are no courses under this category yet.
           </p>
 
-          {isAdmin && (
+          {canAuthor && (
             <button
               className="mt-6 rounded-xl bg-[#2563EB] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#1D4ED8]"
               onClick={() => {
@@ -292,7 +296,7 @@ const ProgramsPage = () => {
                     {enrollCounts[item.uuid] || 0} enrolled
                   </span>
 
-                  {!isAdmin && (
+                  {!canAuthor && (
                     <Link
                       href={`/dashboard/programs/details/${item.uuid}`}
                       className="text-sm font-semibold text-[#F59E0B] transition hover:text-[#D97706]"
@@ -304,7 +308,7 @@ const ProgramsPage = () => {
                   )}
                 </div>
 
-                {isAdmin && (
+                {canAuthor && (
                   <div className="mt-5 flex flex-wrap gap-3">
                     <Link
                       href={`/dashboard/programs/details/${item.uuid}`}
@@ -324,12 +328,14 @@ const ProgramsPage = () => {
                       {t("common.edit", "Edit")}
                     </button>
 
-                    <button
-                      className="rounded-xl bg-[#FEF3F2] px-5 py-2.5 text-sm font-semibold text-[#B42318] transition hover:bg-[#FEE4E2]"
-                      onClick={() => handleDelete(item.uuid)}
-                    >
-                      {t("common.delete", "Delete")}
-                    </button>
+                    {isAdmin && (
+                      <button
+                        className="rounded-xl bg-[#FEF3F2] px-5 py-2.5 text-sm font-semibold text-[#B42318] transition hover:bg-[#FEE4E2]"
+                        onClick={() => handleDelete(item.uuid)}
+                      >
+                        {t("common.delete", "Delete")}
+                      </button>
+                    )}
                   </div>
                 )}
               </div>

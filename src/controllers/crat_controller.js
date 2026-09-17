@@ -108,21 +108,6 @@ export const getAdminQueue = async (
   return unwrap(response) || [];
 };
 
-export const assignReviewer = async (assessmentId, reviewerIds) => {
-  // Accept either a single number (legacy) or an array
-  const ids = Array.isArray(reviewerIds) ? reviewerIds : [reviewerIds];
-  const response = await axios.post(
-    `${server_url}/crat/admin/assessments/${assessmentId}/assign`,
-    {
-      reviewerIds: ids,
-    },
-    {
-      headers,
-    },
-  );
-  return unwrap(response);
-};
-
 export const approveAssessment = async (assessmentId, adminDecisionNotes) => {
   const response = await axios.post(
     `${server_url}/crat/admin/assessments/${assessmentId}/approve`,
@@ -159,37 +144,8 @@ export const deleteAssessment = async (assessmentId) => {
   return unwrap(response);
 };
 
-export const getReviewerAssignments = async () => {
-  const response = await axios.get(`${server_url}/crat/reviewer/assignments`, {
-    headers,
-  });
-  return unwrap(response) || [];
-};
-
-export const saveReviewerScores = async (assessmentId, scores) => {
-  const response = await axios.put(
-    `${server_url}/crat/reviewer/assessments/${assessmentId}/scores`,
-    {
-      scores,
-    },
-    {
-      headers,
-    },
-  );
-  return unwrap(response);
-};
-
-export const submitReviewerAssessment = async (assessmentId) => {
-  const response = await axios.post(
-    `${server_url}/crat/reviewer/assessments/${assessmentId}/submit`,
-    {},
-    {
-      headers,
-    },
-  );
-  return unwrap(response);
-};
-
+// CRAT is scored by AI and published by an admin: there is no reviewer
+// assignment or reviewer scoring, so those calls have been removed.
 export const getInternalReport = async (businessId) => {
   const response = await axios.get(
     `${server_url}/crat/reports/${businessId}/internal`,

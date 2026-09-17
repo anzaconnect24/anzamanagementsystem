@@ -1,11 +1,11 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
 
+import { profileListText } from "@/utils/profile_list";
 import {
   getAdmins,
   getUserInfo,
 } from "../../../controllers/user_controller.js";
-import Breadcrumb from "../../../components/Breadcrumbs/Breadcrumb";
 import { useContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createNotification } from "../../../controllers/notification_controller";
@@ -28,6 +28,9 @@ import { UserContext } from "../../../layouts/DashboardLayout";
 import { useParams } from "react-router-dom";
 import Image from "../../../utils/image.js";
 import { useTranslation } from "../../../locales";
+import InvestorProfileDetails, {
+  investorAnswers,
+} from "@/components/investors/InvestorProfileDetails";
 
 // Profile Image Component
 const ProfileImage = ({ user }) => {
@@ -114,6 +117,8 @@ const InvestorProfilePage = () => {
     );
   }
 
+  const answers = investorAnswers(user.InvestorProfile || {});
+
   const contactSection = {
     title: t("common.contactInformation", "Contact Information"),
     items: [
@@ -190,68 +195,83 @@ const InvestorProfilePage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Breadcrumb
-        prevLink={``}
-        prevPage={t("common.investors", "Investors")}
-        pageName={
-          user.InvestorProfile?.company || t("users.noCompany", "No Company")
-        }
-      />
+      {/* HERO */}
+      <div className="relative min-h-[260px] overflow-hidden rounded-2xl bg-black shadow-sm">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/investors_hero.svg')" }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-black/85 via-black/60 to-[#c9672b]/30" />
+
+        <div className="relative z-10 flex min-h-[260px] flex-col justify-center gap-6 p-8 text-white md:flex-row md:items-center md:justify-start md:p-10">
+          <div className="h-24 w-24 shrink-0 overflow-hidden rounded-xl border-2 border-white/30 bg-white shadow-lg">
+            <ProfileImage user={user} />
+          </div>
+
+          <div className="max-w-3xl">
+            <span className="mb-4 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
+              <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
+              {t("users.investorProfile", "Investor Profile")}
+            </span>
+
+            <h1 className="mb-2 text-3xl font-bold leading-tight drop-shadow-lg md:text-4xl">
+              {user.InvestorProfile?.company || user.name}
+            </h1>
+
+            {user.InvestorProfile?.company && user.name && user.name !== user.InvestorProfile.company ? (
+              <p className="mb-4 text-lg text-white/85 drop-shadow-md">
+                {user.name}
+                {user.InvestorProfile?.role ? ` · ${user.InvestorProfile.role}` : ""}
+              </p>
+            ) : null}
+
+            <div className="flex flex-wrap items-center gap-6 text-sm text-white/85">
+              {user.InvestorProfile?.geography ? (
+                <span className="flex items-center gap-2">
+                  <HiOutlineLocationMarker className="h-4 w-4" />
+                  {user.InvestorProfile.geography}
+                </span>
+              ) : null}
+              {user.InvestorProfile?.BusinessSector ? (
+                <span className="flex items-center gap-2">
+                  <HiOutlineOfficeBuilding className="h-4 w-4" />
+                  {isSwahili
+                    ? user.InvestorProfile.BusinessSector.swName || user.InvestorProfile.BusinessSector.name
+                    : user.InvestorProfile.BusinessSector.name}
+                </span>
+              ) : null}
+              <span className="flex items-center gap-2">
+                <HiOutlineDocumentText className="h-4 w-4" />
+                {profileListText(
+                  user.InvestorProfile?.investmentType,
+                  t("users.structureNotSpecified", "Structure not specified"),
+                )}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* TOP METRICS */}
       <div className="mt-6 rounded-xl border border-primary/5 bg-primary/5 p-8">
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
-          <div className="flex flex-col items-center rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark-2">
-            <div className="mb-3 text-4xl">📍</div>
-
-            <h3 className="mb-1 text-center text-2xl font-bold text-gray-900 dark:text-white">
-              {user.InvestorProfile?.geography || "N/A"}
-            </h3>
-
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              {t("common.location", "Location")}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark-2">
-            <div className="mb-3 text-4xl">💡</div>
-
-            <h3 className="line-clamp-1 mb-1 text-2xl font-bold text-gray-900 dark:text-white">
-              {isSwahili
-                ? user?.InvestorProfile?.BusinessSector?.swName
-                : user?.InvestorProfile?.BusinessSector?.name || "N/A"}
-            </h3>
-
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              {t("business.businessSector", "Sector")}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark-2">
-            <div className="mb-3 text-4xl">👥</div>
-
-            <h3 className="mb-1 text-2xl font-bold text-gray-900 dark:text-white">
-              {Object.values(user?.InvestorProfile?.investmentType || {}).join(
-                ", ",
-              ) || "N/A"}
-            </h3>
-
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              {t("common.investmentType", "Investment Type")}
-            </p>
-          </div>
-
-          <div className="flex flex-col items-center rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark-2">
-            <div className="mb-3 text-4xl">🏢</div>
-
-            <h3 className="line-clamp-1 overflow-y-hidden text-2xl font-bold text-gray-900 dark:text-white">
-              {user?.InvestorProfile?.investmentSize || "N/A"}
-            </h3>
-
-            <p className="text-sm font-medium text-gray-600 dark:text-gray-400">
-              {t("common.investmentRange", "Investment Range")}
-            </p>
-          </div>
+          {[
+            { icon: "🏦", label: "Investor Type", value: answers.investorType },
+            { icon: "📍", label: "Headquarters", value: answers.headquarters },
+            { icon: "💼", label: "Fund Size", value: answers.fundSize },
+            { icon: "💰", label: "Typical Ticket Size", value: answers.ticketSize },
+          ].map((metric) => (
+            <div
+              key={metric.label}
+              className="flex flex-col items-center rounded-2xl bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark-2"
+            >
+              <div className="mb-3 text-4xl">{metric.icon}</div>
+              <h3 className="mb-1 line-clamp-2 text-center text-xl font-bold text-gray-900 dark:text-white">
+                {metric.value || "N/A"}
+              </h3>
+              <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{metric.label}</p>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -259,56 +279,8 @@ const InvestorProfilePage = () => {
       <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-3">
         {/* LEFT CONTENT */}
         <div className="col-span-2 pt-6">
-          {/* BIO */}
-          <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark">
-            <div className="mb-4">
-              <h2 className="mb-2 flex items-center text-xl font-bold capitalize text-gray-900 dark:text-white">
-                <span className="mr-3 text-xl">🙍</span>
-                {t("users.bio", "Bio")}
-              </h2>
-
-              <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-300">
-                {user?.InvestorProfile?.bio ||
-                  t(
-                    "users.noInformationAvailable",
-                    "No Information Available",
-                  )}
-              </p>
-            </div>
-
-            <div className="mb-4">
-              <h2 className="mb-2 flex items-center text-xl font-bold capitalize text-gray-900 dark:text-white">
-                <span className="mr-3 text-xl">💰</span>
-                {t("users.notableInvestments", "Notable Investments")}
-              </h2>
-
-              <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-300">
-                {user?.InvestorProfile?.notableInvestment ||
-                  t(
-                    "users.noInformationAvailable",
-                    "No Information Available",
-                  )}
-              </p>
-            </div>
-          </div>
-
-          {/* SEEKING */}
-          <div className="mt-6 rounded-2xl bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark">
-            <div className="mb-4">
-              <h2 className="mb-2 flex items-center text-xl font-bold capitalize text-gray-900 dark:text-white">
-                <span className="mr-3 text-xl">📪</span>
-                {t("users.seeking", "Seeking")}
-              </h2>
-
-              <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-300">
-                {user?.InvestorProfile?.seeking ||
-                  t(
-                    "users.noInformationAvailable",
-                    "No Information Available",
-                  )}
-              </p>
-            </div>
-          </div>
+          {/* The investor's answers to the profile questions. */}
+          <InvestorProfileDetails profile={user.InvestorProfile} />
 
           {/* ACTIONS */}
           <div className="mt-4 flex space-x-4">

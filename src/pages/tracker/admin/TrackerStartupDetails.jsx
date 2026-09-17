@@ -49,6 +49,7 @@ import MilestoneStatusTable from "@/components/tracker/MilestoneStatusTable";
 import { downloadMilestoneTemplatePDF } from "@/services/milestoneTemplatePDF";
 import {
   formatReportAmount,
+  milestoneKpiImpact,
   milestonePlannedAmount,
   milestoneTimelineSpan,
   reportFromMilestone,
@@ -72,6 +73,7 @@ const SECTION_TABS = [
   { id: "milestones", label: "Milestones" },
   { id: "status", label: "Milestone Status" },
   { id: "report", label: "Milestone Reporting" },
+  { id: "attachments", label: "Attachments" },
 ];
 
 const SECTION_SUBTITLE = {
@@ -81,6 +83,8 @@ const SECTION_SUBTITLE = {
     "Where every milestone stands: whether the BDA has approved the plan, and what has happened to the report filed against it.",
   report:
     "The startup's reports, budgeted against actual spend, with their evidence. Approve the tranche once the plan is BDA-approved, or decline it.",
+  attachments:
+    "Documents the startup uploaded from their Attachments tab. Read-only — view or download them here.",
 };
 
 const planHeadClass =
@@ -99,6 +103,22 @@ const parseAttachments = (value) => {
     }
   }
   return [];
+};
+
+// The enterprise's `documents` field is a flat { key: value } object (same
+// one the KYC screen reads/writes) — the startup's uploaded budget document
+// lives under `budgetDocumentUrl`/`budgetDocumentDescription`.
+const parseDocuments = (value) => {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
 };
 
 const fmtTZS = (value) => `TZS ${Number(value || 0).toLocaleString()}`;
@@ -216,7 +236,8 @@ const TrackerStartupDetails = () => {
         : [];
       const matchesEnt = (e) =>
         (e?.Entreprenuer?.uuid || e?.entreprenuer_uuid) === entUuid;
-      let match = enterpriseRows.find(matchesEnt);
+      // Overview entries wrap the record as { enterprise, milestones, ... }.
+      let match = enterprises.map((e) => e?.enterprise || e).find(matchesEnt);
 
       // The overview lookup is best-effort. If it didn't resolve the enterprise,
       // fall back to the full enterprise list — the same records the BDA reads —
@@ -332,6 +353,7 @@ const TrackerStartupDetails = () => {
           meta.cleanDescription,
           meta.categories,
           startups,
+          meta.cohortUuid,
         ),
         programCategory: fresh.programCategory,
         type: "grant",
@@ -636,7 +658,7 @@ const TrackerStartupDetails = () => {
             ? response.data
             : [];
         const staffOnly = all.filter((user) =>
-          ["Staff", "Reviewer"].includes(user.role),
+          ["BDA"].includes(user.role),
         );
         if (!cancelled) setBdaList(staffOnly.length ? staffOnly : all);
       } catch {
@@ -651,9 +673,21 @@ const TrackerStartupDetails = () => {
 
   // Assign right away rather than waiting for the page's Save: the assignment is
   // what lets the BDA reach this startup at all, and burying it behind the
-  // disbursement form's save button hides that.
+  // disbursement form's save button hides that. This does everything onSave
+  // would do for the assignment itself — writes the program markers and
+  // creates the tracker enterprise — so a bare assignment is immediately
+  // visible on the BDA's own Grant Management view, not just recorded server
+  // side. (The BDA's view groups by the tracker enterprise's linked program;
+  // without one being created here, the assignment would silently show
+  // nowhere until someone separately opened "Configure disbursement" and hit
+  // "Save changes".)
   const onAssignBda = async (bdaUuid) => {
-    setForm((prev) => ({ ...prev, bdaUuid }));
+    const bdaName =
+      bdaList.find((bda) => bda.uuid === bdaUuid)?.name ||
+      bdaList.find((bda) => bda.uuid === bdaUuid)?.email ||
+      "";
+
+    setForm((prev) => ({ ...prev, bdaUuid, bdaName }));
     if (!bdaUuid || !form.entreprenuerUuid) return;
 
     setAssigningBda(true);
@@ -662,9 +696,49 @@ const TrackerStartupDetails = () => {
         staff_uuid: bdaUuid,
         entreprenuer_uuid: form.entreprenuerUuid,
       });
-      // The markers carry the same uuid, so the BDA's own startup list picks it
-      // up too. onSave writes them; say so rather than implying it is done.
-      toast.success("BDA assigned — save the page to record it on the programme");
+
+      if (program?.uuid) {
+        const fresh = (await getProgram(program.uuid)) || program;
+        const meta = parseTrackerProgramMeta(fresh);
+        const startups = Array.isArray(meta.startups) ? [...meta.startups] : [];
+        const idx = startups.findIndex((s) => s.entreprenuerUuid === entUuid);
+        if (idx !== -1) {
+          startups[idx] = { ...startups[idx], bdaUuid, bdaName };
+          await editProgram(program.uuid, {
+            title: fresh.title,
+            description: buildDescriptionWithMeta(
+              meta.cleanDescription,
+              meta.categories,
+              startups,
+              meta.cohortUuid,
+            ),
+            programCategory: fresh.programCategory,
+            type: "grant",
+            startDate: fresh.startDate || null,
+            endDate: fresh.endDate || null,
+            image: fresh.image,
+          });
+        }
+      }
+
+      if (!enterprise?.uuid) {
+        try {
+          const created = await upsertMentorEnterprise({
+            entreprenuer_uuid: form.entreprenuerUuid,
+            program_uuid: programUuid,
+            name: form.name || undefined,
+          });
+          if (created?.uuid) {
+            setEnterprise((prev) => ({ ...(prev || {}), ...created }));
+          }
+        } catch {
+          toast.error(
+            "BDA assigned, but the startup's tracker workspace could not be created — they may not see it on Grant Management yet.",
+          );
+        }
+      }
+
+      toast.success("BDA assigned");
     } catch (error) {
       toast.error(
         error?.response?.data?.message || "Failed to assign the BDA",
@@ -741,6 +815,7 @@ const TrackerStartupDetails = () => {
         meta.cleanDescription,
         meta.categories,
         startups,
+        meta.cohortUuid,
       );
       await editProgram(program.uuid, {
         title: fresh.title,
@@ -882,16 +957,6 @@ const TrackerStartupDetails = () => {
 
   return (
     <div className="space-y-6 bg-[#eef2f8] px-6 py-6">
-      <button
-        type="button"
-        onClick={() =>
-          navigate(`/dashboard/trackerPrograms/${programUuid}/details`)
-        }
-        className="text-sm font-semibold text-[#163b8f]"
-      >
-        Back to program startups
-      </button>
-
       <section
         className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
         style={{
@@ -1349,7 +1414,7 @@ const TrackerStartupDetails = () => {
           {/* The approved plan as a document to work from. Only offered once the
               BDA has approved something — before that there is no plan to
               print, so the button would produce an empty table. */}
-          {approvedMilestones.length > 0 && (
+          {milestoneTab !== "attachments" && approvedMilestones.length > 0 && (
             <button
               type="button"
               onClick={onDownloadTemplate}
@@ -1367,20 +1432,77 @@ const TrackerStartupDetails = () => {
         {/* One tab per tranche, inside every section. The open one stays in the
             URL, so the view can still be linked to and the back button still
             works. */}
-        {milestones.length > 0 &&
+        {milestoneTab !== "attachments" &&
+          milestones.length > 0 &&
           !openTranche &&
           renderTrancheList(
             milestoneTab === "report" ? "Tranche Reports" : "Tranche Milestones",
             milestoneTab === "report" ? "Reports" : "Milestones",
           )}
 
-        {milestones.length > 0 &&
+        {milestoneTab !== "attachments" &&
+          milestones.length > 0 &&
           openTranche &&
           renderTrancheHeading(
             milestoneTab === "report" ? "All reports" : "All milestones",
           )}
 
-        {milestones.length === 0 ? (
+        {milestoneTab === "attachments" ? (
+          // The startup's budget document, uploaded from their own Attachments
+          // tab — finance only views or downloads it.
+          (() => {
+            const documents = parseDocuments(enterprise?.documents);
+            const budgetDocumentUrl = documents.budgetDocumentUrl;
+
+            if (!budgetDocumentUrl) {
+              return (
+                <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
+                  The startup has not uploaded any attachments yet.
+                </div>
+              );
+            }
+
+            return (
+              <div className="overflow-x-auto rounded-xl border border-black/10">
+                <table className="w-full min-w-[560px] border-collapse bg-white">
+                  <thead>
+                    <tr>
+                      <th className={`${planHeadClass} w-[25%]`}>Document</th>
+                      <th className={planHeadClass}>Description</th>
+                      <th className={`${planHeadClass} w-[20%]`}>Action</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td className={`${planCellClass} font-bold text-[#111827]`}>
+                        <span className="inline-flex items-center gap-2">
+                          <FileText className="h-4 w-4 text-emerald-600" />
+                          Budget Document
+                        </span>
+                      </td>
+                      <td className={`${planCellClass} whitespace-pre-line`}>
+                        {documents.budgetDocumentDescription || (
+                          <span className="text-[#94a3b8]">—</span>
+                        )}
+                      </td>
+                      <td className={planCellClass}>
+                        <a
+                          href={budgetDocumentUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="inline-flex items-center gap-2 text-sm font-bold text-[#163b8f] hover:underline"
+                        >
+                          <Download className="h-4 w-4" />
+                          View / download
+                        </a>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            );
+          })()
+        ) : milestones.length === 0 ? (
           <div className="rounded-xl border border-dashed border-black/20 p-6 text-center text-sm text-[#64748b]">
             No milestones have been set for this startup yet.
           </div>
@@ -1420,6 +1542,11 @@ const TrackerStartupDetails = () => {
                       {milestone.tranchePlannedUse ? (
                         <span className="mt-1 block text-xs font-normal text-[#64748b]">
                           {milestone.tranchePlannedUse}
+                        </span>
+                      ) : null}
+                      {milestoneKpiImpact(milestone) ? (
+                        <span className="mt-1 block text-xs font-normal text-emerald-700">
+                          KPI/Impact: {milestoneKpiImpact(milestone)}
                         </span>
                       ) : null}
                     </td>
@@ -1497,8 +1624,10 @@ const TrackerStartupDetails = () => {
 
                 return {
                   uuid: milestone.uuid,
+                  milestone,
                   title: milestone.title,
                   activity: milestone.tranchePlannedUse,
+                  kpiImpact: milestoneKpiImpact(milestone),
                   // Planned funds have their own column; the span does not.
                   timeline: milestoneTimelineSpan(milestone),
                   report: reportFromMilestone(milestone),

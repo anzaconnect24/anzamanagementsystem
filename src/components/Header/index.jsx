@@ -1,5 +1,6 @@
 import Link from "@/utils/link";
 import DropdownNotification from "./DropdownNotification";
+import CalendarButton from "./CalendarButton";
 import DropdownUser from "./DropdownUser";
 import LanguageToggle from "@/components/LanguageToggle";
 import Image from "@/utils/image";
@@ -90,6 +91,10 @@ const Header = ({ sidebarOpen, setSidebarOpen }) => {
             {/* <!-- Dark Mode Toggler --> */}
             {/* <DarkModeSwitcher /> */}
             {/* <!-- Dark Mode Toggler --> */}
+
+            {/* <!-- Calendar Menu Area --> */}
+            <CalendarButton />
+            {/* <!-- Calendar Menu Area --> */}
 
             {/* <!-- Notification Menu Area --> */}
             <DropdownNotification />

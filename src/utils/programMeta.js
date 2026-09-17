@@ -11,6 +11,10 @@ const TRACKER_MARKERS = ["__TRACKER_STARTUPS__:", "__TRACKER_CATEGORIES__:"];
 // finance officer's grant figures.
 const MENTORSHIP_MARKER = "__TRACKER_BDAS__:";
 
+// Records which platform program a grant program was set up against, so the
+// startup picker can be re-scoped when it is edited.
+const COHORT_LINK_MARKER = "__TRACKER_COHORT__:";
+
 // Markers from a removed course-access feature. They are only cleaned out of
 // descriptions (never used to classify a program) so any rows that still carry
 // them don't show the raw marker in the course text.
@@ -20,6 +24,7 @@ const LEGACY_MARKERS = ["__COURSE_CATEGORIES__:", "__COURSE_PROGRAMS__:"];
 const CLEAN_MARKERS = [
   ...TRACKER_MARKERS,
   MENTORSHIP_MARKER,
+  COHORT_LINK_MARKER,
   ...LEGACY_MARKERS,
 ];
 
@@ -36,6 +41,14 @@ export const isTrackerProgram = (program) => {
     TRACKER_MARKERS.some((marker) => text.includes(marker))
   );
 };
+
+// Startup cohorts moved to their own cohort_programs table and no longer live
+// here. This stays only so that any row left typed "cohort" in an unmigrated
+// environment is still kept out of the Class Rooms listing.
+export const COHORT_PROGRAM_TYPE = "cohort";
+
+export const isCohortProgram = (program) =>
+  String(program?.type || "").toLowerCase() === COHORT_PROGRAM_TYPE;
 
 // A BDA's own mentorship program — typed "mentorship", or carrying the BDA
 // marker for backends that do not store the type.
@@ -68,7 +81,7 @@ export const cleanProgramDescription = (description) => {
 // and clean their descriptions.
 export const onlyCourses = (programs = []) =>
   (Array.isArray(programs) ? programs : [])
-    .filter((program) => !isTrackerProgram(program))
+    .filter((program) => !isTrackerProgram(program) && !isCohortProgram(program))
     .map((program) => ({
       ...program,
       description: cleanProgramDescription(program.description),

@@ -5,6 +5,7 @@ import {
   completionStatusLabel,
   computeVariance,
   formatReportAmount,
+  milestoneKpiImpact,
   milestonePlannedAmount,
   milestoneTimelineSpan,
   receiptLabel,
@@ -38,6 +39,7 @@ const varianceText = (report) => {
 const HEAD = [
   "Milestone",
   "Key activities",
+  "KPI / Impact",
   "Timeline",
   "Budgeted amount",
   "Actual amount",
@@ -97,6 +99,7 @@ export const downloadMilestoneTemplatePDF = (milestones = [], context = {}) => {
     return [
       milestone.title || "",
       milestone.tranchePlannedUse || "",
+      milestoneKpiImpact(milestone) || "",
       milestoneTimelineSpan(milestone) || "",
       formatReportAmount(
         report.plannedAmount || milestonePlannedAmount(milestone),
@@ -130,14 +133,15 @@ export const downloadMilestoneTemplatePDF = (milestones = [], context = {}) => {
     alternateRowStyles: { fillColor: [248, 250, 252] },
     // Empty reporting cells need to stay tall enough to write in by hand.
     columnStyles: {
-      0: { cellWidth: 120, fontStyle: "bold" },
-      1: { cellWidth: 130 },
-      2: { cellWidth: 60 },
-      3: { cellWidth: 85 },
-      4: { cellWidth: 85 },
+      0: { cellWidth: 105, fontStyle: "bold" },
+      1: { cellWidth: 110 },
+      2: { cellWidth: 95 },
+      3: { cellWidth: 55 },
+      4: { cellWidth: 80 },
       5: { cellWidth: 80 },
       6: { cellWidth: 75 },
-      7: { cellWidth: "auto" },
+      7: { cellWidth: 70 },
+      8: { cellWidth: "auto" },
     },
     didParseCell: (data) => {
       if (data.section === "body" && !String(data.cell.raw || "").trim()) {

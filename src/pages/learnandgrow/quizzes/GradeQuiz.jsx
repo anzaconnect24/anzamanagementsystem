@@ -25,7 +25,7 @@ const GradeQuiz = () => {
 
   useEffect(() => {
     // Check if user is admin/instructor
-    if (userDetails?.role !== "Admin" && userDetails?.role !== "Staff") {
+    if (userDetails?.role !== "Admin" && userDetails?.role !== "BDA") {
       toast.error(t("common.noPermission"));
       router.push("/dashboard");
       return;

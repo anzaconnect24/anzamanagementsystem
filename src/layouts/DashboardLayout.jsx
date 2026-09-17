@@ -4,7 +4,7 @@ import { Toaster } from "react-hot-toast";
 import Loader from "@/components/common/Loader";
 import Sidebar from "@/components/Sidebar";
 import Header from "@/components/Header";
-import { getUser } from "@/utils/local_storage";
+import { getUser, logout } from "@/utils/local_storage";
 import { getMyInfo } from "@/controllers/user_controller";
 import { getDashboardData } from "@/controllers/dashboard_controller";
 import { createLog } from "@/controllers/log_controller";
@@ -27,33 +27,44 @@ export default function DashboardLayout() {
     if (userDetails) return; // Don't refetch if we already have user details
 
     if (getUser()) {
-      getMyInfo().then((data) => {
-        if (data) {
-          setUserDetails(data);
-          createLog({ action: "Logged in to the system" });
-          getDashboardData().then((ddata) => {
-            setData(ddata);
-            if (data.activated == 1) {
-              if (data.role != "Enterprenuer") {
-                setTimeout(() => setLoading(false), 2000);
-              } else {
-                if (data.Business && data.Business.status == "accepted") {
+      getMyInfo()
+        .then((data) => {
+          if (data) {
+            setUserDetails(data);
+            createLog({ action: "Logged in to the system" });
+            getDashboardData().then((ddata) => {
+              setData(ddata);
+              if (data.activated == 1) {
+                if (data.role != "Enterprenuer") {
                   setTimeout(() => setLoading(false), 2000);
                 } else {
-                  navigate("/auth/authorization");
-                  setTimeout(() => setLoading(false), 2000);
+                  if (data.Business && data.Business.status == "accepted") {
+                    setTimeout(() => setLoading(false), 2000);
+                  } else {
+                    navigate("/auth/authorization");
+                    setTimeout(() => setLoading(false), 2000);
+                  }
                 }
+              } else {
+                navigate("/auth/authorization");
+                setTimeout(() => setLoading(false), 2000);
               }
-            } else {
-              navigate("/auth/authorization");
-              setTimeout(() => setLoading(false), 2000);
-            }
-          });
-        } else {
+            });
+          } else {
+            navigate("/auth/signin");
+            setTimeout(() => setLoading(false), 2000);
+          }
+        })
+        .catch(() => {
+          // getMyInfo rejects when the stored session token is no longer
+          // valid (expired, or signed against an old server secret). Without
+          // this catch, the rejection was unhandled and setLoading(false)
+          // never ran — the loader spun forever instead of returning to
+          // sign-in.
+          logout();
           navigate("/auth/signin");
-          setTimeout(() => setLoading(false), 2000);
-        }
-      });
+          setLoading(false);
+        });
     } else {
       navigate("/auth/signin");
       setTimeout(() => setLoading(false), 2000);

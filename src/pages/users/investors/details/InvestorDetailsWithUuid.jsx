@@ -1,129 +1,57 @@
 /* eslint-disable react/no-unescaped-entities */
 "use client";
-import { getAdmins, getUserInfo } from "@/controllers/user_controller.js";
-import { timeAgo } from "@/utils/time_ago";
-import Breadcrumb from "@/components/Breadcrumbs/Breadcrumb";
 import { useContext, useEffect, useState } from "react";
-import toast from "react-hot-toast";
-import { createConversation } from "@/controllers/conversation_controller";
-import { useRouter } from "@/utils/navigation";
 import { useParams } from "react-router-dom";
-import { createNotification } from "@/controllers/notification_controller";
-import {
-  HiOutlineChat,
-  HiOutlineMail,
-  HiOutlinePhone,
-  HiOutlineOfficeBuilding,
-  HiOutlineLocationMarker,
-  HiOutlineCash,
-  HiOutlineDocumentText,
-  HiOutlineUserCircle,
-} from "react-icons/hi";
+import toast from "react-hot-toast";
 import Link from "@/utils/link";
-import Image from "@/utils/image";
+import Loader from "@/components/common/Loader";
+import { useRouter } from "@/utils/navigation";
+import { getUserInfo } from "@/controllers/user_controller.js";
+import { createConversation } from "@/controllers/conversation_controller";
+import { createNotification } from "@/controllers/notification_controller";
 import { useTranslation } from "@/locales";
 import { UserContext } from "../../../../layouts/DashboardLayout";
+import { investorAnswers } from "@/components/investors/InvestorProfileDetails";
 
-// ProfileImage component for better organization and reuse
-const ProfileImage = ({ user }) => {
-  if (user.image) {
-    return (
-      <div className="w-full h-full relative">
-        <Image
-          src={user.image}
-          alt={user.name}
-          width={96}
-          height={96}
-          className="object-cover w-full h-full rounded-xl"
-          onError={(e) => {
-            e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(
-              user.name,
-            )}&background=6366f1&color=fff`;
-          }}
-        />
-      </div>
-    );
-  } else {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-primary/10">
-        <span className="text-2xl font-bold text-primary">
-          {user.name?.charAt(0).toUpperCase()}
-        </span>
-      </div>
-    );
-  }
-};
-
+// An investor's profile as a startup sees it: their answers from sign-up,
+// laid out like the mentor profile — the organisation's story on the left and
+// what they invest in beside it. Contact information is withheld by the API.
 const Page = () => {
-  const { t, isSwahili } = useTranslation();
+  const { t } = useTranslation();
   const { uuid } = useParams();
-
   const { userDetails } = useContext(UserContext);
-  const [user, setuser] = useState(null);
-  const [loading, setloading] = useState(true);
   const router = useRouter();
-  const isAdmin = userDetails && userDetails.role === "Admin";
+
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     getUserInfo(uuid).then((data) => {
-      setuser(data);
-      setloading(false);
+      setUser(data);
+      setLoading(false);
     });
   }, [uuid]);
 
-  const handleStartChatClick = () => {
-    const data = {
-      to: user.uuid,
-      type: "userToUser",
-      lastMessage: "",
-    };
-
+  const startChat = () => {
+    toast.success(
+      t("messages.encryptionEnabling", "Enabling end-to-end encryption. Please wait..."),
+    );
     createNotification({
       user_uuid: user.uuid,
       to: "User",
-      message: t("messages.newMessage", "You have a new message"),
+      message: t("messages.youHaveNewMessage", "You have a new message"),
     });
-
-    createConversation(data).then((res) => {
-      router.push(`/dashboard/messages/${res.uuid}`);
+    createConversation({ to: user.uuid, type: "userToUser", lastMessage: "" }).then((data) => {
+      router.push(`/dashboard/messages/${data.uuid}`);
     });
   };
 
-  const heroCards = [
-    {
-      label: t("users.location", "Location"),
-      value: user?.InvestorProfile?.geography || t("mentorHub.notAvailable", "N/A"),
-    },
-    {
-      label: t("users.sector", "Sector"),
-      value: (isSwahili
-        ? user?.InvestorProfile?.BusinessSector?.swName
-        : user?.InvestorProfile?.BusinessSector?.name) || t("mentorHub.notAvailable", "N/A"),
-    },
-    {
-      label: t("users.structure", "Investment Type"),
-      value: user?.InvestorProfile?.investmentType
-        ? Object.values(user.InvestorProfile.investmentType).join(", ")
-        : t("mentorHub.notAvailable", "N/A"),
-    },
-    {
-      label: t("users.ticketSize", "Investment Range"),
-      value: user?.InvestorProfile?.investmentSize || t("mentorHub.notAvailable", "N/A"),
-    },
-  ];
-
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[400px]">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
+  if (loading) return <Loader />;
 
   if (!user) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[400px]">
-        <div className="text-xl font-medium text-gray-600 dark:text-gray-400 mb-2">
+      <div className="flex min-h-[400px] flex-col items-center justify-center">
+        <div className="mb-2 text-xl font-medium text-gray-600 dark:text-gray-400">
           {t("users.investorNotFound", "Investor not found")}
         </div>
         <p className="text-gray-500 dark:text-gray-500">
@@ -136,14 +64,37 @@ const Page = () => {
     );
   }
 
+  const answers = investorAnswers(user.InvestorProfile || {});
+  const notAvailable = t("common.notAvailable", "N/A");
+
+  const heroCards = [
+    { label: "Investor type", value: answers.investorType },
+    { label: "Headquarters", value: answers.headquarters },
+    { label: "Fund size", value: answers.fundSize },
+    { label: "Year founded", value: answers.yearFounded },
+  ];
+
+  const investmentRows = [
+    { icon: "🎯", label: "Investment focus", value: answers.sectors.join(", ") },
+    { icon: "🪜", label: "Business stages", value: answers.businessStages.join(", ") },
+    { icon: "💰", label: "Typical ticket size", value: answers.ticketSize },
+    { icon: "🧾", label: "Type of capital", value: answers.capitalType },
+    { icon: "🌍", label: "Geographies", value: answers.geographies.join(", ") },
+    { icon: "🌱", label: "Impact areas", value: answers.impactAreas.join(", ") },
+    { icon: "📝", label: "Impact thesis", value: answers.impactThesis },
+  ];
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Hero Section */}
       <div className="relative mt-6 overflow-hidden rounded-3xl bg-black shadow-xl">
         <img
-          src="/images/investment_readiness_classes.svg"
-          alt={user.InvestorProfile?.company || user.name}
+          src="/images/investors_hero.svg"
+          alt={answers.company || user.name}
           className="absolute inset-0 h-full w-full object-cover"
+          onError={(e) => {
+            e.target.src = "/images/investment_readiness_classes.svg";
+          }}
         />
 
         <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-black/40 to-black/30" />
@@ -158,22 +109,24 @@ const Page = () => {
                 <span className="h-2 w-2 rounded-full bg-orange-500"></span>
                 Investor Profile
               </div>
-              <h1 className="mb-5 max-w-4xl text-3xl font-bold leading-tight tracking-tight text-white drop-shadow-2xl md:text-4xl">
-                {user.InvestorProfile?.company || user.name}
+
+              <h1 className="mb-2 max-w-4xl text-3xl font-bold leading-tight tracking-tight text-white drop-shadow-2xl md:text-4xl">
+                {answers.company || user.name}
               </h1>
 
+              {answers.legalName && answers.legalName !== answers.company && (
+                <p className="mb-5 text-xl font-medium text-white/80">{answers.legalName}</p>
+              )}
+
               <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {heroCards.map((card, index) => (
+                {heroCards.map((card) => (
                   <div
-                    key={index}
+                    key={card.label}
                     className="rounded-2xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur-md"
                   >
-                    <p className="text-sm font-medium text-white/70">
-                      {card.label}
-                    </p>
-
+                    <p className="text-sm font-medium text-white/70">{card.label}</p>
                     <p className="mt-2 line-clamp-2 text-lg font-bold leading-snug">
-                      {card.value}
+                      {card.value || notAvailable}
                     </p>
                   </div>
                 ))}
@@ -183,54 +136,65 @@ const Page = () => {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">🙍</span>
-            {t("users.bio", "Bio")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {user?.InvestorProfile?.bio ||
-              t("users.noInformationAvailable", "No Information Available")}
-          </p>
+      {/* The organisation on the left, what they invest in in the panel beside it. */}
+      <div className="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[2.4fr_1fr]">
+        <div className="rounded-2xl bg-white p-8 shadow-sm transition-all duration-300 hover:shadow-md dark:bg-boxdark">
+          <div className="mb-4">
+            <h2 className="mb-2 flex items-center text-xl font-bold capitalize text-gray-900 dark:text-white">
+              <span className="mr-3 text-xl">🏢</span>
+              About
+            </h2>
+            <p className="text-lg leading-relaxed text-gray-600 dark:text-gray-300">
+              {answers.bio || t("users.noInformationAvailable", "No Information Available")}
+            </p>
+          </div>
         </div>
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">💰</span>
-            {t("users.notableInvestments", "Notable investments")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {user?.InvestorProfile?.notableInvestment ||
-              t("users.noInformationAvailable", "No Information Available")}
-          </p>
-        </div>
+
+        <aside className="mt-6 space-y-4 xl:mt-0">
+          <div className="rounded-2xl bg-white p-6 shadow-sm dark:bg-boxdark">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white">Investment Details</h2>
+            <p className="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
+              What this investor backs, and how they invest.
+            </p>
+
+            <div className="mt-5 space-y-3">
+              {investmentRows.map((row) => (
+                <div
+                  key={row.label}
+                  className="flex items-start gap-3 rounded-xl bg-gray-50 p-4 dark:bg-meta-4"
+                >
+                  <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-white text-lg shadow-sm dark:bg-boxdark">
+                    {row.icon}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-bold text-gray-900 dark:text-white">{row.label}</p>
+                    <p
+                      className={`mt-0.5 text-sm leading-6 ${
+                        row.value ? "text-gray-600 dark:text-gray-300" : "font-semibold text-[#e07a1f]"
+                      }`}
+                    >
+                      {row.value || t("common.notAvailable", "Not provided")}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
       </div>
 
-      <div className="bg-white dark:bg-boxdark rounded-2xl p-8 shadow-sm hover:shadow-md transition-all duration-300 mt-6">
-        <div className="mb-4">
-          <h2 className="text-xl font-bold mb-2 capitalize flex items-center text-gray-900 dark:text-white">
-            <span className="text-xl mr-3">📪</span>
-            {t("users.seeking", "Seeking")}
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 text-lg leading-relaxed">
-            {user?.InvestorProfile?.seeking ||
-              t("users.noInformationAvailable", "No Information Available")}
-          </p>
-        </div>
-      </div>
-
-      <div className="flex space-x-4 mt-6">
+      <div className="mt-6 flex space-x-4">
         <button
-          onClick={handleStartChatClick}
-          className=" px-6 py-3 bg-green-500 text-white rounded-lg  transition-colors flex items-center justify-center gap-2"
+          onClick={startChat}
+          className="flex items-center justify-center gap-2 rounded-lg bg-green-500 px-6 py-3 font-bold text-white transition-all duration-300 hover:bg-green-600"
         >
-          <HiOutlineChat className="w-5 h-5" />
-          {t("users.message", "Message")}
+          {t("messages.sendMessage", "Send Message")}
         </button>
+
         {userDetails?.role === "Enterprenuer" && (
           <Link
             href={`/dashboard/investmentApplicationByEntreprenuer/${user.uuid}`}
-            className="py-3 px-6 text-white font-bold bg-primary hover:bg-primary/90 transition-all duration-300 rounded-lg flex items-center justify-center"
+            className="flex items-center justify-center rounded-lg bg-primary px-6 py-3 font-bold text-white transition-all duration-300 hover:bg-primary/90"
           >
             {t("users.askForInvestment", "Ask for Investment")}
           </Link>

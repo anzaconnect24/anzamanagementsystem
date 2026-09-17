@@ -8,7 +8,6 @@ import toast from "react-hot-toast";
 import Spinner from "@/components/spinner";
 import { register } from "@/controllers/user_controller";
 import { createBusiness } from "@/controllers/business_controller";
-import { createStaffProfile } from "@/controllers/staff_profile_controller";
 import { createMentorProfile } from "@/controllers/mentor_profile_controller";
 import { getSectors } from "@/controllers/sector_controller";
 import { createInvestorProfile } from "@/controllers/investor_profile_controller";
@@ -16,15 +15,73 @@ import { useRouter } from "@/utils/navigation";
 import { createNotification } from "@/controllers/notification_controller";
 import { useTranslation } from "../../locales";
 import EnterprenuerSignupForm from "../../component/entreprenuerSignupForm";
-import InvestorSignupForm from "../../component/investorSignupForm";
-import MentorSignupForm from "../../component/mentorSignupForm";
+import InvestorSignupForm, {
+  signupInvestorValues,
+} from "../../component/investorSignupForm";
+import { validateInvestorProfile } from "@/components/investors/InvestorProfileForm";
+import MentorSignupForm, {
+  signupMentorValues,
+} from "../../component/mentorSignupForm";
+import { validateMentorProfile } from "@/components/mentors/MentorProfileForm";
 import { Eye, EyeOff, UserRound } from "lucide-react";
+
+// The roles a visitor can register as. Internal staff accounts - Business
+// Development Advisor, Finance Officer, M&E Officer and Admin - are created
+// by an Admin from the Users page instead, and the register endpoint rejects
+// them, so they are deliberately absent here.
+const ROLE_OPTIONS = [
+  {
+    value: "Enterprenuer",
+    labelKey: "roles.entrepreneur",
+    label: "Entrepreneur",
+  },
+  { value: "Investor", labelKey: "roles.investor", label: "Investor" },
+  { value: "Mentor", labelKey: "roles.mentor", label: "Mentor" },
+];
+
+// The investor questions, one section per sign-up step.
+const INVESTOR_STEPS = {
+  1: {
+    section: "company",
+    title: "Tell us about your organisation",
+    description: "Company overview of your organisation or fund",
+  },
+  2: {
+    section: "investment",
+    title: "Your investment focus",
+    description: "Tell us about your investment preferences",
+  },
+  3: {
+    section: "impact",
+    title: "Your impact focus",
+    description: "Tell us about your impact strategy",
+  },
+};
+
+// The mentor questions, one section per sign-up step.
+const MENTOR_STEPS = {
+  1: {
+    section: "background",
+    title: "Tell us about your professional background",
+    description: "Your role, where you are based and your experience",
+  },
+  2: {
+    section: "expertise",
+    title: "Your expertise and focus",
+    description: "What you can advise on, and who you can support",
+  },
+  3: {
+    section: "support",
+    title: "How you will support entrepreneurs",
+    description: "How you mentor, your availability and your bio",
+  },
+};
 
 const SignUp = () => {
   const { t } = useTranslation();
   const router = useRouter();
 
-  const [role, setRole] = useState("Reviewer");
+  const [role, setRole] = useState("Enterprenuer");
   const [loading, setloading] = useState(false);
   const [sectors, setSectors] = useState([]);
   const [showPassword, setshowPassword] = useState(false);
@@ -48,6 +105,7 @@ const SignUp = () => {
     completedProgram: "",
     stage: "",
     business_sector_uuid: "",
+    program_uuid: "",
     businessLocation: "",
     traction: "",
 
@@ -74,13 +132,20 @@ const SignUp = () => {
   const steps =
     role === "Enterprenuer"
       ? ["User Information", "Business Information", "Profile Image"]
-      : role === "Reviewer" || role === "Finance"
-        ? ["User Information", "Profile Image"]
-        : role === "Mentor"
+      : role === "Mentor"
+        ? [
+            "User Information",
+            "Professional Background",
+            "Expertise & Focus",
+            "Mentoring Support",
+            "Profile Image",
+          ]
+        : role === "Investor"
           ? [
               "User Information",
-              "Mentorship Profile",
-              "Availability & Motivation",
+              "Company Overview",
+              "Investment Focus",
+              "Impact Focus",
               "Profile Image",
             ]
           : ["User Information", "Profile Information", "Profile Image"];
@@ -148,6 +213,26 @@ const SignUp = () => {
       }
     }
 
+    if (role === "Mentor" && MENTOR_STEPS[selectedIndex]) {
+      const problem = validateMentorProfile(signupMentorValues(formValues), [
+        MENTOR_STEPS[selectedIndex].section,
+      ]);
+      if (problem) {
+        toast.error(problem);
+        return;
+      }
+    }
+
+    if (role === "Investor" && INVESTOR_STEPS[selectedIndex]) {
+      const problem = validateInvestorProfile(signupInvestorValues(formValues), [
+        INVESTOR_STEPS[selectedIndex].section,
+      ]);
+      if (problem) {
+        toast.error(problem);
+        return;
+      }
+    }
+
     setSelectedIndex((prev) => Math.min(prev + 1, steps.length - 1));
   };
 
@@ -157,6 +242,12 @@ const SignUp = () => {
 
     if (role === "Enterprenuer" && selectedIndex === 1)
       return "Add your business information";
+
+    if (role === "Investor" && INVESTOR_STEPS[selectedIndex])
+      return INVESTOR_STEPS[selectedIndex].title;
+
+    if (role === "Mentor" && MENTOR_STEPS[selectedIndex])
+      return MENTOR_STEPS[selectedIndex].title;
 
     if (isLastStep) return "Add your profile picture";
 
@@ -169,6 +260,12 @@ const SignUp = () => {
 
     if (role === "Enterprenuer" && selectedIndex === 1)
       return "Add the basic details about your business";
+
+    if (role === "Investor" && INVESTOR_STEPS[selectedIndex])
+      return INVESTOR_STEPS[selectedIndex].description;
+
+    if (role === "Mentor" && MENTOR_STEPS[selectedIndex])
+      return MENTOR_STEPS[selectedIndex].description;
 
     if (isLastStep) return "Upload a profile image to personalize your account";
 
@@ -204,6 +301,9 @@ const SignUp = () => {
                 businessData = {
                   name: formValues.businessName,
                   business_sector_uuid: formValues.business_sector_uuid,
+                  // Optional — empty leaves the startup "Unassigned" until
+                  // Admin/Staff place it in a cohort.
+                  program_uuid: formValues.program_uuid || "",
                   location: formValues.businessLocation,
                   description: formValues.businessBio,
                   email: formValues.userEmail || "",
@@ -229,50 +329,13 @@ const SignUp = () => {
               let investorData;
 
               if (role === "Investor") {
-                investorData = {
-                  company: e.target.company?.value,
-                  geography: e.target.location?.value,
-                  seeking: e.target.seeking?.value,
-                  bio: formValues.investorBio,
-                  notableInvestment: formValues.investorNotableInvestments,
-                };
-              }
-
-              let staffData;
-
-              if (role === "Reviewer") {
-                staffData = {
-                  title: formValues.staffTitle,
-                  department: formValues.staffDepartment,
-                  yearOfEmployment: formValues.staffYearOfEmployment,
-                  employeeID: formValues.staffEmployeeID,
-                  supervisor: formValues.staffSupervisor,
-                };
+                investorData = signupInvestorValues(formValues);
               }
 
               let mentorData;
 
               if (role === "Mentor") {
-                // These keys are the MentorProfile columns the mentor list and
-                // mentor detail pages read. The signup form collects all of
-                // them; anything dropped here shows as "N/A" on the profile.
-                mentorData = {
-                  description: formValues.mentorDescription,
-                  business_sector_uuid: e.target.business_sector_uuid?.value,
-                  organisation: formValues.mentorOrganisation,
-                  position: formValues.mentorPosition,
-                  linkedinURL: formValues.mentorLinkedIn,
-                  location: e.target.location?.value,
-                  language: e.target.language?.value,
-                  smeFocus: formValues.smeFocus,
-                  // Index-keyed maps — the shape every mentor view reads.
-                  areasOfExperties: formValues.mentorExpertise || {},
-                  mentoringFormat: formValues.mentorFormat || {},
-                  mentorAvailability: formValues.mentorAvailability,
-                  mentorHours: formValues.mentorHours || null,
-                  mentorshipFocus: formValues.mentorshipFocus,
-                  industries: formValues.mentorIndustries,
-                };
+                mentorData = signupMentorValues(formValues);
               }
 
               if (formValues.password !== formValues.repeatPassword) {
@@ -290,11 +353,6 @@ const SignUp = () => {
                     for: "Admin",
                   });
 
-                  if (role === "Reviewer") {
-                    staffData.user_uuid = data.body.uuid;
-                    createStaffProfile(staffData);
-                  }
-
                   if (role === "Mentor") {
                     mentorData.user_uuid = data.body.uuid;
                     // Surfaced rather than swallowed: without this profile the
@@ -311,7 +369,7 @@ const SignUp = () => {
                   if (role === "Enterprenuer") {
                     createNotification({
                       message: `${userData.name} has joined as ${userData.role}, waiting for confirmation`,
-                      for: "Reviewer",
+                      for: "BDA",
                     });
 
                     createBusiness(businessData).then((businessResponse) => {
@@ -330,7 +388,14 @@ const SignUp = () => {
                   } else if (role === "Investor") {
                     investorData.user_uuid = data.body.uuid;
 
-                    createInvestorProfile(investorData).then(() => {
+                    createInvestorProfile(investorData).then((res) => {
+                      // Surfaced rather than swallowed: without the profile
+                      // startups see an empty investor page.
+                      if (!res?.status) {
+                        toast.error(
+                          "Your account was created, but your investor details could not be saved. Please add them from Edit Profile.",
+                        );
+                      }
                       router.push("/confirmEmail");
                       setloading(false);
                     });
@@ -428,24 +493,11 @@ const SignUp = () => {
                     className={inputClass}
                     name="role"
                   >
-                    {["Staff", "Finance", "Enterprenuer", "Investor", "Mentor"].map(
-                      (item) => (
-                        <option
-                          key={item}
-                          value={item === "Staff" ? "Reviewer" : item}
-                        >
-                          {item === "Staff"
-                            ? t("roles.staff", "Staff")
-                            : item === "Finance"
-                              ? t("roles.finance", "Finance Officer")
-                              : item === "Enterprenuer"
-                                ? t("roles.entrepreneur", "Entrepreneur")
-                                : item === "Investor"
-                                  ? t("roles.investor", "Investor")
-                                  : t("roles.mentor", "Mentor")}
-                        </option>
-                      ),
-                    )}
+                    {ROLE_OPTIONS.map((item) => (
+                      <option key={item.value} value={item.value}>
+                        {t(item.labelKey, item.label)}
+                      </option>
+                    ))}
                   </select>
                 </div>
 
@@ -521,6 +573,7 @@ const SignUp = () => {
 
                 {role === "Investor" && (
                   <InvestorSignupForm
+                    section="company"
                     sectors={sectors}
                     formValues={formValues}
                     setFormValues={setFormValues}
@@ -529,7 +582,7 @@ const SignUp = () => {
 
                 {role === "Mentor" && (
                   <MentorSignupForm
-                    sectors={sectors}
+                    section="background"
                     formValues={formValues}
                     setFormValues={setFormValues}
                   />
@@ -538,62 +591,26 @@ const SignUp = () => {
             )}
 
 
-            {role === "Mentor" && selectedIndex === 2 && (
-              <div className="space-y-5">
-                <div>
-                  <label className={labelClass}>
-                    What is your availability for mentorship sessions? *
-                  </label>
-                  <textarea
-                    name="mentorAvailability"
-                    value={formValues.mentorAvailability || ""}
-                    onChange={(e) =>
-                      updateFormValue("mentorAvailability", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[80px]`}
-                    placeholder="Preferred days, hours per month, virtual or physical meetings, etc."
-                  />
-                </div>
+            {/* Investment Focus and Impact Focus each have their own step. */}
+            {role === "Investor" &&
+              (selectedIndex === 2 || selectedIndex === 3) && (
+                <InvestorSignupForm
+                  section={INVESTOR_STEPS[selectedIndex].section}
+                  sectors={sectors}
+                  formValues={formValues}
+                  setFormValues={setFormValues}
+                />
+              )}
 
-                <div>
-                  <label className={labelClass}>
-                    Have you mentored entrepreneurs before? Please describe your
-                    experience. *
-                  </label>
-                  <textarea
-                    name="mentorPreviousExperience"
-                    value={formValues.mentorPreviousExperience || ""}
-                    onChange={(e) =>
-                      updateFormValue(
-                        "mentorPreviousExperience",
-                        e.target.value,
-                      )
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe your previous mentorship experience"
-                  />
-                </div>
-
-                <div>
-                  <label className={labelClass}>
-                    Why do you want to join this mentorship platform as a
-                    mentor? *
-                  </label>
-                  <textarea
-                    name="mentorMotivation"
-                    value={formValues.mentorMotivation || ""}
-                    onChange={(e) =>
-                      updateFormValue("mentorMotivation", e.target.value)
-                    }
-                    required
-                    className={`${textareaClass} min-h-[110px]`}
-                    placeholder="Describe your motivation"
-                  />
-                </div>
-              </div>
-            )}
+            {/* Expertise & Focus and Mentoring Support each have their own step. */}
+            {role === "Mentor" &&
+              (selectedIndex === 2 || selectedIndex === 3) && (
+                <MentorSignupForm
+                  section={MENTOR_STEPS[selectedIndex].section}
+                  formValues={formValues}
+                  setFormValues={setFormValues}
+                />
+              )}
 
 
             {isLastStep && (

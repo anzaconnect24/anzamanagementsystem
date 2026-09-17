@@ -234,6 +234,12 @@ export const sw = {
     myMilestones: "Ukuaji wa Biashara",
     trackerOverview: "Usimamizi wa Ruzuku",
     tracking: "Usaidizi wa Biashara",
+    programManagement: "Usimamizi wa Programu",
+    bdas: "Washauri wa Maendeleo ya Biashara",
+    monitoringEvaluation: "Ufuatiliaji na Tathmini",
+    mePortfolio: "Jalada la Ufuatiliaji na Tathmini",
+    programmeMe: "Ufuatiliaji wa Programu",
+    meOfficers: "Maafisa wa Ufuatiliaji na Tathmini",
     staffTracker: "Usimamizi wa Ruzuku",
     enterpriseGrowth: "Ukuaji wa Biashara",
     grantManagement: "Usimamizi wa Ruzuku",
@@ -269,7 +275,11 @@ export const sw = {
     cratCatalogManager: "Mjenzi wa CRAT",
     learnAndGrow: "Jifunze na Kuza Maarifa",
     generalResources: "Maarifa ya Jumla",
-    classRooms: "Mafunzo Maalum",
+    classRooms: "Kozi",
+    availableCourses: "Kozi Zinazopatikana",
+    programLearning: "Ujifunzaji wa Programu",
+    courseLibrary: "Maktaba ya Kozi",
+    surveys: "Tafiti",
     successStories: "Shuhuda Mbalimbali",
     chats: "Ujumbe Mfupi",
     conversations: "Mijadala",
@@ -388,6 +398,8 @@ export const sw = {
   // Role labels
   roles: {
     staff: "Mfanyakazi",
+    bda: "Mshauri wa Maendeleo ya Biashara",
+    meOfficer: "Afisa wa Ufuatiliaji na Tathmini",
     startup: "Biashara Changa",
     entrepreneur: "Mjasiriamali",
     investor: "Mwekezaji",
@@ -764,7 +776,8 @@ export const sw = {
     describeTheInvestmentOpportunity: "Eleza fursa ya uwekezaji",
     detailsURL: "Kiungo cha Maelezo",
     detailsURLOptional: "Kiungo cha Maelezo (Hiari)",
-    linkToExternalPage: "Kiungo cha ukurasa wa nje wenye maelezo zaidi kuhusu fursa hii",
+    linkToExternalPage:
+      "Kiungo cha ukurasa wa nje wenye maelezo zaidi kuhusu fursa hii",
     expireDate: "Tarehe ya Kumalizika",
     expireDateOptional: "Tarehe ya kumalizika (Hiari)",
     whenThisOpportunityExpires: "Wakati fursa hii itaisha na isiwepo tena",
@@ -903,6 +916,12 @@ export const sw = {
     more: "Zaidi",
     viewDetails: "Tazama Maelezo",
     newProgram: "Programu Mpya",
+    addNewCourse: "Ongeza Kozi Mpya",
+    addNewCourseFor: "Ongeza kozi mpya kwa {{course}}",
+    enterCourseTitle: "Weka jina la kozi",
+    courseType: "Aina ya Kozi",
+    courseCoverImage: "Picha ya Kozi",
+    addCourse: "Ongeza Kozi",
     editProgram: "Hariri Programu",
     addNewProgram: "Ongeza Programu Mpya",
     createNewProgram: "Unda programu mpya kushirikisha washiriki",
@@ -1025,6 +1044,11 @@ export const sw = {
     mentor: "Mshauri wa biashara",
     entrepreneur: "Mjasiriamali",
     reviewer: "Mhakiki",
+    bda: "Mshauri wa Maendeleo ya Biashara",
+    meOfficer: "Afisa wa Ufuatiliaji na Tathmini",
+    addStaffAccount: "Ongeza Akaunti ya Mfanyakazi",
+    fullName: "Jina Kamili",
+    password: "Nenosiri",
     reviewers: "Wahakiki",
     searchReviewers: "Tafuta wahakiki...",
     inviteUser: "Alika Mtumiaji",
@@ -2146,7 +2170,8 @@ export const sw = {
     interestedStartups: "Biashara Zilizovutiwa",
     startup: "Biashara Changa",
     startupDistribution: "Mgawanyo wa Biashara Changa",
-    regionalStartupDistribution: "Mgawanyo wa kimkoa wa biashara changa nchini Tanzania",
+    regionalStartupDistribution:
+      "Mgawanyo wa kimkoa wa biashara changa nchini Tanzania",
     loadingStartupData: "Inapakia data ya biashara changa...",
     noStartupDataFound: "Hakuna Data ya Biashara Changa Iliyopatikana",
     noStartupsRegistered:
@@ -2361,8 +2386,6 @@ export const sw = {
     send: "Tuma",
   },
 
-
-
   // CRAT System
   cratSystem: {
     title: "Zana ya Tathmini ya Uwezo wa Mtaji (CRAT)",
@@ -2528,7 +2551,7 @@ export const sw = {
     moduleCoverImage: "Picha ya jalada la moduli",
     description: "Maelezo",
     enterModuleDescription: "Weka maelezo ya moduli",
-    classRooms: "Mafunzo Maalum",
+    classRooms: "Kozi",
     financeAndFundraising: "Fedha na Uchangishaji",
     marketingAndSales: "Masoko na Uuzaji",
     technologyAndInnovation: "Teknolojia na Ubunifu",
@@ -2576,7 +2599,11 @@ export const sw = {
     openResource: "Fungua Rasilimali",
     classRoomsWelcome:
       "Fuatilia maendeleo yako, pata kozi maalum, na kukuza biashara yako hatua kwa hatua. Iwe unaanza tu na wazo au unakuza biashara yako kwa uongozi, jukwaa hili limeundwa kukuongoza kupitia kila hatua ya safari yako ya ujasiriamali. Fuatilia alama za kujifunza, jiandikishe kwenye madarasa yanayolingana na hatua ya biashara yako, na fungua zana za vitendo, maarifa ya wataalamu, na fursa za ulezi. Kwa kila moduli unayomaliza, utajenga misingi imara zaidi kuimarisha mkakati wako, na kusonga karibu na kufikia malengo yako ya biashara. Hebu tukue—hatua moja kwa wakati.",
-    availableClasses: "Mafunzo Maalum yanayopatikana",
+    availableCourses: "Kozi Zinazopatikana",
+    recommendedCourses: "Kozi Zinazopendekezwa Kwako",
+    recommendedCoursesIntro:
+      "Chunguza kozi zinazopendekezwa kwako kulingana na programu uliyochagua na ugundue chaguo za kujifunza zinazounga mkono safari yako ya kitaaluma.",
+    availableModules: "Moduli Zinazopatikana",
     ideation: "Wazo la Biashara",
     businessFoundation: "Misingi ya Biashara",
     investmentReadiness: "Utayari wa Uwekezaji",

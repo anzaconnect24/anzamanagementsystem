@@ -23,9 +23,20 @@ import "./index.css";
 import "./satoshi.css";
 import "./data-tables-css.css";
 
-// Lazy-loaded Dashboard Pages
-const Dashboard = React.lazy(() => import("@/pages/dashboard/Dashboard"));
-const ChatMessages = React.lazy(() => import("@/pages/chat/ChatMessages"));
+// User Management Pages
+import Users from "./pages/users/users/Users";
+import Enterprenuers from "./pages/users/enterprenuers/Enterprenuers";
+import ProgramCategories from "./pages/users/enterprenuers/ProgramCategories";
+import StartupPrograms from "./pages/users/enterprenuers/StartupPrograms";
+import ProgramStartups from "./pages/users/enterprenuers/ProgramStartups";
+import ProgramCourses from "./pages/users/enterprenuers/ProgramCourses";
+import Investors from "./pages/users/investors/Investors";
+import Mentors from "./pages/users/mentors/Mentors";
+import Reviewers from "./pages/users/reviewers/Reviewers";
+import Admins from "./pages/users/admins/Admins";
+import FinanceOfficers from "./pages/users/financeOfficers/FinanceOfficers";
+import MEOfficers from "./pages/users/meOfficers/MEOfficers";
+import InterestedEnterprenuers from "./pages/users/interestedEnterprenuers/InterestedEntreprenuers";
 
 // Lazy-loaded User Management Pages
 const Users = React.lazy(() => import("./pages/users/users/Users"));
@@ -58,8 +69,15 @@ const PendingApplications = React.lazy(() => import("./pages/business/PendingApp
 const ApprovedApplications = React.lazy(() => import("./pages/business/ApprovedApplications"));
 const RejectedApplications = React.lazy(() => import("./pages/business/RejectedApplications"));
 
-// Lazy-loaded Investment Opportunities Pages
-const Opportunities = React.lazy(() => import("./pages/investment-opportunities/opportunities/Opportunities"));
+// Learn and Grow Pages
+import ProgramsApplications from "./pages/learnandgrow/programsApplications/ProgramsApplications";
+import ClassRooms from "./pages/learnandgrow/classRooms/ClassRooms";
+import GeneralResources from "./pages/learnandgrow/generalResources/GeneralResources";
+import BusinessTools from "./pages/learnandgrow/businessTools/BusinessTools";
+import UploadBusinessTool from "./pages/learnandgrow/businessTools/UploadBusinessTool";
+import EditBusinessTool from "./pages/learnandgrow/businessTools/EditBusinessTool";
+import BusinessToolCategory from "./pages/learnandgrow/businessTools/BusinessToolCategory";
+import GenerateBusinessTool from "./pages/learnandgrow/businessTools/GenerateBusinessTool";
 
 // Lazy-loaded Learn and Grow Pages
 const ProgramsApplications = React.lazy(() => import("./pages/learnandgrow/programsApplications/ProgramsApplications"));
@@ -69,8 +87,7 @@ const BusinessTools = React.lazy(() => import("./pages/learnandgrow/businessTool
 const UploadBusinessTool = React.lazy(() => import("./pages/learnandgrow/businessTools/UploadBusinessTool"));
 const EditBusinessTool = React.lazy(() => import("./pages/learnandgrow/businessTools/EditBusinessTool"));
 
-// Lazy-loaded CRAT System Pages
-const Introduction = React.lazy(() => import("./pages/cratSystem/Introduction"));
+// Reviewer Pages
 
 // Lazy-loaded Reviewer Pages
 const CratReviews = React.lazy(() => import("./pages/reviewer/cratReviews/CratReviews"));
@@ -79,11 +96,51 @@ const CratReviews = React.lazy(() => import("./pages/reviewer/cratReviews/CratRe
 const CratReviewApplications = React.lazy(() => import("./pages/applications/cratReviewApplications/CratReviewApplications"));
 const CratCatalogManager = React.lazy(() => import("./pages/admin/CratCatalogManager"));
 
-// Lazy-loaded Stories Pages
-const SuccessStories = React.lazy(() => import("./pages/stories/successStories/SuccessStories"));
+// Conversation Pages
+import Conversations from "./pages/conversation/conversations/Conversations";
+// import MarketDomain from "./pages/cratSystem/marketDomain/MarketDomain";
+import OperationsDomain from "./pages/cratSystem/operationsDomain/OperationsDomain";
+// import LegalDomain from "./pages/cratSystem/legalDomain/LegalDomain";
+import CratReviewPage from "./pages/cratSystem/cratReview/CratReview";
+import IntroductionPage from "./pages/cratSystem/Introduction";
+import LegalDomainPage from "./pages/cratSystem/legalDomain/LegalDomain";
+import MarketDomainPage from "./pages/cratSystem/marketDomain/MarketDomain";
+import FinancialDomain from "./pages/cratSystem/financialDomain/FinancialDomain";
+import Report from "./pages/cratSystem/report/Report";
+import DomainAssessmentPage from "./pages/cratSystem/domain/DomainAssessmentPage";
 
-// Lazy-loaded Conversation Pages
-const Conversations = React.lazy(() => import("./pages/conversation/conversations/Conversations"));
+// Dynamic route components
+import MyMentorDetailsWithUuid from "./pages/mentor/myMentorDetails/MyMentorDetailsWithUuid";
+import InvestorDetailsWithUuid from "./pages/users/investors/details/InvestorDetailsWithUuid";
+import BusinessDetailsWithUuid from "./pages/business/businessDetails/BusinessDetailsWithUuid";
+import CategoryWithParam from "./pages/learnandgrow/generalResources/category/CategoryWithParam";
+import ModuleWithCourse from "./pages/learnandgrow/modules/ModuleWithCourse";
+import ModuleDetails from "./pages/learnandgrow/modules/ModuleDetails";
+import SurveyBuilder from "./pages/users/enterprenuers/SurveyBuilder";
+import ProgramSurveys from "./pages/users/enterprenuers/ProgramSurveys";
+import ProgramCourseList from "./pages/users/enterprenuers/ProgramCourseList";
+import ProgramME from "./pages/users/enterprenuers/ProgramME";
+import ProgramCalendar from "./pages/users/enterprenuers/ProgramCalendar";
+import ProgramCoaching from "./pages/users/enterprenuers/ProgramCoaching";
+import ProgramDocuments from "./pages/users/enterprenuers/ProgramDocuments";
+import LiveFeed from "./pages/feed/LiveFeed";
+import MyCalendar from "./pages/calendar/MyCalendar";
+import ProgramComms from "./pages/users/enterprenuers/ProgramComms";
+import ProgramReports from "./pages/users/enterprenuers/ProgramReports";
+import ProgramDashboard from "./pages/users/enterprenuers/ProgramDashboard";
+import ProgramGrants from "./pages/users/enterprenuers/ProgramGrants";
+import ProgramWorkplan from "./pages/users/enterprenuers/ProgramWorkplan";
+import ProgramTargets from "./pages/users/enterprenuers/ProgramTargets";
+import MEPortfolioDashboard from "./pages/users/enterprenuers/MEPortfolioDashboard";
+import SurveyResults from "./pages/users/enterprenuers/SurveyResults";
+import SurveyManager from "./pages/users/enterprenuers/SurveyManager";
+import MySurveys from "./pages/learnandgrow/surveys/MySurveys";
+import CoursePlayer from "./pages/learnandgrow/player/CoursePlayer";
+import CourseDetails from "./pages/learnandgrow/courses/CourseDetails";
+import CourseLibrary from "./pages/learnandgrow/courses/CourseLibrary";
+import AddCourse from "./pages/learnandgrow/courses/AddCourse";
+import TakeSurvey from "./pages/learnandgrow/surveys/TakeSurvey";
+import MessagesWithUuid from "./pages/chat/messages/MessagesWithUuid";
 
 // Lazy-loaded CRAT System nested route components
 const OperationsDomain = React.lazy(() => import("./pages/cratSystem/operationsDomain/OperationsDomain"));
@@ -180,11 +237,7 @@ const EntrepreneurReportsWithUuid = React.lazy(() => import("./pages/mentor/entr
 // Lazy-loaded Mentorship Components
 const MentorshipApplicationFormWithUuid = React.lazy(() => import("./pages/mentorship/mentorshipApplicationForm/MentorshipApplicationFormWithUuid"));
 
-// Lazy-loaded Pitch Materials Components
-const Documents = React.lazy(() => import("./pages/pitchMaterials/documents/Documents"));
-const UploadMaterialWithType = React.lazy(() => import("./pages/pitchMaterials/uploadMaterial/UploadMaterialWithType"));
-const Videos = React.lazy(() => import("./pages/pitchMaterials/videos/Videos"));
-const ViewerWithUuid = React.lazy(() => import("./pages/pitchMaterials/viewer/ViewerWithUuid"));
+// Additional Missing Imports - Reviewer Components
 
 // Lazy-loaded Program Components
 const BFA = React.lazy(() => import("./pages/programs/bfa/BFA"));
@@ -219,23 +272,61 @@ const MentorEntreprenuerWithUuid = React.lazy(() => import("./pages/users/mentor
 const MentorWithUuid = React.lazy(() => import("./pages/users/mentors/MentorWithUuid"));
 // TranslationProvider - eagerly loaded (small, needed at root)
 import { TranslationProvider } from "./locales";
-const EditAccountDetails = React.lazy(() => import("./pages/account/editAccount/editAccountDetails"));
-const EntrepreneurProfile = React.lazy(() => import("./pages/account/entreprenuerProfile"));
-const MentorTracker = React.lazy(() => import("./pages/tracker/mentor/MentorTracker"));
-const EnterpriseTrackerDetails = React.lazy(() => import("./pages/tracker/mentor/EnterpriseTrackerDetails"));
-const EnterpriseKyc = React.lazy(() => import("./pages/tracker/mentor/EnterpriseKyc"));
-const EntrepreneurMilestones = React.lazy(() => import("./pages/tracker/entreprenuer/EntrepreneurMilestones"));
-const CoachingSessions = React.lazy(() => import("./pages/tracker/entreprenuer/CoachingSessions"));
-const GrantContract = React.lazy(() => import("./pages/tracker/entreprenuer/GrantContract"));
-const ProgramMemberRoute = React.lazy(() => import("./components/guards/ProgramMemberRoute"));
-const RoleRoute = React.lazy(() => import("./components/guards/RoleRoute"));
-const BdaCoachingSessions = React.lazy(() => import("./pages/tracker/mentor/BdaCoachingSessions"));
-const BdaCoachingSessionSetup = React.lazy(() => import("./pages/tracker/mentor/BdaCoachingSessionSetup"));
-const TrackerProgramDetails = React.lazy(() => import("./pages/tracker/admin/TrackerProgramDetails"));
-const FundingAgreements = React.lazy(() => import("./pages/tracker/admin/FundingAgreements"));
-const TrackerPrograms = React.lazy(() => import("./pages/tracker/admin/TrackerPrograms"));
-const TrackerStartupDetails = React.lazy(() => import("./pages/tracker/admin/TrackerStartupDetails"));
-const StaffStartupMilestones = React.lazy(() => import("./pages/tracker/mentor/StaffStartupMilestones"));
+import EditAccountDetails from "./pages/account/editAccount/editAccountDetails";
+import EntrepreneurProfile from "./pages/account/entreprenuerProfile";
+import MentorTracker from "./pages/tracker/mentor/MentorTracker";
+import EnterpriseTrackerDetails from "./pages/tracker/mentor/EnterpriseTrackerDetails";
+import EnterpriseKyc from "./pages/tracker/mentor/EnterpriseKyc";
+import EntrepreneurMilestones from "./pages/tracker/entreprenuer/EntrepreneurMilestones";
+import CoachingSessions from "./pages/tracker/entreprenuer/CoachingSessions";
+import MyMEProgress from "./pages/tracker/entreprenuer/MyMEProgress";
+import MyProgramTargets from "./pages/tracker/entreprenuer/MyProgramTargets";
+import GrantContract from "./pages/tracker/entreprenuer/GrantContract";
+import ProgramMemberRoute from "./components/guards/ProgramMemberRoute";
+import RoleRoute from "./components/guards/RoleRoute";
+import BdaCoachingSessions from "./pages/tracker/mentor/BdaCoachingSessions";
+import BdaCoachingSessionSetup from "./pages/tracker/mentor/BdaCoachingSessionSetup";
+import TrackerProgramDetails from "./pages/tracker/admin/TrackerProgramDetails";
+import FundingAgreements from "./pages/tracker/admin/FundingAgreements";
+import TrackerPrograms from "./pages/tracker/admin/TrackerPrograms";
+import TrackerStartupDetails from "./pages/tracker/admin/TrackerStartupDetails";
+import StaffStartupMilestones from "./pages/tracker/mentor/StaffStartupMilestones";
+import CapitalManagers from "./pages/users/capitalManagers/CapitalManagers";
+import CapitalRoute from "./components/capital/CapitalRoute";
+import CapitalHome from "./pages/capital/CapitalHome";
+import CapitalRequests from "./pages/capital/CapitalRequests";
+import CapitalRequestDetail from "./pages/capital/CapitalRequestDetail";
+import CapitalMatching from "./pages/capital/CapitalMatching";
+import ManageMatching from "./pages/capital/ManageMatching";
+import CapitalIntroductions from "./pages/capital/CapitalIntroductions";
+import CapitalOpportunities from "./pages/capital/CapitalOpportunities";
+import CapitalOpportunityRecord from "./pages/capital/CapitalOpportunityRecord";
+import CapitalPipeline from "./pages/capital/CapitalPipeline";
+import CapitalDealRooms from "./pages/capital/CapitalDealRooms";
+import CapitalDueDiligence from "./pages/capital/CapitalDueDiligence";
+import CapitalProviders from "./pages/capital/CapitalProviders";
+import CapitalProviderDetail from "./pages/capital/CapitalProviderDetail";
+import CapitalEnterprises from "./pages/capital/CapitalEnterprises";
+import CapitalCommunications from "./pages/capital/CapitalCommunications";
+import CapitalFacilitated from "./pages/capital/CapitalFacilitated";
+import CapitalReports from "./pages/capital/CapitalReports";
+import CapitalNotifications from "./pages/capital/CapitalNotifications";
+import CapitalSettings from "./pages/capital/CapitalSettings";
+import CapitalDeals from "./pages/capital/CapitalDeals";
+import CapitalInvestors from "./pages/capital/CapitalInvestors";
+import CapitalApplications from "./pages/capital/CapitalApplications";
+import CapitalInterestedInvestors from "./pages/capital/CapitalInterestedInvestors";
+
+// Capital facilitation screens are open to the internal roles an administrator
+// can grant capital permissions to; CapitalRoute then checks the permission.
+const CAPITAL_STAFF = ["CFM", "Admin", "BDA", "ME", "Finance"];
+
+// One capital facilitation page: staff only, and only with the permission.
+const capitalPage = (need, page) => (
+  <RoleRoute allow={CAPITAL_STAFF}>
+    <CapitalRoute need={need}>{page}</CapitalRoute>
+  </RoleRoute>
+);
 
 function App() {
   const [loading, setLoading] = useState(true);
@@ -282,15 +373,282 @@ function App() {
           <Route path="/dashboard" element={<DashboardLayout />}>
             <Route index element={<Dashboard />} />
 
+            {/* The live feed is the one screen with no role gate: every
+                signed-in user reads and writes the same board. */}
+            <Route path="feed" element={<LiveFeed />} />
+
+            {/* Everyone's calendar: events published to them, and their own
+                reminders. No role gate — the visibility is per entry. */}
+            <Route path="calendar" element={<MyCalendar />} />
+
             {/* User Management Routes */}
             <Route path="users" element={<Users />} />
+            {/* Startups is the flat directory for every role. */}
             <Route path="enterprenuers" element={<Enterprenuers />} />
+            <Route path="enterprenuers/all" element={<Enterprenuers />} />
+
+            {/* Program Management (Admin/Staff): category -> program -> startups. */}
+            <Route path="programManagement" element={<ProgramCategories />} />
+            {/* Monitoring & Evaluation is the M&E Officer's workspace alone. */}
+            <Route
+              path="programManagement/me"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <MEPortfolioDashboard />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="programManagement/category/:category"
+              element={<StartupPrograms />}
+            />
+            <Route
+              path="programManagement/program/:uuid"
+              element={<ProgramStartups />}
+            />
+            <Route
+              path="programManagement/program/:uuid/courses"
+              element={<ProgramCourseList />}
+            />
+            <Route
+              path="programManagement/program/:uuid/course/:courseUuid"
+              element={<ProgramCourses />}
+            />
+            {/* The old modules url now lands on the course list. */}
+            <Route
+              path="programManagement/program/:uuid/modules"
+              element={<ProgramCourseList />}
+            />
+            <Route
+              path="programManagement/module/:uuid"
+              element={<ModuleDetails />}
+            />
+            {/* Writing surveys is M&E work; startups answer them through
+                /dashboard/surveys, which stays open to them. */}
+            <Route
+              path="programManagement/program/:uuid/surveys"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <ProgramSurveys />
+                </RoleRoute>
+              }
+            />
+            {/* The Program Calendar belongs to whoever runs the
+                programme: Admin, or the advisor leading it. The API narrows
+                it to this programme’s own lead. */}
+            {/* The workplan: outputs, activities and when each runs. */}
+            <Route
+              path="programManagement/program/:uuid/workplan"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramWorkplan />
+                </RoleRoute>
+              }
+            />
+            {/* Tailored milestones and KPIs every startup on the programme
+                must report; the advisor sets them and reviews submissions. */}
+            <Route
+              path="programManagement/program/:uuid/milestones-kpis"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramTargets />
+                </RoleRoute>
+              }
+            />
+            {/* Who on this programme gets a grant. The lead selects; the
+                finance officer disburses against what they set. */}
+            <Route
+              path="programManagement/program/:uuid/grants"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramGrants />
+                </RoleRoute>
+              }
+            />
+            {/* The programme dashboard: the lead’s landing screen. */}
+            <Route
+              path="programManagement/program/:uuid/dashboard"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramDashboard />
+                </RoleRoute>
+              }
+            />
+            {/* The report builder. Reading is open to whoever reports on the
+                programme; building and finalising are narrowed by the API. */}
+            <Route
+              path="programManagement/program/:uuid/reports"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramReports />
+                </RoleRoute>
+              }
+            />
+            {/* Cohort communications and the internal alert board. Reading is
+                open to whoever reports on the programme; sending is narrowed
+                by the API to Admin and the lead. */}
+            <Route
+              path="programManagement/program/:uuid/communications"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramComms />
+                </RoleRoute>
+              }
+            />
+            {/* The document library. Finance and M&E read it; filing is
+                narrowed by the API to Admin and the programme lead. */}
+            <Route
+              path="programManagement/program/:uuid/documents"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "ME", "Finance"]}>
+                  <ProgramDocuments />
+                </RoleRoute>
+              }
+            />
+            {/* Coaching oversight. Mentors are admitted too - the API shows
+                them only the enterprises they coach, and holds back the
+                private notes on anyone else’s confidential sessions. */}
+            <Route
+              path="programManagement/program/:uuid/coaching"
+              element={
+                <RoleRoute allow={["Admin", "BDA", "Mentor", "ME"]}>
+                  <ProgramCoaching />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="programManagement/program/:uuid/calendar"
+              element={
+                <RoleRoute allow={["Admin", "BDA"]}>
+                  <ProgramCalendar />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="programManagement/program/:uuid/me"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <ProgramME />
+                </RoleRoute>
+              }
+            />
+            <Route path="learn" element={<CoursePlayer />} />
+            {/* The course page a startup reads before enrolling. */}
+            {/* The admin course library: write a course once and choose the
+                programs it appears on. Listed before "courses/:courseUuid"
+                so "library" is not read as a course uuid. */}
+            <Route
+              path="courses/library"
+              element={
+                <RoleRoute allow={["Admin"]}>
+                  <CourseLibrary />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="courses/library/new"
+              element={
+                <RoleRoute allow={["Admin"]}>
+                  <AddCourse />
+                </RoleRoute>
+              }
+            />
+            <Route path="courses/:courseUuid" element={<CourseDetails />} />
+            <Route path="learn/course/:courseUuid" element={<CoursePlayer />} />
+            <Route path="learn/:uuid" element={<CoursePlayer />} />
+            <Route path="surveys" element={<MySurveys />} />
+            {/* The M&E Officer's surveys that reach beyond one programme: to
+                every startup, or to people chosen by name. */}
+            <Route
+              path="surveys/manage"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyManager />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="surveys/new"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyBuilder />
+                </RoleRoute>
+              }
+            />
+            <Route path="surveys/:uuid/take" element={<TakeSurvey />} />
+            <Route
+              path="surveys/:uuid/edit"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyBuilder />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="surveys/:uuid/results"
+              element={
+                <RoleRoute allow={["ME"]}>
+                  <SurveyResults />
+                </RoleRoute>
+              }
+            />
             <Route path="investors" element={<Investors />} />
             <Route path="mentors" element={<Mentors />} />
             <Route path="reviewers" element={<Reviewers />} />
             <Route path="admins" element={<Admins />} />
             <Route path="financeOfficers" element={<FinanceOfficers />} />
-            <Route path="interestedEnterprenuers" element={<InterestedEnterprenuers />} />
+            <Route path="meOfficers" element={<MEOfficers />} />
+            <Route
+              path="capitalManagers"
+              element={
+                <RoleRoute allow={["Admin"]}>
+                  <CapitalManagers />
+                </RoleRoute>
+              }
+            />
+
+            {/* Capital facilitation. /capital is shared by everyone a capital
+                notification reaches: enterprises land on their own capital
+                workspace, staff on the facilitation dashboard. Every other
+                screen is staff-only and needs its capital permission. */}
+            <Route path="capital" element={<CapitalHome />} />
+            {/* Raise Capital, the startup's side: investors to be introduced
+                to, its applications, and investors interested in it. */}
+            <Route path="capital/investors" element={<RoleRoute allow={["Enterprenuer"]}><CapitalInvestors /></RoleRoute>} />
+            <Route path="capital/applications" element={<RoleRoute allow={["Enterprenuer"]}><CapitalApplications /></RoleRoute>} />
+            <Route path="capital/interested-investors" element={<RoleRoute allow={["Enterprenuer"]}><CapitalInterestedInvestors /></RoleRoute>} />
+            <Route path="capital/requests" element={capitalPage(["capital.requests.view"], <CapitalRequests />)} />
+            <Route path="capital/requests/:uuid" element={capitalPage(["capital.requests.view"], <CapitalRequestDetail />)} />
+            <Route path="capital/matching" element={capitalPage(["capital.matching.manage"], <CapitalMatching />)} />
+            <Route path="capital/matching/:uuid" element={capitalPage(["capital.matching.manage"], <ManageMatching />)} />
+            <Route path="capital/introductions" element={capitalPage(["capital.introductions.manage"], <CapitalIntroductions />)} />
+            <Route path="capital/opportunities" element={capitalPage(["capital.opportunities.view"], <CapitalOpportunities />)} />
+            <Route path="capital/opportunities/:uuid" element={capitalPage(["capital.opportunities.view"], <CapitalOpportunityRecord />)} />
+            <Route path="capital/pipeline" element={capitalPage(["capital.opportunities.view"], <CapitalPipeline />)} />
+            <Route path="capital/deal-rooms" element={capitalPage(["capital.dealrooms.manage"], <CapitalDealRooms />)} />
+            <Route path="capital/due-diligence" element={capitalPage(["capital.duediligence.manage"], <CapitalDueDiligence />)} />
+            <Route path="capital/providers" element={capitalPage(["capital.providers.view"], <CapitalProviders />)} />
+            <Route path="capital/providers/:uuid" element={capitalPage(["capital.providers.view"], <CapitalProviderDetail />)} />
+            <Route path="capital/enterprises" element={capitalPage(["capital.requests.view"], <CapitalEnterprises />)} />
+            <Route path="capital/communications" element={capitalPage(["capital.communications.moderate"], <CapitalCommunications />)} />
+            <Route path="capital/facilitated" element={capitalPage(["capital.reports.view", "capital.outcomes.manage"], <CapitalFacilitated />)} />
+            <Route path="capital/reports" element={capitalPage(["capital.reports.view"], <CapitalReports />)} />
+            <Route path="capital/notifications" element={capitalPage([], <CapitalNotifications />)} />
+            <Route path="capital/settings" element={capitalPage(["capital.settings.manage", "capital.permissions.manage", "capital.audit.view"], <CapitalSettings />)} />
+            {/* A capital provider's side: enterprises seeking capital, its
+                requests to Anza, and deals once introduced. */}
+            <Route
+              path="capital-deals"
+              element={
+                <RoleRoute allow={["Investor"]}>
+                  <CapitalDeals />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="interestedEnterprenuers"
+              element={<InterestedEnterprenuers />}
+            />
 
             {/* Mentor Routes */}
             <Route path="myMentors" element={<MyMentors />} />
@@ -300,22 +658,112 @@ function App() {
             <Route path="mentorshipApplications" element={<MentorshipApplications />} />
             <Route path="mentorReports" element={<MentorReports />} />
             <Route path="mentorTracker" element={<MentorTracker />} />
-            <Route path="bdaCoachingSessions" element={<BdaCoachingSessions />} />
-            <Route path="bdaCoachingSessions/:entUuid" element={<BdaCoachingSessionSetup />} />
-            <Route path="mentorTracker/enterprise-kyc" element={<EnterpriseKyc />} />
-            <Route path="mentorTracker/enterprise-kyc/:enterpriseUuid" element={<EnterpriseKyc />} />
-            <Route path="mentorTracker/enterprise/:enterpriseUuid" element={<EnterpriseTrackerDetails />} />
-            <Route path="mentorTracker/startup/:entUuid/milestones" element={<StaffStartupMilestones />} />
-            <Route path="myMilestones" element={<ProgramMemberRoute><EntrepreneurMilestones /></ProgramMemberRoute>} />
-            <Route path="coachingSessions" element={<ProgramMemberRoute><CoachingSessions /></ProgramMemberRoute>} />
-            <Route path="myMilestones/kyc" element={<ProgramMemberRoute><EnterpriseKyc audience="entrepreneur" /></ProgramMemberRoute>} />
-            <Route path="myMilestones/contract" element={<ProgramMemberRoute><GrantContract /></ProgramMemberRoute>} />
+            <Route
+              path="bdaCoachingSessions"
+              element={<BdaCoachingSessions />}
+            />
+            <Route
+              path="bdaCoachingSessions/:entUuid"
+              element={<BdaCoachingSessionSetup />}
+            />
+            <Route
+              path="mentorTracker/enterprise-kyc"
+              element={<EnterpriseKyc />}
+            />
+            <Route
+              path="mentorTracker/enterprise-kyc/:enterpriseUuid"
+              element={<EnterpriseKyc />}
+            />
+            <Route
+              path="mentorTracker/enterprise/:enterpriseUuid"
+              element={<EnterpriseTrackerDetails />}
+            />
+            <Route
+              path="mentorTracker/startup/:entUuid/milestones"
+              element={<StaffStartupMilestones />}
+            />
+            <Route
+              path="myMilestones"
+              element={
+                <ProgramMemberRoute>
+                  <EntrepreneurMilestones />
+                </ProgramMemberRoute>
+              }
+            />
+            <Route
+              path="coachingSessions"
+              element={<CoachingSessions />}
+            />
+            <Route path="my-me-progress" element={<MyMEProgress />} />
+            <Route
+              path="my-programme-targets"
+              element={
+                <RoleRoute allow={["Enterprenuer"]}>
+                  <MyProgramTargets />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="myMilestones/kyc"
+              element={
+                <ProgramMemberRoute>
+                  <EnterpriseKyc audience="entrepreneur" />
+                </ProgramMemberRoute>
+              }
+            />
+            <Route
+              path="myMilestones/contract"
+              element={
+                <ProgramMemberRoute>
+                  <GrantContract />
+                </ProgramMemberRoute>
+              }
+            />
 
-            <Route path="trackerAdminOverview" element={<RoleRoute allow={["Finance"]}><TrackerPrograms /></RoleRoute>} />
-            <Route path="trackerPrograms" element={<RoleRoute allow={["Finance"]}><TrackerPrograms /></RoleRoute>} />
-            <Route path="trackerPrograms/:programUuid/details" element={<RoleRoute allow={["Finance"]}><TrackerProgramDetails /></RoleRoute>} />
-            <Route path="trackerPrograms/:programUuid/startup/:entUuid" element={<RoleRoute allow={["Finance"]}><TrackerStartupDetails /></RoleRoute>} />
-            <Route path="fundingAgreements" element={<RoleRoute allow={["Finance"]}><FundingAgreements /></RoleRoute>} />
+            <Route
+              path="trackerAdminOverview"
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <TrackerPrograms />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="trackerPrograms"
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <TrackerPrograms />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="trackerPrograms/:programUuid/details"
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <TrackerProgramDetails />
+                </RoleRoute>
+              }
+            />
+            {/* A recipient’s grant: contract, advisor, tranches and milestone
+                reporting. The Program Lead opens it from Grant Recipients, so
+                it is no longer Finance-only. The tracker APIs behind it
+                already accept a BDA. */}
+            <Route
+              path="trackerPrograms/:programUuid/startup/:entUuid"
+              element={
+                <RoleRoute allow={["Finance", "Admin", "BDA"]}>
+                  <TrackerStartupDetails />
+                </RoleRoute>
+              }
+            />
+            <Route
+              path="fundingAgreements"
+              element={
+                <RoleRoute allow={["Finance"]}>
+                  <FundingAgreements />
+                </RoleRoute>
+              }
+            />
 
             {/* Investment Routes */}
             <Route path="myInvestmentRequests" element={<MyInvestmentRequests />} />
@@ -417,8 +865,6 @@ function App() {
             <Route path="sendProgramApplication/:uuid" element={<SendProgramApplicationWithUuid />} />
 
             {/* Reviewer Routes - Additional */}
-            <Route path="applicationList" element={<ApplicationList />} />
-            <Route path="previewPage" element={<PreviewPage />} />
 
             {/* Sector Routes */}
             <Route path="addSector" element={<AddSector />} />
@@ -438,20 +884,37 @@ function App() {
             <Route path="mentors/:uuid" element={<MentorWithUuid />} />
 
             {/* Learn and Grow Routes */}
-            <Route path="programsApplications" element={<ProgramsApplications />} />
-            <Route path="classRooms" element={<ClassRooms />} />
+            <Route
+              path="programsApplications"
+              element={<ProgramsApplications />}
+            />
+            {/* Courses is a learner page. Admin reaches courses through the
+                Course Library instead, so it is listed by every role except
+                Admin rather than left open by URL. */}
+            <Route
+              path="classRooms"
+              element={
+                <RoleRoute allow={["Enterprenuer", "BDA", "Mentor", "Finance", "ME"]}>
+                  <ClassRooms />
+                </RoleRoute>
+              }
+            />
             <Route path="generalResources" element={<GeneralResources />} />
             <Route path="businessTools" element={<BusinessTools />} />
+            <Route
+              path="businessTools/category/:category"
+              element={<BusinessToolCategory />}
+            />
+            <Route
+              path="businessTools/generate/:uuid"
+              element={<GenerateBusinessTool />}
+            />
             <Route path="uploadBusinessTool" element={<UploadBusinessTool />} />
             <Route path="editBusinessTool/:uuid" element={<EditBusinessTool />} />
 
             {/* CRAT System Routes */}
             <Route path="introduction" element={<Introduction />} />
             <Route path="report" element={<Report />} />
-
-            {/* Reviewer Routes */}
-            <Route path="cratReviews" element={<CratReviews />} />
-            <Route path="cratReviewAssessment" element={<CratSubmissionReviewPage />} />
 
             {/* Application Routes */}
             <Route path="cratReviewApplications" element={<CratReviewApplications />} />

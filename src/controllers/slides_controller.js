@@ -14,7 +14,7 @@ export const getSlides = async ({ module_uuid, page, limit, keyword }) => {
           "Content-Type": "application/json",
           Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
         },
-      }
+      },
     );
     return response.data.body;
   } catch (error) {
@@ -32,9 +32,15 @@ export const createSlide = async (data) => {
         Authorization: `Bearer ${user && user.ACCESS_TOKEN}`,
       },
     });
-    return response.data.body;
+    return response.data;
   } catch (error) {
-    return error.response;
+    console.log(error.response);
+    return (
+      error.response?.data || {
+        status: false,
+        message: "Failed to add the content",
+      }
+    );
   }
 };
 

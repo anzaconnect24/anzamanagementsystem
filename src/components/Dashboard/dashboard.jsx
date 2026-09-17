@@ -16,7 +16,6 @@ import { getScoreData } from "@/controllers/crat_general_controller";
 import {
   getAdminTrackerOverview,
   getMentorOverview,
-  listTrackerMilestones,
 } from "@/controllers/trackerController";
 import TanzaniaMap from "../Maps/TanzaniaMap";
 import { useTranslation } from "@/locales";
@@ -38,14 +37,25 @@ const DashboardHero = ({ userDetails, data }) => {
       image: "/images/business-class-hero.svg",
     },
 
-    Reviewer: {
-      badge: "Reviewer Dashboard",
+    BDA: {
+      badge: "Business Development Advisor Dashboard",
       title: "Review and Evaluate Startup Applications",
       description:
         "Assess business applications, review startup readiness, and support quality onboarding across the Anza Connect ecosystem.",
       statOne: `${data?.pendingBusiness || 0} Pending Reviews`,
       statTwo: "Application Reviews",
       statThree: "Startup Evaluation",
+      image: "/images/business-class-hero.svg",
+    },
+
+    ME: {
+      badge: "Monitoring & Evaluation Dashboard",
+      title: "Track Programme Results and Verify Impact Data",
+      description:
+        "Configure results frameworks and indicators, verify the data startups report, and monitor impact across every programme in the portfolio.",
+      statOne: `${data?.enterprenuers || 0} Startups`,
+      statTwo: "Results Frameworks",
+      statThree: "Impact Reporting",
       image: "/images/business-class-hero.svg",
     },
 
@@ -108,8 +118,8 @@ const DashboardHero = ({ userDetails, data }) => {
           </p>
         </div>
 
-        {/* Staff users are stored as either "Staff" or "Reviewer" (see SignUp),
-            so both are excluded here. */}
+        {/* Only the roles with a profile of their own get Edit Profile;
+            Admin, Business Development Advisors, Finance and M&E do not. */}
         {["Enterprenuer", "Investor", "Mentor"].includes(userDetails?.role) && (
           <Link
             href="/dashboard/entreprenuer-profile"
@@ -183,7 +193,6 @@ const Dashboard = () => {
   const [aiReport, setAiReport] = useState(null);
   const [loadingReport, setLoadingReport] = useState(false);
   const [mentorTrackerStats, setMentorTrackerStats] = useState(null);
-  const [myMilestonesCount, setMyMilestonesCount] = useState(0);
 
   useEffect(() => {
     getMentorOverviewStats().then((res) => {
@@ -202,14 +211,6 @@ const Dashboard = () => {
       );
     }
 
-    if (userDetails.role === "Enterprenuer") {
-      listTrackerMilestones().then((items) => {
-        const openMilestones = (items || []).filter((item) =>
-          ["pending", "in_progress", "submitted"].includes(item.status),
-        );
-        setMyMilestonesCount(openMilestones.length);
-      });
-    }
   }, [userDetails.role]);
 
   useEffect(() => {
@@ -317,7 +318,8 @@ const Dashboard = () => {
             </div>
           )}
 
-          <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-5 md:gap-6">
+          {/* Auto-fit, so the cards fill the row whatever their number. */}
+          <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
             <CardDataStats
               link="/dashboard/enterprenuers"
               title={t("dashboard.totalStartups", "Total Startups")}
@@ -358,15 +360,6 @@ const Dashboard = () => {
               <SlPeople className="text-lg text-primary dark:text-white" />
             </CardDataStats>
 
-            <CardDataStats
-              link="/dashboard/myMilestones"
-              title={t("dashboard.myMilestones", "My Milestones")}
-              total={myMilestonesCount}
-              rate="0.95%"
-              levelUp
-            >
-              <SlPeople className="text-lg text-primary dark:text-white" />
-            </CardDataStats>
 
             <div className="col-span-1 w-full md:col-span-5">
               <PerformanceOverview userDetails={userDetails} />
@@ -444,34 +437,62 @@ const Dashboard = () => {
         </div>
       )}
 
-      {["Admin", "Reviewer"].includes(userDetails.role) && (
+      {["Admin", "BDA"].includes(userDetails.role) && (
         <div>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6 md:grid-cols-[repeat(auto-fit,minmax(220px,1fr))]">
-            <CardDataStats
-              link="/dashboard/pendingApplications"
-              title={t(
-                "dashboard.pendingBusinessApplications",
-                "Pending business applications",
-              )}
-              total={data.pendingBusiness}
-              rate="0.43%"
-              levelUp
-            >
-              <SlPeople className="text-lg text-primary dark:text-white" />
-            </CardDataStats>
+            {/* The BDA works with the whole community, so they see its size;
+                approving applications stays with the Admin. */}
+            {userDetails.role === "BDA" ? (
+              <>
+                <CardDataStats
+                  link="/dashboard/enterprenuers"
+                  title={t("dashboard.totalStartups", "Total startups")}
+                  total={data.enterprenuers || 0}
+                  rate="0.43%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
 
-            <CardDataStats
-              link="/dashboard/users"
-              title={t(
-                "dashboard.pendingUserApplications",
-                "Pending users applications",
-              )}
-              total={data.pendingUser}
-              rate="4.35%"
-              levelUp
-            >
-              <SlPeople className="text-lg text-primary dark:text-white" />
-            </CardDataStats>
+                <CardDataStats
+                  link="/dashboard/investors"
+                  title={t("dashboard.totalInvestors", "Total investors")}
+                  total={data.investors || 0}
+                  rate="4.35%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
+              </>
+            ) : (
+              <>
+                <CardDataStats
+                  link="/dashboard/pendingApplications"
+                  title={t(
+                    "dashboard.pendingBusinessApplications",
+                    "Pending business applications",
+                  )}
+                  total={data.pendingBusiness}
+                  rate="0.43%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
+
+                <CardDataStats
+                  link="/dashboard/users"
+                  title={t(
+                    "dashboard.pendingUserApplications",
+                    "Pending users applications",
+                  )}
+                  total={data.pendingUser}
+                  rate="4.35%"
+                  levelUp
+                >
+                  <SlPeople className="text-lg text-primary dark:text-white" />
+                </CardDataStats>
+              </>
+            )}
 
             <CardDataStats
               link="/dashboard/pendingRequests"

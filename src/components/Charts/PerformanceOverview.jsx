@@ -10,6 +10,7 @@ import {
   getUserBusiness,
 } from "@/controllers/crat_controller";
 import { UserContext } from "@/layouts/DashboardLayout";
+import { readinessLabelT } from "@/utils/cratReadiness";
 
 const BusinessDomainScores = dynamic(
   () => import("@/components/Charts/BusinessDomainScores"),
@@ -118,8 +119,8 @@ const getDomainForSubDomain = (subDomain = "") => {
 const calculateScores = (reportData, t) => {
   if (!reportData) return null;
 
-  const makeStatus = (pct) =>
-    pct >= 70 ? t("report.ready", "Ready") : t("report.notReady", "Not Ready");
+  // Investment ready at 70% and above — see utils/cratReadiness.
+  const makeStatus = (pct) => readinessLabelT(pct, t);
 
   if (!Array.isArray(reportData)) {
     const domains = ["commercial", "financial", "operations", "legal"];
@@ -212,8 +213,8 @@ const makeFallback = (t) => ({
 const calculateScoresFromPublishedCrat = (publishedData, t) => {
   if (!publishedData || !publishedData.domainScores) return null;
 
-  const makeStatus = (pct) =>
-    pct >= 70 ? t("report.ready", "Ready") : t("report.notReady", "Not Ready");
+  // Investment ready at 70% and above — see utils/cratReadiness.
+  const makeStatus = (pct) => readinessLabelT(pct, t);
 
   const domainMap = {
     commercial: "commercial_marketing",

@@ -28,7 +28,7 @@ const CratDocumentsPage = ({ params }) => {
 
   useEffect(() => {
     // Check permissions
-    if (!["Admin", "Staff"].includes(userDetails?.role)) {
+    if (!["Admin", "BDA"].includes(userDetails?.role)) {
       toast.error(
         t("common.accessDenied", "Access denied. Admin or Staff role required.")
       );

@@ -1,4 +1,5 @@
 import { analyzeCompleteReport, generateExecutiveSummary } from "./openAi";
+import { readinessLabel } from "@/utils/cratReadiness";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import {
@@ -240,9 +241,8 @@ export class AIReportService {
    * Helper method to determine readiness level based on score
    */
   getReadinessLevel(score) {
-    if (score >= 75) return "Ready";
-    if (score >= 60) return "Partially Ready";
-    return "Not Ready";
+    // Investment ready at 70% and above — see utils/cratReadiness.
+    return readinessLabel(score);
   }
 
   /**

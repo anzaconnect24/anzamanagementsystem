@@ -15,11 +15,26 @@ const Page = () => {
   const router = useRouter();
   const [loading, setloading] = useState(false);
   const [searchParams] = useSearchParams();
+  // A module now belongs to a program. programId is the older course-scoped
+  // form, still honoured for the modules authored that way.
+  // A module is authored inside a course. cohortProgram and programId are
+  // the older forms, still honoured for links made before courses existed.
+  const course = searchParams.get("course");
+  const parentProgram = searchParams.get("program");
+  const cohortProgram = searchParams.get("cohortProgram");
   const programId = searchParams.get("programId");
+
+  const backLink =
+    course && parentProgram
+      ? `/dashboard/programManagement/program/${parentProgram}/course/${course}`
+      : cohortProgram
+        ? `/dashboard/programManagement/program/${cohortProgram}/courses`
+        : `/dashboard/modules/${programId}`;
+
   return (
     <div>
       <Breadcrumb
-        prevLink={`/dashboard/modules/${programId}`}
+        prevLink={backLink}
         prevPage={t("common.back", "Back")}
         pageName={t("modules.newModule", "New module")}
       />
@@ -37,13 +52,16 @@ const Page = () => {
               uploadFile(formData).then((url) => {
                 const payload = {
                   image: url,
-                  program_uuid: programId,
+                  course_uuid: course || undefined,
+                  cohort_program_uuid:
+                    !course && cohortProgram ? cohortProgram : undefined,
+                  program_uuid: course || cohortProgram ? undefined : programId,
                   title: e.target.title.value,
                   description: e.target.description.value,
                 };
-                console.log("payload", payload);
-                createModule(payload).then((res) => {
-                  router.push(`/dashboard/modules/${programId}`);
+
+                createModule(payload).then(() => {
+                  router.push(backLink);
                   setloading(false);
                 });
               });
@@ -59,7 +77,7 @@ const Page = () => {
                   className="w-full rounded border-stroke"
                   placeholder={t(
                     "modules.enterModuleTitle",
-                    "Enter module title"
+                    "Enter module title",
                   )}
                 />
               </div>
@@ -82,7 +100,7 @@ const Page = () => {
                   className="w-full rounded border-stroke"
                   placeholder={t(
                     "modules.enterModuleDescription",
-                    "Enter module description"
+                    "Enter module description",
                   )}
                 />
               </div>

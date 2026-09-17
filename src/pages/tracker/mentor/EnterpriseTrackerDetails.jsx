@@ -14,17 +14,27 @@ import { parseTrackerProgramMeta } from "@/utils/trackerProgramMarkers";
 import MilestoneReportTable from "@/components/tracker/MilestoneReportTable";
 import MilestoneStatusTable from "@/components/tracker/MilestoneStatusTable";
 import {
+  buildActivityNotes,
+  commentsFromNotes,
+  milestoneActivityRows,
+} from "@/utils/milestoneActivities";
+import {
   formatReportAmount,
+  milestoneKpiImpact,
   milestonePlannedAmount,
   milestoneTimelineSpan,
+  parseMilestonePlan,
   reportFromMilestone,
+  timelineSpanLabel,
 } from "@/utils/milestoneReport";
 import TrancheGroupList, {
   groupMilestonesByTranche,
 } from "@/components/tracker/TrancheGroupList";
-import { ClipboardList, Flag } from "lucide-react";
+import { ClipboardList, Download, FileText, Flag } from "lucide-react";
 import {
   PLAN_STATUS,
+  PLAN_STATUS_LABEL,
+  PLAN_STATUS_PILL,
   REPORT_STATUS,
   canReviewPlan,
   VERIFICATION_OPTIONS,
@@ -45,14 +55,41 @@ const tableHeadClass =
 const tableSelectClass =
   "w-full rounded-lg border border-black/10 bg-white px-2 py-1.5 text-xs font-semibold text-slate-700 outline-none transition focus:border-[#082d77] disabled:opacity-60";
 
+// The enterprise's `documents` field is a flat { key: value } object (same
+// one the KYC screen reads/writes) — the startup's uploaded budget document
+// lives under `budgetDocumentUrl`/`budgetDocumentDescription`.
+const parseDocuments = (value) => {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? parsed
+        : {};
+    } catch {
+      return {};
+    }
+  }
+  return {};
+};
+
 const formatCurrency = (value, currency = "TZS") => {
   const amount = Number(value || 0);
   if (!Number.isFinite(amount)) return `${currency} 0`;
   return `${currency} ${amount.toLocaleString()}`;
 };
 
-const PortalCard = ({ icon, title, subtitle, action, children, className = "" }) => (
-  <section className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}>
+const PortalCard = ({
+  icon,
+  title,
+  subtitle,
+  action,
+  children,
+  className = "",
+}) => (
+  <section
+    className={`rounded-2xl border border-slate-200/80 bg-white p-6 shadow-sm shadow-slate-200/70 ${className}`}
+  >
     {(title || subtitle || action || icon) && (
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-start gap-3">
@@ -62,14 +99,24 @@ const PortalCard = ({ icon, title, subtitle, action, children, className = "" })
             </div>
           )}
           <div>
-            {title && <h2 className="text-lg font-black tracking-tight text-slate-950">{title}</h2>}
-            {subtitle && <p className="mt-1 text-sm leading-6 text-slate-500">{subtitle}</p>}
+            {title && (
+              <h2 className="text-lg font-black tracking-tight text-slate-950">
+                {title}
+              </h2>
+            )}
+            {subtitle && (
+              <p className="mt-1 text-sm leading-6 text-slate-500">
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
         {action}
       </div>
     )}
-    <div className={title || subtitle || action || icon ? "mt-6" : ""}>{children}</div>
+    <div className={title || subtitle || action || icon ? "mt-6" : ""}>
+      {children}
+    </div>
   </section>
 );
 
@@ -109,21 +156,22 @@ const formatDateDisplay = (value) => {
   return date.toLocaleDateString("en-GB");
 };
 
-
 const normalizeTrancheStages = (value) => {
   if (Array.isArray(value)) {
-    return value
-      .map((item) => ({
-        title: String(item?.title || "").trim(),
-        date: item?.date ? String(item.date).slice(0, 10) : "",
-        amount: Number(item?.amount || 0),
-        // Finance marks a stage Disbursed when it releases the tranche — keep it
-        // so the summary cards can tell which tranches are already out.
-        status: item?.status ? String(item.status) : "",
-      }))
-      // A tranche without a planned date is still a tranche; it must not vanish
-      // from the totals just because finance left the date blank.
-      .filter((item) => item.title);
+    return (
+      value
+        .map((item) => ({
+          title: String(item?.title || "").trim(),
+          date: item?.date ? String(item.date).slice(0, 10) : "",
+          amount: Number(item?.amount || 0),
+          // Finance marks a stage Disbursed when it releases the tranche — keep it
+          // so the summary cards can tell which tranches are already out.
+          status: item?.status ? String(item.status) : "",
+        }))
+        // A tranche without a planned date is still a tranche; it must not vanish
+        // from the totals just because finance left the date blank.
+        .filter((item) => item.title)
+    );
   }
 
   if (typeof value === "string") {
@@ -254,11 +302,13 @@ const EnterpriseTrackerDetails = () => {
   // was disbursed through the plan workflow.
   const grantStats = useMemo(() => {
     const isTrancheDisbursed = (stage) => {
-      if (String(stage?.status || "").toLowerCase() === "disbursed") return true;
+      if (String(stage?.status || "").toLowerCase() === "disbursed")
+        return true;
       const linked = milestones.find((m) => m.linkedTranche === stage?.title);
       return Boolean(
         linked &&
-          (String(linked.planStatus) === PLAN_STATUS.DISBURSED || linked.disbursed),
+        (String(linked.planStatus) === PLAN_STATUS.DISBURSED ||
+          linked.disbursed),
       );
     };
 
@@ -273,9 +323,17 @@ const EnterpriseTrackerDetails = () => {
     const remaining = Math.max(0, committed - disbursed);
     const disbursedPct = committed > 0 ? (disbursed / committed) * 100 : 0;
     const remainingPct = committed > 0 ? (remaining / committed) * 100 : 0;
-    const next = trancheStages.find((stage) => !isTrancheDisbursed(stage)) || null;
+    const next =
+      trancheStages.find((stage) => !isTrancheDisbursed(stage)) || null;
 
-    return { committed, disbursed, remaining, disbursedPct, remainingPct, next };
+    return {
+      committed,
+      disbursed,
+      remaining,
+      disbursedPct,
+      remainingPct,
+      next,
+    };
   }, [enterprise?.grantUsd, trancheStages, milestones]);
 
   const loadDetails = async () => {
@@ -310,7 +368,6 @@ const EnterpriseTrackerDetails = () => {
       };
     });
   };
-
 
   const onSubmitWeekLog = async (e) => {
     e.preventDefault();
@@ -413,25 +470,28 @@ const EnterpriseTrackerDetails = () => {
       }));
       loadDetails();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to review the report");
+      toast.error(
+        error?.response?.data?.message || "Failed to review the report",
+      );
     } finally {
       setReviewingById((prev) => ({ ...prev, [uuid]: false }));
     }
   };
 
   // Phase 3: BDA approves / requests revision / rejects the proposed plan.
-  const onReviewPlan = async (uuid, planStatus) => {
+  // `notes` carries the comments written beside each activity.
+  const onReviewPlan = async (uuid, planStatus, notes) => {
     setReviewingById((prev) => ({ ...prev, [uuid]: true }));
     try {
       await reviewTrackerMilestone(uuid, {
         planStatus,
-        mentorReviewNotes: reviewState[uuid]?.mentorReviewNotes || "",
+        mentorReviewNotes: notes ?? (reviewState[uuid]?.mentorReviewNotes || ""),
       });
       toast.success(
         planStatus === PLAN_STATUS.APPROVED
           ? "Plan approved — ready for disbursement"
           : planStatus === PLAN_STATUS.REVISION_REQUESTED
-            ? "Revision requested"
+            ? "Further information requested from the startup"
             : "Plan rejected",
       );
       setReviewState((prev) => ({ ...prev, [uuid]: {} }));
@@ -455,7 +515,9 @@ const EnterpriseTrackerDetails = () => {
       setReviewState((prev) => ({ ...prev, [uuid]: {} }));
       loadDetails();
     } catch (error) {
-      toast.error(error?.response?.data?.message || "Failed to verify milestone");
+      toast.error(
+        error?.response?.data?.message || "Failed to verify milestone",
+      );
     } finally {
       setReviewingById((prev) => ({ ...prev, [uuid]: false }));
     }
@@ -501,14 +563,6 @@ const EnterpriseTrackerDetails = () => {
   return (
     <div className="min-h-screen bg-[#f3f6fb] px-4 py-6 text-slate-950 md:px-6">
       <main className="mx-auto w-full space-y-8">
-        <button
-          type="button"
-          onClick={() => navigate("/dashboard/mentorTracker")}
-          className="inline-flex items-center gap-2 text-sm font-bold text-[#082d77] transition hover:text-[#061f54]"
-        >
-          <span aria-hidden>&larr;</span> Back to startups
-        </button>
-
         <section
           className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
           style={{
@@ -536,7 +590,11 @@ const EnterpriseTrackerDetails = () => {
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
-                  onClick={() => navigate(`/dashboard/mentorTracker/enterprise-kyc/${enterpriseUuid}?view=1`)}
+                  onClick={() =>
+                    navigate(
+                      `/dashboard/mentorTracker/enterprise-kyc/${enterpriseUuid}?view=1`,
+                    )
+                  }
                   className="rounded-xl bg-white/15 px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/25"
                 >
                   View KYC
@@ -554,7 +612,6 @@ const EnterpriseTrackerDetails = () => {
                 )}
               </div>
             </div>
-
           </div>
         </section>
 
@@ -569,200 +626,270 @@ const EnterpriseTrackerDetails = () => {
         />
 
         <div className="space-y-8">
-            <SignedContractCard
-              contractUrl={
-                enterprise?.signedContractUrl || financeMember?.signedContractUrl
-              }
-              uploadedAt={
-                enterprise?.signedContractUploadedAt ||
-                financeMember?.signedContractUploadedAt
-              }
-              acknowledgedAt={enterprise?.contractAcknowledgedAt}
-              signedUrl={enterprise?.startupSignedContractUrl}
-              contractName={enterprise?.name || undefined}
-            />
+          <SignedContractCard
+            contractUrl={
+              enterprise?.signedContractUrl || financeMember?.signedContractUrl
+            }
+            uploadedAt={
+              enterprise?.signedContractUploadedAt ||
+              financeMember?.signedContractUploadedAt
+            }
+            acknowledgedAt={enterprise?.contractAcknowledgedAt}
+            signedUrl={enterprise?.startupSignedContractUrl}
+            contractName={enterprise?.name || undefined}
+          />
 
-            {/* The plan and the reports filed against it, split the same way
-                the startup sees them. */}
-            <div className="flex flex-wrap gap-2">
-              {[
-                { id: "milestones", label: "Milestones" },
-                { id: "status", label: "Milestone Status" },
-                { id: "report", label: "Milestone Reporting" },
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  type="button"
-                  onClick={() => {
-                    // A section always opens on its tranche list, so switching
-                    // to one closes whichever tranche was drilled into.
-                    setMilestoneTab(tab.id);
-                    setOpenTranche("");
-                  }}
-                  className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
-                    milestoneTab === tab.id
-                      ? "bg-[#082d77] text-white"
-                      : "border border-[#082d77]/20 bg-[#082d77]/5 text-[#082d77] hover:bg-[#082d77]/10"
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            {milestoneTab === "status" && (
-              <PortalCard
-                icon={<Flag className="h-5 w-5" />}
-                title="Milestone Status"
-                subtitle="Where every milestone stands across the tranches — whether you have approved the plan, and what has happened to the report filed against it."
+          {/* The plan, the reports filed against it and the startup's
+                attachments, split the same way the startup sees them. */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { id: "milestones", label: "Milestones" },
+              { id: "status", label: "Milestone Status" },
+              { id: "report", label: "Milestone Reporting" },
+              { id: "attachments", label: "Attachments" },
+            ].map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => {
+                  // A section always opens on its tranche list, so switching
+                  // to one closes whichever tranche was drilled into.
+                  setMilestoneTab(tab.id);
+                  setOpenTranche("");
+                }}
+                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition ${
+                  milestoneTab === tab.id
+                    ? "bg-[#082d77] text-white"
+                    : "border border-[#082d77]/20 bg-[#082d77]/5 text-[#082d77] hover:bg-[#082d77]/10"
+                }`}
               >
-                <div className="space-y-4">
-                  {milestones.length === 0 && (
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {milestoneTab === "attachments" && (
+            <PortalCard
+              icon={<FileText className="h-5 w-5" />}
+              title="Attachments"
+              subtitle="Documents the startup uploaded from their Attachments tab. Read-only — view or download them here."
+            >
+              {(() => {
+                // The startup's budget document — the BDA only views it.
+                const documents = parseDocuments(enterprise?.documents);
+                const budgetDocumentUrl = documents.budgetDocumentUrl;
+                const headClass =
+                  "border border-black/10 bg-[#eaf0fb] px-3 py-2 text-left text-xs font-black text-[#111827]";
+                const cellClass =
+                  "border border-black/10 px-3 py-2 align-top text-sm break-words text-[#334155]";
+
+                if (!budgetDocumentUrl) {
+                  return (
                     <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                      No milestones yet.
+                      The startup has not uploaded any attachments yet.
                     </div>
-                  )}
+                  );
+                }
 
-                  {milestones.length > 0 &&
-                    !openTranche &&
-                    renderTrancheList("Tranche Milestones", "Milestones")}
+                return (
+                  <div className="overflow-x-auto rounded-xl border border-black/10">
+                    <table className="w-full min-w-[560px] border-collapse bg-white">
+                      <thead>
+                        <tr>
+                          <th className={`${headClass} w-[25%]`}>Document</th>
+                          <th className={headClass}>Description</th>
+                          <th className={`${headClass} w-[20%]`}>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td className={`${cellClass} font-bold text-[#111827]`}>
+                            <span className="inline-flex items-center gap-2">
+                              <FileText className="h-4 w-4 text-emerald-600" />
+                              Budget Document
+                            </span>
+                          </td>
+                          <td className={`${cellClass} whitespace-pre-line`}>
+                            {documents.budgetDocumentDescription || (
+                              <span className="text-[#94a3b8]">—</span>
+                            )}
+                          </td>
+                          <td className={cellClass}>
+                            <a
+                              href={budgetDocumentUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-2 text-sm font-bold text-[#163b8f] hover:underline"
+                            >
+                              <Download className="h-4 w-4" />
+                              View / download
+                            </a>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                );
+              })()}
+            </PortalCard>
+          )}
 
-                  {openTranche && renderTrancheHeading("All milestones")}
+          {milestoneTab === "status" && (
+            <PortalCard
+              icon={<Flag className="h-5 w-5" />}
+              title="Milestone Status"
+              subtitle="Where every milestone stands across the tranches — whether you have approved the plan, and what has happened to the report filed against it."
+            >
+              <div className="space-y-4">
+                {milestones.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    No milestones yet.
+                  </div>
+                )}
 
-                  {openTranche && (
-                    <div className="-mx-6 px-1">
-                      {/* The open tranche only. The heading names it, so the
+                {milestones.length > 0 &&
+                  !openTranche &&
+                  renderTrancheList("Tranche Milestones", "Milestones")}
+
+                {openTranche && renderTrancheHeading("All milestones")}
+
+                {openTranche && (
+                  <div className="-mx-6 px-1">
+                    {/* The open tranche only. The heading names it, so the
                           tranche column is dropped — except on "All milestones",
                           where it is the only thing telling the rows apart. */}
-                      <MilestoneStatusTable
-                        rows={visibleMilestones}
-                        showTranche={openTranche === "__all__"}
-                      />
-                    </div>
-                  )}
-                </div>
-              </PortalCard>
-            )}
+                    <MilestoneStatusTable
+                      rows={visibleMilestones}
+                      showTranche={openTranche === "__all__"}
+                    />
+                  </div>
+                )}
+              </div>
+            </PortalCard>
+          )}
 
-            {milestoneTab === "report" && (
-              <PortalCard
-                icon={<ClipboardList className="h-5 w-5" />}
-                title="Milestone Reporting"
-                subtitle="The startup's reports for this tranche — planned against actual spend, with their evidence. Approve a report to send it to the finance officer, or decline it back to the startup."
-              >
-                <div className="space-y-4">
-                  {milestones.length === 0 && (
-                    <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
-                      No milestones yet.
-                    </div>
-                  )}
+          {milestoneTab === "report" && (
+            <PortalCard
+              icon={<ClipboardList className="h-5 w-5" />}
+              title="Milestone Reporting"
+              subtitle="The startup's reports for this tranche — planned against actual spend, with their evidence. Approve a report to send it to the finance officer, or decline it back to the startup."
+            >
+              <div className="space-y-4">
+                {milestones.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-slate-200 p-8 text-center text-sm text-slate-500">
+                    No milestones yet.
+                  </div>
+                )}
 
-                  {milestones.length > 0 &&
-                    !openTranche &&
-                    renderTrancheList("Tranche Reports", "Reports")}
+                {milestones.length > 0 &&
+                  !openTranche &&
+                  renderTrancheList("Tranche Reports", "Reports")}
 
-                  {openTranche && renderTrancheHeading("All reports")}
+                {openTranche && renderTrancheHeading("All reports")}
 
-                  {openTranche && visibleMilestones.length > 0 && (
-                    <div className="-mx-6 px-1">
-                      <MilestoneReportTable
-                        showReview
-                        reviewLabel="Business coach comment"
-                        rows={visibleMilestones.map((item) => {
-                          const status = String(item.status || "").toLowerCase();
-                          const ps = item.planStatus || "";
-                          // The startup has filed a report nobody has ruled on.
-                          const awaitingReview = status === "submitted";
-                          const sentToFinance =
-                            ps === PLAN_STATUS.SENT_TO_FINANCE ||
-                            ps === PLAN_STATUS.DISBURSED ||
-                            Boolean(item.disbursed);
+                {openTranche && visibleMilestones.length > 0 && (
+                  <div className="-mx-6 px-1">
+                    <MilestoneReportTable
+                      showReview
+                      reviewLabel="Business coach comment"
+                      rows={visibleMilestones.map((item) => {
+                        const status = String(item.status || "").toLowerCase();
+                        const ps = item.planStatus || "";
+                        // The startup has filed a report nobody has ruled on.
+                        const awaitingReview = status === "submitted";
+                        const sentToFinance =
+                          ps === PLAN_STATUS.SENT_TO_FINANCE ||
+                          ps === PLAN_STATUS.DISBURSED ||
+                          Boolean(item.disbursed);
 
-                          return {
-                            uuid: item.uuid,
-                            title: item.title,
-                            activity: item.tranchePlannedUse,
-                            timeline: milestoneTimelineSpan(item),
-                            report: reportFromMilestone(item),
-                            attachments: parseSubmissionAttachments(
-                              item.submissionAttachments,
+                        return {
+                          uuid: item.uuid,
+                          milestone: item,
+                          title: item.title,
+                          activity: item.tranchePlannedUse,
+                          kpiImpact: milestoneKpiImpact(item),
+                          timeline: milestoneTimelineSpan(item),
+                          report: reportFromMilestone(item),
+                          attachments: parseSubmissionAttachments(
+                            item.submissionAttachments,
+                          ),
+
+                          // Comment written in the row being reviewed; the
+                          // recorded one once it has been ruled on.
+                          reviewComment:
+                            !readOnly && awaitingReview ? (
+                              <textarea
+                                className={`${baseInputClass} min-h-[70px]`}
+                                placeholder="Comment (required when declining)"
+                                value={
+                                  reviewState[item.uuid]?.reportReviewNotes ||
+                                  ""
+                                }
+                                onChange={(e) =>
+                                  setReviewState((prev) => ({
+                                    ...prev,
+                                    [item.uuid]: {
+                                      ...prev[item.uuid],
+                                      reportReviewNotes: e.target.value,
+                                    },
+                                  }))
+                                }
+                              />
+                            ) : item.mentorReviewNotes ? (
+                              <p className="text-[#334155]">
+                                {item.mentorReviewNotes}
+                              </p>
+                            ) : null,
+
+                          action:
+                            !readOnly && awaitingReview ? (
+                              // One verdict per row, picked from the list and
+                              // applied as soon as it is chosen — the same
+                              // shape as the plan verdict on the Milestones
+                              // tab.
+                              <select
+                                className={tableSelectClass}
+                                value=""
+                                disabled={reviewingById[item.uuid]}
+                                onChange={(e) => {
+                                  if (e.target.value)
+                                    onReviewReport(item.uuid, e.target.value);
+                                }}
+                              >
+                                <option value="">
+                                  {reviewingById[item.uuid]
+                                    ? "Saving..."
+                                    : "Select verdict"}
+                                </option>
+                                <option value="approve">Approve</option>
+                                <option value="decline">Decline</option>
+                                <option value="info">
+                                  Request further information
+                                </option>
+                              </select>
+                            ) : (
+                              <span className="text-xs font-semibold text-slate-600">
+                                {sentToFinance
+                                  ? "Approved — with finance"
+                                  : status === REPORT_STATUS.REJECTED
+                                    ? "Declined"
+                                    : status === REPORT_STATUS.INFO_REQUESTED
+                                      ? "Further information requested"
+                                      : status === REPORT_STATUS.COMPLETED
+                                        ? "Completed"
+                                        : "No report submitted yet"}
+                              </span>
                             ),
+                        };
+                      })}
+                    />
+                  </div>
+                )}
+              </div>
+            </PortalCard>
+          )}
 
-                            // Comment written in the row being reviewed; the
-                            // recorded one once it has been ruled on.
-                            reviewComment:
-                              !readOnly && awaitingReview ? (
-                                <textarea
-                                  className={`${baseInputClass} min-h-[70px]`}
-                                  placeholder="Comment (required when declining)"
-                                  value={
-                                    reviewState[item.uuid]?.reportReviewNotes || ""
-                                  }
-                                  onChange={(e) =>
-                                    setReviewState((prev) => ({
-                                      ...prev,
-                                      [item.uuid]: {
-                                        ...prev[item.uuid],
-                                        reportReviewNotes: e.target.value,
-                                      },
-                                    }))
-                                  }
-                                />
-                              ) : item.mentorReviewNotes ? (
-                                <p className="text-[#334155]">
-                                  {item.mentorReviewNotes}
-                                </p>
-                              ) : null,
-
-                            action:
-                              !readOnly && awaitingReview ? (
-                                // One verdict per row, picked from the list and
-                                // applied as soon as it is chosen — the same
-                                // shape as the plan verdict on the Milestones
-                                // tab.
-                                <select
-                                  className={tableSelectClass}
-                                  value=""
-                                  disabled={reviewingById[item.uuid]}
-                                  onChange={(e) => {
-                                    if (e.target.value)
-                                      onReviewReport(item.uuid, e.target.value);
-                                  }}
-                                >
-                                  <option value="">
-                                    {reviewingById[item.uuid]
-                                      ? "Saving..."
-                                      : "Select verdict"}
-                                  </option>
-                                  <option value="approve">Approve</option>
-                                  <option value="decline">Decline</option>
-                                  <option value="info">
-                                    Request further information
-                                  </option>
-                                </select>
-                              ) : (
-                                <span className="text-xs font-semibold text-slate-600">
-                                  {sentToFinance
-                                    ? "Approved — with finance"
-                                    : status === REPORT_STATUS.REJECTED
-                                      ? "Declined"
-                                      : status === REPORT_STATUS.INFO_REQUESTED
-                                        ? "Further information requested"
-                                        : status === REPORT_STATUS.COMPLETED
-                                          ? "Completed"
-                                          : "No report submitted yet"}
-                                </span>
-                              ),
-                          };
-                        })}
-                      />
-                    </div>
-                  )}
-                </div>
-              </PortalCard>
-            )}
-
-            {milestoneTab === "milestones" && (
+          {milestoneTab === "milestones" && (
             <PortalCard
               icon={<Flag className="h-5 w-5" />}
               title="Milestones"
@@ -790,178 +917,227 @@ const EnterpriseTrackerDetails = () => {
                   !openTranche &&
                   renderTrancheList("Tranche Milestones", "Milestones")}
 
-                {openTranche && renderTrancheHeading("All milestones")}
+                {openTranche && (
+                  <p className="text-sm font-bold text-slate-950">
+                    {openTranche === "__all__"
+                      ? "All milestones"
+                      : `${openTranche} Milestones`}
+                  </p>
+                )}
 
-                {/* The submitted plans, one row each: what the startup proposed,
-                    where it stands, and the verdict you can give it. */}
+                {/* The plan as the startup submitted it: every activity with its
+                    budget, timeline and expected KPI/impact, a comment beside
+                    each, and one verdict on the milestone as a whole. */}
                 {openTranche && visibleMilestones.length > 0 && (
                   <div className="-mx-6 overflow-x-auto px-1">
                     <table
                       className="w-full table-fixed border-collapse bg-white"
-                      style={{ minWidth: "1030px" }}
+                      style={{ minWidth: "1180px" }}
                     >
                       <thead>
                         <tr>
-                          <th className={`${tableHeadClass} w-[28%]`}>Milestone</th>
-                          <th className={`${tableHeadClass} w-[11%]`}>Planned funds</th>
-                          <th className={`${tableHeadClass} w-[10%]`}>Timeline</th>
-                          <th className={`${tableHeadClass} w-[15%]`}>Verification</th>
-                          <th className={`${tableHeadClass} w-[19%]`}>Review note</th>
+                          <th className={`${tableHeadClass} w-[17%]`}>Milestone</th>
+                          <th className={`${tableHeadClass} w-[16%]`}>Activity</th>
+                          <th className={`${tableHeadClass} w-[10%] text-right`}>
+                            Planned Amount (TZS)
+                          </th>
+                          <th className={`${tableHeadClass} w-[8%]`}>Timeline</th>
+                          <th className={`${tableHeadClass} w-[13%]`}>KPI | Impact</th>
+                          <th className={`${tableHeadClass} w-[19%]`}>Comments</th>
                           <th className={`${tableHeadClass} w-[17%]`}>Action</th>
                         </tr>
                       </thead>
 
                       <tbody>
-                        {visibleMilestones.map((item) => {
+                        {visibleMilestones.map((item, milestoneIndex) => {
                           const ps = item.planStatus || "";
-                          const vs = item.verificationStatus || "";
                           const verificationRequested = Boolean(
                             item.verificationRequested,
                           );
                           const reviewable = !readOnly && canReviewPlan(ps);
-                          const plannedAmount = milestonePlannedAmount(item);
-                          const timelineSpan = milestoneTimelineSpan(item);
+                          const rows = milestoneActivityRows(item);
+                          const drafts =
+                            reviewState[item.uuid]?.activityComments || {};
+                          const saved = commentsFromNotes(
+                            item.mentorReviewNotes,
+                            rows,
+                          );
+                          const busy = reviewingById[item.uuid];
 
-                          return (
-                            <tr
-                              key={item.uuid}
-                              className="odd:bg-white even:bg-[#f8fafc]"
-                            >
+                          const setDraft = (index, value) =>
+                            setReviewState((prev) => ({
+                              ...prev,
+                              [item.uuid]: {
+                                ...prev[item.uuid],
+                                activityComments: {
+                                  ...(prev[item.uuid]?.activityComments || {}),
+                                  [index]: value,
+                                },
+                              },
+                            }));
+
+                          // Approving needs no comment; asking for more or
+                          // rejecting has to say what is wanted.
+                          const decide = (planStatus) => {
+                            const notes = buildActivityNotes(rows, drafts);
+                            if (planStatus !== PLAN_STATUS.APPROVED && !notes) {
+                              toast.error(
+                                "Comment on at least one activity so the startup knows what to add",
+                              );
+                              return;
+                            }
+                            onReviewPlan(item.uuid, planStatus, notes);
+                          };
+
+                          return rows.map((row, index) => (
+                            <tr key={`${item.uuid}-${index}`} className="bg-white">
+                              {index === 0 && (
+                                <td rowSpan={rows.length} className={tableCellClass}>
+                                  <div className="flex items-start gap-3">
+                                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-[#eaf0fb] text-sm font-black text-[#082d77]">
+                                      {milestoneIndex + 1}
+                                    </span>
+                                    <div className="min-w-0">
+                                      <p className="font-bold text-[#111827]">
+                                        {item.title}
+                                      </p>
+                                      {openTranche === "__all__" && item.linkedTranche ? (
+                                        <p className="mt-1 text-xs text-[#64748b]">
+                                          {item.linkedTranche}
+                                        </p>
+                                      ) : null}
+                                    </div>
+                                  </div>
+                                </td>
+                              )}
+
+                              <td className={`${tableCellClass} text-xs`}>
+                                {row.text || <span className="text-[#94a3b8]">—</span>}
+                              </td>
+
                               <td
-                                className={`${tableCellClass} font-bold text-[#111827]`}
+                                className={`${tableCellClass} text-right text-xs ${
+                                  index === 0 ? "font-bold text-[#111827]" : ""
+                                }`}
                               >
-                                {item.title}
-                                {item.tranchePlannedUse ? (
-                                  <span className="mt-1 block text-xs font-normal text-[#64748b]">
-                                    {item.tranchePlannedUse}
-                                  </span>
-                                ) : null}
+                                {formatReportAmount(row.plannedAmount)}
                               </td>
 
-                              <td className={tableCellClass}>
-                                {formatReportAmount(plannedAmount)}
+                              <td className={`${tableCellClass} text-xs`}>
+                                {row.timeline || <span className="text-[#94a3b8]">—</span>}
                               </td>
 
-                              <td className={tableCellClass}>
-                                {timelineSpan || (
-                                  <span className="text-[#94a3b8]">—</span>
-                                )}
+                              <td className={`${tableCellClass} text-xs`}>
+                                {row.kpiImpact || <span className="text-[#94a3b8]">—</span>}
                               </td>
 
-                              <td className={tableCellClass}>
-                                <span
-                                  className={`inline-block rounded-full px-2.5 py-1 text-xs font-bold ${verificationPill(vs)}`}
-                                >
-                                  {verificationLabel(vs)}
-                                </span>
-                                {verificationRequested && (
-                                  <span className="mt-1 block text-xs font-semibold text-amber-600">
-                                    Verification requested
-                                  </span>
-                                )}
-                              </td>
-
-                              {/* Written where the verdict is given; the note
-                                  already on record once it has been given. */}
                               <td className={tableCellClass}>
                                 {reviewable ? (
                                   <textarea
-                                    className={`${baseInputClass} min-h-[70px]`}
-                                    placeholder="Optional for approve, recommended for revision/reject"
-                                    value={
-                                      reviewState[item.uuid]?.mentorReviewNotes || ""
-                                    }
-                                    onChange={(e) =>
-                                      setReviewState((prev) => ({
-                                        ...prev,
-                                        [item.uuid]: {
-                                          ...prev[item.uuid],
-                                          mentorReviewNotes: e.target.value,
-                                        },
-                                      }))
-                                    }
+                                    rows={1}
+                                    className="w-full resize-y rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#082d77]"
+                                    placeholder="Comment on this activity"
+                                    value={drafts[index] || ""}
+                                    onChange={(e) => setDraft(index, e.target.value)}
                                   />
-                                ) : item.mentorReviewNotes ? (
-                                  item.mentorReviewNotes
+                                ) : saved[index] ? (
+                                  <p className="whitespace-pre-line text-xs text-[#334155]">
+                                    {saved[index]}
+                                  </p>
                                 ) : (
                                   <span className="text-[#94a3b8]">—</span>
                                 )}
                               </td>
 
-                              <td className={tableCellClass}>
-                                <div className="flex flex-col gap-2">
-                                  {/* One verdict per row, picked from the list —
-                                      it applies as soon as it is chosen. Where
-                                      the plan ends up is read on the Milestone
-                                      Status tab. */}
-                                  {reviewable && (
-                                    <select
-                                      className={tableSelectClass}
-                                      value=""
-                                      disabled={reviewingById[item.uuid]}
-                                      onChange={(e) => {
-                                        if (e.target.value)
-                                          onReviewPlan(item.uuid, e.target.value);
-                                      }}
-                                    >
-                                      <option value="">
-                                        {reviewingById[item.uuid]
-                                          ? "Saving..."
-                                          : "Select verdict"}
-                                      </option>
-                                      <option value={PLAN_STATUS.APPROVED}>
-                                        Approve plan
-                                      </option>
-                                      <option value={PLAN_STATUS.REVISION_REQUESTED}>
-                                        Request revision
-                                      </option>
-                                      <option value={PLAN_STATUS.REJECTED}>
-                                        Reject
-                                      </option>
-                                    </select>
-                                  )}
-
-                                  {/* Verification is a separate call, made once
-                                      the startup asks for it. */}
-                                  {!readOnly && verificationRequested && (
-                                    <select
-                                      className={tableSelectClass}
-                                      value=""
-                                      disabled={reviewingById[item.uuid]}
-                                      onChange={(e) => {
-                                        if (e.target.value)
-                                          onVerifyMilestone(item.uuid, e.target.value);
-                                      }}
-                                    >
-                                      <option value="">Verify milestone</option>
-                                      {VERIFICATION_OPTIONS.map((opt) => (
-                                        <option key={opt.value} value={opt.value}>
-                                          {opt.label}
+                              {index === 0 && (
+                                <td rowSpan={rows.length} className={tableCellClass}>
+                                  <div className="flex flex-col gap-2">
+                                    {reviewable ? (
+                                      // One verdict for the milestone, applied
+                                      // as soon as it is chosen.
+                                      <select
+                                        className={tableSelectClass}
+                                        value=""
+                                        disabled={busy}
+                                        onChange={(e) => {
+                                          if (e.target.value) decide(e.target.value);
+                                        }}
+                                      >
+                                        <option value="">
+                                          {busy ? "Saving..." : "Select action"}
                                         </option>
-                                      ))}
-                                    </select>
-                                  )}
+                                        <option value={PLAN_STATUS.REVISION_REQUESTED}>
+                                          Request further information
+                                        </option>
+                                        <option value={PLAN_STATUS.APPROVED}>
+                                          Approve plan
+                                        </option>
+                                        <option value={PLAN_STATUS.REJECTED}>
+                                          Reject plan
+                                        </option>
+                                      </select>
+                                    ) : (
+                                      <span
+                                        className={`inline-block w-fit rounded-full px-2.5 py-1 text-xs font-bold ${
+                                          PLAN_STATUS_PILL[ps] || "bg-slate-100 text-slate-600"
+                                        }`}
+                                      >
+                                        {PLAN_STATUS_LABEL[ps] || "Not submitted"}
+                                      </span>
+                                    )}
 
-                                  {!reviewable && !verificationRequested && (
-                                    <span className="text-xs font-semibold text-[#64748b]">
-                                      {String(item.status || "").toLowerCase() ===
-                                      "submitted"
-                                        ? "Report awaiting your review"
-                                        : "No action needed"}
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
+                                    {/* Verification is a separate call, made once
+                                        the startup asks for it. */}
+                                    {!readOnly && verificationRequested && (
+                                      <select
+                                        className={tableSelectClass}
+                                        value=""
+                                        disabled={busy}
+                                        onChange={(e) => {
+                                          if (e.target.value)
+                                            onVerifyMilestone(item.uuid, e.target.value);
+                                        }}
+                                      >
+                                        <option value="">Verify milestone</option>
+                                        {VERIFICATION_OPTIONS.map((opt) => (
+                                          <option key={opt.value} value={opt.value}>
+                                            {opt.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    )}
+                                  </div>
+                                </td>
+                              )}
                             </tr>
-                          );
+                          ));
                         })}
                       </tbody>
+
+                      <tfoot>
+                        <tr>
+                          <td colSpan={2} className={`${tableHeadClass} text-xs`}>
+                            {openTranche === "__all__" ? "Total" : `${openTranche} Total`}
+                          </td>
+                          <td className={`${tableHeadClass} text-right text-xs`}>
+                            {formatReportAmount(
+                              String(
+                                visibleMilestones.reduce(
+                                  (sum, m) => sum + (Number(milestonePlannedAmount(m)) || 0),
+                                  0,
+                                ),
+                              ),
+                            )}
+                          </td>
+                          <td colSpan={4} className={tableHeadClass} />
+                        </tr>
+                      </tfoot>
                     </table>
                   </div>
                 )}
               </div>
             </PortalCard>
-            )}
+          )}
         </div>
       </main>
 
@@ -970,8 +1146,12 @@ const EnterpriseTrackerDetails = () => {
           <form onSubmit={onSubmitMilestone} className={modalCardClass}>
             <div className={modalHeaderClass}>
               <div>
-                <h3 className="text-2xl font-black text-slate-950">Add milestone</h3>
-                <p className="mt-1 text-sm text-slate-500">Create a milestone for {enterprise?.name || "this startup"}.</p>
+                <h3 className="text-2xl font-black text-slate-950">
+                  Add milestone
+                </h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  Create a milestone for {enterprise?.name || "this startup"}.
+                </p>
               </div>
               <button
                 type="button"
@@ -984,15 +1164,45 @@ const EnterpriseTrackerDetails = () => {
             <div className="grid grid-cols-1 gap-4 p-6 md:grid-cols-2">
               <div className="md:col-span-2">
                 <FieldLabel>Milestone title</FieldLabel>
-                <input className={baseInputClass} placeholder="Milestone title" value={milestoneForm.title} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, title: e.target.value }))} required />
+                <input
+                  className={baseInputClass}
+                  placeholder="Milestone title"
+                  value={milestoneForm.title}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  required
+                />
               </div>
               <div>
                 <FieldLabel>Due date</FieldLabel>
-                <input className={baseInputClass} type="date" value={milestoneForm.dueDate} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, dueDate: e.target.value }))} />
+                <input
+                  className={baseInputClass}
+                  type="date"
+                  value={milestoneForm.dueDate}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      dueDate: e.target.value,
+                    }))
+                  }
+                />
               </div>
               <div>
                 <FieldLabel>Initial status</FieldLabel>
-                <select className={baseInputClass} value={milestoneForm.status} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, status: e.target.value }))}>
+                <select
+                  className={baseInputClass}
+                  value={milestoneForm.status}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      status: e.target.value,
+                    }))
+                  }
+                >
                   <option value="pending">Pending</option>
                   <option value="in_progress">In progress</option>
                   <option value="completed">Completed</option>
@@ -1000,23 +1210,54 @@ const EnterpriseTrackerDetails = () => {
               </div>
               <div>
                 <FieldLabel>Linked tranche</FieldLabel>
-                <select className={baseInputClass} value={milestoneForm.linkedTranche} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, linkedTranche: e.target.value }))}>
+                <select
+                  className={baseInputClass}
+                  value={milestoneForm.linkedTranche}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      linkedTranche: e.target.value,
+                    }))
+                  }
+                >
                   <option value="None">None</option>
                   {trancheStages.map((item, index) => (
-                    <option key={`${item.title}-${item.date}-${index}`} value={item.title}>
-                      {item.title} ({formatDateDisplay(item.date)} · {formatCurrency(item.amount)})
+                    <option
+                      key={`${item.title}-${item.date}-${index}`}
+                      value={item.title}
+                    >
+                      {item.title} ({formatDateDisplay(item.date)} ·{" "}
+                      {formatCurrency(item.amount)})
                     </option>
                   ))}
                 </select>
               </div>
               <div className="md:col-span-2">
                 <FieldLabel>Description</FieldLabel>
-                <textarea className={`${baseInputClass} min-h-[90px]`} placeholder="Description" value={milestoneForm.description} onChange={(e) => setMilestoneForm((prev) => ({ ...prev, description: e.target.value }))} />
+                <textarea
+                  className={`${baseInputClass} min-h-[90px]`}
+                  placeholder="Description"
+                  value={milestoneForm.description}
+                  onChange={(e) =>
+                    setMilestoneForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                />
               </div>
             </div>
             <div className="flex justify-end gap-3 border-t border-slate-100 px-6 py-5">
-              <button type="button" onClick={() => setShowMilestoneModal(false)} className={modalCancelClass}>Cancel</button>
-              <button type="submit" className={modalSubmitClass}>Save milestone</button>
+              <button
+                type="button"
+                onClick={() => setShowMilestoneModal(false)}
+                className={modalCancelClass}
+              >
+                Cancel
+              </button>
+              <button type="submit" className={modalSubmitClass}>
+                Save milestone
+              </button>
             </div>
           </form>
         </div>

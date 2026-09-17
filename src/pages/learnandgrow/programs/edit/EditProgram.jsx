@@ -13,12 +13,8 @@ import {
 import { cleanProgramDescription } from "@/utils/programMeta";
 import { useRouter } from "../../../../utils/navigation";
 import { useSearchParams } from "react-router-dom";
-
-const PROGRAM_CATEGORIES = [
-  "Ideation",
-  "Business Foundation",
-  "Investment Readiness",
-];
+import { PROGRAM_CATEGORIES } from "@/constants/programCategories";
+import { getCohortProgramOptions } from "@/controllers/cohort_controller";
 
 const EditProgramPage = () => {
   const { t } = useTranslation();
@@ -31,10 +27,25 @@ const EditProgramPage = () => {
   const [loading, setloading] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
+  // Which programme cohorts may open this class. None ticked = open to every
+  // startup, which is how classes behaved before access control existed.
+  const [cohorts, setCohorts] = useState([]);
+  const [allowedCohorts, setAllowedCohorts] = useState([]);
+
+  useEffect(() => {
+    getCohortProgramOptions().then(setCohorts);
+  }, []);
+
   useEffect(() => {
     getProgram(uuid).then((res) => {
       setProgram(res);
       setPreviewImage(res?.image);
+      // Pre-tick whatever already has access.
+      setAllowedCohorts(
+        (res?.ClassProgramAccesses || [])
+          .map((grant) => grant?.CohortProgram?.uuid)
+          .filter(Boolean),
+      );
     });
   }, [uuid]);
 
@@ -66,6 +77,7 @@ const EditProgramPage = () => {
       programCategory: e.target.programCategory.value,
       startDate: e.target.startDate.value || null,
       endDate: e.target.endDate.value || null,
+      cohortProgramUuids: allowedCohorts,
     };
 
     try {
@@ -196,6 +208,31 @@ const EditProgramPage = () => {
                     className="w-full rounded border-stroke"
                   />
                 </div>
+              </div>
+
+              <div className="mt-4">
+                <label className="mb-2.5 block font-medium text-black dark:text-white">
+                  Program that can access this class
+                </label>
+                <select
+                  value={allowedCohorts[0] || ""}
+                  onChange={(e) =>
+                    setAllowedCohorts(e.target.value ? [e.target.value] : [])
+                  }
+                  className="w-full rounded border-stroke"
+                >
+                  <option value="">All programs (no restriction)</option>
+                  {cohorts.map((cohort) => (
+                    <option key={cohort.uuid} value={cohort.uuid}>
+                      {cohort.title}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-sm text-[#64748b]">
+                  {allowedCohorts.length === 0
+                    ? "Every startup will be able to open this class."
+                    : "Only startups in the selected program will see it."}
+                </p>
               </div>
 
               <button

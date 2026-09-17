@@ -159,6 +159,26 @@ export const resetPassword = async (data) => {
     return error.response.data;
   }
 };
+// Create an internal staff account (Business Development Advisor, Finance
+// Officer, M&E Officer or Admin). Admin-only on the server; these roles are
+// not on the sign-up form. Returns the API body so the caller can show the
+// server's message on failure.
+export const createInternalUser = async (data) => {
+  try {
+    const response = await axios.post(`${server_url}/user/internal`, data, {
+      headers,
+    });
+    return response.data;
+  } catch (error) {
+    return (
+      error?.response?.data || {
+        status: false,
+        message: "Could not create the account",
+      }
+    );
+  }
+};
+
 export const inviteUser = async (data) => {
   try {
     const response = await axios.post(`${server_url}/user/inviteUser`, data);

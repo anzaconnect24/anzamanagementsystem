@@ -7,6 +7,7 @@ import {
   getUserBusiness,
 } from "@/controllers/crat_controller";
 import { useTranslation } from "@/locales";
+import { readinessColor, readinessLabelT } from "@/utils/cratReadiness";
 
 // Localized loading component for dynamic import
 const LoadingChart = () => {
@@ -60,11 +61,8 @@ const mapPublishedReportToScoreData = (published, t) => {
     legal: "legal_compliance",
   };
 
-  const toStatus = (pct) => {
-    if (pct >= 75) return t("report.ready", "Ready");
-    if (pct >= 60) return t("report.partiallyReady", "Partially Ready");
-    return t("report.notReady", "Not Ready");
-  };
+  // Investment ready at 70% and above — see utils/cratReadiness.
+  const toStatus = (pct) => readinessLabelT(pct, t);
 
   const result = {};
   Object.entries(domainMap).forEach(([chartKey, apiKey]) => {
@@ -188,16 +186,10 @@ const PerformanceDistribution = ({
   const remainingScore = 100 - overallScore;
 
   // Determine chart color and status based on CRAT readiness levels
-  const getChartColorAndStatus = (score) => {
-    if (score >= 75)
-      return { color: "#219654", status: t("report.ready", "Ready") };
-    if (score >= 60)
-      return {
-        color: "#f4dc2c",
-        status: t("report.partiallyReady", "Partially Ready"),
-      };
-    return { color: "#EF4444", status: t("report.notReady", "Not Ready") };
-  };
+  const getChartColorAndStatus = (score) => ({
+    color: readinessColor(score),
+    status: readinessLabelT(score, t),
+  });
 
   const { color: chartColor, status: scoreStatus } =
     getChartColorAndStatus(overallScore);

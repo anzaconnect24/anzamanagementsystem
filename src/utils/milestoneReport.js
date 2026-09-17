@@ -50,6 +50,19 @@ export const emptyMilestoneReport = () => ({
 
 const REPORT_KEYS = Object.keys(emptyMilestoneReport());
 
+// Each activity of a milestone is reported on its own line.
+const ACTIVITY_REPORT_KEYS = ["completionStatus", "actualAmount", "receiptEvidence", "narrative"];
+
+const sanitizeActivityReport = (value) => {
+  const base = { completionStatus: "", actualAmount: "", receiptEvidence: "", narrative: "", attachments: [] };
+  if (!value || typeof value !== "object") return base;
+  ACTIVITY_REPORT_KEYS.forEach((key) => {
+    if (value[key] !== undefined && value[key] !== null) base[key] = String(value[key]);
+  });
+  if (Array.isArray(value.attachments)) base.attachments = value.attachments.map(String).filter(Boolean);
+  return base;
+};
+
 // Keep only the known keys so a hand-edited or older payload can't smuggle
 // extra fields into the submission.
 const sanitizeReport = (value) => {
@@ -60,6 +73,9 @@ const sanitizeReport = (value) => {
       base[key] = String(value[key]);
     }
   });
+  if (Array.isArray(value.activities)) {
+    base.activities = value.activities.map(sanitizeActivityReport);
+  }
   return base;
 };
 
@@ -93,7 +109,13 @@ export const milestoneReportNotes = (submissionNotes) =>
 
 // A row is worth persisting only if the startup actually filled something in.
 export const hasReportData = (report) =>
-  REPORT_KEYS.some((key) => String(report?.[key] || "").trim());
+  REPORT_KEYS.some((key) => String(report?.[key] || "").trim()) ||
+  (Array.isArray(report?.activities) &&
+    report.activities.some(
+      (line) =>
+        ACTIVITY_REPORT_KEYS.some((key) => String(line?.[key] || "").trim()) ||
+        (line?.attachments || []).length > 0,
+    ));
 
 // Rebuild submissionNotes from the narrative plus the structured row.
 export const buildSubmissionNotes = (notes, report) => {
@@ -169,30 +191,49 @@ export const timelineSpanDueDate = (span, startDate) => {
   return start.toISOString().slice(0, 10);
 };
 
-const emptyMilestonePlan = () => ({
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
+export const emptyMilestoneActivity = () => ({
+  text: "",
   plannedAmount: "",
   timelineSpan: "",
+  kpiImpact: "",
+  setDate: todayISO(),
 });
 
-const PLAN_KEYS = Object.keys(emptyMilestonePlan());
+const emptyMilestonePlan = () => ({
+  activities: [emptyMilestoneActivity()],
+});
 
-// `plan` takes any subset of { plannedAmount, timelineSpan }; anything omitted
-// is stored blank.
+// `plan.activities` is a list of { text, plannedAmount, timelineSpan,
+// kpiImpact, setDate } — each activity within the milestone carries its own
+// budget, timeline, expected KPI/impact, and the date its timeline is counted
+// from. Entries with nothing filled in are dropped.
 export const buildMilestoneDescription = (description, plan = {}) => {
   const clean = String(description || "").trim();
 
-  const stored = emptyMilestonePlan();
-  PLAN_KEYS.forEach((key) => {
-    stored[key] = String(plan?.[key] ?? "").trim();
-  });
+  const activities = (Array.isArray(plan?.activities) ? plan.activities : [])
+    .map((a) => ({
+      text: String(a?.text ?? "").trim(),
+      plannedAmount: String(a?.plannedAmount ?? "").trim(),
+      timelineSpan: String(a?.timelineSpan ?? "").trim(),
+      kpiImpact: String(a?.kpiImpact ?? "").trim(),
+      setDate: String(a?.setDate ?? "").trim(),
+    }))
+    .filter((a) => a.text || a.plannedAmount || a.timelineSpan || a.kpiImpact);
 
-  if (PLAN_KEYS.every((key) => !stored[key])) return clean || null;
+  if (!activities.length) return clean || null;
 
-  return `${clean}\n${MILESTONE_PLAN_MARKER}${JSON.stringify(stored)}`;
+  return `${clean}\n${MILESTONE_PLAN_MARKER}${JSON.stringify({ activities })}`;
 };
 
-// Split a milestone description into the text the user typed and the plan
-// (amount, timeline span) stored alongside it.
+// Split a milestone description into the text the user typed and the list of
+// activities (each with its own planned amount and timeline) stored alongside
+// it. Milestones created before per-activity planning stored one shared
+// { plannedAmount, timelineSpan } — read as a single activity with blank text
+// so old milestones still parse; EntrepreneurMilestones.jsx pairs it back up
+// with the activity text (stored separately in tranchePlannedUse) when a plan
+// is reopened for revision.
 export const parseMilestonePlan = (description) => {
   const raw = String(description || "");
   const idx = raw.lastIndexOf(MILESTONE_PLAN_MARKER);
@@ -201,25 +242,86 @@ export const parseMilestonePlan = (description) => {
 
   const line = raw.slice(idx + MILESTONE_PLAN_MARKER.length).split("\n")[0].trim();
 
-  const plan = emptyMilestonePlan();
+  let activities = [];
   try {
     const parsed = JSON.parse(line);
-    PLAN_KEYS.forEach((key) => {
-      plan[key] = String(parsed?.[key] || "");
-    });
+    if (Array.isArray(parsed?.activities)) {
+      activities = parsed.activities.map((a) => ({
+        text: String(a?.text ?? ""),
+        plannedAmount: String(a?.plannedAmount ?? ""),
+        timelineSpan: String(a?.timelineSpan ?? ""),
+        kpiImpact: String(a?.kpiImpact ?? ""),
+        setDate: String(a?.setDate ?? ""),
+      }));
+    } else if (parsed && (parsed.plannedAmount !== undefined || parsed.timelineSpan !== undefined)) {
+      activities = [
+        {
+          text: "",
+          plannedAmount: String(parsed.plannedAmount ?? ""),
+          timelineSpan: String(parsed.timelineSpan ?? ""),
+          kpiImpact: "",
+          setDate: "",
+        },
+      ];
+    }
   } catch {
-    // Leave the plan blank — a description that lost its marker still reads.
+    // Leave activities empty — a description that lost its marker still reads.
   }
 
-  return { description: raw.slice(0, idx).trim(), ...plan };
+  if (!activities.length) activities = [emptyMilestoneActivity()];
+
+  return { description: raw.slice(0, idx).trim(), activities };
 };
 
-export const milestonePlannedAmount = (milestone) =>
-  parseMilestonePlan(milestone?.description).plannedAmount ||
-  (milestone?.trancheAmount ? String(milestone.trancheAmount) : "");
+// Every activity's expected KPI/impact, joined for display the same way
+// activity text is (see ACTIVITY_SEPARATOR in EntrepreneurMilestones.jsx) —
+// so wherever this is shown alongside the activities line, they read
+// consistently.
+export const milestoneKpiImpact = (milestone) => {
+  const { activities } = parseMilestonePlan(milestone?.description);
+  return activities
+    .map((a) => String(a.kpiImpact || "").trim())
+    .filter(Boolean)
+    .join(" • ");
+};
 
-export const milestoneTimelineSpan = (milestone) =>
-  timelineSpanLabel(parseMilestonePlan(milestone?.description).timelineSpan);
+// The milestone's total budget — the sum of every activity's planned amount.
+export const milestonePlannedAmount = (milestone) => {
+  const { activities } = parseMilestonePlan(milestone?.description);
+  const sum = activities.reduce((total, a) => {
+    const n = Number(String(a.plannedAmount || "").replace(/,/g, ""));
+    return total + (Number.isFinite(n) ? n : 0);
+  }, 0);
+
+  if (sum > 0) return String(sum);
+  return milestone?.trancheAmount ? String(milestone.trancheAmount) : "";
+};
+
+// The milestone isn't done until its last activity is, so its overall
+// timeline is the longest (latest-due) span among its activities.
+export const milestoneTimelineSpan = (milestone) => {
+  const { activities } = parseMilestonePlan(milestone?.description);
+  const longest = activities.reduce((best, a) => {
+    const option = TIMELINE_SPAN_OPTIONS.find((o) => o.value === a.timelineSpan);
+    if (!option) return best;
+    return !best || option.days > best.days ? option : best;
+  }, null);
+
+  return longest?.label || "";
+};
+
+// The milestone's own due date: the latest due date among its activities,
+// each counted from its own Date Set — falling back to `fallbackStartDate`
+// only for an activity that doesn't have one of its own (older data saved
+// before per-activity Date Set).
+export const milestoneActivitiesDueDate = (activities, fallbackStartDate) => {
+  const dueDates = (activities || [])
+    .map((a) => timelineSpanDueDate(a.timelineSpan, a.setDate || fallbackStartDate))
+    .filter(Boolean);
+
+  if (!dueDates.length) return null;
+  return dueDates.reduce((latest, d) => (d > latest ? d : latest));
+};
 
 // Pre-fill a row from what the milestone already knows: the planned amount set
 // when it was created, falling back to the tranche amount finance committed, so

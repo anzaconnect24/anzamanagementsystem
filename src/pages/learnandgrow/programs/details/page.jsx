@@ -3,7 +3,11 @@
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
 import toast from "react-hot-toast";
-import { getPrograms } from "@/controllers/program_controller";
+import {
+  getPrograms,
+  getCourseCompletion,
+  setCourseCompleted,
+} from "@/controllers/program_controller";
 import {
   enrollInCourse,
   isEnrolled as checkIsEnrolled,
@@ -15,6 +19,11 @@ import { useRouter } from "@/utils/navigation";
 import Link from "@/utils/link";
 import Image from "@/utils/image";
 import Loader from "@/components/common/Loader";
+import StaffCourseView from "./StaffCourseView";
+
+// Admin and staff open a course to review it, not to take it, so they get the
+// tabbed course record instead of the learner's enrol-and-continue page.
+const STAFF_ROLES = ["Admin", "BDA"];
 
 const fallbackImage = "/images/ideation-classes.svg";
 
@@ -69,6 +78,32 @@ const CourseDetailsPage = () => {
   // Only startups "enrol"; the enrolled count tracks enrolled startups.
   const canEnroll = userDetails?.role === "Enterprenuer";
   const modulesHref = `/dashboard/modules/${uuid}`;
+
+  // Finishing a class is recorded on the backend (enrolment lives in
+  // Firestore and only says the class was started).
+
+  const [completed, setCompleted] = useState(false);
+  const [savingCompletion, setSavingCompletion] = useState(false);
+
+  useEffect(() => {
+    if (!uuid || !canEnroll) return;
+    getCourseCompletion(uuid).then((body) => setCompleted(!!body?.completed));
+  }, [uuid, canEnroll]);
+
+  const toggleCompleted = async () => {
+    const next = !completed;
+    setSavingCompletion(true);
+    const response = await setCourseCompleted(uuid, next);
+    setSavingCompletion(false);
+
+    if (response?.status !== true) {
+      toast.error(response?.message || "Could not update the class");
+      return;
+    }
+
+    setCompleted(next);
+    toast.success(next ? "Marked as completed" : "Marked as not completed");
+  };
 
   useEffect(() => {
     const loadProgram = async () => {
@@ -178,6 +213,10 @@ const CourseDetailsPage = () => {
         </div>
       </div>
     );
+  }
+
+  if (STAFF_ROLES.includes(userDetails?.role)) {
+    return <StaffCourseView uuid={uuid} program={program} />;
   }
 
   return (
@@ -306,6 +345,25 @@ const CourseDetailsPage = () => {
               <p className="mt-3 text-center text-[11px] font-semibold text-[#16a34a]">
                 ✓ You are enrolled in this course
               </p>
+            )}
+
+            {canEnroll && enrolled && (
+              <button
+                type="button"
+                onClick={toggleCompleted}
+                disabled={savingCompletion}
+                className={`mt-3 flex w-full items-center justify-center gap-2 rounded-2xl px-4 py-3 text-xs font-semibold shadow-md transition disabled:opacity-60 ${
+                  completed
+                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-100"
+                    : "bg-white text-[#082d77] ring-1 ring-[#082d77]/20 hover:bg-slate-50"
+                }`}
+              >
+                {savingCompletion
+                  ? "Saving..."
+                  : completed
+                    ? "✓ Completed — undo"
+                    : "Mark as completed"}
+              </button>
             )}
 
             {!canEnroll && (

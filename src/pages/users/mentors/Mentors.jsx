@@ -543,17 +543,12 @@ const Mentors = () => {
 
                 <div className="absolute bottom-4 left-4">
                   <span className="rounded-full bg-green-50 px-3 py-1 text-xs font-medium text-green-700 shadow-sm backdrop-blur-sm">
-                    {item?.MentorProfile?.expertise ||
-                      t(
-                        `mentor.expertise.${makeFirstLetterLowercase(
-                          expertiseList(item?.MentorProfile?.areasOfExperties)
-                            .slice(0, 2)
-                            .join(", ")
-                            .replace("&", "And")
-                            .replaceAll(" ", "")
-                        )}`,
-                        t("users.generalExpertise", "General Expertise")
-                      )}
+                    {expertiseList(
+                      item?.MentorProfile?.expertiseAreas ||
+                        item?.MentorProfile?.areasOfExperties
+                    )
+                      .slice(0, 2)
+                      .join(", ") || t("users.generalExpertise", "General Expertise")}
                   </span>
                 </div>
 
@@ -573,11 +568,14 @@ const Mentors = () => {
                 </p>
 
                 <div className="space-y-3 text-sm text-[#6f6f72]">
-                  {item?.MentorProfile?.expertise && (
+                  {item?.MentorProfile?.position && (
                     <div className="flex items-center gap-2">
                       <FaBriefcase className="shrink-0" />
                       <span className="line-clamp-1">
-                        {item.MentorProfile.expertise}
+                        {item.MentorProfile.position}
+                        {item.MentorProfile.organisation
+                          ? ` · ${item.MentorProfile.organisation}`
+                          : ""}
                       </span>
                     </div>
                   )}

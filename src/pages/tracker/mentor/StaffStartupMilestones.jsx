@@ -2,13 +2,10 @@ import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Loader from "@/components/common/Loader";
 import GrantSummaryCards from "@/components/tracker/GrantSummaryCards";
-import {
-  getMentorEnterpriseDetails,
-  listMentorEnterprises,
-  listTrackerMilestones,
-} from "@/controllers/trackerController";
+import { listTrackerMilestones } from "@/controllers/trackerController";
+import { milestoneKpiImpact } from "@/utils/milestoneReport";
 import { PLAN_STATUS } from "@/utils/trancheWorkflow";
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { ClipboardList } from "lucide-react";
 
 const isMilestoneDisbursed = (m) =>
   String(m?.planStatus) === PLAN_STATUS.DISBURSED || Boolean(m?.disbursed);
@@ -128,15 +125,6 @@ const StaffStartupMilestones = () => {
 
   return (
     <div className="space-y-6 bg-[#eef2f8] px-6 py-6">
-      <button
-        type="button"
-        onClick={() => navigate("/dashboard/mentorTracker")}
-        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#163b8f]"
-      >
-        <ArrowLeft className="h-4 w-4" />
-        Back to startups
-      </button>
-
       <section
         className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
         style={{
@@ -203,7 +191,9 @@ const StaffStartupMilestones = () => {
           {/* Same shape as the startup's own milestone list: the name, with key
               activities (stored on tranchePlannedUse) as the description. */}
           {rows.map((m, index) => {
-            const normalizedStatus = String(m.status || "pending").toLowerCase();
+            const normalizedStatus = String(
+              m.status || "pending",
+            ).toLowerCase();
             const waitingForApproval = ["pending", "draft"].includes(
               normalizedStatus,
             );
@@ -223,6 +213,12 @@ const StaffStartupMilestones = () => {
                     {m.tranchePlannedUse ? (
                       <p className="mt-2 text-sm leading-6 text-slate-600">
                         {m.tranchePlannedUse}
+                      </p>
+                    ) : null}
+
+                    {milestoneKpiImpact(m) ? (
+                      <p className="mt-1 text-sm leading-6 text-emerald-700">
+                        KPI/Impact: {milestoneKpiImpact(m)}
                       </p>
                     ) : null}
 

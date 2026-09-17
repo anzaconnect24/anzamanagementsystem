@@ -178,12 +178,13 @@ const CoachingSessions = () => {
         >
           <div className="relative z-10 flex min-h-[160px] flex-wrap items-start justify-between gap-4">
             <div>
+              {/* The activity names the page; the business it belongs to sits above it. */}
               <div className="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2 text-sm font-bold text-white shadow-sm backdrop-blur">
                 <span className="h-2.5 w-2.5 rounded-full bg-[#F59E0B]" />
-                Coaching Sessions
+                {userDetails?.Business?.name || "My business"}
               </div>
               <h1 className="mt-4 text-3xl font-black tracking-tight md:text-4xl">
-                {userDetails?.Business?.name || "Coaching Sessions"}
+                Coaching Sessions
               </h1>
               <p className="mt-3 max-w-2xl text-sm leading-7 text-white/85 md:text-base">
                 Your coaching sessions and engagement history — the guidance

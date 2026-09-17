@@ -210,14 +210,6 @@ const TrackerProgramDetails = () => {
 
   return (
     <div className="space-y-6 bg-[#eef2f8] px-6 py-6">
-      <button
-        type="button"
-        onClick={() => navigate("/dashboard/trackerPrograms")}
-        className="text-sm font-semibold text-[#163b8f]"
-      >
-        Back to tracker programs
-      </button>
-
       <section
         className="relative overflow-hidden rounded-2xl bg-slate-950 px-7 py-6 text-white shadow-sm shadow-slate-300/70 md:px-10 md:py-7"
         style={{

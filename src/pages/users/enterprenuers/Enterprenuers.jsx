@@ -1,7 +1,12 @@
 "use client";
 
 import { useContext, useEffect, useState } from "react";
+import toast from "react-hot-toast";
 import { getEnterprenuers } from "@/controllers/user_controller";
+import {
+  getCohortProgramOptions,
+  cohortOf,
+} from "@/controllers/cohort_controller";
 import Link from "@/utils/link";
 import Loader from "@/components/common/Loader";
 import NoData from "@/component/noData";
@@ -40,6 +45,17 @@ const Enterprenuers = () => {
   const [page, setPage] = useState(1);
   const [count, setCount] = useState(0);
   const [openDropdown, setOpenDropdown] = useState(null);
+  // Program filter options come from the Programs table rather than a
+  // hardcoded list, so a newly created cohort is filterable straight away.
+  const [programTitles, setProgramTitles] = useState([]);
+
+  useEffect(() => {
+    getCohortProgramOptions()
+      .then((list) =>
+        setProgramTitles(list.map((program) => program.title).filter(Boolean)),
+      )
+      .catch(() => setProgramTitles([]));
+  }, []);
 
   const filterOptions = {
     sector: {
@@ -61,22 +77,7 @@ const Enterprenuers = () => {
     },
     program: {
       label: "Program",
-      options: [
-        "All Programs",
-        "Climate Launchpad",
-        "Generation Food",
-        "Capacity Building to Kilwa Entrepreneurs",
-        "Female Entrepreneurs Growing Greener Economies",
-        "Rapid Banana",
-        "Restoration Factory Tanzania",
-        "Capacity Building to Entrepreneurs Focusing on Clean and Renewable Energy in Arusha",
-        "Capacity Building for Entrepreneurship and Aquaculture Practices",
-        "Youth Entrepreneurship & Innovation Program",
-        "Regenerative Economy Accelerator Tanzania",
-        "Pesatech Accelerator Two",
-        "Funguo Investment Accelerator",
-        "AWCE Investment Accelerator",
-      ],
+      options: ["All Programs", ...programTitles],
     },
     revenue: {
       label: "Revenue",
@@ -157,18 +158,27 @@ const Enterprenuers = () => {
       setIsFetching(true);
     }
 
-    getEnterprenuers(limit, page, debouncedKeyword, revenueParams).then(
-      (body) => {
+    getEnterprenuers(limit, page, debouncedKeyword, revenueParams)
+      .then((body) => {
         let filteredData = Array.isArray(body?.data) ? [...body.data] : [];
 
         filteredData = applyFilters(filteredData);
 
         setCount(body?.count || 0);
         setUsers(filteredData);
+      })
+      // Without this the page sat on its loading spinner forever whenever the
+      // request failed, which reads as "Startups does not open" rather than as
+      // an error anyone can act on.
+      .catch(() => {
+        setUsers([]);
+        setCount(0);
+        toast.error("Failed to load startups");
+      })
+      .finally(() => {
         setloading(false);
         setIsFetching(false);
-      },
-    );
+      });
   }, [sortConfig, filters, page, debouncedKeyword]);
 
   const applyFilters = (filteredData) => {
@@ -189,7 +199,7 @@ const Enterprenuers = () => {
 
       if (filters.program !== "All Programs") {
         filteredData = filteredData.filter(
-          (item) => item.Business?.program === filters.program,
+          (item) => cohortOf(item.Business)?.title === filters.program,
         );
       }
     }
@@ -217,7 +227,9 @@ const Enterprenuers = () => {
         case "program":
           return (
             direction *
-            (a.Business?.program?.localeCompare(b.Business?.program) || 0)
+            (cohortOf(a.Business)?.title?.localeCompare(
+              cohortOf(b.Business)?.title,
+            ) || 0)
           );
         default:
           return 0;
@@ -276,11 +288,11 @@ const Enterprenuers = () => {
         <div className="relative z-10 max-w-3xl p-10 text-white">
           <span className="mb-5 inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-1 text-sm font-medium shadow-sm">
             <span className="h-2 w-2 rounded-full bg-[#f08a3c]" />
-            Entrepreneur Network
+            Startup Network
           </span>
 
           <h2 className="mb-3 text-4xl font-bold leading-tight drop-shadow-lg">
-            Entrepreneurs
+            Startups
           </h2>
 
           <p className="mb-6 text-lg text-white/85 drop-shadow-md">
@@ -300,11 +312,23 @@ const Enterprenuers = () => {
               Business Profiles
             </span>
           </div>
+
+          {/* The Capital Facilitation Manager also follows which startups
+              have asked for capital and how far each has got. */}
+          {userDetails?.role === "CFM" && (
+            <Link
+              href="/dashboard/capital/enterprises"
+              className="mt-6 inline-flex items-center gap-2 rounded-lg bg-white/15 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/25"
+            >
+              Startups seeking capital
+              <FaArrowRight />
+            </Link>
+          )}
         </div>
       </div>
 
       <h2 className="mb-6 text-2xl font-bold text-[#172033]">
-        Available Entrepreneurs
+        Available Startups
       </h2>
 
       <div className="mb-8 rounded-2xl bg-white p-5 shadow-sm">
@@ -432,11 +456,11 @@ const Enterprenuers = () => {
                 </p>
 
                 <div className="space-y-3 text-sm text-[#6f6f72]">
-                  {item?.Business?.program && (
+                  {cohortOf(item?.Business)?.title && (
                     <div className="flex items-center gap-2">
                       <FaBuilding className="shrink-0" />
                       <span className="line-clamp-1">
-                        {item.Business.program}
+                        {cohortOf(item.Business).title}
                       </span>
                     </div>
                   )}
@@ -485,7 +509,7 @@ const Enterprenuers = () => {
           <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
             <p className="text-sm text-[#6f6f72]">
               Showing {(page - 1) * limit + 1} - {Math.min(page * limit, count)}{" "}
-              of {count} Entrepreneurs
+              of {count} Startups
             </p>
 
             <div className="flex flex-wrap items-center gap-2">
